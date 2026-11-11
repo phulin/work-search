@@ -1,3 +1,4 @@
+import { decodeBlockInto } from "../format/decode-block.js";
 import {
   BLOCK_SIZE,
   decodeDirectory,
@@ -94,6 +95,29 @@ export async function loadPosting(
     e.positionLength,
     e.crc,
   );
+  if (!sparse) {
+    const result: DecodedPostings = {
+      docs: new Uint32Array(e.df),
+      body: new Uint32Array(e.df),
+      title: new Uint32Array(e.df),
+      bytes: eagerPositions ?? new Uint8Array(0),
+      positionOffsets: positions ? new Uint32Array(e.df) : undefined,
+    };
+    let row = 0;
+    for (const block of blocks) {
+      decodeBlockInto(
+        frequency,
+        block.offset,
+        block,
+        result,
+        row,
+        eagerPositions,
+        block.positionOffset,
+      );
+      row += block.count;
+    }
+    return result;
+  }
   const selected = selectBlocks(blocks, sparse ? candidates : undefined);
   // Broadly distributed candidates erase the advantage of tiny ranges. Use
   // at most four contiguous windows per term. Gap bytes may be transferred,
@@ -184,37 +208,17 @@ export async function loadPosting(
         else result.bytes.set(p, byte);
       }
       for (const i of run) {
-        const b = blocks[i],
-          list = decodeFrequencies(
-            f.subarray(
-              b.offset - first.offset,
-              b.offset - first.offset + b.length,
-            ),
-            b.count,
-            b.crc,
-            { list: result, offset: row },
-          );
-        if (
-          list.docs[0] !== b.first ||
-          list.docs[list.docs.length - 1] !== b.last
-        )
-          throw new Error("Block skip boundary mismatch");
-        if (p) {
-          attachPositions(
-            list,
-            p.subarray(
-              b.positionOffset - first.positionOffset,
-              b.positionOffset - first.positionOffset + b.positionLength,
-            ),
-            b.positionCrc,
-          );
-          for (let j = 0; j < list.docs.length; j++)
-            result.positionOffsets![row + j] =
-              byte +
-              b.positionOffset -
-              first.positionOffset +
-              list.positionOffsets![j];
-        }
+        const b = blocks[i];
+        decodeBlockInto(
+          f,
+          b.offset - first.offset,
+          b,
+          result,
+          row,
+          p,
+          b.positionOffset - first.positionOffset,
+          byte,
+        );
         row += b.count;
       }
     },

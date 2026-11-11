@@ -20,6 +20,11 @@ export function varint(out: number[], n: number) {
   out.push(n);
 }
 export function readVarint(b: Uint8Array, p: { i: number }): number {
+  const first = b[p.i];
+  if (first < 128) {
+    p.i++;
+    return first;
+  }
   let n = 0,
     mul = 1;
   for (let j = 0; j < 5; j++) {

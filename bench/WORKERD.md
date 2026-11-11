@@ -4,16 +4,16 @@ Miniflare starts an actual workerd process and imports the Wrangler-generated ES
 
 |Configuration|Startup wall ms|HTTP P50 ms|HTTP P95 ms|Failed requests|
 |---|---:|---:|---:|---:|
-|10000-8-smallest|148.6|1.68|9.03|0|
-|100000-8-smallest|50.1|4.18|26.64|0|
-|100000-8-workload|44.9|2.73|26.12|0|
-|1000000-8-smallest|45.6|12.36|212.89|0|
-|1000000-8-workload|57.8|12.49|219.56|0|
-|1000000-16-smallest|68.0|15.74|217.93|0|
-|1000000-16-workload|69.9|10.14|213.00|0|
-|1000000-32-smallest|91.7|12.94|215.69|0|
-|1000000-32-workload|87.2|9.93|209.70|0|
-|1000000-48-smallest|112.9|12.76|214.18|0|
-|1000000-48-workload|110.2|9.64|216.35|0|
+|10000-8-smallest|151.0|1.54|8.60|0|
+|100000-8-smallest|49.9|3.53|29.30|0|
+|100000-8-workload|44.1|2.21|23.32|0|
+|1000000-8-smallest|46.7|11.24|188.02|0|
+|1000000-8-workload|59.6|12.00|184.12|0|
+|1000000-16-smallest|72.3|15.95|213.05|0|
+|1000000-16-workload|87.1|10.39|181.45|0|
+|1000000-32-smallest|91.2|11.79|184.64|0|
+|1000000-32-workload|95.6|9.87|188.45|0|
+|1000000-48-smallest|119.9|11.40|188.46|0|
+|1000000-48-workload|129.5|10.72|219.69|0|
 
 Raw response diagnostics and exact samples are in results/workerd.json. Process startup wall time must not be compared to Cloudflare’s one-second global-scope CPU limit. Run a real deployment to validate that limit.

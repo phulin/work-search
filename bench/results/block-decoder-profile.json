@@ -1,0 +1,365 @@
+{
+  "kind": "preloaded bytes, decoder only, alternating order, local Node; five measured passes after warmup",
+  "samples": [
+    {
+      "term": "document",
+      "positions": false,
+      "before": {
+        "ms": 24.14483299999999,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 15.882207999999991,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": false,
+      "before": {
+        "ms": 24.091583999999983,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 14.827708999999999,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": false,
+      "before": {
+        "ms": 22.612875000000003,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 14.297500000000014,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": false,
+      "before": {
+        "ms": 23.341250000000002,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 13.921249999999986,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": false,
+      "before": {
+        "ms": 22.820415999999994,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 14.105458999999996,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": true,
+      "before": {
+        "ms": 38.62787499999996,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 22.792542000000026,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": true,
+      "before": {
+        "ms": 38.06179199999997,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 22.848749999999995,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": true,
+      "before": {
+        "ms": 37.56395900000001,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 22.813666000000012,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": true,
+      "before": {
+        "ms": 37.4230409999999,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 24.007334000000014,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "document",
+      "positions": true,
+      "before": {
+        "ms": 36.54270799999995,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 22.26916600000004,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": false,
+      "before": {
+        "ms": 29.59441700000002,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 14.56620799999996,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": false,
+      "before": {
+        "ms": 24.954500000000053,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 15.651874999999905,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": false,
+      "before": {
+        "ms": 24.647374999999897,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 13.634584000000018,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": false,
+      "before": {
+        "ms": 24.45954100000006,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 13.642458000000033,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": false,
+      "before": {
+        "ms": 31.056375000000003,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 13.972208000000023,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": true,
+      "before": {
+        "ms": 38.50137500000005,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 22.857582999999977,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": true,
+      "before": {
+        "ms": 49.202790999999934,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 25.22220799999991,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": true,
+      "before": {
+        "ms": 38.887291000000005,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 24.30270900000005,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": true,
+      "before": {
+        "ms": 48.50958400000013,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 22.8951669999999,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "search",
+      "positions": true,
+      "before": {
+        "ms": 38.45895900000005,
+        "count": 1000000
+      },
+      "after": {
+        "ms": 25.28387500000008,
+        "count": 1000000
+      }
+    },
+    {
+      "term": "word0",
+      "positions": false,
+      "before": {
+        "ms": 18.171082999999953,
+        "count": 777754
+      },
+      "after": {
+        "ms": 10.511499999999842,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": false,
+      "before": {
+        "ms": 18.633125000000064,
+        "count": 777754
+      },
+      "after": {
+        "ms": 11.263209000000188,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": false,
+      "before": {
+        "ms": 18.420249999999896,
+        "count": 777754
+      },
+      "after": {
+        "ms": 10.568125000000009,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": false,
+      "before": {
+        "ms": 19.379042000000027,
+        "count": 777754
+      },
+      "after": {
+        "ms": 10.418541000000005,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": false,
+      "before": {
+        "ms": 18.336084000000028,
+        "count": 777754
+      },
+      "after": {
+        "ms": 10.488583000000062,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": true,
+      "before": {
+        "ms": 38.83074999999985,
+        "count": 777754
+      },
+      "after": {
+        "ms": 24.548249999999825,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": true,
+      "before": {
+        "ms": 38.265542000000096,
+        "count": 777754
+      },
+      "after": {
+        "ms": 24.667500000000018,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": true,
+      "before": {
+        "ms": 39.512208999999984,
+        "count": 777754
+      },
+      "after": {
+        "ms": 24.75883399999998,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": true,
+      "before": {
+        "ms": 38.228374999999915,
+        "count": 777754
+      },
+      "after": {
+        "ms": 24.011124999999993,
+        "count": 777754
+      }
+    },
+    {
+      "term": "word0",
+      "positions": true,
+      "before": {
+        "ms": 38.02766600000018,
+        "count": 777754
+      },
+      "after": {
+        "ms": 26.20029199999999,
+        "count": 777754
+      }
+    }
+  ]
+}

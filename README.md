@@ -120,3 +120,5 @@ See [DESIGN.md](DESIGN.md) for tradeoffs and the highest-value next optimization
 Latest scoring-loop measurements: [benchmark report](bench/SCORING-OPTIMIZATION.md).
 
 Block-based postings and skip planning: [benchmark report](bench/BLOCK-POSTINGS.md). Format v5 counts all block directories and embedded payloads against the same configured bundle budget.
+
+The v5 decoder performance recovery is measured in [bench/BLOCK-DECODING.md](bench/BLOCK-DECODING.md); existing v5 generations can be served without rebuilding.

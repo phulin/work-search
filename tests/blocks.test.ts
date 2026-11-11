@@ -161,3 +161,84 @@ it("preserves exact Boolean and positional results across sparse and exhaustive 
     await rm(root, { recursive: true, force: true });
   }
 });
+
+it("matches the previous decoder for multi-byte gaps, frequencies and positions", async () => {
+  const { loadPosting: previous } =
+    await import("../bench/baseline-v5-blocks/load.js");
+  const records: Posting[] = Array.from({ length: 1031 }, (_, i) => {
+    const body = i === 511 ? 130 : 1 + (i % 5),
+      title = i % 3;
+    return {
+      doc: i * 300,
+      body,
+      title,
+      bodyPositions: Array.from({ length: body }, (_, j) => j * 301),
+      titlePositions: Array.from({ length: title }, (_, j) => 128 + j * 300),
+    };
+  });
+  const { frequencies, positions, crc } = encodeBlocks(records);
+  const e: Entry = {
+    term: "x",
+    df: records.length,
+    object: 0,
+    offset: 0,
+    length: frequencies.length,
+    crc,
+    positionObject: 0,
+    positionOffset: 0,
+    positionLength: positions.length,
+    positionCrc: crc32(positions),
+  };
+  const read = async (_: Entry, p: boolean, start: number, length: number) =>
+    (p ? positions : frequencies).subarray(start, start + length);
+  for (const candidates of [
+    undefined,
+    new Uint32Array([0, 90000, 300000]),
+    new Uint32Array(),
+  ])
+    for (const positional of [false, true]) {
+      const a = await previous(e, positional, read, candidates),
+        b = await loadPosting(e, positional, read, candidates);
+      expect(b.docs).toEqual(a.docs);
+      expect(b.body).toEqual(a.body);
+      expect(b.title).toEqual(a.title);
+      if (positional)
+        for (let row = 0; row < a.docs.length; row++)
+          expect(postingPositions(b, row)).toEqual(postingPositions(a, row));
+    }
+});
+
+it("validates canonical varints and never reads beyond a selected block", async () => {
+  const { decodeBlockInto } = await import("../src/format/decode-block.js");
+  const { decodeFrequencies } = await import("../src/format/codec.js");
+  for (const bytes of [
+    new Uint8Array([0x81, 0]),
+    new Uint8Array([1, 0x80]),
+    new Uint8Array([1, 0, 0, 0]),
+  ]) {
+    const padded = new Uint8Array(bytes.length + 20);
+    padded.set(bytes);
+    const block = {
+      first: 0,
+      last: 0,
+      offset: 0,
+      length: bytes.length,
+      crc: crc32(bytes),
+      count: 1,
+      positionOffset: 0,
+      positionLength: 1,
+      positionCrc: 0,
+    };
+    const result = {
+      docs: new Uint32Array(1),
+      body: new Uint32Array(1),
+      title: new Uint32Array(1),
+      bytes: new Uint8Array(0),
+    };
+    expect(() => decodeBlockInto(padded, 0, block, result, 0)).toThrow();
+  }
+  expect(() => decodeFrequencies(new Uint8Array([0x80, 0]))).toThrow(
+    "Invalid varint",
+  );
+  expect(() => decodeFrequencies(new Uint8Array([0x80]))).toThrow("Truncated");
+});

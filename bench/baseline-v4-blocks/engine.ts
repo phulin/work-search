@@ -3,7 +3,7 @@ import {
   decodeFrequencies,
   attachPositions,
   decoder,
-} from "../../src/format/codec.js";
+} from "../baseline-v5-blocks/codec.js";
 import {
   parse,
   queryTerms,

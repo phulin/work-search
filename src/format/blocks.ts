@@ -100,20 +100,16 @@ export function decodeDirectory(
     last = -1;
   const blocks: Block[] = [];
   for (let i = 0; i < n; i++) {
-    const a = Array.from({ length: 9 }, (_, j) =>
-      v.getUint32(BLOCK_HEADER + i * BLOCK_ENTRY + j * 4, true),
-    );
-    const [
-      first,
-      end,
-      offset,
-      length,
-      checksum,
-      positionOffset,
-      plen,
-      pcrc,
-      count,
-    ] = a;
+    const entry = BLOCK_HEADER + i * BLOCK_ENTRY,
+      first = v.getUint32(entry, true),
+      end = v.getUint32(entry + 4, true),
+      offset = v.getUint32(entry + 8, true),
+      length = v.getUint32(entry + 12, true),
+      checksum = v.getUint32(entry + 16, true),
+      positionOffset = v.getUint32(entry + 20, true),
+      plen = v.getUint32(entry + 24, true),
+      pcrc = v.getUint32(entry + 28, true),
+      count = v.getUint32(entry + 32, true);
     if (
       first <= last ||
       end < first ||
