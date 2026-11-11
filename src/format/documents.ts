@@ -42,20 +42,20 @@ function unpack(
   i: number,
   bits: number,
 ): number {
-  let bit = i * bits,
-    remaining = bits,
-    value = 0,
-    shift = 0;
-  while (remaining) {
-    const take = Math.min(8 - (bit % 8), remaining);
-    value +=
-      (Math.floor(bytes[start + (bit >>> 3)] / 2 ** (bit % 8)) % 2 ** take) *
-      2 ** shift;
-    remaining -= take;
-    bit += take;
-    shift += take;
-  }
-  return value;
+  if (bits === 0) return 0;
+  const bit = i * bits,
+    offset = start + (bit >>> 3),
+    shift = bit & 7,
+    span = bits + shift;
+  // Read only the required bytes, including the fifth byte for unaligned u32s.
+  let value = bytes[offset];
+  if (span > 8) value |= bytes[offset + 1] << 8;
+  if (span > 16) value |= bytes[offset + 2] << 16;
+  if (span > 24) value |= bytes[offset + 3] << 24;
+  value = value >>> shift;
+  if (span > 32)
+    value += (bytes[offset + 4] & ((1 << (span - 32)) - 1)) * 2 ** (32 - shift);
+  return bits === 32 ? value : (value & (0xffffffff >>> (32 - bits))) >>> 0;
 }
 
 /** Independent restart blocks: constant-time lengths, bounded ID/pointer decoding. */
@@ -150,6 +150,15 @@ export class DocumentTable {
   readonly view: DataView;
   readonly blocks: number;
   readonly validated: Uint8Array;
+  // One header, not a per-document or per-block decompressed cache. Candidates
+  // are sorted, so adjacent documents usually reuse these scalar fields.
+  private lengthBlock = -1;
+  private bodyBase = 0;
+  private titleBase = 0;
+  private bodyBits = 0;
+  private titleBits = 0;
+  private bodyStart = 0;
+  private titleStart = 0;
   constructor(
     readonly bytes: Uint8Array,
     readonly count: number,
@@ -214,20 +223,37 @@ export class DocumentTable {
       i: i % DOCUMENT_BLOCK_SIZE,
     };
   }
-  lengths(i: number) {
-    const b = this.block(i),
-      v = this.view,
-      bw = v.getUint8(b.start + 8),
-      tw = v.getUint8(b.start + 9);
+  lengths(i: number, out = { body: 0, title: 0 }) {
+    if (!Number.isInteger(i) || i < 0 || i >= this.count)
+      throw new Error("Document out of range");
+    const block = i >>> 5;
+    if (block !== this.lengthBlock) {
+      const b = this.block(i),
+        v = this.view;
+      this.bodyBase = v.getUint32(b.start, true);
+      this.titleBase = v.getUint32(b.start + 4, true);
+      this.bodyBits = v.getUint8(b.start + 8);
+      this.titleBits = v.getUint8(b.start + 9);
+      this.bodyStart = b.start + BLOCK_HEADER;
+      this.titleStart = this.bodyStart + packedSize(b.n, this.bodyBits);
+      this.lengthBlock = block;
+    }
+    const local = i & 31;
     const body =
-      v.getUint32(b.start, true) +
-      unpack(this.bytes, b.start + BLOCK_HEADER, b.i, bw);
+      this.bodyBase +
+      (this.bodyBits === 0
+        ? 0
+        : unpack(this.bytes, this.bodyStart, local, this.bodyBits));
     const title =
-      v.getUint32(b.start + 4, true) +
-      unpack(this.bytes, b.start + BLOCK_HEADER + packedSize(b.n, bw), b.i, tw);
-    uint(body);
-    uint(title);
-    return { body, title };
+      this.titleBase +
+      (this.titleBits === 0
+        ? 0
+        : unpack(this.bytes, this.titleStart, local, this.titleBits));
+    if (body > 0xffffffff || title > 0xffffffff)
+      throw new Error("Invalid document integer");
+    out.body = body;
+    out.title = title;
+    return out;
   }
   document(i: number): StoredDocument {
     const b = this.block(i),

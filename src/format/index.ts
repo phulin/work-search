@@ -99,8 +99,8 @@ export class BinaryIndex {
   document(i: number) {
     return this.documents.document(i);
   }
-  lengths(i: number) {
-    return this.documents.lengths(i);
+  lengths(i: number, out?: { body: number; title: number }) {
+    return this.documents.lengths(i, out);
   }
   key(object: number, kind = "postings") {
     return `${this.generation}/${kind}-${object}.bin`;

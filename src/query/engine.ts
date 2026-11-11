@@ -159,10 +159,11 @@ export async function search(
       candidates = intersect(candidates, order[i]);
   } else for (const docs of filtered) candidates = union(candidates, docs);
   const cursors = lists.map(() => 0),
-    heap = new TopK(limit);
+    heap = new TopK(limit),
+    lengths = { body: 0, title: 0 };
   for (const doc of candidates) {
     if (doc >= index.count) throw new Error("Posting document out of range");
-    const d = index.lengths(doc);
+    const d = index.lengths(doc, lengths);
     let score = 0;
     lists.forEach((l, j) => {
       let p = cursors[j];

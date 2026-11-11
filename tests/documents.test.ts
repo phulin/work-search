@@ -149,3 +149,77 @@ describe("compressed document tables", () => {
     expect(t.validated.byteLength).toBe(40);
   });
 });
+
+describe("length access fast paths", () => {
+  it.each(Array.from({ length: 33 }, (_, i) => i))(
+    "matches exact values at every bit offset for %i-bit deltas",
+    (bits) => {
+      let state = 123;
+      const rand = () =>
+        (state = (Math.imul(state, 1664525) + 1013904223) >>> 0);
+      const bodyMax = 2 ** bits - 1,
+        titleBits = 32 - bits,
+        titleMax = 2 ** titleBits - 1;
+      const bodyBase = 0xffffffff - bodyMax,
+        titleBase = 0xffffffff - titleMax;
+      const documents = Array.from({ length: 65 }, (_, i) => ({
+        ...doc(`id-${i}`),
+        body:
+          bodyBase +
+          (i % 32 === 0 ? 0 : i % 32 === 31 ? bodyMax : rand() % (bodyMax + 1)),
+        title:
+          titleBase +
+          (i % 32 === 0
+            ? 0
+            : i % 32 === 31
+              ? titleMax
+              : rand() % (titleMax + 1)),
+      }));
+      const t = new DocumentTable(encodeDocuments(documents), documents.length);
+      // Cross and revisit blocks, including a one-document tail, to exercise eviction.
+      for (const i of [...documents.keys(), 64, 0, 32, 31, 63, 64, 1, 33])
+        expect(t.lengths(i)).toEqual({
+          body: documents[i].body,
+          title: documents[i].title,
+        });
+    },
+  );
+  it("still validates bounds on a hot header and rejects a damaged next block", () => {
+    const bytes = encodeDocuments(
+      Array.from({ length: 33 }, (_, i) => ({
+        ...doc(`${i}`),
+        body: i,
+        title: 3,
+      })),
+    );
+    const v = new DataView(bytes.buffer),
+      second = v.getUint32(20, true);
+    bytes[second] ^= 1;
+    const table = new DocumentTable(bytes, 33);
+    table.lengths(0);
+    table.lengths(1);
+    for (const i of [-1, NaN, 0.5, 33, 2 ** 32])
+      expect(() => table.lengths(i)).toThrow("range");
+    expect(() => table.lengths(32)).toThrow("checksum");
+    expect(table.lengths(0)).toEqual({ body: 0, title: 3 });
+  });
+});
+
+it("reuses only a caller-owned length result and keeps default results independent", () => {
+  const t = new DocumentTable(
+    encodeDocuments([
+      { ...doc("a"), body: 44, title: 3 },
+      { ...doc("b"), body: 123, title: 9 },
+    ]),
+    2,
+  );
+  const scratch = { body: -1, title: -1 };
+  expect(t.lengths(0, scratch)).toBe(scratch);
+  expect(scratch).toEqual({ body: 44, title: 3 });
+  const saved = t.lengths(0);
+  expect(t.lengths(1, scratch)).toBe(scratch);
+  expect(scratch).toEqual({ body: 123, title: 9 });
+  expect(saved).toEqual({ body: 44, title: 3 });
+  expect(() => t.lengths(2, scratch)).toThrow("range");
+  expect(scratch).toEqual({ body: 123, title: 9 });
+});

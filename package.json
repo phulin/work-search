@@ -14,7 +14,7 @@
     "deploy": "tsx src/cli/main.ts deploy",
     "check": "tsc --noEmit",
     "test": "vitest run",
-    "bench": "tsx bench/run.ts && tsx bench/details.ts && tsx bench/compare.ts",
+    "bench": "tsx bench/run.ts",
     "bundle": "wrangler deploy --dry-run --outdir dist"
   },
   "devDependencies": {

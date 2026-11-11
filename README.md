@@ -33,7 +33,7 @@ npm run search-local -- --out indexes/v3 --query 'example text' --mode or --meta
 npx tsx src/cli/main.ts verify --out indexes/v3
 ```
 
-The current binary format is **v2** and rejects old v1 indexes. Rebuild into a fresh directory (for example `--out indexes/v2-compressed`) before running `dev`, local search, or deployment with an existing checkout. There is no in-place migration. After rebuilding, use `npm run dev -- --out indexes/v2-compressed` and `npm run search-local -- --out indexes/v2-compressed --query "search"` to select that directory.
+The current binary format is **v2** and rejects old v1 indexes. Rebuild into a fresh directory (for example `--out indexes/v2-compressed`) before running `dev`, local search, or deployment with an existing checkout. There is no in-place migration from v1. The subsequent length-access optimization retains v2 compatibility and requires only Worker redeployment for existing v2 generations. After rebuilding, use `npm run dev -- --out indexes/v2-compressed` and `npm run search-local -- --out indexes/v2-compressed --query "search"` to select that directory.
 
 Use a fresh output directory for each build. A generation's objects are never overwritten by the builder. `queries.txt` contains one query per line; repeated lines supply frequencies. The bundle budget includes dictionary, document tables, IDs, and embedded postings. A budget too small for mandatory tables is rejected. `build-index` selects the resulting binary for the next Worker build by copying it to `data/bundle.bin`.
 
@@ -95,7 +95,7 @@ npx tsx bench/runtime.ts  # startup and HTTP measurements in local workerd
 npx tsx bench/bundle.ts   # dry-run the 48 MiB bundle, then restore sample binary
 ```
 
-For supplied corpora, `--sizes` labels the corpus; the actual document count is also recorded in successful results. The runner creates a new child process per configuration and preserves failed/infeasible configurations. Generated corpora and indexes are ignored by Git. The v1 baseline is preserved under `bench/baseline-v1/`. Compare formats with `npx tsx bench/compare.ts` after the matrix run; the report is [bench/COMPARISON.md](bench/COMPARISON.md).
+For supplied corpora, `--sizes` labels the corpus; the actual document count is also recorded in successful results. The runner creates a new child process per configuration and preserves failed/infeasible configurations. Generated corpora and indexes are ignored by Git. The v1 baseline is preserved under `bench/baseline-v1/`, and the original compressed-reader measurements under `bench/baseline-v2/`. [bench/OPTIMIZATION.md](bench/OPTIMIZATION.md) compares the reader optimization; `npx tsx bench/length-access.ts` and `npx tsx bench/paired.ts` reproduce the paired length and end-to-end measurements using the frozen v2 reader on identical binary data. After those runs, `npx tsx bench/optimization-report.ts` regenerates the optimization comparison. Compare formats with `npx tsx bench/compare.ts` after the matrix run; the report is [bench/COMPARISON.md](bench/COMPARISON.md).
 
 Results are in [bench/RESOURCES.md](bench/RESOURCES.md), [bench/WORKERD.md](bench/WORKERD.md), [bench/REPORT.md](bench/REPORT.md), [bench/results/results.json](bench/results/results.json), and individual sample JSON files. Local filesystem/HTTP-handler times are separated from local workerd and deployed network measurements. Cost formulas and caveats are in the report.
 
