@@ -5,3 +5,5 @@ indexes/
 bench/generated/
 *.log
 .dev.vars
+
+work/

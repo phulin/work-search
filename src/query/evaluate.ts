@@ -178,6 +178,12 @@ class TermCursor {
       if (row >= 0 && l) {
         if (!l.positionOffsets) throw new Error("Positions unavailable");
         const p = this.byteCursor;
+        const bytes = l.bytes;
+        const rowEnd = l.positionEnds
+          ? row % 256 === 255 || row === l.docs.length - 1
+            ? l.positionEnds[Math.floor(row / 256)]
+            : l.positionOffsets[row + 1]
+          : 0;
         p.i = l.positionOffsets[row];
         for (let f = 0; f < 2; f++) {
           const count = f === 0 ? l.body[row] : l.title[row],
@@ -190,14 +196,21 @@ class TermCursor {
           let position = 0;
           for (let i = 0; i < count; i++) {
             // decodePostings already validated this immutable byte stream.
-            const byte = l.bytes[p.i];
-            position += byte < 128 ? (p.i++, byte) : readVarint(l.bytes, p);
+            const byte = bytes[p.i];
+            const delta = byte < 128 ? (p.i++, byte) : readVarint(bytes, p);
+            if (l.positionEnds && i && !delta)
+              throw new Error("Unsorted positions");
+            position += delta;
+            if (l.positionEnds && position > 0xffffffff)
+              throw new Error("Position overflow");
             if (wanted) buffer[i] = position;
           }
           this.runs[f].starts = this.runs[f].ends = buffer;
           this.runs[f].count = wanted ? count : 0;
-          if (this.field === "body") break;
+          if (this.field === "body" && !l.positionEnds) break;
         }
+        if (l.positionEnds && p.i !== rowEnd)
+          throw new Error("Trailing position data");
       }
       this.decodedDoc = doc;
     }

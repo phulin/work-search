@@ -287,7 +287,14 @@ export async function build(options: BuildOptions) {
         frequencies: bytes,
         positions,
         crc: frequencyCrc,
-      } = encodeBlocks(list);
+      } = encodeBlocks(list, {
+        packed: true,
+        seekPositions: true,
+        count: documents.length,
+        avgBody: bodySum / documents.length,
+        avgTitle: titleSum / documents.length,
+        lengths: (doc) => documents[doc],
+      });
       entries.push({
         term: current,
         df: list.length,

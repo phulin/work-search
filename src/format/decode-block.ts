@@ -1,3 +1,4 @@
+import { decodePacked } from "./packed.js";
 import { readVarint, type DecodedPostings } from "./codec.js";
 import type { Block } from "./blocks.js";
 const table = Uint32Array.from({ length: 256 }, (_, i) => {
@@ -32,6 +33,17 @@ export function decodeBlockInto(
   if (fstart < 0 || fend > frequency.length)
     throw new Error("Invalid frequency block range");
   checksum(frequency, fstart, fend, block.crc);
+  const payload = frequency.subarray(fstart, fend);
+  if (decodePacked(payload, result, row, block.count)) {
+    if (
+      result.docs[row] !== block.first ||
+      result.docs[row + block.count - 1] !== block.last
+    )
+      throw new Error("Block skip boundary mismatch");
+    if (positions)
+      decodePositionsInto(positions, pstart, block, result, row, positionBase);
+    return;
+  }
   const f = frequency.subarray(fstart, fend),
     cursor = { i: 0 };
   if (
@@ -73,6 +85,37 @@ export function decodePositionsInto(
     throw new Error("Invalid position block range");
   checksum(positions, pstart, pend, block.positionCrc);
   const p = positions.subarray(pstart, pend);
+  const view = new DataView(p.buffer, p.byteOffset, p.byteLength);
+  if (p.length >= 12 && view.getUint32(0, true) === 0x37534f50) {
+    if (
+      view.getUint32(4, true) !== block.count ||
+      view.getUint32(8, true) !== block.crc
+    )
+      throw new Error("Frequency/position stream mismatch");
+    const cursor = { i: 12 },
+      lengths: number[] = [];
+    for (let i = 0; i < block.count; i++) lengths.push(readVarint(p, cursor));
+    result.positionEnds ??= new Uint32Array(
+      Math.ceil(result.docs.length / 256),
+    );
+    let offset = cursor.i;
+    for (let i = 0; i < block.count; i++) {
+      const len = lengths[i],
+        rowIndex = row + i;
+      if (
+        len < result.body[rowIndex] + result.title[rowIndex] ||
+        offset + len > p.length
+      )
+        throw new Error("Invalid position row length");
+      result.positionOffsets[rowIndex] = positionBase + pstart + offset;
+      offset += len;
+      if (i === block.count - 1)
+        result.positionEnds[Math.floor(rowIndex / 256)] =
+          positionBase + pstart + offset;
+    }
+    if (offset !== p.length) throw new Error("Trailing position data");
+    return;
+  }
   const cursor = { i: 0 };
   if (readVarint(p, cursor) !== block.count || cursor.i + 4 > p.length)
     throw new Error("Invalid position count");

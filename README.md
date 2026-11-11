@@ -86,7 +86,7 @@ A failed upload leaves the old Worker intact. A failed deployment may leave unre
 
 Cloudflare's [current limits](https://developers.cloudflare.com/workers/platform/limits/) checked November 11, 2026 list 64 MiB **uncompressed** Worker size, 128 MiB isolate memory, and 1 second startup. The default 8 MiB index leaves room for code, per-isolate runtime, and decoding. Configurable budgets up to 48 MiB are experiments, not a universal memory guarantee. Always inspect `npm run bundle` and validate startup on your account. Format v4 retains the compressed bundled document table using 32-document restart blocks, bit-packed length deltas, front-coded IDs and metadata pointer deltas. The million-document synthetic corpus now fits all benchmark budgets; less compressible IDs or lengths may still require more space. See the before/after benchmark report.
 
-Queries retrieve up to four remote ranges concurrently. A conservative working-set estimate rejects oversized queries rather than allocating unbounded typed arrays. Concurrent requests share an isolate and can still exhaust memory; large, common-term queries may exceed the Free plan's 10 ms CPU limit. Paid Workers are appropriate for that workload. Default queries enable block-max score pruning after decoding; explicit total=true queries score every matching candidate to compute exact counts. Adaptive v5 planning skips irrelevant posting blocks, and a bounded warm-isolate cache can retain complete verified postings. There is no pivot-WAND iterator. Metadata filters, root expansion/wildcards, automatic word variants, and incremental updates are not implemented. Position/phrase queries add storage and CPU costs; see [bench/SPLIT-POSTINGS.md](bench/SPLIT-POSTINGS.md).
+Queries retrieve up to four remote ranges concurrently. A conservative working-set estimate rejects oversized queries rather than allocating unbounded typed arrays. Concurrent requests share an isolate and can still exhaust memory; large, common-term queries may exceed the Free plan's 10 ms CPU limit. Paid Workers are appropriate for that workload. New v8 builds execute positive Boolean term queries through block cursors with persisted score bounds; other default queries use block-max score pruning after decoding; explicit total=true queries score every matching candidate to compute exact counts. Adaptive v5 planning skips irrelevant posting blocks, and a bounded warm-isolate cache can retain complete postings, block directories, decoded blocks and small remote ranges. There is no pivot-WAND iterator. Metadata filters, root expansion/wildcards, automatic word variants, and incremental updates are not implemented. Position/phrase queries add storage and CPU costs; see [bench/SPLIT-POSTINGS.md](bench/SPLIT-POSTINGS.md).
 
 ## Benchmarks and layout
 
@@ -129,3 +129,16 @@ The four remaining optimization experiments are implemented and measured in [ben
 Adaptive query planning is enabled by default. HTTP `total=false` is the default: exact top-K block-max score pruning omits the match count. Opt into exact totals with HTTP `total=true` or CLI `--total`; CLI `--no-total` remains supported for explicit count omission. This is score pruning after frequency decoding; it does not implement a pivot-WAND iterator or avoid all broad-list decoding. Initial score-bound construction costs CPU; warm calls can reuse bounds.
 
 The Worker retains up to `CACHE_MIB` MiB of complete verified decoded postings and score bounds (default 4, configurable 0–8; set 0 to disable). The cache is per warm isolate, scoped to immutable generations, and constrained by query memory headroom. Cache-cold queries and lists exceeding capacity still read/decode normally. Concurrent requests can still exhaust isolate memory even with a bounded cache.
+
+Seven further optimizations and their cumulative measurements: [bench/NEXT-OPTIMIZATIONS.md](bench/NEXT-OPTIMIZATIONS.md). New builds write v8; the Worker also reads v5–v7 generations. [docs/FORMAT.md](docs/FORMAT.md) documents the extensions. Reproduction commands:
+
+```sh
+# Existing benchmark fixture indexes are required; generate them with npm run bench.
+node --import tsx bench/next-prepare.ts
+for stage in 0 1 2 3 4 5 6 7; do node --import tsx bench/next.ts "$stage"; done
+node --import tsx bench/next-matrix.ts
+node --import tsx bench/next-worker.ts
+python3 bench/next-report.py
+```
+
+The new matrix converts existing immutable index streams offline, then reselects embedding within the original budgets. Conversion timings are not corpus-ingestion throughput. See the report for fixture preparation and cold/warm definitions.

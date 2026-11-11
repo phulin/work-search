@@ -1,3 +1,6 @@
+import { loadPosting } from "../src/query/load.js";
+import { postingPositions, crc32 } from "../src/format/codec.js";
+import { encodeBlocks } from "../src/format/blocks.js";
 // Offline benchmark utility: re-embed already-built immutable v5 streams without
 // rebuilding/tokenizing the same corpus. Each output has a distinct generation.
 import { readFile, mkdir, writeFile } from "node:fs/promises";
@@ -5,7 +8,12 @@ import { createWriteStream } from "node:fs";
 import { once } from "node:events";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
-import { BinaryIndex, buildBinary, LOCAL } from "../src/format/index.js";
+import {
+  BinaryIndex,
+  buildBinary,
+  LOCAL,
+  VERSION,
+} from "../src/format/index.js";
 import { selectPostings, selectStreams } from "../src/builder/selection.js";
 export async function repack(
   source: string,
@@ -13,6 +21,7 @@ export async function repack(
   budget: number,
   policy: "frequency" | "mixed",
   workload: string[],
+  upgrade = 0,
 ) {
   const started = performance.now(),
     bytes = await readFile(join(source, "bundle.bin")),
@@ -29,31 +38,12 @@ export async function repack(
     index.entry(i),
   );
   if (index.local > budget) throw new Error("Mandatory sections exceed budget");
-  const joint =
-    policy === "mixed"
-      ? selectStreams(entries, budget - index.local, workload)
-      : undefined;
-  const chosen =
-    joint?.frequencies ??
-    selectPostings(entries, budget - index.local, "workload", workload);
-  const fbytes = entries.reduce(
-    (s, e) => s + (chosen.has(e.term) ? e.length : 0),
-    0,
-  );
-  const pos =
-    joint?.positions ??
-    selectPostings(
-      entries
-        .filter((e) => chosen.has(e.term))
-        .map((e) => ({ term: e.term, length: e.positionLength })),
-      budget - index.local - fbytes,
-      "workload",
-      workload,
-    );
   const generation = createHash("sha256")
     .update(
       JSON.stringify({
-        repack: 1,
+        repack: 2,
+        upgrade,
+        format: upgrade ? VERSION : index.format,
         source: index.generation,
         budget,
         policy,
@@ -91,6 +81,59 @@ export async function repack(
   const payloads: { f: Uint8Array; p: Uint8Array }[] = [];
   for (const e of entries)
     payloads.push({ f: await stream(e, false), p: await stream(e, true) });
+  if (upgrade) {
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i],
+        payload = payloads[i];
+      const list = await loadPosting(e, true, async (_, p, offset, length) =>
+        (p ? payload.p : payload.f).subarray(offset, offset + length),
+      );
+      const rows = Array.from(list.docs, (doc, row) => {
+        const p = postingPositions(list, row);
+        return {
+          doc,
+          body: list.body[row],
+          title: list.title[row],
+          bodyPositions: [...p.body],
+          titlePositions: [...p.title],
+        };
+      });
+      const encoded = encodeBlocks(rows, {
+        packed: upgrade >= 7,
+        seekPositions: upgrade >= 5,
+        count: index.count,
+        avgBody: index.avgBody,
+        avgTitle: index.avgTitle,
+        lengths: (doc) => index.lengths(doc),
+      });
+      payloads[i] = { f: encoded.frequencies, p: encoded.positions };
+      e.length = encoded.frequencies.length;
+      e.crc = encoded.crc;
+      e.positionLength = encoded.positions.length;
+      e.positionCrc = crc32(encoded.positions);
+    }
+  }
+  const joint =
+    policy === "mixed"
+      ? selectStreams(entries, budget - index.local, workload)
+      : undefined;
+  const chosen =
+    joint?.frequencies ??
+    selectPostings(entries, budget - index.local, "workload", workload);
+  const fbytes = entries.reduce(
+    (s, e) => s + (chosen.has(e.term) ? e.length : 0),
+    0,
+  );
+  const pos =
+    joint?.positions ??
+    selectPostings(
+      entries
+        .filter((e) => chosen.has(e.term))
+        .map((e) => ({ term: e.term, length: e.positionLength })),
+      budget - index.local - fbytes,
+      "workload",
+      workload,
+    );
   const embedded: Uint8Array[] = [],
     objects: { key: string; size: number; sha256: string; kind: string }[] = [];
   let local = 0;
@@ -165,12 +208,24 @@ export async function repack(
     embedded,
     index.avgBody,
     index.avgTitle,
+    upgrade ? VERSION : index.format,
   );
   if (binary.length > budget) throw new Error("Budget overflow");
   await writeFile(join(out, "bundle.bin"), binary);
   const manifest = {
     ...sourceManifest,
+    format: upgrade ? VERSION : index.format,
     generation,
+    buildKind: upgrade
+      ? "Offline stream conversion"
+      : "Offline stream repacking",
+    buildMs: undefined,
+    frequencyBytes: entries.reduce((sum, e) => sum + e.length, 0),
+    positionBytes: entries.reduce((sum, e) => sum + e.positionLength, 0),
+    postingsBytes: entries.reduce(
+      (sum, e) => sum + e.length + e.positionLength,
+      0,
+    ),
     budget,
     strategy: policy === "mixed" ? "mixed" : "workload",
     embeddingPolicy: policy === "mixed" ? "joint-streams" : "frequencies-first",
@@ -199,7 +254,7 @@ export async function repack(
   };
 }
 if (process.argv[1]?.endsWith("/repack.ts")) {
-  const [source, out, budget, policy, file] = process.argv.slice(2);
+  const [source, out, budget, policy, file, upgrade] = process.argv.slice(2);
   console.log(
     JSON.stringify(
       await repack(
@@ -208,6 +263,7 @@ if (process.argv[1]?.endsWith("/repack.ts")) {
         Number(budget),
         policy as "frequency" | "mixed",
         (await readFile(file, "utf8")).split("\n").filter(Boolean),
+        Number(upgrade ?? 0),
       ),
     ),
   );

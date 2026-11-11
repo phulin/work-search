@@ -178,7 +178,7 @@ it("adaptive planning, deferred positions, caching and block-max pruning preserv
         runtime,
         limit: 7,
       });
-      expect(broad.diagnostics.prunedCandidates).toBeGreaterThan(0);
+      expect(broad.diagnostics.prunedCandidates + broad.diagnostics.skippedBlocks).toBeGreaterThan(0);
       const h = handler(index, store, true, runtime);
       const response = await h(
         new Request(

@@ -3,7 +3,7 @@ import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { build } from "../builder/build.js";
 import { generate } from "./generate.js";
-import { BinaryIndex, VERSION } from "../format/index.js";
+import { BinaryIndex, VERSION, SUPPORTED_VERSIONS } from "../format/index.js";
 import { FileStorage } from "../storage/filesystem.js";
 import { search } from "../query/engine.js";
 import { upload } from "./upload.js";
@@ -27,7 +27,8 @@ async function manifest() {
   const { createHash } = await import("node:crypto");
   const binary = await readFile(join(out, "bundle.bin"));
   if (
-    m.format !== VERSION ||
+    !SUPPORTED_VERSIONS.includes(m.format) ||
+    new BinaryIndex(binary).format !== m.format ||
     createHash("sha256").update(binary).digest("hex") !== m.bundleSha256 ||
     new BinaryIndex(binary).generation !== m.generation
   )

@@ -58,6 +58,7 @@ export function postingSize(l: DecodedPostings) {
     l.title.byteLength +
     l.bytes.byteLength +
     (l.positionOffsets?.byteLength ?? 0) +
+    (l.positionEnds?.byteLength ?? 0) +
     (l.blocks?.length ?? 0) * 128 +
     (l.blockRows?.byteLength ?? 0)
   );

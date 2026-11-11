@@ -88,14 +88,14 @@ export async function loadPosting(
     e,
     false,
     0,
-    sparse ? directoryLength(e.df) : e.length,
+    sparse ? directoryLength(e.df, e.format) : e.length,
   );
   const [frequency, eagerPositions] = await Promise.all([
     frequencyPromise,
     fullPositions,
   ]);
   const blocks = decodeDirectory(
-    frequency.subarray(0, directoryLength(e.df)),
+    frequency.subarray(0, directoryLength(e.df, e.format)),
     e.df,
     e.length,
     e.positionLength,
@@ -266,7 +266,11 @@ export async function attachCandidatePositions(
   read: Read,
   candidates: Uint32Array,
 ): Promise<DecodedPostings> {
-  const result = { ...list, positionsComplete: false };
+  const result = {
+    ...list,
+    positionEnds: undefined as Uint32Array | undefined,
+    positionsComplete: false,
+  };
   if (!candidates.length) {
     result.bytes = new Uint8Array(0);
     result.positionOffsets = new Uint32Array(list.docs.length);

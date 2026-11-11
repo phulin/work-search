@@ -91,6 +91,7 @@ export interface DecodedPostings {
   title: Uint32Array;
   bytes: Uint8Array;
   positionOffsets?: Uint32Array;
+  positionEnds?: Uint32Array;
 }
 export function decodePostings(
   b: Uint8Array,
@@ -140,7 +141,15 @@ export function postingPositions(
 ): { body: Uint32Array; title: Uint32Array } {
   if (!list.positionOffsets || row < 0 || row >= list.docs.length)
     throw new Error("Positions unavailable");
-  const p = { i: list.positionOffsets[row] };
+  const bytes = list.positionEnds
+    ? list.bytes.subarray(
+        list.positionOffsets[row],
+        row % 256 === 255 || row === list.docs.length - 1
+          ? list.positionEnds[Math.floor(row / 256)]
+          : list.positionOffsets[row + 1],
+      )
+    : list.bytes;
+  const p = { i: list.positionEnds ? 0 : list.positionOffsets[row] };
   const result = {
     body: new Uint32Array(list.body[row]),
     title: new Uint32Array(list.title[row]),
@@ -148,10 +157,15 @@ export function postingPositions(
   for (const field of [result.body, result.title]) {
     let value = 0;
     for (let i = 0; i < field.length; i++) {
-      value += readVarint(list.bytes, p);
+      const delta = readVarint(bytes, p);
+      if (i && !delta) throw new Error("Unsorted positions");
+      value += delta;
+      if (value > 0xffffffff) throw new Error("Position overflow");
       field[i] = value;
     }
   }
+  if (list.positionEnds && p.i !== bytes.length)
+    throw new Error("Trailing position data");
   return result;
 }
 

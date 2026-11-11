@@ -197,7 +197,7 @@ it("corrupt positional descriptors do not affect frequency-only execution", asyn
   ).toBe(3);
   await expect(
     search(corrupt, storage, '"red fox"', { exactTotal: true }),
-  ).rejects.toThrow("memory budget");
+  ).rejects.toThrow(/memory budget|Invalid local range/);
 });
 it("also supports local positions paired with remote frequencies", async () => {
   const out = join(root, "reverse-placement");

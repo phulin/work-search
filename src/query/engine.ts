@@ -1,3 +1,4 @@
+import { blockEligible, searchBlocks } from "./block-search.js";
 import { candidatePlan } from "./planning.js";
 import { lowerBound } from "./sets.js";
 import { SearchRuntime, postingSize } from "./runtime.js";
@@ -85,6 +86,9 @@ export interface SearchOptions {
   exactTotal?: boolean;
   planning?: "legacy" | "adaptive";
   runtime?: SearchRuntime;
+  blockCache?: boolean;
+  /** Internal cumulative benchmark switch; HTTP does not expose this. */
+  optimizationStage?: number;
 }
 export async function search(
   index: BinaryIndex,
@@ -93,6 +97,7 @@ export async function search(
   options: SearchOptions = {},
   skipBlocks = true,
 ) {
+  const stage = options.optimizationStage ?? 7;
   const exactTotal = options.exactTotal === true;
   const start = performance.now(),
     original = parse(q, options.mode ?? "and"),
@@ -135,6 +140,7 @@ export async function search(
     scoredDocuments: 0,
     prunedCandidates: 0,
     deferredPositions: false,
+    skippedBlocks: 0,
   };
   if (ast.kind === "empty")
     return {
@@ -144,23 +150,52 @@ export async function search(
     };
   const entries = found.filter((x) => x !== undefined),
     fetchStart = performance.now();
-  const workingBytes =
-    entries.reduce(
-      (s, e) =>
-        s +
-        e.length +
-        e.df * 20 +
-        (positionTerms.has(e.term) ? e.positionLength + e.df * 4 : 0),
-      0,
-    ) + (needsUniverse(ast) ? index.count * 8 : 0);
+  const streaming =
+    stage >= 4 &&
+    skipBlocks &&
+    index.format >= 6 &&
+    !exactTotal &&
+    !options.metadata &&
+    blockEligible(ast) &&
+    entries.some((e) => e.df > 256);
+  const workingBytes = streaming
+    ? entries.reduce(
+        (sum, e) =>
+          sum +
+          (e.object === LOCAL ? 65536 : e.length) +
+          Math.ceil(e.df / 256) * 180 +
+          4096,
+        0,
+      )
+    : entries.reduce(
+        (s, e) =>
+          s +
+          (e.object === LOCAL ? 0 : e.length) +
+          e.df * (exactTotal ? 20 : 16) +
+          (positionTerms.has(e.term)
+            ? (e.positionObject === LOCAL ? 0 : e.positionLength) +
+              e.df * 4 +
+              (index.format >= 7 ? Math.ceil(e.df / 256) * 4 : 0)
+            : 0),
+        0,
+      ) + (needsUniverse(ast) ? index.count * 8 : 0);
   if (
     workingBytes >
     Math.min(56 * 1024 * 1024, 104 * 1024 * 1024 - index.bytes.length)
   )
     throw new Error("Query working set exceeds memory budget");
   // All phases share one four-read semaphore, including parallel block streams.
-  let active = 0;
+  let active = 0,
+    networkActive = 0,
+    networkStart = 0,
+    networkMs = 0;
   const waiters: (() => void)[] = [];
+  const runtime = options.runtime;
+  const memoryHeadroom = Math.max(
+    0,
+    104 * 1024 * 1024 - index.bytes.length - workingBytes,
+  );
+  runtime?.setLimit(memoryHeadroom);
   const read = async (
     e: (typeof entries)[number],
     positions: boolean,
@@ -175,9 +210,27 @@ export async function search(
         throw new Error("Invalid local range");
       return index.bytes.subarray(start, start + length);
     }
+    const rangeKey = JSON.stringify([
+      index.generation,
+      "range",
+      positions ? e.positionCrc : e.crc,
+      object,
+      positions,
+      offset,
+      length,
+    ]);
+    const cached =
+      stage >= 6 && options.blockCache !== false
+        ? runtime?.get<Uint8Array>(rangeKey)
+        : undefined;
+    if (cached) {
+      diagnostics.postingCacheHits++;
+      return cached;
+    }
     if (active >= 4)
       await new Promise<void>((resolve) => waiters.push(resolve));
     else active++;
+    if (networkActive++ === 0) networkStart = performance.now();
     try {
       diagnostics.indexRequests++;
       diagnostics.indexBytes += length;
@@ -188,23 +241,53 @@ export async function search(
         diagnostics.frequencyRequests++;
         diagnostics.frequencyBytes += length;
       }
-      return await storage.read(
+      const bytes = await storage.read(
         index.key(object, positions ? "positions" : "frequencies"),
         offset,
         length,
       );
+      if (stage >= 6 && options.blockCache !== false && length <= 262144)
+        runtime?.set(rangeKey, bytes, bytes.byteLength);
+      return bytes;
     } finally {
+      if (--networkActive === 0) networkMs += performance.now() - networkStart;
       const next = waiters.shift();
       if (next) next();
       else active--;
     }
   };
-  const runtime = options.runtime;
-  const memoryHeadroom = Math.max(
-    0,
-    104 * 1024 * 1024 - index.bytes.length - workingBytes,
-  );
-  runtime?.setLimit(memoryHeadroom);
+  if (streaming) {
+    const heap = new TopK(limit);
+    const execution = performance.now();
+    const stats = await searchBlocks(
+      index,
+      entries,
+      ast,
+      read,
+      heap,
+      limit,
+      options.field ?? "all",
+      boost,
+      stage >= 6 && options.blockCache !== false ? runtime : undefined,
+    );
+    diagnostics.scoredDocuments = stats.scored;
+    diagnostics.skippedBlocks = stats.skippedBlocks;
+    diagnostics.cacheBytes = runtime?.bytes ?? 0;
+    diagnostics.fetchMs = networkMs;
+    diagnostics.scoreMs = Math.max(
+      0,
+      performance.now() - execution - networkMs,
+    );
+    diagnostics.fullyLocal = diagnostics.indexRequests === 0;
+    const results = heap.heap
+      .sort((a, b) => b.score - a.score || a.doc - b.doc)
+      .map((h) => ({ id: index.document(h.doc).id, score: h.score }));
+    return {
+      results: results as Omit<Hit, "doc">[],
+      ...(exactTotal ? { total: 0 } : {}),
+      diagnostics,
+    };
+  }
   const adaptive = options.planning !== "legacy";
   const cacheKey = (e: (typeof entries)[number], positions: boolean) =>
     JSON.stringify([
@@ -367,7 +450,17 @@ export async function search(
     avgBody = index.avgBody || 1,
     avgTitle = index.avgTitle || 1;
   const boundsStart = performance.now();
-  const bounds = !exactTotal
+  // Building bounds scans every posting; direct scoring wins on small or
+  // very selective candidate sets. Cached bounds remain cheap for larger sets.
+  const boundRows = scoringTerms.reduce(
+    (sum, term) => sum + term.list.docs.length,
+    0,
+  );
+  const useBounds =
+    !exactTotal &&
+    (stage < 3 ||
+      (candidates.length >= 1024 && boundRows <= candidates.length * 8));
+  const bounds = useBounds
     ? scoringTerms.map((term) => {
         const e = entries.find((e) => e.term === term.term)!;
         const result = scoreBounds(index, e, term.list, term.idf, runtime);
@@ -413,7 +506,7 @@ export async function search(
         continue;
       }
     }
-    if (match && !match(doc)) continue;
+    if (stage < 2 && match && !match(doc)) continue;
     diagnostics.scoredDocuments++;
     if (doc >= index.count) throw new Error("Posting document out of range");
     const d = index.lengths(doc, lengths),
@@ -424,7 +517,14 @@ export async function search(
       const term = scoringTerms[j],
         l = term.list;
       let p = term.cursor;
-      while (p < l.docs.length && l.docs[p] < doc) p++;
+      let steps = 0;
+      while (
+        p < l.docs.length &&
+        l.docs[p] < doc &&
+        steps++ < (stage >= 1 ? 8 : Infinity)
+      )
+        p++;
+      if (p < l.docs.length && l.docs[p] < doc) p = lowerBound(l.docs, doc, p);
       term.cursor = p;
       if (l.docs[p] !== doc) continue;
       const body = l.body[p],
@@ -433,6 +533,16 @@ export async function search(
         score += (term.idf * (body * 2.2)) / (body + bodyNorm);
       if (titleEnabled && title)
         score += boost * ((term.idf * (title * 2.2)) / (title + titleNorm));
+    }
+    if (stage >= 2 && match) {
+      const threshold = heap.heap.length === limit ? heap.heap[0] : undefined;
+      if (
+        threshold &&
+        (score < threshold.score ||
+          (score === threshold.score && doc > threshold.doc))
+      )
+        continue;
+      if (!match(doc)) continue;
     }
     heap.add(doc, score);
   }

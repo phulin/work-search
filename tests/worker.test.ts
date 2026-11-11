@@ -76,6 +76,15 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
       const json = (await res.json()) as any;
       expect(json.results[0].id).toBe("remote");
       expect(json.diagnostics.indexRequests).toBe(name === "full" ? 0 : 1);
+      const ranked = await mf.dispatchFetch(
+        "https://test/search?q=common&limit=7&diagnostics=true",
+      );
+      expect(ranked.status).toBe(200);
+      const rankedBody = (await ranked.json()) as any;
+      expect(rankedBody).not.toHaveProperty("total");
+      expect(rankedBody.results).toHaveLength(7);
+      expect(rankedBody.diagnostics.positionRequests).toBe(0);
+      expect(rankedBody.diagnostics.skippedBlocks).toBeGreaterThan(0);
       for (const [q, total] of [
         ['"unique common"', 1],
         ["unique /1 common", 1],

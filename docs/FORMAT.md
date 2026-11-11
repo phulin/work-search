@@ -1,4 +1,4 @@
-# Binary format v5
+# Binary formats: v5 base, v8 current
 
 All fixed integers are unsigned little-endian u32; offsets are bytes. Objects and individual sections must fit u32. The index file is at most the configured budget (up to 48 MiB). UTF-8 strings have no terminator. Dictionary order is JavaScript UTF-16 lexicographic order, not UTF-8 byte order. Readers/writers must use that comparator.
 
@@ -111,3 +111,40 @@ Frequency block payloads follow the directory and each use the small-list freque
 The term dictionary still fully specifies objects/ranges locally. A remote block directory is read as a prefix range of that term's frequency payload, not a remote term lookup. Its size is computable from df. Full scans read it together with payload in one range. Sparse plans fetch it before choosing ranges. All directory bytes count toward index storage and, when local, the configured bundle budget. No per-block R2 objects are created.
 
 The planner derives terms obligatory for every result (AND/proximity unions, OR intersection, left side of exclusion, no required term under NOT). If one term is more than eight times rarer than a large peer, it is decoded first as an anchor. Longer lists seek the anchor's sorted IDs against block endpoints, skipping nonoverlapping ranges. To limit R2 requests, fragmented selections are read through at most four contiguous windows per term stream, but only selected blocks are decoded/checksummed. This may transfer intervening unneeded bytes. All reads share one four-request concurrency bound. General OR/NOT expressions with no obligatory anchor retain exhaustive exact evaluation. Exact totals and BM25 scores are preserved.
+
+## v6–v8 extensions (current writer: v8)
+
+The current Worker reads complete v5, v6, v7 and v8 generations; it never mixes
+objects across generations. The production builder now writes v8. Rebuild to
+adopt the new encodings. The header, term descriptors and compressed document
+sections retain their layouts; the header version identifies the blocked layout.
+
+For v6 onward, lists over 256 documents have a 16-byte directory header with magic
+`0x364b4c42` and 52-byte entries. The first 36 bytes retain the v5 geometry and
+checksums. Bytes 36 and 44 hold little-endian f64 body/title BM25 maxima, without
+title boosting. They are computed offline using the exact serving arithmetic,
+corpus statistics and term df. The directory CRC covers the impacts. Independently
+maximized fields remain conservative for every supported field/boost combination.
+Every extra directory byte consumes the configured bundle budget.
+
+V7 adds optional seekable positional blocks: u32 magic `0x37534f50`, u32 row count,
+u32 bound frequency-block CRC, then one canonical u32 varint byte length per row,
+then the original concatenated positional gap bytes. The block CRC covers all
+bytes; lengths must exactly partition the payload. Loading verifies CRC, geometry,
+frequency binding and row lengths. Canonical positional gaps, ordering, overflow
+and exact row exhaustion are checked when that row is accessed. Skipped rows are
+not semantically decoded. The decoder retains one u32 end per block, reusing the
+existing per-row start offsets. This avoids a second full document-sized array.
+The builder uses this encoding only when a block averages more than four positions
+per row; sparse positional blocks keep the smaller legacy encoding.
+
+V8 adds optional packed frequency blocks: u32 magic `0x38465250`, u32 row count,
+u32 first document ID, followed by three column encodings (document gaps, body tf,
+title tf). Each column starts with a byte: 0–32 means that many little-endian bits
+per value; 64 means one constant u32. The first gap is ignored because the first
+document ID is in the header; subsequent gaps must be positive. Constant document
+gaps represent arithmetic runs without storing individual IDs. Constant frequency
+columns use typed-array fills. Decoders check bounds, ordering, overflow, nonempty
+frequencies, exact byte exhaustion and directory endpoints. The encoder picks the
+smaller of packed and canonical-varint blocks, including all headers; v5 frequency
+blocks and positional blocks remain valid within the extended directory.

@@ -1,0 +1,242 @@
+[
+  {
+    "docs": 10000,
+    "budgetMiB": 8,
+    "policy": "frequency",
+    "bundleBytes": 3014083,
+    "frequencyBytes": 1405437,
+    "positionBytes": 572727,
+    "dictionaryBytes": 973950,
+    "totalStoredBytes": 3829863
+  },
+  {
+    "docs": 10000,
+    "budgetMiB": 8,
+    "policy": "mixed",
+    "bundleBytes": 3014083,
+    "frequencyBytes": 1405437,
+    "positionBytes": 572727,
+    "dictionaryBytes": 973950,
+    "totalStoredBytes": 3829863
+  },
+  {
+    "docs": 10000,
+    "budgetMiB": 16,
+    "policy": "frequency",
+    "bundleBytes": 3014083,
+    "frequencyBytes": 1405437,
+    "positionBytes": 572727,
+    "dictionaryBytes": 973950,
+    "totalStoredBytes": 3829863
+  },
+  {
+    "docs": 10000,
+    "budgetMiB": 16,
+    "policy": "mixed",
+    "bundleBytes": 3014083,
+    "frequencyBytes": 1405437,
+    "positionBytes": 572727,
+    "dictionaryBytes": 973950,
+    "totalStoredBytes": 3829863
+  },
+  {
+    "docs": 10000,
+    "budgetMiB": 32,
+    "policy": "frequency",
+    "bundleBytes": 3014083,
+    "frequencyBytes": 1405437,
+    "positionBytes": 572727,
+    "dictionaryBytes": 973950,
+    "totalStoredBytes": 3829863
+  },
+  {
+    "docs": 10000,
+    "budgetMiB": 32,
+    "policy": "mixed",
+    "bundleBytes": 3014083,
+    "frequencyBytes": 1405437,
+    "positionBytes": 572727,
+    "dictionaryBytes": 973950,
+    "totalStoredBytes": 3829863
+  },
+  {
+    "docs": 10000,
+    "budgetMiB": 48,
+    "policy": "frequency",
+    "bundleBytes": 3014083,
+    "frequencyBytes": 1405437,
+    "positionBytes": 572727,
+    "dictionaryBytes": 973950,
+    "totalStoredBytes": 3829863
+  },
+  {
+    "docs": 10000,
+    "budgetMiB": 48,
+    "policy": "mixed",
+    "bundleBytes": 3014083,
+    "frequencyBytes": 1405437,
+    "positionBytes": 572727,
+    "dictionaryBytes": 973950,
+    "totalStoredBytes": 3829863
+  },
+  {
+    "docs": 100000,
+    "budgetMiB": 8,
+    "policy": "frequency",
+    "bundleBytes": 8388599,
+    "frequencyBytes": 11496321,
+    "positionBytes": 4858057,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 26264413
+  },
+  {
+    "docs": 100000,
+    "budgetMiB": 8,
+    "policy": "mixed",
+    "bundleBytes": 8388440,
+    "frequencyBytes": 11496321,
+    "positionBytes": 4858057,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 26264413
+  },
+  {
+    "docs": 100000,
+    "budgetMiB": 16,
+    "policy": "frequency",
+    "bundleBytes": 16777120,
+    "frequencyBytes": 11496321,
+    "positionBytes": 4858057,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 26264413
+  },
+  {
+    "docs": 100000,
+    "budgetMiB": 16,
+    "policy": "mixed",
+    "bundleBytes": 16775729,
+    "frequencyBytes": 11496321,
+    "positionBytes": 4858057,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 26264413
+  },
+  {
+    "docs": 100000,
+    "budgetMiB": 32,
+    "policy": "frequency",
+    "bundleBytes": 17951073,
+    "frequencyBytes": 11496321,
+    "positionBytes": 4858057,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 26264413
+  },
+  {
+    "docs": 100000,
+    "budgetMiB": 32,
+    "policy": "mixed",
+    "bundleBytes": 17951073,
+    "frequencyBytes": 11496321,
+    "positionBytes": 4858057,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 26264413
+  },
+  {
+    "docs": 100000,
+    "budgetMiB": 48,
+    "policy": "frequency",
+    "bundleBytes": 17951073,
+    "frequencyBytes": 11496321,
+    "positionBytes": 4858057,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 26264413
+  },
+  {
+    "docs": 100000,
+    "budgetMiB": 48,
+    "policy": "mixed",
+    "bundleBytes": 17951073,
+    "frequencyBytes": 11496321,
+    "positionBytes": 4858057,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 26264413
+  },
+  {
+    "docs": 1000000,
+    "budgetMiB": 8,
+    "policy": "frequency",
+    "bundleBytes": 8388149,
+    "frequencyBytes": 79438940,
+    "positionBytes": 48104449,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 218907071
+  },
+  {
+    "docs": 1000000,
+    "budgetMiB": 8,
+    "policy": "mixed",
+    "bundleBytes": 8388006,
+    "frequencyBytes": 79438940,
+    "positionBytes": 48104449,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 218907071
+  },
+  {
+    "docs": 1000000,
+    "budgetMiB": 16,
+    "policy": "frequency",
+    "bundleBytes": 16776870,
+    "frequencyBytes": 79438940,
+    "positionBytes": 48104449,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 218907071
+  },
+  {
+    "docs": 1000000,
+    "budgetMiB": 16,
+    "policy": "mixed",
+    "bundleBytes": 16777022,
+    "frequencyBytes": 79438940,
+    "positionBytes": 48104449,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 218907071
+  },
+  {
+    "docs": 1000000,
+    "budgetMiB": 32,
+    "policy": "frequency",
+    "bundleBytes": 33554401,
+    "frequencyBytes": 79438940,
+    "positionBytes": 48104449,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 218907071
+  },
+  {
+    "docs": 1000000,
+    "budgetMiB": 32,
+    "policy": "mixed",
+    "bundleBytes": 33552715,
+    "frequencyBytes": 79438940,
+    "positionBytes": 48104449,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 218907071
+  },
+  {
+    "docs": 1000000,
+    "budgetMiB": 48,
+    "policy": "frequency",
+    "bundleBytes": 50331637,
+    "frequencyBytes": 79438940,
+    "positionBytes": 48104449,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 218907071
+  },
+  {
+    "docs": 1000000,
+    "budgetMiB": 48,
+    "policy": "mixed",
+    "bundleBytes": 50329600,
+    "frequencyBytes": 79438940,
+    "positionBytes": 48104449,
+    "dictionaryBytes": 974195,
+    "totalStoredBytes": 218907071
+  }
+]

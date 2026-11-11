@@ -1,11 +1,13 @@
 import { decoder, encoder } from "./codec.js";
 import { DocumentTable } from "./documents.js";
 export const MAGIC = 0x31535742,
-  VERSION = 5,
+  VERSION = 8,
   HEADER = 128,
   TERM = 40,
   LOCAL = 0xffffffff;
+export const SUPPORTED_VERSIONS = [5, 6, 7, VERSION];
 export interface Entry {
+  format?: number;
   term: string;
   df: number;
   object: number;
@@ -18,6 +20,7 @@ export interface Entry {
   positionCrc: number;
 }
 export class BinaryIndex {
+  readonly format: number;
   readonly bytes: Uint8Array;
   readonly view: DataView;
   readonly count: number;
@@ -37,11 +40,12 @@ export class BinaryIndex {
     if (
       bytes.length < HEADER ||
       v.getUint32(0, true) !== MAGIC ||
-      v.getUint32(4, true) !== VERSION
+      !SUPPORTED_VERSIONS.includes(v.getUint32(4, true))
     )
       throw new Error("Index magic/version mismatch");
     if (v.getUint32(8, true) !== bytes.length)
       throw new Error("Index length mismatch");
+    this.format = v.getUint32(4, true);
     this.count = v.getUint32(12, true);
     this.termCount = v.getUint32(16, true);
     this.avgBody = v.getFloat64(24, true);
@@ -79,6 +83,7 @@ export class BinaryIndex {
     if (s > e || this.strings + e > this.docs)
       throw new Error("Invalid dictionary");
     return {
+      format: this.format,
       term: decoder.decode(
         this.bytes.subarray(this.strings + s, this.strings + e),
       ),
@@ -122,6 +127,7 @@ export function buildBinary(
   embedded: Uint8Array[],
   avgBody: number,
   avgTitle: number,
+  format = VERSION,
 ) {
   const terms = entries.map((e) => encoder.encode(e.term));
   const strings = HEADER + entries.length * TERM,
@@ -131,7 +137,7 @@ export function buildBinary(
     v = new DataView(b.buffer);
   for (const [p, n] of [
     [0, MAGIC],
-    [4, VERSION],
+    [4, format],
     [8, b.length],
     [12, documentCount],
     [16, entries.length],

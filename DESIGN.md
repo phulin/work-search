@@ -43,3 +43,37 @@ The v5 index bytes and budgets remain unchanged. Full-list scans bypass sparse s
 - `total=false` enables exact top-K block-max score pruning after frequency decoding. Maxima are built lazily in 1,024-document windows and use exactly the scorer's arithmetic order. Independent body/title maxima permit configurable boosts and fields without underestimating. This is not pivot-WAND and does not skip frequency decoding; cold bound construction is an explicit cost. Exact totals require explicit total=true; otherwise totals are omitted. Equal-score skips preserve input-order ties; positional matching is delayed until a candidate survives score bounds.
 - `SearchRuntime` is a weighted LRU (Worker default 4 MiB; 0–8 configurable) shared by complete verified decoded postings and score maxima. Generation/CRC-scoped keys prevent mixing generations; incomplete positional lists are never stored as complete. Request cursors and attachments stay private. Oversized entries are rejected; conservative query headroom can lower the cache ceiling. The configured capacity is a retained-cache bound, not a guarantee for concurrent search working sets. No arrays are expanded at Worker startup.
 - Benchmarks separately measure placement, planning, cache-cold/warm and pruning-cold/warm cases. Identical encoded v5 streams are repacked for policy comparisons; repacking is not reported as document-index throughput. Query-process RSS includes multiple reference index fixtures, so it is not isolate memory. See bench/REMAINING-OPTIMIZATIONS.md.
+
+## Seven sequential execution/index experiments
+
+- Scoring cursors now switch from eight sequential steps to galloping seeks.
+  With no exact total, documents that cannot beat the heap skip positional
+  verification after scoring; only verified hits enter the heap. Sparse candidate
+  sets bypass the runtime bound-building scan (threshold 1,024 and at most 8x
+  posting/candidate ratio).
+- New v8 builds persist separate exact body/title impacts in 52-byte directories.
+  Positive Boolean term trees use bounded block cursors and safe block-max
+  skipping. AND trees align cursors; OR/mixed positive trees enumerate their union
+  and evaluate the Boolean predicate. This is not pivot-WAND. Phrases, negation,
+  metadata requests and exact-total queries retain the established executor.
+  Broad remote frequency streams deliberately use one read: current streaming
+  primarily avoids decoding/allocation, not remote bytes. Local streams use views
+  and bounded read-ahead. A full candidate array is not constructed by this path.
+- Optional dense-position seek tables avoid a semantic scan of every position.
+  CRC/binding/geometry remain eager; accessed rows get semantic validation. Sparse
+  positions retain varints because the initial always-on experiment regressed.
+- The same bounded LRU now admits directories, verified decoded blocks and remote
+  ranges up to 256 KiB. Local decoded lists whose full size exceeds half the cache
+  are excluded to avoid scan pollution. Remote block misses fall back to one full
+  frequency read to avoid request amplification; hot retained blocks can avoid it.
+  Generation/checksum-scoped keys and private cursors preserve request isolation.
+- Packed/constant frequency columns compete against legacy varints per block.
+  Constant document gaps represent runs; zero/constant title and body columns avoid
+  storing repeated values. All format overhead counts against the same budgets.
+  Scalar decoding can still lose CPU on irregular distributions; smaller bytes do
+  not guarantee faster execution. No phrase accelerators were added.
+- Current readers support v5–v8. The builder writes v8; deployment verifies the
+  manifest format and exact generation. Internal optimizationStage is a benchmark
+  switch only, never an HTTP option. See bench/NEXT-OPTIMIZATIONS.md for sequential
+  measurements and limitations. Cache capacity still does not bound simultaneous
+  query working sets across an isolate.
