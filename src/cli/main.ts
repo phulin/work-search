@@ -3,7 +3,7 @@ import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { build } from "../builder/build.js";
 import { generate } from "./generate.js";
-import { BinaryIndex } from "../format/index.js";
+import { BinaryIndex, VERSION } from "../format/index.js";
 import { FileStorage } from "../storage/filesystem.js";
 import { search } from "../query/engine.js";
 import { upload } from "./upload.js";
@@ -27,6 +27,7 @@ async function manifest() {
   const { createHash } = await import("node:crypto");
   const binary = await readFile(join(out, "bundle.bin"));
   if (
+    m.format !== VERSION ||
     createHash("sha256").update(binary).digest("hex") !== m.bundleSha256 ||
     new BinaryIndex(binary).generation !== m.generation
   )
@@ -86,7 +87,7 @@ try {
         2,
       ),
     );
-  } else if (command === "seed" || command === "deploy") {
+  } else if (command === "seed" || command === "deploy" || command === "dev") {
     const m = await manifest(),
       remote = command === "deploy";
     if (remote) await upload(out, arg("bucket", "worker-search-index"), m);
@@ -109,10 +110,13 @@ try {
     }
     await copyFile(join(out, "bundle.bin"), "data/bundle.bin");
     if (remote) wrangler(["deploy"]);
+    else if (command === "dev") wrangler(["dev"]);
   } else if (command === "verify") {
     console.log((await manifest()).generation);
   } else
-    throw new Error("Commands: generate, build, search, seed, deploy, verify");
+    throw new Error(
+      "Commands: generate, build, search, seed, dev, deploy, verify",
+    );
 } catch (e) {
   console.error(e instanceof Error ? e.message : e);
   process.exitCode = 1;

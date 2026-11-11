@@ -22,8 +22,9 @@ for (const name of [
   "10000-8-smallest",
   "100000-8-smallest",
   "100000-8-workload",
-  "1000000-48-smallest",
-  "1000000-48-workload",
+  ...[8, 16, 32, 48].flatMap((budget) =>
+    ["smallest", "workload"].map((strategy) => `1000000-${budget}-${strategy}`),
+  ),
 ]) {
   const out = join("bench/generated", name),
     m = JSON.parse(await readFile(join(out, "manifest.json"), "utf8")),

@@ -24,10 +24,11 @@ import {
   buildBinary,
   HEADER,
   TERM,
-  DOC,
   LOCAL,
+  VERSION,
   type Entry,
 } from "../format/index.js";
+import { encodeDocuments } from "../format/documents.js";
 import { selectPostings } from "./selection.js";
 export interface BuildOptions {
   input: string;
@@ -137,7 +138,7 @@ export async function build(options: BuildOptions) {
   try {
     const hash = createHash("sha256").update(
       JSON.stringify({
-        version: 1,
+        version: VERSION,
         budget,
         strategy,
         workload: options.workload ?? [],
@@ -300,12 +301,12 @@ export async function build(options: BuildOptions) {
     }
     await emit();
     await finish(spool);
+    const compressedDocuments = encodeDocuments(documents);
     const baseBytes =
       HEADER +
       entries.length * TERM +
       entries.reduce((s, e) => s + encoder.encode(e.term).length, 0) +
-      documents.length * DOC +
-      documents.reduce((s, d) => s + encoder.encode(d.id).length, 0);
+      compressedDocuments.length;
     if (baseBytes > budget)
       throw new Error(
         `Required dictionary/doc tables ${baseBytes} bytes exceed bundle budget ${budget}`,
@@ -383,14 +384,15 @@ export async function build(options: BuildOptions) {
     const binary = buildBinary(
       generation,
       entries,
-      documents,
+      compressedDocuments,
+      documents.length,
       embedded,
       documents.length ? bodySum / documents.length : 0,
       documents.length ? titleSum / documents.length : 0,
     );
     await writeFile(join(options.out, "bundle.bin"), binary);
     const manifest = {
-      format: 1,
+      format: VERSION,
       generation,
       documents: documents.length,
       terms: entries.length,
@@ -406,6 +408,9 @@ export async function build(options: BuildOptions) {
         HEADER -
         entries.length * TERM -
         entries.reduce((s, e) => s + encoder.encode(e.term).length, 0),
+      documentTableUncompressedBytes:
+        documents.length * 24 +
+        documents.reduce((s, d) => s + encoder.encode(d.id).length, 0),
       postingsBytes: spoolOffset,
       embeddedBytes: localOffset,
       embeddedTerms: chosen.size,

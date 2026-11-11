@@ -162,11 +162,7 @@ export async function search(
     heap = new TopK(limit);
   for (const doc of candidates) {
     if (doc >= index.count) throw new Error("Posting document out of range");
-    const p = index.docs + doc * 24,
-      d = {
-        body: index.view.getUint32(p + 4, true),
-        title: index.view.getUint32(p + 8, true),
-      };
+    const d = index.lengths(doc);
     let score = 0;
     lists.forEach((l, j) => {
       let p = cursors[j];

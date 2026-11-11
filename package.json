@@ -10,11 +10,11 @@
     "generate-sample": "tsx src/cli/main.ts generate --count 100",
     "build-index": "tsx src/cli/main.ts build",
     "search-local": "tsx src/cli/main.ts search",
-    "dev": "tsx src/cli/main.ts seed && wrangler dev",
+    "dev": "tsx src/cli/main.ts dev",
     "deploy": "tsx src/cli/main.ts deploy",
     "check": "tsc --noEmit",
     "test": "vitest run",
-    "bench": "tsx bench/run.ts",
+    "bench": "tsx bench/run.ts && tsx bench/details.ts && tsx bench/compare.ts",
     "bundle": "wrangler deploy --dry-run --outdir dist"
   },
   "devDependencies": {

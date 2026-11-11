@@ -10,7 +10,7 @@ import {
   decodePostings,
   crc32,
 } from "../src/format/codec.js";
-import { BinaryIndex, LOCAL } from "../src/format/index.js";
+import { BinaryIndex, LOCAL, VERSION } from "../src/format/index.js";
 import { build } from "../src/builder/build.js";
 import { selectPostings } from "../src/builder/selection.js";
 import { FileStorage } from "../src/storage/filesystem.js";
@@ -211,7 +211,7 @@ describe("engine and builder", () => {
     const bytes = index.bytes.slice();
     bytes[4] = 99;
     expect(() => new BinaryIndex(bytes)).toThrow();
-    bytes[4] = 1;
+    bytes[4] = VERSION;
     const e = index.lookup("red")!;
     bytes[index.local + e.offset] ^= 1;
     await expect(search(new BinaryIndex(bytes), store, "red")).rejects.toThrow(

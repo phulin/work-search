@@ -1,9 +1,9 @@
 import { decoder, encoder } from "./codec.js";
+import { DocumentTable } from "./documents.js";
 export const MAGIC = 0x31535742,
-  VERSION = 1,
+  VERSION = 2,
   HEADER = 128,
   TERM = 28,
-  DOC = 24,
   LOCAL = 0xffffffff;
 export interface Entry {
   term: string;
@@ -24,7 +24,7 @@ export class BinaryIndex {
   readonly dict: number;
   readonly strings: number;
   readonly docs: number;
-  readonly ids: number;
+  readonly documents: DocumentTable;
   readonly local: number;
   constructor(bytes: Uint8Array) {
     this.bytes = bytes;
@@ -45,20 +45,24 @@ export class BinaryIndex {
     this.dict = v.getUint32(40, true);
     this.strings = v.getUint32(44, true);
     this.docs = v.getUint32(48, true);
-    this.ids = v.getUint32(52, true);
+
     this.local = v.getUint32(56, true);
     this.generation = decoder.decode(bytes.subarray(64, 128));
     if (
       this.dict !== HEADER ||
       this.strings !== HEADER + this.termCount * TERM ||
       this.docs < this.strings ||
-      this.ids !== this.docs + this.count * DOC ||
-      this.local < this.ids ||
+      v.getUint32(52, true) !== 0 ||
+      this.local < this.docs ||
       this.local > bytes.length ||
       !Number.isFinite(this.avgBody) ||
       !Number.isFinite(this.avgTitle)
     )
       throw new Error("Invalid index sections");
+    this.documents = new DocumentTable(
+      bytes.subarray(this.docs, this.local),
+      this.count,
+    );
   }
   entry(i: number): Entry {
     const v = this.view,
@@ -93,21 +97,10 @@ export class BinaryIndex {
     }
   }
   document(i: number) {
-    if (i >= this.count) throw new Error("Document out of range");
-    const p = this.docs + i * DOC,
-      v = this.view,
-      s = v.getUint32(p, true),
-      e =
-        i + 1 < this.count ? v.getUint32(p + DOC, true) : this.local - this.ids;
-    if (s > e || this.ids + e > this.local) throw new Error("Invalid ID table");
-    return {
-      id: decoder.decode(this.bytes.subarray(this.ids + s, this.ids + e)),
-      body: v.getUint32(p + 4, true),
-      title: v.getUint32(p + 8, true),
-      metaObject: v.getUint32(p + 12, true),
-      metaOffset: v.getUint32(p + 16, true),
-      metaLength: v.getUint32(p + 20, true),
-    };
+    return this.documents.document(i);
+  }
+  lengths(i: number) {
+    return this.documents.lengths(i);
   }
   key(object: number, kind = "postings") {
     return `${this.generation}/${kind}-${object}.bin`;
@@ -116,36 +109,27 @@ export class BinaryIndex {
 export function buildBinary(
   generation: string,
   entries: Entry[],
-  documents: {
-    id: string;
-    body: number;
-    title: number;
-    metaObject: number;
-    metaOffset: number;
-    metaLength: number;
-  }[],
+  documents: Uint8Array,
+  documentCount: number,
   embedded: Uint8Array[],
   avgBody: number,
   avgTitle: number,
 ) {
-  const terms = entries.map((e) => encoder.encode(e.term)),
-    ids = documents.map((d) => encoder.encode(d.id));
+  const terms = entries.map((e) => encoder.encode(e.term));
   const strings = HEADER + entries.length * TERM,
     docs = strings + terms.reduce((s, b) => s + b.length, 0),
-    idStart = docs + documents.length * DOC,
-    local = idStart + ids.reduce((s, b) => s + b.length, 0);
+    local = docs + documents.length;
   const b = new Uint8Array(local + embedded.reduce((s, x) => s + x.length, 0)),
     v = new DataView(b.buffer);
   for (const [p, n] of [
     [0, MAGIC],
     [4, VERSION],
     [8, b.length],
-    [12, documents.length],
+    [12, documentCount],
     [16, entries.length],
     [40, HEADER],
     [44, strings],
     [48, docs],
-    [52, idStart],
     [56, local],
   ])
     v.setUint32(p, n, true);
@@ -161,14 +145,7 @@ export function buildBinary(
     b.set(terms[i], strings + off);
     off += terms[i].length;
   });
-  off = 0;
-  documents.forEach((d, i) => {
-    [off, d.body, d.title, d.metaObject, d.metaOffset, d.metaLength].forEach(
-      (n, j) => v.setUint32(docs + i * DOC + j * 4, n, true),
-    );
-    b.set(ids[i], idStart + off);
-    off += ids[i].length;
-  });
+  b.set(documents, docs);
   off = local;
   for (const x of embedded) {
     b.set(x, off);

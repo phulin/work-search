@@ -1,4 +1,4 @@
-import { BinaryIndex } from "../format/index.js";
+import { BinaryIndex, VERSION } from "../format/index.js";
 import { search, type SearchOptions } from "../query/engine.js";
 import type { Storage } from "../storage/types.js";
 export function handler(
@@ -15,7 +15,7 @@ export function handler(
         status: "ok",
         generation: index.generation,
         documents: index.count,
-        format: 1,
+        format: VERSION,
       });
     if (url.pathname !== "/search")
       return Response.json({ error: "Not found" }, { status: 404 });

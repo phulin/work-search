@@ -33,6 +33,8 @@ npm run search-local -- --out indexes/v3 --query 'example text' --mode or --meta
 npx tsx src/cli/main.ts verify --out indexes/v3
 ```
 
+The current binary format is **v2** and rejects old v1 indexes. Rebuild into a fresh directory (for example `--out indexes/v2-compressed`) before running `dev`, local search, or deployment with an existing checkout. There is no in-place migration. After rebuilding, use `npm run dev -- --out indexes/v2-compressed` and `npm run search-local -- --out indexes/v2-compressed --query "search"` to select that directory.
+
 Use a fresh output directory for each build. A generation's objects are never overwritten by the builder. `queries.txt` contains one query per line; repeated lines supply frequencies. The bundle budget includes dictionary, document tables, IDs, and embedded postings. A budget too small for mandatory tables is rejected. `build-index` selects the resulting binary for the next Worker build by copying it to `data/bundle.bin`.
 
 The builder streams documents, spills term-sorted runs, merges at most 32 streams per pass, compresses one merged term at a time, and packs remote objects up to 64 MiB (an individual larger posting stays contiguous). IDs are checked in an on-disk SQLite uniqueness table. RAM scales with the document table, vocabulary, one input chunk, largest term list, and final bundle—not the entire corpus postings. Title/body text and metadata are not retained in memory. A single very large input document or dominant term can still consume substantial builder RAM.
@@ -79,7 +81,7 @@ A failed upload leaves the old Worker intact. A failed deployment may leave unre
 
 ## Limits and tuning
 
-Cloudflare's [current limits](https://developers.cloudflare.com/workers/platform/limits/) checked November 11, 2026 list 64 MiB **uncompressed** Worker size, 128 MiB isolate memory, and 1 second startup. The default 8 MiB index leaves room for code, per-isolate runtime, and decoding. Configurable budgets up to 48 MiB are experiments, not a universal memory guarantee. Always inspect `npm run bundle` and validate startup on your account. At one million documents the bundled external-ID/length table alone makes the smaller budgets infeasible; see the benchmark report.
+Cloudflare's [current limits](https://developers.cloudflare.com/workers/platform/limits/) checked November 11, 2026 list 64 MiB **uncompressed** Worker size, 128 MiB isolate memory, and 1 second startup. The default 8 MiB index leaves room for code, per-isolate runtime, and decoding. Configurable budgets up to 48 MiB are experiments, not a universal memory guarantee. Always inspect `npm run bundle` and validate startup on your account. Format v2 compresses the bundled document table using 32-document restart blocks, bit-packed length deltas, front-coded IDs and metadata pointer deltas. The million-document synthetic corpus now fits all benchmark budgets; less compressible IDs or lengths may still require more space. See the before/after benchmark report.
 
 Queries retrieve up to four remote lists concurrently. A conservative working-set estimate rejects oversized queries rather than allocating unbounded typed arrays. Concurrent requests share an isolate and can still exhaust memory; large, common-term queries may exceed the Free plan's 10 ms CPU limit. Paid Workers are appropriate for that workload. This is exhaustive BM25, without WAND or block skips. There is no persistent query/posting cache. Phrase search, positions, metadata filters, and incremental updates are not implemented.
 
@@ -93,7 +95,9 @@ npx tsx bench/runtime.ts  # startup and HTTP measurements in local workerd
 npx tsx bench/bundle.ts   # dry-run the 48 MiB bundle, then restore sample binary
 ```
 
-For supplied corpora, `--sizes` labels the corpus; the actual document count is also recorded in successful results. The runner creates a new child process per configuration and preserves failed/infeasible configurations. Generated corpora and indexes are ignored by Git. Results are in [bench/RESOURCES.md](bench/RESOURCES.md), [bench/WORKERD.md](bench/WORKERD.md), [bench/REPORT.md](bench/REPORT.md), [bench/results/results.json](bench/results/results.json), and individual sample JSON files. Local filesystem/HTTP-handler times are separated from local workerd and deployed network measurements. Cost formulas and caveats are in the report.
+For supplied corpora, `--sizes` labels the corpus; the actual document count is also recorded in successful results. The runner creates a new child process per configuration and preserves failed/infeasible configurations. Generated corpora and indexes are ignored by Git. The v1 baseline is preserved under `bench/baseline-v1/`. Compare formats with `npx tsx bench/compare.ts` after the matrix run; the report is [bench/COMPARISON.md](bench/COMPARISON.md).
+
+Results are in [bench/RESOURCES.md](bench/RESOURCES.md), [bench/WORKERD.md](bench/WORKERD.md), [bench/REPORT.md](bench/REPORT.md), [bench/results/results.json](bench/results/results.json), and individual sample JSON files. Local filesystem/HTTP-handler times are separated from local workerd and deployed network measurements. Cost formulas and caveats are in the report.
 
 ```text
 src/builder/   streaming construction, external merge, embedding selection

@@ -69,6 +69,7 @@ for (const n of sizes) {
           {
             environment: {
               date: new Date().toISOString(),
+              format: row.format,
               platform: os.platform(),
               arch: os.arch(),
               cpu: os.cpus()[0].model,
@@ -84,12 +85,4 @@ for (const n of sizes) {
       );
     }
 }
-const mb = (n: number) => (n / 1048576).toFixed(2);
-let report = `# Local benchmark report\n\nMeasured ${new Date().toISOString()} on ${os.cpus()[0].model}, ${os.platform()}/${os.arch()}, Node ${process.version}.\n\nDeterministic seed 42; 40 sampled vocabulary tokens plus 4 common/category tokens per document; 20,000-word vocabulary. ${queries.length} queries, three passes each, ID-only AND, top 20. Includes common, rare, mixed and missing terms. Workload selection is evaluated on its training queries, so its advantage is optimistic.\n\nLatency is the in-process HTTP handler with filesystem ranged reads and warm OS caches. It is **not deployed Cloudflare latency**, and excludes public-network transport. Peak RSS is measured in a fresh child process per build/configuration and includes Node and the builder. CPU is process user+system time, not Worker billing CPU. Constructor timing measures 100 binary-view constructions, not isolate startup.\n\n|Docs|MiB budget|Strategy|Build s|Docs/s|Bundle MiB|Storage MiB|Zero reads %|Reads/query|Bytes/query|P50 ms|P95 ms|CPU ms/query|Peak RSS MiB|\n|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n`;
-for (const r of results)
-  report +=
-    r.status === "ok"
-      ? `|${r.documents}|${r.budgetMiB}|${r.strategy}|${(r.buildMs / 1000).toFixed(2)}|${r.throughput.toFixed(0)}|${mb(r.bundleBytes)}|${mb(r.storageBytes)}|${r.zeroReadPercent.toFixed(1)}|${r.avgRequests.toFixed(2)}|${r.avgBytes.toFixed(0)}|${r.p50Ms.toFixed(2)}|${r.p95Ms.toFixed(2)}|${r.avgCpuMs.toFixed(2)}|${mb(r.queryPeakRssBytes)}|\n`
-      : `|${r.documents}|${r.budgetMiB}|${r.strategy}|infeasible: mandatory tables exceed budget||||||||||\n`;
-report += `\n## Interpretation and costs\n\nThe 10k corpus can fit entirely in the bundle, so budgets larger than that index do not improve I/O. At larger sizes, mandatory external IDs and document lengths consume meaningful space before embedding any postings. An infeasible budget is rejected rather than silently exceeded. Query failures, if any, are preserved in per-query JSON samples and excluded from latency percentiles; inspect those samples before comparing configurations.\n\nR2 Standard list prices checked 2026-11-11: $0.015/GB-month storage, $0.36/million Class B reads, $4.50/million Class A writes, zero Internet egress fee. Before free tiers, estimated monthly R2 cost = remote bytes / 1e9 * 0.015 + monthly queries / 1e6 * average reads * 0.36. Metadata reads add separately; benchmark queries omit metadata. For one million monthly queries, the read charge is $0.36 times reads/query. These are estimates, not an account invoice. Workers Paid adds a $5/month minimum, usage beyond included request/CPU allowances, and deployment storage may vary. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/) and [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/).\n\nNo Cloudflare account was used. Run bench/remote.ts against a deployed URL for genuine network latency, and use Workers analytics for server-side CPU and memory.\n`;
-await writeFile("bench/REPORT.md", report);
+await import("./report.js");
