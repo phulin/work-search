@@ -112,7 +112,7 @@ it("plain Boolean searches never request positions, even when all positional obj
       "red AND NOT cat",
       "NOT cat",
     ]) {
-      const r = await search(i, storage, q);
+      const r = await search(i, storage, q, { exactTotal: true });
       expect(r.diagnostics.positionRequests).toBe(0);
       expect(r.diagnostics.positionBytes).toBe(0);
       expect(r.total).toBeGreaterThan(0);
@@ -122,13 +122,14 @@ it("plain Boolean searches never request positions, even when all positional obj
       expect(m.embeddedFrequencyBytes).toBe(m.frequencyBytes);
       expect(m.embeddedPositionBytes).toBe(0);
       expect(reads).toEqual([]);
-      await expect(search(i, storage, '"red fox"')).rejects.toThrow(
-        "Positions must not",
-      );
+      await expect(
+        search(i, storage, '"red fox"', { exactTotal: true }),
+      ).rejects.toThrow("Positions must not");
     }
     if (name === "local") {
       expect(
-        (await search(i, storage, '"red fox"')).diagnostics.fullyLocal,
+        (await search(i, storage, '"red fox"', { exactTotal: true }))
+          .diagnostics.fullyLocal,
       ).toBe(true);
     }
   }
@@ -153,7 +154,9 @@ it("fetches frequency and position streams independently and omits positions for
       return fs.read(key, offset, length);
     },
   };
-  const r = await search(index, storage, '"red fox" AND dog');
+  const r = await search(index, storage, '"red fox" AND dog', {
+    exactTotal: true,
+  });
   expect(r.results.map((x) => x.id).sort()).toEqual(["a", "c"]);
   expect(r.diagnostics.frequencyRequests).toBe(3);
   expect(r.diagnostics.positionRequests).toBe(2);
@@ -189,10 +192,12 @@ it("corrupt positional descriptors do not affect frequency-only execution", asyn
   );
   const corrupt = new BinaryIndex(bytes),
     storage = new FileStorage(join(out, "objects"));
-  expect((await search(corrupt, storage, "red")).total).toBe(3);
-  await expect(search(corrupt, storage, '"red fox"')).rejects.toThrow(
-    "memory budget",
-  );
+  expect(
+    (await search(corrupt, storage, "red", { exactTotal: true })).total,
+  ).toBe(3);
+  await expect(
+    search(corrupt, storage, '"red fox"', { exactTotal: true }),
+  ).rejects.toThrow("memory budget");
 });
 it("also supports local positions paired with remote frequencies", async () => {
   const out = join(root, "reverse-placement");
@@ -224,7 +229,9 @@ it("also supports local positions paired with remote frequencies", async () => {
       return data;
     },
   };
-  const result = await search(new BinaryIndex(bytes), storage, '"red fox"');
+  const result = await search(new BinaryIndex(bytes), storage, '"red fox"', {
+    exactTotal: true,
+  });
   expect(result.results.map((r) => r.id).sort()).toEqual(["a", "c"]);
   expect(result.diagnostics.frequencyRequests).toBe(2);
   expect(result.diagnostics.positionRequests).toBe(0);

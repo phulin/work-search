@@ -9,7 +9,7 @@ for (let i = 0; i < 10; i++)
   for (const q of queries) {
     const start = performance.now();
     const response = await fetch(
-      new URL("/search?q=" + encodeURIComponent(q), base),
+      new URL("/search?total=true&q=" + encodeURIComponent(q), base),
     );
     await response.arrayBuffer();
     samples.push({ q, status: response.status, ms: performance.now() - start });

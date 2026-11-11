@@ -50,7 +50,7 @@ export function handler(
         limit,
         titleBoost,
         metadata: p.get("metadata") === "true",
-        exactTotal: p.get("total") !== "false",
+        exactTotal: p.get("total") === "true",
         runtime,
       } as SearchOptions);
       if (!diagnostics || p.get("diagnostics") !== "true") {

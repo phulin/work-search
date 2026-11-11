@@ -66,7 +66,8 @@ for (const name of [
       ]) {
         const t = performance.now(),
           r = await mf.dispatchFetch(
-            "http://local/search?diagnostics=true&q=" + encodeURIComponent(q),
+            "http://local/search?total=true&diagnostics=true&q=" +
+              encodeURIComponent(q),
           ),
           body = await r.json();
         samples.push({ q, status: r.status, ms: performance.now() - t, body });

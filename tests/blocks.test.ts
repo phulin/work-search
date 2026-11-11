@@ -151,8 +151,14 @@ it("preserves exact Boolean and positional results across sparse and exhaustive 
         "rare /s (common AND NOT other)",
       ])
         for (const field of ["all", "body", "title"] as const) {
-          const a = await search(index, store, q, { field }, false),
-            b = await search(index, store, q, { field });
+          const a = await search(
+              index,
+              store,
+              q,
+              { exactTotal: true, field },
+              false,
+            ),
+            b = await search(index, store, q, { exactTotal: true, field });
           expect(b.results).toEqual(a.results);
           expect(b.total).toBe(a.total);
         }

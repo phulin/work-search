@@ -43,7 +43,8 @@ for (const r of results.filter(
       cpu = process.cpuUsage();
     const response = await h(
       new Request(
-        "https://local/search?diagnostics=true&q=" + encodeURIComponent(q),
+        "https://local/search?total=true&diagnostics=true&q=" +
+          encodeURIComponent(q),
       ),
     );
     const body = (await response.json()) as any;

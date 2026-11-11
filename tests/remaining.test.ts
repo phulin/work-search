@@ -153,10 +153,15 @@ it("adaptive planning, deferred positions, caching and block-max pruning preserv
           for (const q of queries) {
             const options = { field, titleBoost, limit: 7 };
             const a = await search(index, store, q, {
+              exactTotal: true,
               ...options,
               planning: "legacy",
             });
-            const b = await search(index, store, q, { ...options, runtime });
+            const b = await search(index, store, q, {
+              exactTotal: true,
+              ...options,
+              runtime,
+            });
             const c = await search(index, store, q, {
               ...options,
               runtime,
@@ -193,7 +198,10 @@ it("adaptive planning, deferred positions, caching and block-max pruning preserv
         await readFile(join(root, "remote", "bundle.bin")),
       ),
       store = new FileStorage(join(root, "remote", "objects"));
-    const first = await search(index, store, "rare", { runtime: shared });
+    const first = await search(index, store, "rare", {
+      exactTotal: true,
+      runtime: shared,
+    });
     const second = await search(
       index,
       {
@@ -202,7 +210,7 @@ it("adaptive planning, deferred positions, caching and block-max pruning preserv
         },
       },
       "rare",
-      { runtime: shared },
+      { exactTotal: true, runtime: shared },
     );
     expect(second.results).toEqual(first.results);
     expect(second.diagnostics.postingCacheHits).toBeGreaterThan(0);

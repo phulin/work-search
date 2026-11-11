@@ -70,7 +70,7 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
           { customMetadata: { generation: manifest.generation } },
         );
       const res = await mf.dispatchFetch(
-        "https://test/search?q=unique&diagnostics=true",
+        "https://test/search?total=true&q=unique&diagnostics=true",
       );
       expect(res.status).toBe(200);
       const json = (await res.json()) as any;
@@ -85,7 +85,7 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
         ['"common unique"', 0],
       ] as const) {
         const response = await mf.dispatchFetch(
-          "https://test/search?q=" +
+          "https://test/search?total=true&q=" +
             encodeURIComponent(q) +
             "&diagnostics=true",
         );
@@ -98,7 +98,8 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
       expect(
         (
           await mf.dispatchFetch(
-            "https://test/search?q=" + encodeURIComponent("unique /0 common"),
+            "https://test/search?total=true&q=" +
+              encodeURIComponent("unique /0 common"),
           )
         ).status,
       ).toBe(400);
@@ -106,7 +107,7 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
         for (const o of manifest.objects)
           if (o.kind === "positions") await bucket.delete(o.key);
         const plain = await mf.dispatchFetch(
-          "https://test/search?q=unique&diagnostics=true",
+          "https://test/search?total=true&q=unique&diagnostics=true",
         );
         expect(plain.status).toBe(200);
         const body = (await plain.json()) as any;
@@ -142,14 +143,14 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
         { customMetadata: { generation: m.generation } },
       );
     const first = await cachedWorker.dispatchFetch(
-      "https://test/search?q=unique&diagnostics=true",
+      "https://test/search?total=true&q=unique&diagnostics=true",
     );
     expect(first.status).toBe(200);
     const firstResults = ((await first.json()) as any).results;
     for (const o of m.objects)
       if (o.kind === "frequencies") await bucket.delete(o.key);
     const again = await cachedWorker.dispatchFetch(
-      "https://test/search?q=unique&diagnostics=true&total=false",
+      "https://test/search?q=unique&diagnostics=true",
     );
     expect(again.status).toBe(200);
     const result = (await again.json()) as any;

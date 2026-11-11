@@ -93,6 +93,7 @@ export async function search(
   options: SearchOptions = {},
   skipBlocks = true,
 ) {
+  const exactTotal = options.exactTotal === true;
   const start = performance.now(),
     original = parse(q, options.mode ?? "and"),
     ast = simplify(original, (t) => !!index.lookup(t)),
@@ -138,7 +139,7 @@ export async function search(
   if (ast.kind === "empty")
     return {
       results: [],
-      ...(options.exactTotal === false ? {} : { total: 0 }),
+      ...(!exactTotal ? {} : { total: 0 }),
       diagnostics,
     };
   const entries = found.filter((x) => x !== undefined),
@@ -342,7 +343,7 @@ export async function search(
     options.field ?? "all",
     !needsPositions,
   );
-  if (needsPositions && options.exactTotal !== false)
+  if (needsPositions && exactTotal)
     candidates = candidates.filter(
       positionalMatcher(ast, byTerm, options.field ?? "all"),
     );
@@ -366,18 +367,17 @@ export async function search(
     avgBody = index.avgBody || 1,
     avgTitle = index.avgTitle || 1;
   const boundsStart = performance.now();
-  const bounds =
-    options.exactTotal === false
-      ? scoringTerms.map((term) => {
-          const e = entries.find((e) => e.term === term.term)!;
-          const result = scoreBounds(index, e, term.list, term.idf, runtime);
-          if (result.hit) diagnostics.boundsCacheHits++;
-          return result.bounds;
-        })
-      : undefined;
+  const bounds = !exactTotal
+    ? scoringTerms.map((term) => {
+        const e = entries.find((e) => e.term === term.term)!;
+        const result = scoreBounds(index, e, term.list, term.idf, runtime);
+        if (result.hit) diagnostics.boundsCacheHits++;
+        return result.bounds;
+      })
+    : undefined;
   diagnostics.boundsMs = performance.now() - boundsStart;
   const match =
-    needsPositions && options.exactTotal === false
+    needsPositions && !exactTotal
       ? positionalMatcher(ast, byTerm, options.field ?? "all")
       : undefined;
   let bucket = -1,
@@ -460,7 +460,7 @@ export async function search(
     diagnostics.indexRequests + diagnostics.metadataRequests === 0;
   return {
     results: hits.map(({ doc, ...h }) => h),
-    ...(options.exactTotal === false ? {} : { total: candidates.length }),
+    ...(!exactTotal ? {} : { total: candidates.length }),
     diagnostics,
   };
 }

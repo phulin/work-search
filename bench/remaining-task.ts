@@ -93,8 +93,9 @@ for (const [suite, queries] of [
 ] as const) {
   for (let pass = 0; pass < 3; pass++)
     for (const q of queries) {
-      const f = () => search(frequency.index, frequency.store, q),
-        m = () => search(mixed.index, mixed.store, q);
+      const f = () =>
+          search(frequency.index, frequency.store, q, { exactTotal: true }),
+        m = () => search(mixed.index, mixed.store, q, { exactTotal: true });
       const [x, y] =
           pass % 2
             ? [await run(m), await run(f)]
@@ -117,7 +118,7 @@ const planning = [
 for (let pass = 0; pass < 3; pass++)
   for (const q of planning) {
     const a = () => baseline(original.index, original.store, q),
-      b = () => search(original.index, original.store, q);
+      b = () => search(original.index, original.store, q, { exactTotal: true });
     const [x, y] =
         pass % 2 ? [await run(b), await run(a)] : [await run(a), await run(b)],
       before = pass % 2 ? y : x,
@@ -132,7 +133,9 @@ for (const q of [
   "word0 OR document",
   "category1 OR word0",
 ]) {
-  const oracle = await run(() => search(original.index, original.store, q));
+  const oracle = await run(() =>
+    search(original.index, original.store, q, { exactTotal: true }),
+  );
   record("pruning", q, "exact-total", oracle, 0);
   const runtime = new SearchRuntime(4 * 1048576);
   for (let pass = 0; pass < 4; pass++) {
@@ -151,11 +154,13 @@ for (const q of [
   "(word10 OR word20) AND category1",
 ]) {
   const runtime = new SearchRuntime(4 * 1048576),
-    oracle = await run(() => search(original.index, original.store, q));
+    oracle = await run(() =>
+      search(original.index, original.store, q, { exactTotal: true }),
+    );
   record("cache", q, "uncached", oracle, 0);
   for (let pass = 0; pass < 4; pass++) {
     const x = await run(() =>
-      search(original.index, original.store, q, { runtime }),
+      search(original.index, original.store, q, { exactTotal: true, runtime }),
     );
     same(oracle.r, x.r);
     record("cache", q, pass === 0 ? "cold" : "warm", x, pass);
@@ -164,8 +169,14 @@ for (const q of [
 }
 // Repacking must preserve the separate metadata objects too.
 same(
-  await search(original.index, original.store, "word19999", { metadata: true }),
-  await search(mixed.index, mixed.store, "word19999", { metadata: true }),
+  await search(original.index, original.store, "word19999", {
+    exactTotal: true,
+    metadata: true,
+  }),
+  await search(mixed.index, mixed.store, "word19999", {
+    exactTotal: true,
+    metadata: true,
+  }),
 );
 await writeFile(
   `bench/results/remaining-${name}.json`,

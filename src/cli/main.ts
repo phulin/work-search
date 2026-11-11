@@ -81,7 +81,8 @@ try {
             mode: arg("mode", "and") as "and" | "or",
             limit: Number(arg("limit", "20")),
             metadata: args.includes("--metadata"),
-            exactTotal: !args.includes("--no-total"),
+            exactTotal:
+              args.includes("--total") && !args.includes("--no-total"),
           },
         ),
         null,

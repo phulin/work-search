@@ -61,7 +61,7 @@ try {
         try {
           const response = await h(
             new Request(
-              "https://local/search?diagnostics=true&q=" +
+              "https://local/search?total=true&diagnostics=true&q=" +
                 encodeURIComponent(q),
             ),
           );

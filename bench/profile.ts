@@ -15,4 +15,4 @@ if (process.argv.includes("--baseline"))
 const store = new FileStorage(out + "/objects");
 for (let pass = 0; pass < 12; pass++)
   for (const q of ["document", "search engine", "category1 word0", "word19999"])
-    await search(index, store, q);
+    await search(index, store, q, { exactTotal: true });

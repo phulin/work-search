@@ -246,7 +246,10 @@ describe("positional execution", () => {
             docs.findIndex((d) => d.id === a.id) -
               docs.findIndex((d) => d.id === b.id),
         );
-        const actual = await search(index, store, q, { limit: 100 });
+        const actual = await search(index, store, q, {
+          exactTotal: true,
+          limit: 100,
+        });
         expect(actual.total, q).toBe(expected.length);
         expect(
           actual.results.map((r) => r.id),
@@ -259,7 +262,11 @@ describe("positional execution", () => {
       }
       for (const field of ["body", "title"] as const)
         for (const q of ['"red fox"', "red /1 fox", "red AND NOT fox"]) {
-          const actual = await search(index, store, q, { field, limit: 100 });
+          const actual = await search(index, store, q, {
+            exactTotal: true,
+            field,
+            limit: 100,
+          });
           expect(actual.results.map((r) => r.id).sort()).toEqual(
             docs
               .filter((d) => oracle(d, parse(q), field))
@@ -275,7 +282,9 @@ describe("positional execution", () => {
     const i = new BinaryIndex(await readFile(join(out, "bundle.bin"))),
       s = new FileStorage(join(out, "objects"));
     const ids = async (q: string) =>
-      (await search(i, s, q, { limit: 100 })).results.map((r) => r.id);
+      (await search(i, s, q, { exactTotal: true, limit: 100 })).results.map(
+        (r) => r.id,
+      );
     expect(await ids("red /s fox")).toContain("e");
     expect(await ids("red /s fox")).not.toContain("f");
     expect(await ids("red /p fox")).toContain("g");
@@ -286,8 +295,13 @@ describe("positional execution", () => {
     const h = handler(i, s, true);
     for (const q of ["a AND", "neglig!", "a /0 b"])
       expect(
-        (await h(new Request("https://test/search?q=" + encodeURIComponent(q))))
-          .status,
+        (
+          await h(
+            new Request(
+              "https://test/search?total=true&q=" + encodeURIComponent(q),
+            ),
+          )
+        ).status,
       ).toBe(400);
   });
 });

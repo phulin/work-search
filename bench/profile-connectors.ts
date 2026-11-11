@@ -13,4 +13,4 @@ for (let pass = 0; pass < 4; pass++)
     "document /s engine",
     '"search engine" AND NOT category1',
   ])
-    await search(index, store, q);
+    await search(index, store, q, { exactTotal: true });

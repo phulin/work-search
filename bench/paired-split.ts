@@ -36,12 +36,12 @@ for (const name of ["100000-8-workload", "1000000-48-workload"].filter(
   ] as const) {
     for (const q of queries) {
       await v3Search(a, aStore, q);
-      await search(b, bStore, q);
+      await search(b, bStore, q, { exactTotal: true });
     }
     for (let repeat = 0; repeat < 3; repeat++)
       for (const q of queries) {
         const old = () => v3Search(a, aStore, q),
-          current = () => search(b, bStore, q),
+          current = () => search(b, bStore, q, { exactTotal: true }),
           [x, y] =
             repeat % 2
               ? [await timed(current), await timed(old)]

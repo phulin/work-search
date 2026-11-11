@@ -82,9 +82,9 @@ for (const name of [
     const nodeIndex = new BinaryIndex(await readFile(join(out, "bundle.bin"))),
       store = new FileStorage(join(out, "objects"));
     for (const q of new Set(samples.map((s) => s.q))) {
-      const oracle = await search(nodeIndex, store, q);
+      const oracle = await search(nodeIndex, store, q, { exactTotal: true });
       const exactResponse = await mf.dispatchFetch(
-        "https://local/search?q=" + encodeURIComponent(q),
+        "https://local/search?total=true&q=" + encodeURIComponent(q),
       );
       const expected = (await exactResponse.json()) as any;
       if (

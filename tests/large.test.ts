@@ -35,7 +35,7 @@ it("merges multiple external-sort passes and preserves ranking and top-K", async
           idx,
           new FileStorage(join(root, "a", "objects")),
           q,
-          { mode, limit: 7 },
+          { exactTotal: true, mode, limit: 7 },
         );
         const expected = reference(docs, q, mode).slice(0, 7);
         expect(got.results.map((x) => x.id)).toEqual(expected.map((x) => x.id));

@@ -122,10 +122,19 @@ describe("engine and builder", () => {
     expect(index.lookup("fox")?.df).toBe(2);
     expect(index.lookup("café")?.df).toBe(1);
     expect(index.lookup("missing")).toBeUndefined();
-    expect((await search(index, store, "fox unknown")).total).toBe(0);
-    expect((await search(index, store, "")).results).toEqual([]);
     expect(
-      (await search(index, store, "fox unknown", { mode: "or" })).total,
+      (await search(index, store, "fox unknown", { exactTotal: true })).total,
+    ).toBe(0);
+    expect(
+      (await search(index, store, "", { exactTotal: true })).results,
+    ).toEqual([]);
+    expect(
+      (
+        await search(index, store, "fox unknown", {
+          exactTotal: true,
+          mode: "or",
+        })
+      ).total,
     ).toBe(2);
   });
   it("matches independent reference across all embedding budgets and modes", async () => {
@@ -147,7 +156,11 @@ describe("engine and builder", () => {
           "red red",
           "",
         ]) {
-          const got = await search(index, store, q, { mode, limit: 100 }),
+          const got = await search(index, store, q, {
+              exactTotal: true,
+              mode,
+              limit: 100,
+            }),
             expected = reference(docs, q, mode);
           expect(got.results.map((r) => r.id)).toEqual(
             expected.map((r) => r.id),
@@ -156,7 +169,7 @@ describe("engine and builder", () => {
             expect(r.score).toBeCloseTo(expected[i].score, 12),
           );
         }
-      const r = await search(index, store, "fox");
+      const r = await search(index, store, "fox", { exactTotal: true });
       expect(r.diagnostics.indexRequests).toBe(
         name === "local"
           ? 0
@@ -180,18 +193,24 @@ describe("engine and builder", () => {
   });
   it("fetches metadata separately and supports title/body fields", async () => {
     const { index, store } = await fixture("metadata");
-    expect((await search(index, store, "red")).diagnostics.fullyLocal).toBe(
-      true,
-    );
-    const r = await search(index, store, "red", { metadata: true });
+    expect(
+      (await search(index, store, "red", { exactTotal: true })).diagnostics
+        .fullyLocal,
+    ).toBe(true);
+    const r = await search(index, store, "red", {
+      exactTotal: true,
+      metadata: true,
+    });
     expect(r.results[0].metadata).toEqual({ n: 1 });
     expect(r.diagnostics.metadataRequests).toBe(2);
     expect(r.diagnostics.indexRequests).toBe(0);
-    expect((await search(index, store, "red", { field: "title" })).total).toBe(
-      1,
-    );
     expect(
-      (await search(index, store, "dog", { field: "body" })).results[0].id,
+      (await search(index, store, "red", { exactTotal: true, field: "title" }))
+        .total,
+    ).toBe(1);
+    expect(
+      (await search(index, store, "dog", { exactTotal: true, field: "body" }))
+        .results[0].id,
     ).toBe("c");
   });
   it("builds deterministically across spill sizes", async () => {
@@ -220,9 +239,9 @@ describe("engine and builder", () => {
     bytes[4] = VERSION;
     const e = index.lookup("red")!;
     bytes[index.local + e.offset] ^= 1;
-    await expect(search(new BinaryIndex(bytes), store, "red")).rejects.toThrow(
-      "checksum",
-    );
+    await expect(
+      search(new BinaryIndex(bytes), store, "red", { exactTotal: true }),
+    ).rejects.toThrow("checksum");
     const r2 = new R2Storage(
       {
         get: async () => ({
@@ -254,10 +273,12 @@ describe("engine and builder", () => {
   it("validates HTTP and gates diagnostics", async () => {
     const { index, store } = await fixture("http");
     const h = handler(index, store);
-    expect((await h(new Request("https://x/search?limit=0"))).status).toBe(400);
+    expect(
+      (await h(new Request("https://x/search?total=true&limit=0"))).status,
+    ).toBe(400);
     expect((await h(new Request("https://x/health"))).status).toBe(200);
     const r = (await (
-      await h(new Request("https://x/search?q=red&diagnostics=true"))
+      await h(new Request("https://x/search?total=true&q=red&diagnostics=true"))
     ).json()) as any;
     expect(r.diagnostics).toBeUndefined();
   });
@@ -280,8 +301,42 @@ it("preserves exact scoring, top-K ties and field/boost behavior against the pre
         for (const limit of [1, 2, 20]) {
           const options = { field, titleBoost, limit };
           const a = await previous(index, store, query, options);
-          const b = await search(index, store, query, options);
+          const b = await search(index, store, query, {
+            exactTotal: true,
+            ...options,
+          });
           expect(b.results).toEqual(a.results);
           expect(b.total).toBe(a.total);
         }
+});
+
+it("omits totals by default in the engine and HTTP API, with exact counts explicitly available", async () => {
+  const { index, store } = await fixture("default-top-k");
+  const api = handler(index, store, true);
+  for (const q of ["fox", '"red fox"', "NOT blue", "missing", ""]) {
+    const defaultResult = await search(index, store, q);
+    const explicitFalse = await search(index, store, q, { exactTotal: false });
+    const exact = await search(index, store, q, { exactTotal: true });
+    expect(defaultResult).not.toHaveProperty("total");
+    expect(defaultResult.results).toEqual(explicitFalse.results);
+    expect(defaultResult.results).toEqual(exact.results);
+    expect(exact.total).toBe(
+      q === "fox" ? 2 : q === '"red fox"' ? 1 : q === "NOT blue" ? 3 : 0,
+    );
+    for (const suffix of ["", "&total=false", "&total=true"]) {
+      const response = await api(
+        new Request(
+          "https://test/search?q=" +
+            encodeURIComponent(q) +
+            "&diagnostics=true" +
+            suffix,
+        ),
+      );
+      expect(response.status).toBe(200);
+      const json = (await response.json()) as any;
+      expect(json.results).toEqual(exact.results);
+      if (suffix === "&total=true") expect(json.total).toBe(exact.total);
+      else expect(json).not.toHaveProperty("total");
+    }
+  }
 });
