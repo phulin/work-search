@@ -116,3 +116,5 @@ docs/          binary format and query-language specifications
 ```
 
 See [DESIGN.md](DESIGN.md) for tradeoffs and the highest-value next optimizations.
+
+Latest scoring-loop measurements: [benchmark report](bench/SCORING-OPTIMIZATION.md).

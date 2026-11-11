@@ -262,3 +262,26 @@ describe("engine and builder", () => {
     expect(r.diagnostics).toBeUndefined();
   });
 });
+
+it("preserves exact scoring, top-K ties and field/boost behavior against the previous scorer", async () => {
+  const { search: previous } =
+    await import("../bench/baseline-v4-scoring/engine.js");
+  const { index, store } = await fixture("scoring-equivalence");
+  for (const query of [
+    "fox",
+    "red OR fox",
+    "red fox",
+    "NOT blue",
+    '"red fox" OR dog',
+    "red AND NOT dog",
+  ])
+    for (const field of ["all", "body", "title"] as const)
+      for (const titleBoost of [0, 0.3, 2, 20])
+        for (const limit of [1, 2, 20]) {
+          const options = { field, titleBoost, limit };
+          const a = await previous(index, store, query, options);
+          const b = await search(index, store, query, options);
+          expect(b.results).toEqual(a.results);
+          expect(b.total).toBe(a.total);
+        }
+});

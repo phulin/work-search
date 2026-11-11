@@ -23,3 +23,7 @@
 5. Bound per-isolate concurrent search working sets and add a size-capped posting cache only after measuring locality.
 6. Introduce Block-Max WAND after profiling; either omit total or compute it separately when skipping candidates.
 7. Incremental design: immutable base plus small delta generations and a bundled tombstone map; query both, resolve external IDs, then compact offline. Not implemented because it changes ID/statistics semantics and deployment consistency.
+
+## Scoring hot path
+
+Positive scoring entries precompute IDF and retain original term order. Each candidate computes body/title normalization once, then uses direct loops over entries. The heap rejects losing candidates before allocating a Hit. Arithmetic operation order matches the previous scorer, including title boosting; exact score and result equivalence are tested against its frozen snapshot. Index bytes and all embedding decisions are unchanged. See bench/SCORING-OPTIMIZATION.md for paired and full-matrix measurements.

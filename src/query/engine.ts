@@ -41,8 +41,14 @@ const better = (a: Hit, b: Hit) =>
 class TopK {
   heap: Hit[] = [];
   constructor(readonly k: number) {}
-  add(h: Hit) {
+  add(doc: number, score: number) {
     const a = this.heap;
+    if (
+      a.length === this.k &&
+      (score < a[0].score || (score === a[0].score && doc >= a[0].doc))
+    )
+      return;
+    const h: Hit = { id: "", score, doc };
     if (a.length < this.k) {
       a.push(h);
       let i = a.length - 1;
@@ -195,40 +201,45 @@ export async function search(
     candidates = candidates.filter(
       positionalMatcher(ast, byTerm, options.field ?? "all"),
     );
-  const cursors = lists.map(() => 0),
-    heap = new TopK(limit),
-    lengths = { body: 0, title: 0 };
+  // Compile positive terms once; preserve term order and BM25 operation order.
+  const scoringTerms = entries.flatMap((e, j) =>
+    positiveTerms.has(e.term)
+      ? [
+          {
+            list: lists[j],
+            cursor: 0,
+            idf: Math.log(1 + (index.count - e.df + 0.5) / (e.df + 0.5)),
+          },
+        ]
+      : [],
+  );
+  const heap = new TopK(limit),
+    lengths = { body: 0, title: 0 },
+    bodyEnabled = options.field !== "title",
+    titleEnabled = options.field !== "body",
+    avgBody = index.avgBody || 1,
+    avgTitle = index.avgTitle || 1;
   for (const doc of candidates) {
     if (doc >= index.count) throw new Error("Posting document out of range");
-    const d = index.lengths(doc, lengths);
+    const d = index.lengths(doc, lengths),
+      bodyNorm = 1.2 * (1 - 0.75 + (0.75 * d.body) / avgBody),
+      titleNorm = 1.2 * (1 - 0.75 + (0.75 * d.title) / avgTitle);
     let score = 0;
-    lists.forEach((l, j) => {
-      if (!positiveTerms.has(entries[j].term)) return;
-      let p = cursors[j];
+    for (let j = 0; j < scoringTerms.length; j++) {
+      const term = scoringTerms[j],
+        l = term.list;
+      let p = term.cursor;
       while (p < l.docs.length && l.docs[p] < doc) p++;
-      cursors[j] = p;
-      if (l.docs[p] === doc) {
-        if (options.field !== "title")
-          score += bm25(
-            l.body[p],
-            entries[j].df,
-            index.count,
-            d.body,
-            index.avgBody,
-          );
-        if (options.field !== "body")
-          score +=
-            boost *
-            bm25(
-              l.title[p],
-              entries[j].df,
-              index.count,
-              d.title,
-              index.avgTitle,
-            );
-      }
-    });
-    heap.add({ id: "", score, doc });
+      term.cursor = p;
+      if (l.docs[p] !== doc) continue;
+      const body = l.body[p],
+        title = l.title[p];
+      if (bodyEnabled && body)
+        score += (term.idf * (body * 2.2)) / (body + bodyNorm);
+      if (titleEnabled && title)
+        score += boost * ((term.idf * (title * 2.2)) / (title + titleNorm));
+    }
+    heap.add(doc, score);
   }
   for (const h of heap.heap) h.id = index.document(h.doc).id;
   const hits = heap.heap.sort((a, b) => b.score - a.score || a.doc - b.doc);
