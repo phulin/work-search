@@ -134,10 +134,13 @@ export async function search(
     needsPositions &&
     workingBytes +
       lists.reduce((sum, l) => {
-        let max = 0;
-        for (let i = 0; i < l.docs.length; i++)
-          max = Math.max(max, l.body[i] + l.title[i]);
-        return sum + max * 4;
+        let bodyMax = 0,
+          titleMax = 0;
+        for (let i = 0; i < l.docs.length; i++) {
+          bodyMax = Math.max(bodyMax, l.body[i]);
+          titleMax = Math.max(titleMax, l.title[i]);
+        }
+        return sum + (bodyMax + titleMax) * 8;
       }, 0) >
       Math.min(56 * 1024 * 1024, 104 * 1024 * 1024 - index.bytes.length)
   )

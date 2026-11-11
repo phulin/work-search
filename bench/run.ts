@@ -32,13 +32,15 @@ await writeFile("bench/generated/queries.txt", queries.join("\n"));
 const results: any[] = [];
 for (const n of sizes) {
   const input = arg("input", `bench/generated/corpus-${n}.jsonl`);
-  if (!args.includes("--input")) await generate(input, n);
+  if (!args.includes("--input") && !args.includes("--reuse-indexes"))
+    await generate(input, n);
   for (const budget of budgets)
     for (const strategy of ["smallest", "workload"]) {
       const name = `${n}-${budget}-${strategy}`,
         out = join("bench/generated", name),
         result = join("bench/results", name + ".json");
-      await rm(out, { recursive: true, force: true });
+      if (!args.includes("--reuse-indexes"))
+        await rm(out, { recursive: true, force: true });
       console.log(`Benchmark ${name}`);
       const p = spawnSync(
         process.execPath,
@@ -52,6 +54,7 @@ for (const n of sizes) {
           strategy,
           "bench/generated/queries.txt",
           result,
+          ...(args.includes("--reuse-indexes") ? ["--reuse-indexes"] : []),
         ],
         { encoding: "utf8", maxBuffer: 1024 * 1024 },
       );
@@ -60,7 +63,7 @@ for (const n of sizes) {
       results.push({ documents: n, budgetMiB: budget, strategy, ...row });
       console.log(
         row.status === "ok"
-          ? `${row.buildMs.toFixed(0)}ms build, ${row.zeroReadPercent.toFixed(1)}% local, P95 ${row.p95Ms.toFixed(2)}ms`
+          ? `${args.includes("--reuse-indexes") ? "reused verified index" : row.buildMs.toFixed(0) + "ms build"}, ${row.zeroReadPercent.toFixed(1)}% local, P95 ${row.p95Ms.toFixed(2)}ms`
           : row.error,
       );
       await writeFile(
@@ -70,6 +73,9 @@ for (const n of sizes) {
             environment: {
               date: new Date().toISOString(),
               format: row.format,
+              indexConstruction: args.includes("--reuse-indexes")
+                ? "Reused byte-verified v3 indexes; build timings/RSS inherited from a68426a baseline, not remeasured"
+                : "Fresh build",
               platform: os.platform(),
               arch: os.arch(),
               cpu: os.cpus()[0].model,

@@ -1,0 +1,2021 @@
+{
+  "kind": "same-process alternating-order search calls on identical immutable v3 indexes; one warmup and five measured passes; exact results/scores/totals/I/O compared; not deployed latency",
+  "rows": [
+    {
+      "name": "1000000-8-smallest",
+      "beforeP95Ms": 778.5659579999992,
+      "afterP95Ms": 263.0025420000002,
+      "samples": [
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 497.196958,
+          "afterMs": 239.08987499999967,
+          "beforeCpuMs": 539.215,
+          "afterCpuMs": 270.364
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 641.797458,
+          "afterMs": 236.42100000000028,
+          "beforeCpuMs": 1163.98,
+          "afterCpuMs": 286.899
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 51.36791699999958,
+          "afterMs": 41.676416000000245,
+          "beforeCpuMs": 74.219,
+          "afterCpuMs": 51.537
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.687957999999526,
+          "afterMs": 7.2777909999995245,
+          "beforeCpuMs": 10.424,
+          "afterCpuMs": 9.732
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 550.6355830000002,
+          "afterMs": 261.5037919999995,
+          "beforeCpuMs": 591.65,
+          "afterCpuMs": 283.109
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.2007500000008804,
+          "afterMs": 0.10437500000080036,
+          "beforeCpuMs": 0.202,
+          "afterCpuMs": 0.395
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 81.80749999999989,
+          "afterMs": 60.693583999999646,
+          "beforeCpuMs": 149.357,
+          "afterCpuMs": 82.473
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 496.773459,
+          "afterMs": 253.75858400000016,
+          "beforeCpuMs": 535.126,
+          "afterCpuMs": 279.939
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 560.1770410000008,
+          "afterMs": 244.50779200000034,
+          "beforeCpuMs": 817.607,
+          "afterCpuMs": 284.773
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.984375,
+          "afterMs": 43.037749999999505,
+          "beforeCpuMs": 70.79,
+          "afterCpuMs": 49.465
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.525959000000512,
+          "afterMs": 7.581207999999606,
+          "beforeCpuMs": 7.674,
+          "afterCpuMs": 7.913
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 536.6014999999998,
+          "afterMs": 263.0025420000002,
+          "beforeCpuMs": 583.867,
+          "afterCpuMs": 282.549
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.10516699999971024,
+          "afterMs": 0.21945899999991525,
+          "beforeCpuMs": 0.105,
+          "afterCpuMs": 0.22
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.33245799999895,
+          "afterMs": 55.04699999999866,
+          "beforeCpuMs": 84.358,
+          "afterCpuMs": 73.395
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 555.0221250000013,
+          "afterMs": 243.8809170000004,
+          "beforeCpuMs": 778.087,
+          "afterCpuMs": 261.973
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 804.1373339999991,
+          "afterMs": 239.5477919999994,
+          "beforeCpuMs": 1927.042,
+          "afterCpuMs": 264.82
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.58033299999988,
+          "afterMs": 39.222875000001295,
+          "beforeCpuMs": 54.361,
+          "afterCpuMs": 45.443
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.294707999999446,
+          "afterMs": 7.07366600000023,
+          "beforeCpuMs": 7.543,
+          "afterCpuMs": 7.212
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 560.7945420000015,
+          "afterMs": 262.66704200000095,
+          "beforeCpuMs": 591.103,
+          "afterCpuMs": 282.114
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.21395799999845622,
+          "afterMs": 0.09733299999970768,
+          "beforeCpuMs": 0.331,
+          "afterCpuMs": 0.098
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 67.60341700000026,
+          "afterMs": 53.7208329999994,
+          "beforeCpuMs": 93.204,
+          "afterCpuMs": 64.254
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 561.7428329999984,
+          "afterMs": 248.88500000000022,
+          "beforeCpuMs": 784.809,
+          "afterCpuMs": 275.556
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 566.6032079999986,
+          "afterMs": 239.56574999999975,
+          "beforeCpuMs": 829.454,
+          "afterCpuMs": 265.117
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.13587499999994,
+          "afterMs": 41.28049999999894,
+          "beforeCpuMs": 54.507,
+          "afterCpuMs": 47.814
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.337124999998196,
+          "afterMs": 7.480499999999665,
+          "beforeCpuMs": 7.474,
+          "afterCpuMs": 7.685
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 603.8714999999993,
+          "afterMs": 262.19191599999976,
+          "beforeCpuMs": 823.788,
+          "afterCpuMs": 279.336
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.14350000000013097,
+          "afterMs": 0.22754100000020117,
+          "beforeCpuMs": 0.143,
+          "afterCpuMs": 0.228
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.15883399999984,
+          "afterMs": 55.54125000000022,
+          "beforeCpuMs": 95.005,
+          "afterCpuMs": 67.022
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 778.5659579999992,
+          "afterMs": 246.34158299999945,
+          "beforeCpuMs": 1720.955,
+          "afterCpuMs": 264.649
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 569.3207919999986,
+          "afterMs": 236.82187499999964,
+          "beforeCpuMs": 830.323,
+          "afterCpuMs": 261.453
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 46.68304200000057,
+          "afterMs": 40.13508300000103,
+          "beforeCpuMs": 53.053,
+          "afterCpuMs": 46.437
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.563666000000012,
+          "afterMs": 7.343541999998706,
+          "beforeCpuMs": 7.781,
+          "afterCpuMs": 7.498
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 556.9033750000017,
+          "afterMs": 265.5760829999999,
+          "beforeCpuMs": 587.404,
+          "afterCpuMs": 285.147
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.20654199999989942,
+          "afterMs": 0.09545799999978044,
+          "beforeCpuMs": 0.207,
+          "afterCpuMs": 0.095
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.04141700000037,
+          "afterMs": 55.21220800000083,
+          "beforeCpuMs": 93.861,
+          "afterCpuMs": 66.751
+        }
+      ]
+    },
+    {
+      "name": "1000000-8-workload",
+      "beforeP95Ms": 782.5443750000013,
+      "afterP95Ms": 270.57595899999797,
+      "samples": [
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 767.5224170000001,
+          "afterMs": 243.52491600000212,
+          "beforeCpuMs": 1699.72,
+          "afterCpuMs": 266.803
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 556.0393750000003,
+          "afterMs": 242.88850000000093,
+          "beforeCpuMs": 809.658,
+          "afterCpuMs": 269.807
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.667083000000275,
+          "afterMs": 41.35062499999913,
+          "beforeCpuMs": 53.624,
+          "afterCpuMs": 42.906
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.7902500000018335,
+          "afterMs": 7.54462500000227,
+          "beforeCpuMs": 7.769,
+          "afterCpuMs": 7.54
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 551.4619170000005,
+          "afterMs": 270.9344999999994,
+          "beforeCpuMs": 582.476,
+          "afterCpuMs": 295.204
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.22183299999960582,
+          "afterMs": 0.11016700000254787,
+          "beforeCpuMs": 0.223,
+          "afterCpuMs": 0.207
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 71.08974999999919,
+          "afterMs": 54.62945799999943,
+          "beforeCpuMs": 97.098,
+          "afterCpuMs": 60.4
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 559.9327919999996,
+          "afterMs": 249.34633400000166,
+          "beforeCpuMs": 781.16,
+          "afterCpuMs": 279.9
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 579.2110829999983,
+          "afterMs": 243.59700000000157,
+          "beforeCpuMs": 848.7,
+          "afterCpuMs": 275.565
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.16108300000269,
+          "afterMs": 41.96541600000273,
+          "beforeCpuMs": 53.964,
+          "afterCpuMs": 43.711
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.496125000001484,
+          "afterMs": 7.66308299999946,
+          "beforeCpuMs": 7.494,
+          "afterCpuMs": 7.659
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 592.289291000001,
+          "afterMs": 266.95616599999994,
+          "beforeCpuMs": 811.546,
+          "afterCpuMs": 288.775
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.1388329999972484,
+          "afterMs": 0.2354169999998703,
+          "beforeCpuMs": 0.14,
+          "afterCpuMs": 0.237
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.83995800000048,
+          "afterMs": 54.30787500000224,
+          "beforeCpuMs": 95.224,
+          "afterCpuMs": 60.113
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 779.4199999999983,
+          "afterMs": 247.59179199999926,
+          "beforeCpuMs": 1725.678,
+          "afterCpuMs": 271.956
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 563.575499999999,
+          "afterMs": 243.5712910000002,
+          "beforeCpuMs": 826.047,
+          "afterCpuMs": 271.758
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.59041600000273,
+          "afterMs": 41.037458000002516,
+          "beforeCpuMs": 54.502,
+          "afterCpuMs": 42.628
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.471499999999651,
+          "afterMs": 7.378083000003244,
+          "beforeCpuMs": 7.472,
+          "afterCpuMs": 11.001
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 562.3175420000007,
+          "afterMs": 270.57595899999797,
+          "beforeCpuMs": 593.175,
+          "afterCpuMs": 294.89
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.21129199999995762,
+          "afterMs": 0.09654199999931734,
+          "beforeCpuMs": 0.211,
+          "afterCpuMs": 0.096
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.45341700000063,
+          "afterMs": 57.155290999999124,
+          "beforeCpuMs": 95.18,
+          "afterCpuMs": 62.927
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 551.3929580000004,
+          "afterMs": 253.18641600000046,
+          "beforeCpuMs": 773.926,
+          "afterCpuMs": 279.65
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 814.6565420000006,
+          "afterMs": 241.74404100000174,
+          "beforeCpuMs": 1988.969,
+          "afterCpuMs": 268.829
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 49.53141699999833,
+          "afterMs": 41.47241700000086,
+          "beforeCpuMs": 55.513,
+          "afterCpuMs": 43.511
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.505333000000974,
+          "afterMs": 7.7665000000015425,
+          "beforeCpuMs": 7.504,
+          "afterCpuMs": 7.764
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 593.0473329999986,
+          "afterMs": 263.3363330000029,
+          "beforeCpuMs": 822.742,
+          "afterCpuMs": 286.316
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.1477500000000873,
+          "afterMs": 0.24054099999921164,
+          "beforeCpuMs": 0.156,
+          "afterCpuMs": 0.242
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 73.14337499999965,
+          "afterMs": 55.41962499999863,
+          "beforeCpuMs": 100.797,
+          "afterCpuMs": 62.907
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 782.5443750000013,
+          "afterMs": 244.67591600000014,
+          "beforeCpuMs": 1733.303,
+          "afterCpuMs": 268.986
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 574.9707079999971,
+          "afterMs": 244.99791600000026,
+          "beforeCpuMs": 851.483,
+          "afterCpuMs": 282.657
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.50224999999773,
+          "afterMs": 39.37154200000077,
+          "beforeCpuMs": 54.316,
+          "afterCpuMs": 41.882
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.496541000000434,
+          "afterMs": 7.1426659999997355,
+          "beforeCpuMs": 7.495,
+          "afterCpuMs": 7.14
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 558.8062920000011,
+          "afterMs": 269.3319169999959,
+          "beforeCpuMs": 589.538,
+          "afterCpuMs": 297.714
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.20045899999968242,
+          "afterMs": 0.10225000000355067,
+          "beforeCpuMs": 0.351,
+          "afterCpuMs": 0.104
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.6174170000013,
+          "afterMs": 54.960832999997365,
+          "beforeCpuMs": 112.313,
+          "afterCpuMs": 62.134
+        }
+      ]
+    },
+    {
+      "name": "1000000-16-smallest",
+      "beforeP95Ms": 825.5015839999978,
+      "afterP95Ms": 267.1075419999979,
+      "samples": [
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 789.931875000002,
+          "afterMs": 245.36529200000223,
+          "beforeCpuMs": 1787.547,
+          "afterCpuMs": 269.692
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 580.4170830000003,
+          "afterMs": 244.9901250000039,
+          "beforeCpuMs": 853.37,
+          "afterCpuMs": 282.513
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 49.81500000000233,
+          "afterMs": 39.901041000004625,
+          "beforeCpuMs": 57.849,
+          "afterCpuMs": 45.563
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.432624999994005,
+          "afterMs": 7.123041999999259,
+          "beforeCpuMs": 7.643,
+          "afterCpuMs": 7.249
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 555.6981670000023,
+          "afterMs": 268.62625000000116,
+          "beforeCpuMs": 588.81,
+          "afterCpuMs": 297.587
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.20933399999921676,
+          "afterMs": 0.1000419999982114,
+          "beforeCpuMs": 0.306,
+          "afterCpuMs": 0.108
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 70.16825000000244,
+          "afterMs": 54.43279099999927,
+          "beforeCpuMs": 131.1,
+          "afterCpuMs": 60.425
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 550.5838339999973,
+          "afterMs": 247.32445800000278,
+          "beforeCpuMs": 772.167,
+          "afterCpuMs": 273.742
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 826.1760419999991,
+          "afterMs": 239.99929200000042,
+          "beforeCpuMs": 2023.58,
+          "afterCpuMs": 267.269
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.91045899999881,
+          "afterMs": 43.19004199999472,
+          "beforeCpuMs": 54.246,
+          "afterCpuMs": 51.059
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.589791999998852,
+          "afterMs": 7.720708000000741,
+          "beforeCpuMs": 7.729,
+          "afterCpuMs": 7.957
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 550.0967919999966,
+          "afterMs": 265.9811669999981,
+          "beforeCpuMs": 580.685,
+          "afterCpuMs": 291.282
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.09708300000056624,
+          "afterMs": 0.22783300000446616,
+          "beforeCpuMs": 0.096,
+          "afterCpuMs": 0.229
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.56850000000122,
+          "afterMs": 56.705416000004334,
+          "beforeCpuMs": 89.901,
+          "afterCpuMs": 69.306
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 628.1551249999975,
+          "afterMs": 247.40645799999766,
+          "beforeCpuMs": 1117.014,
+          "afterCpuMs": 271.456
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 561.411374999996,
+          "afterMs": 237.95079100000294,
+          "beforeCpuMs": 825.188,
+          "afterCpuMs": 260.263
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 54.383999999998196,
+          "afterMs": 39.392791999998735,
+          "beforeCpuMs": 71.552,
+          "afterCpuMs": 40.165
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.483541999994486,
+          "afterMs": 7.303625000000466,
+          "beforeCpuMs": 7.679,
+          "afterCpuMs": 7.484
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 799.5025830000013,
+          "afterMs": 263.17383300000074,
+          "beforeCpuMs": 1658.779,
+          "afterCpuMs": 282.082
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.2849160000041593,
+          "afterMs": 0.09833299999445444,
+          "beforeCpuMs": 0.284,
+          "afterCpuMs": 0.097
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.97466700000223,
+          "afterMs": 55.11670800000138,
+          "beforeCpuMs": 94.922,
+          "afterCpuMs": 61.179
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 570.0784580000036,
+          "afterMs": 246.13887499999691,
+          "beforeCpuMs": 784.203,
+          "afterCpuMs": 272.659
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 579.1257909999986,
+          "afterMs": 242.56695800000307,
+          "beforeCpuMs": 841.142,
+          "afterCpuMs": 271.333
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.26483300000109,
+          "afterMs": 41.32516699999542,
+          "beforeCpuMs": 54.612,
+          "afterCpuMs": 43.577
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 8.477833999997529,
+          "afterMs": 8.188125000000582,
+          "beforeCpuMs": 10.403,
+          "afterCpuMs": 12.961
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 594.1492080000025,
+          "afterMs": 263.8724999999977,
+          "beforeCpuMs": 818.831,
+          "afterCpuMs": 284.971
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.13741599999775644,
+          "afterMs": 0.22666600000229664,
+          "beforeCpuMs": 0.139,
+          "afterCpuMs": 0.227
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 71.10204199999862,
+          "afterMs": 55.574249999997846,
+          "beforeCpuMs": 97.092,
+          "afterCpuMs": 61.584
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 800.4989579999965,
+          "afterMs": 246.5448749999996,
+          "beforeCpuMs": 1763.651,
+          "afterCpuMs": 270.981
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 501.0853330000027,
+          "afterMs": 244.20329199999833,
+          "beforeCpuMs": 531.278,
+          "afterCpuMs": 280.066
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 45.805333000003884,
+          "afterMs": 39.77337499999703,
+          "beforeCpuMs": 49.913,
+          "afterCpuMs": 41.623
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.514999999999418,
+          "afterMs": 7.534916999997222,
+          "beforeCpuMs": 7.696,
+          "afterCpuMs": 7.666
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 825.5015839999978,
+          "afterMs": 267.1075419999979,
+          "beforeCpuMs": 1830.814,
+          "afterCpuMs": 291.997
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.29008299999986775,
+          "afterMs": 0.09637500000098953,
+          "beforeCpuMs": 0.29,
+          "afterCpuMs": 0.095
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.58579199999804,
+          "afterMs": 55.60712500000227,
+          "beforeCpuMs": 95.702,
+          "afterCpuMs": 61.725
+        }
+      ]
+    },
+    {
+      "name": "1000000-16-workload",
+      "beforeP95Ms": 826.8224999999948,
+      "afterP95Ms": 273.06270799999766,
+      "samples": [
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 499.3462500000023,
+          "afterMs": 245.6125830000019,
+          "beforeCpuMs": 531.329,
+          "afterCpuMs": 270.01
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 580.4616670000032,
+          "afterMs": 238.99570899999526,
+          "beforeCpuMs": 842.049,
+          "afterCpuMs": 260.621
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.22770799999853,
+          "afterMs": 40.29379200000403,
+          "beforeCpuMs": 59.621,
+          "afterCpuMs": 41.887
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.440207999999984,
+          "afterMs": 7.288790999999037,
+          "beforeCpuMs": 7.44,
+          "afterCpuMs": 7.288
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 829.6440000000002,
+          "afterMs": 278.3707080000022,
+          "beforeCpuMs": 1845.573,
+          "afterCpuMs": 331.928
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.28620799999771407,
+          "afterMs": 0.1103339999972377,
+          "beforeCpuMs": 0.286,
+          "afterCpuMs": 0.11
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 66.23999999999796,
+          "afterMs": 54.4824160000062,
+          "beforeCpuMs": 79.845,
+          "afterCpuMs": 59.474
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 552.8777919999993,
+          "afterMs": 248.39687499999854,
+          "beforeCpuMs": 772.951,
+          "afterCpuMs": 272.909
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 510.06795799999963,
+          "afterMs": 245.64537500000006,
+          "beforeCpuMs": 538.063,
+          "afterCpuMs": 289.82
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.09916700000031,
+          "afterMs": 42.730750000002445,
+          "beforeCpuMs": 54.276,
+          "afterCpuMs": 49.584
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.8620000000009895,
+          "afterMs": 8.117582999999286,
+          "beforeCpuMs": 7.802,
+          "afterCpuMs": 8.087
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 615.8186669999996,
+          "afterMs": 267.56766600000265,
+          "beforeCpuMs": 840.027,
+          "afterCpuMs": 289.806
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.1366249999991851,
+          "afterMs": 0.23891700000240235,
+          "beforeCpuMs": 0.137,
+          "afterCpuMs": 0.242
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 72.95850000000064,
+          "afterMs": 57.930083999999624,
+          "beforeCpuMs": 97.033,
+          "afterCpuMs": 68.976
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 511.479124999998,
+          "afterMs": 248.995041999995,
+          "beforeCpuMs": 515.718,
+          "afterCpuMs": 272.592
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 578.0245410000061,
+          "afterMs": 241.5723330000037,
+          "beforeCpuMs": 838.299,
+          "afterCpuMs": 263.025
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.374416999999085,
+          "afterMs": 39.422834000004514,
+          "beforeCpuMs": 59.488,
+          "afterCpuMs": 39.51
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.461332999999286,
+          "afterMs": 7.2497500000026776,
+          "beforeCpuMs": 7.461,
+          "afterCpuMs": 7.249
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 820.9695419999989,
+          "afterMs": 266.7931660000031,
+          "beforeCpuMs": 1823.671,
+          "afterCpuMs": 285.074
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.2583749999976135,
+          "afterMs": 0.09170799999992596,
+          "beforeCpuMs": 0.259,
+          "afterCpuMs": 0.091
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.79370799999742,
+          "afterMs": 56.19712499999878,
+          "beforeCpuMs": 92.989,
+          "afterCpuMs": 61.536
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 731.4686250000013,
+          "afterMs": 245.1889169999995,
+          "beforeCpuMs": 1586.674,
+          "afterCpuMs": 277.819
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 511.49570900000253,
+          "afterMs": 245.18533300000126,
+          "beforeCpuMs": 539.494,
+          "afterCpuMs": 282.335
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.13041599999997,
+          "afterMs": 44.04341700000077,
+          "beforeCpuMs": 53.424,
+          "afterCpuMs": 54.743
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.485332999996899,
+          "afterMs": 7.431875000002037,
+          "beforeCpuMs": 7.484,
+          "afterCpuMs": 7.43
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 826.8224999999948,
+          "afterMs": 273.06270799999766,
+          "beforeCpuMs": 1851.963,
+          "afterCpuMs": 299.689
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.1582909999997355,
+          "afterMs": 0.332165999992867,
+          "beforeCpuMs": 0.159,
+          "afterCpuMs": 0.334
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 71.29079199999978,
+          "afterMs": 55.71112500000163,
+          "beforeCpuMs": 94.479,
+          "afterCpuMs": 79.541
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 692.9510000000009,
+          "afterMs": 248.4071249999979,
+          "beforeCpuMs": 1338.379,
+          "afterCpuMs": 273.031
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 522.5660829999979,
+          "afterMs": 244.9066249999887,
+          "beforeCpuMs": 551.241,
+          "afterCpuMs": 272.202
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 49.83754100000078,
+          "afterMs": 38.76129199999559,
+          "beforeCpuMs": 55.603,
+          "afterCpuMs": 38.759
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.908957999999984,
+          "afterMs": 8.33887500000128,
+          "beforeCpuMs": 12.627,
+          "afterCpuMs": 10.1
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 814.4956670000101,
+          "afterMs": 263.9032909999951,
+          "beforeCpuMs": 1821.532,
+          "afterCpuMs": 282.081
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.2847920000058366,
+          "afterMs": 0.09600000000500586,
+          "beforeCpuMs": 0.287,
+          "afterCpuMs": 0.095
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 79.0907920000027,
+          "afterMs": 56.906082999994396,
+          "beforeCpuMs": 125.482,
+          "afterCpuMs": 62.288
+        }
+      ]
+    },
+    {
+      "name": "1000000-32-smallest",
+      "beforeP95Ms": 813.3432500000054,
+      "afterP95Ms": 270.58612500000163,
+      "samples": [
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 804.2798340000008,
+          "afterMs": 247.42270799999824,
+          "beforeCpuMs": 1818.492,
+          "afterCpuMs": 271.88
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 580.0169580000074,
+          "afterMs": 245.68533400000888,
+          "beforeCpuMs": 843.875,
+          "afterCpuMs": 274.455
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.95908300000883,
+          "afterMs": 41.021374999996624,
+          "beforeCpuMs": 54.463,
+          "afterCpuMs": 43.072
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.50312500000291,
+          "afterMs": 7.3816660000011325,
+          "beforeCpuMs": 7.69,
+          "afterCpuMs": 7.518
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 547.3659170000028,
+          "afterMs": 269.6239590000041,
+          "beforeCpuMs": 578.708,
+          "afterCpuMs": 294.863
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.20137500000419095,
+          "afterMs": 0.08983300000545569,
+          "beforeCpuMs": 0.202,
+          "afterCpuMs": 0.089
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 67.96720899999491,
+          "afterMs": 55.68520899998839,
+          "beforeCpuMs": 93.904,
+          "afterCpuMs": 61.801
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 557.3876670000027,
+          "afterMs": 249.81687500000407,
+          "beforeCpuMs": 777.529,
+          "afterCpuMs": 276.115
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 813.3432500000054,
+          "afterMs": 245.9646250000078,
+          "beforeCpuMs": 2005.854,
+          "afterCpuMs": 273.021
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 49.00241699999606,
+          "afterMs": 41.925875000000815,
+          "beforeCpuMs": 55.412,
+          "afterCpuMs": 44.196
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.591334000011557,
+          "afterMs": 7.837375000002794,
+          "beforeCpuMs": 7.73,
+          "afterCpuMs": 8.265
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 552.4151669999992,
+          "afterMs": 270.11141599999974,
+          "beforeCpuMs": 588.925,
+          "afterCpuMs": 292.663
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.13479100000404287,
+          "afterMs": 0.23124999999708962,
+          "beforeCpuMs": 0.136,
+          "afterCpuMs": 0.232
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.11195799999405,
+          "afterMs": 56.713750000009895,
+          "beforeCpuMs": 88.523,
+          "afterCpuMs": 63.138
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 559.4252500000002,
+          "afterMs": 245.6023339999956,
+          "beforeCpuMs": 775.985,
+          "afterCpuMs": 268.934
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 795.5111670000042,
+          "afterMs": 242.2080419999984,
+          "beforeCpuMs": 1918.014,
+          "afterCpuMs": 271.171
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.514374999998836,
+          "afterMs": 40.946540999997524,
+          "beforeCpuMs": 55.103,
+          "afterCpuMs": 43.046
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.545833000011044,
+          "afterMs": 7.365709000005154,
+          "beforeCpuMs": 7.764,
+          "afterCpuMs": 7.487
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 550.3108329999959,
+          "afterMs": 270.09300000000803,
+          "beforeCpuMs": 581.495,
+          "afterCpuMs": 295.014
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.21383400000922848,
+          "afterMs": 0.09487500000977889,
+          "beforeCpuMs": 0.215,
+          "afterCpuMs": 0.094
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.37504199999967,
+          "afterMs": 54.646458000002895,
+          "beforeCpuMs": 94.066,
+          "afterCpuMs": 59.369
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 559.2847919999913,
+          "afterMs": 248.78237500000978,
+          "beforeCpuMs": 778.265,
+          "afterCpuMs": 275.421
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 818.3805410000059,
+          "afterMs": 252.48554100000183,
+          "beforeCpuMs": 2016.372,
+          "afterCpuMs": 281.837
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 50.04079199999978,
+          "afterMs": 41.353000000002794,
+          "beforeCpuMs": 57.998,
+          "afterCpuMs": 43.713
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.462541000000783,
+          "afterMs": 7.833333999995375,
+          "beforeCpuMs": 7.61,
+          "afterCpuMs": 10.442
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 564.1872079999885,
+          "afterMs": 270.58612500000163,
+          "beforeCpuMs": 603.959,
+          "afterCpuMs": 293.943
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.14737500000046566,
+          "afterMs": 0.23304200000711717,
+          "beforeCpuMs": 0.149,
+          "afterCpuMs": 0.232
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 67.02658400000655,
+          "afterMs": 55.615792000011425,
+          "beforeCpuMs": 79.9,
+          "afterCpuMs": 79.158
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 717.7960000000021,
+          "afterMs": 245.46837499999674,
+          "beforeCpuMs": 1519.573,
+          "afterCpuMs": 284.108
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 505.8583329999965,
+          "afterMs": 247.19791600000462,
+          "beforeCpuMs": 536.22,
+          "afterCpuMs": 272.723
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.89008399999875,
+          "afterMs": 41.26258299998881,
+          "beforeCpuMs": 60.776,
+          "afterCpuMs": 60.758
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.557124999992084,
+          "afterMs": 7.356458000009297,
+          "beforeCpuMs": 7.98,
+          "afterCpuMs": 7.666
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 545.0013330000074,
+          "afterMs": 270.7350839999999,
+          "beforeCpuMs": 581.197,
+          "afterCpuMs": 297.036
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.19320900000457186,
+          "afterMs": 0.08962499999324791,
+          "beforeCpuMs": 0.194,
+          "afterCpuMs": 0.089
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.34124999999767,
+          "afterMs": 54.64670800000022,
+          "beforeCpuMs": 94.235,
+          "afterCpuMs": 60.526
+        }
+      ]
+    },
+    {
+      "name": "1000000-32-workload",
+      "beforeP95Ms": 841.1368749999965,
+      "afterP95Ms": 266.4416249999922,
+      "samples": [
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 747.7884159999958,
+          "afterMs": 245.8576250000042,
+          "beforeCpuMs": 1581.743,
+          "afterCpuMs": 268.671
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 506.52674999999,
+          "afterMs": 240.2530829999887,
+          "beforeCpuMs": 529.192,
+          "afterCpuMs": 266.583
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.30912499999977,
+          "afterMs": 39.084249999999884,
+          "beforeCpuMs": 52.93,
+          "afterCpuMs": 39.082
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.487999999997555,
+          "afterMs": 7.241666999994777,
+          "beforeCpuMs": 7.487,
+          "afterCpuMs": 7.238
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 558.3744159999915,
+          "afterMs": 265.5067909999925,
+          "beforeCpuMs": 592.792,
+          "afterCpuMs": 288.166
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.19124999998894054,
+          "afterMs": 0.09245799999916926,
+          "beforeCpuMs": 0.191,
+          "afterCpuMs": 0.092
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.59154199999466,
+          "afterMs": 56.133042000001296,
+          "beforeCpuMs": 92.781,
+          "afterCpuMs": 61.547
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 500.6020839999983,
+          "afterMs": 241.70445799999288,
+          "beforeCpuMs": 528.08,
+          "afterCpuMs": 274.474
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 841.7823329999956,
+          "afterMs": 240.83691700000782,
+          "beforeCpuMs": 2066.491,
+          "afterCpuMs": 267.225
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.12920899999153,
+          "afterMs": 42.06158300000243,
+          "beforeCpuMs": 52.989,
+          "afterCpuMs": 48.943
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.480042000010144,
+          "afterMs": 7.59291699998721,
+          "beforeCpuMs": 7.478,
+          "afterCpuMs": 7.593
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 540.5780419999937,
+          "afterMs": 265.67962499998976,
+          "beforeCpuMs": 570.251,
+          "afterCpuMs": 287.119
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.08250000000407454,
+          "afterMs": 0.21204199999920093,
+          "beforeCpuMs": 0.082,
+          "afterCpuMs": 0.212
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.77016699999513,
+          "afterMs": 56.679208999994444,
+          "beforeCpuMs": 89.215,
+          "afterCpuMs": 66.626
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 785.5719160000008,
+          "afterMs": 244.7594589999935,
+          "beforeCpuMs": 1779.528,
+          "afterCpuMs": 267.508
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 515.8979580000014,
+          "afterMs": 239.67970799999603,
+          "beforeCpuMs": 537.709,
+          "afterCpuMs": 264.757
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.54512500000419,
+          "afterMs": 40.162374999999884,
+          "beforeCpuMs": 53.385,
+          "afterCpuMs": 41.431
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.44708399999945,
+          "afterMs": 7.3541669999976875,
+          "beforeCpuMs": 7.445,
+          "afterCpuMs": 7.496
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 617.8678749999963,
+          "afterMs": 263.46241599999485,
+          "beforeCpuMs": 832.785,
+          "afterCpuMs": 286.6
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.2030419999937294,
+          "afterMs": 0.15770799999882001,
+          "beforeCpuMs": 0.204,
+          "afterCpuMs": 0.159
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.20379200000025,
+          "afterMs": 54.78087499999674,
+          "beforeCpuMs": 87.594,
+          "afterCpuMs": 58.816
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 507.41204200001084,
+          "afterMs": 245.93675000000803,
+          "beforeCpuMs": 535.024,
+          "afterCpuMs": 268.751
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 841.1368749999965,
+          "afterMs": 240.60508399999526,
+          "beforeCpuMs": 2064.607,
+          "afterCpuMs": 267.82
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.257792000003974,
+          "afterMs": 41.09408299998904,
+          "beforeCpuMs": 53.011,
+          "afterCpuMs": 42.815
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.467333000007784,
+          "afterMs": 7.572499999994761,
+          "beforeCpuMs": 7.466,
+          "afterCpuMs": 7.571
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 721.1218339999905,
+          "afterMs": 266.6925420000043,
+          "beforeCpuMs": 1372.67,
+          "afterCpuMs": 287.625
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.1618750000052387,
+          "afterMs": 0.29566599999088794,
+          "beforeCpuMs": 0.163,
+          "afterCpuMs": 0.296
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.2031660000066,
+          "afterMs": 56.75391600000148,
+          "beforeCpuMs": 88.853,
+          "afterCpuMs": 67.315
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 759.4344580000034,
+          "afterMs": 245.07045899999503,
+          "beforeCpuMs": 1643.206,
+          "afterCpuMs": 267.754
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 501.06254099999205,
+          "afterMs": 240.02454100000614,
+          "beforeCpuMs": 524.053,
+          "afterCpuMs": 266.678
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 46.757041999997455,
+          "afterMs": 38.438584000003175,
+          "beforeCpuMs": 51.404,
+          "afterCpuMs": 38.436
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.4664170000032755,
+          "afterMs": 7.26066699999501,
+          "beforeCpuMs": 7.466,
+          "afterCpuMs": 7.259
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 552.655958000003,
+          "afterMs": 266.4416249999922,
+          "beforeCpuMs": 586.533,
+          "afterCpuMs": 289.444
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.13491599999542814,
+          "afterMs": 0.09541600001102779,
+          "beforeCpuMs": 0.135,
+          "afterCpuMs": 0.094
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 79.26633399999992,
+          "afterMs": 58.868791999993846,
+          "beforeCpuMs": 125.431,
+          "afterCpuMs": 71.414
+        }
+      ]
+    },
+    {
+      "name": "1000000-48-smallest",
+      "beforeP95Ms": 815.0562079999945,
+      "afterP95Ms": 271.1519580000022,
+      "samples": [
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 806.7922079999989,
+          "afterMs": 244.95929099999194,
+          "beforeCpuMs": 1840.869,
+          "afterCpuMs": 266.07
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 574.6245830000116,
+          "afterMs": 242.92699999999604,
+          "beforeCpuMs": 850.609,
+          "afterCpuMs": 270.973
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.28012499999022,
+          "afterMs": 40.999875000008615,
+          "beforeCpuMs": 54.774,
+          "afterCpuMs": 43.084
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.55587499999092,
+          "afterMs": 7.3634170000004815,
+          "beforeCpuMs": 7.744,
+          "afterCpuMs": 7.494
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 561.9627909999981,
+          "afterMs": 266.0842499999999,
+          "beforeCpuMs": 593.544,
+          "afterCpuMs": 291.306
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.20191599999088794,
+          "afterMs": 0.09145799999532755,
+          "beforeCpuMs": 0.204,
+          "afterCpuMs": 0.09
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.70112500000687,
+          "afterMs": 55.742958000002545,
+          "beforeCpuMs": 94.458,
+          "afterCpuMs": 60.359
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 563.8509169999888,
+          "afterMs": 249.54983400000492,
+          "beforeCpuMs": 784.436,
+          "afterCpuMs": 276.074
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 819.107124999995,
+          "afterMs": 240.4201669999893,
+          "beforeCpuMs": 1963.438,
+          "afterCpuMs": 267.605
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 49.22637499999837,
+          "afterMs": 43.281833000000915,
+          "beforeCpuMs": 57.438,
+          "afterCpuMs": 50.453
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 8.008916999999201,
+          "afterMs": 7.991083999993862,
+          "beforeCpuMs": 8.186,
+          "afterCpuMs": 8.369
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 538.6774580000056,
+          "afterMs": 277.0849589999998,
+          "beforeCpuMs": 569.664,
+          "afterCpuMs": 300.171
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.08341700000164565,
+          "afterMs": 0.2188330000062706,
+          "beforeCpuMs": 0.084,
+          "afterCpuMs": 0.221
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 70.23583299999882,
+          "afterMs": 56.12654199999815,
+          "beforeCpuMs": 90.543,
+          "afterCpuMs": 67.547
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 565.4010410000046,
+          "afterMs": 248.86949999998615,
+          "beforeCpuMs": 786.867,
+          "afterCpuMs": 272.442
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 815.0562079999945,
+          "afterMs": 240.65733299999556,
+          "beforeCpuMs": 1956.389,
+          "afterCpuMs": 269.069
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.17154199999641,
+          "afterMs": 41.59220800000185,
+          "beforeCpuMs": 54.74,
+          "afterCpuMs": 43.617
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.6119590000016615,
+          "afterMs": 7.463500000012573,
+          "beforeCpuMs": 7.799,
+          "afterCpuMs": 7.604
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 561.0477079999982,
+          "afterMs": 269.7062079999887,
+          "beforeCpuMs": 591.883,
+          "afterCpuMs": 294.519
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.21433299999625888,
+          "afterMs": 0.09208299999590963,
+          "beforeCpuMs": 0.214,
+          "afterCpuMs": 0.092
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.61241700001119,
+          "afterMs": 55.12295799999265,
+          "beforeCpuMs": 94.17,
+          "afterCpuMs": 61.272
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 553.3323749999981,
+          "afterMs": 248.97879199999443,
+          "beforeCpuMs": 774.77,
+          "afterCpuMs": 275.256
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 811.5294580000045,
+          "afterMs": 241.09179199999198,
+          "beforeCpuMs": 1962.608,
+          "afterCpuMs": 269.088
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.234874999994645,
+          "afterMs": 42.4354170000006,
+          "beforeCpuMs": 53.671,
+          "afterCpuMs": 50.241
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.491250000006403,
+          "afterMs": 7.664750000010827,
+          "beforeCpuMs": 7.625,
+          "afterCpuMs": 7.886
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 553.0685830000002,
+          "afterMs": 267.6743750000023,
+          "beforeCpuMs": 581.78,
+          "afterCpuMs": 292.535
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.0831659999967087,
+          "afterMs": 0.21591600000101607,
+          "beforeCpuMs": 0.082,
+          "afterCpuMs": 0.217
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.1888750000071,
+          "afterMs": 56.64220800000476,
+          "beforeCpuMs": 89.265,
+          "afterCpuMs": 68.074
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 680.503457999992,
+          "afterMs": 245.72508299999754,
+          "beforeCpuMs": 1360.076,
+          "afterCpuMs": 291.437
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 585.1700419999979,
+          "afterMs": 245.80262500001118,
+          "beforeCpuMs": 860.092,
+          "afterCpuMs": 284.246
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.172374999994645,
+          "afterMs": 38.826542000009795,
+          "beforeCpuMs": 71.651,
+          "afterCpuMs": 41.818
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.55633300000045,
+          "afterMs": 7.190167000007932,
+          "beforeCpuMs": 7.757,
+          "afterCpuMs": 7.32
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 544.5687500000058,
+          "afterMs": 271.1519580000022,
+          "beforeCpuMs": 577.65,
+          "afterCpuMs": 300.557
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.19166700000641868,
+          "afterMs": 0.09854199999244884,
+          "beforeCpuMs": 0.192,
+          "afterCpuMs": 0.098
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 69.25075000000652,
+          "afterMs": 54.79324999998789,
+          "beforeCpuMs": 112.1,
+          "afterCpuMs": 60.903
+        }
+      ]
+    },
+    {
+      "name": "1000000-48-workload",
+      "beforeP95Ms": 861.6938340000052,
+      "afterP95Ms": 268.4099580000038,
+      "samples": [
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 505.0227920000034,
+          "afterMs": 245.85262499999953,
+          "beforeCpuMs": 537.717,
+          "afterCpuMs": 262.768
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 582.0577499999927,
+          "afterMs": 237.55724999999802,
+          "beforeCpuMs": 840.177,
+          "afterCpuMs": 259.296
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 49.58708299999125,
+          "afterMs": 40.65275000000838,
+          "beforeCpuMs": 60.737,
+          "afterCpuMs": 42.409
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.435542000006535,
+          "afterMs": 7.257957999987411,
+          "beforeCpuMs": 7.434,
+          "afterCpuMs": 7.324
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 826.8227500000066,
+          "afterMs": 268.9866670000047,
+          "beforeCpuMs": 1835.309,
+          "afterCpuMs": 285.516
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.2924170000042068,
+          "afterMs": 0.09766700000909623,
+          "beforeCpuMs": 0.293,
+          "afterCpuMs": 0.098
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.53770800000348,
+          "afterMs": 54.848291999995126,
+          "beforeCpuMs": 93.02,
+          "afterCpuMs": 60.24
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 496.10083300000406,
+          "afterMs": 242.3597080000036,
+          "beforeCpuMs": 523.653,
+          "afterCpuMs": 274.868
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 861.6938340000052,
+          "afterMs": 240.77787499999977,
+          "beforeCpuMs": 2106.043,
+          "afterCpuMs": 267.092
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 47.2941659999924,
+          "afterMs": 41.83991700000479,
+          "beforeCpuMs": 53.249,
+          "afterCpuMs": 48.999
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.459333000006154,
+          "afterMs": 7.557165999998688,
+          "beforeCpuMs": 7.459,
+          "afterCpuMs": 7.555
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 562.9123340000078,
+          "afterMs": 267.202667000005,
+          "beforeCpuMs": 590.264,
+          "afterCpuMs": 288.557
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.09562500000174623,
+          "afterMs": 0.24683299999742303,
+          "beforeCpuMs": 0.094,
+          "afterCpuMs": 0.279
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 89.42179199999373,
+          "afterMs": 59.77758399999584,
+          "beforeCpuMs": 136.767,
+          "afterCpuMs": 73.593
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 517.5823749999981,
+          "afterMs": 249.9563339999877,
+          "beforeCpuMs": 533.678,
+          "afterCpuMs": 272.837
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 528.6604590000061,
+          "afterMs": 252.56554199999664,
+          "beforeCpuMs": 566.304,
+          "afterCpuMs": 277.645
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 50.97741700001643,
+          "afterMs": 43.05070799999521,
+          "beforeCpuMs": 66.294,
+          "afterCpuMs": 45.202
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.73499999998603,
+          "afterMs": 7.617041999998037,
+          "beforeCpuMs": 7.733,
+          "afterCpuMs": 7.615
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 871.3654580000148,
+          "afterMs": 260.99804099998437,
+          "beforeCpuMs": 1973.604,
+          "afterCpuMs": 278.629
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.2721670000173617,
+          "afterMs": 0.09333299999707378,
+          "beforeCpuMs": 0.273,
+          "afterCpuMs": 0.092
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 86.89479200000642,
+          "afterMs": 60.051832999975886,
+          "beforeCpuMs": 126.68,
+          "afterCpuMs": 70.681
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 498.5520409999881,
+          "afterMs": 242.07937500000116,
+          "beforeCpuMs": 531.407,
+          "afterCpuMs": 259.243
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 504.17116599998553,
+          "afterMs": 242.24037499999395,
+          "beforeCpuMs": 533.421,
+          "afterCpuMs": 269.185
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 45.78558399999747,
+          "afterMs": 38.87716700002784,
+          "beforeCpuMs": 61.076,
+          "afterCpuMs": 38.875
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.462958999996772,
+          "afterMs": 7.67720899998676,
+          "beforeCpuMs": 7.463,
+          "afterCpuMs": 12.815
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 685.5707499999844,
+          "afterMs": 268.4099580000038,
+          "beforeCpuMs": 1160.634,
+          "afterCpuMs": 298.883
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.16108399999211542,
+          "afterMs": 0.28808299999218434,
+          "beforeCpuMs": 0.162,
+          "afterCpuMs": 0.288
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 70.40258300001733,
+          "afterMs": 57.206374999979744,
+          "beforeCpuMs": 90.663,
+          "afterCpuMs": 67.776
+        },
+        {
+          "q": "\"search engine\"",
+          "beforeMs": 746.5325829999929,
+          "afterMs": 242.46495799999684,
+          "beforeCpuMs": 1612.899,
+          "afterCpuMs": 259.83
+        },
+        {
+          "q": "document /s engine",
+          "beforeMs": 510.5645829999994,
+          "afterMs": 239.48212500000955,
+          "beforeCpuMs": 534.71,
+          "afterCpuMs": 265.248
+        },
+        {
+          "q": "category1 /p word0",
+          "beforeMs": 48.602375000016764,
+          "afterMs": 39.486166999995476,
+          "beforeCpuMs": 52.74,
+          "afterCpuMs": 40.89
+        },
+        {
+          "q": "(word10 OR word20) AND category1",
+          "beforeMs": 7.445040999999037,
+          "afterMs": 7.416707999975188,
+          "beforeCpuMs": 7.483,
+          "afterCpuMs": 7.415
+        },
+        {
+          "q": "\"search engine\" AND NOT category1",
+          "beforeMs": 836.0589580000087,
+          "afterMs": 263.1072920000006,
+          "beforeCpuMs": 1844.106,
+          "afterCpuMs": 280.317
+        },
+        {
+          "q": "\"word19999 word19998\"",
+          "beforeMs": 0.23270799999590963,
+          "afterMs": 0.09462499999790452,
+          "beforeCpuMs": 0.233,
+          "afterCpuMs": 0.093
+        },
+        {
+          "q": "(category1 OR category2) /25 (word0 OR word10)",
+          "beforeMs": 68.77629200002411,
+          "afterMs": 56.25108400001773,
+          "beforeCpuMs": 94.01,
+          "afterCpuMs": 61.626
+        }
+      ]
+    }
+  ]
+}

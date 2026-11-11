@@ -5,23 +5,55 @@ import { BinaryIndex } from "../src/format/index.js";
 import { FileStorage } from "../src/storage/filesystem.js";
 import { search } from "../src/query/engine.js";
 import { handler } from "../src/worker/handler.js";
+import { createHash } from "node:crypto";
 import { connectorQueries } from "./connector-queries.js";
 const [input, out, budget, strategy, queryFile, resultFile] =
   process.argv.slice(2);
 const queries = (await readFile(queryFile, "utf8")).split("\n").filter(Boolean);
 try {
   const cpuStart = process.cpuUsage();
-  const m = await build({
-    input,
-    out,
-    budget: Number(budget) * 1024 * 1024,
-    strategy: strategy as "smallest" | "workload",
-    workload: queries,
-  });
+  const reuse = process.argv.includes("--reuse-indexes");
+  const m = reuse
+    ? JSON.parse(await readFile(join(out, "manifest.json"), "utf8"))
+    : await build({
+        input,
+        out,
+        budget: Number(budget) * 1024 * 1024,
+        strategy: strategy as "smallest" | "workload",
+        workload: queries,
+      });
+  if (reuse) {
+    const old = JSON.parse(
+      await readFile(
+        "bench/baseline-v3/results/" +
+          m.documents +
+          "-" +
+          budget +
+          "-" +
+          strategy +
+          ".json",
+        "utf8",
+      ),
+    );
+    m.buildMs = old.buildMs;
+    m.peakRssBytes = old.peakRssBytes;
+    if (m.budget !== Number(budget) * 1024 * 1024 || m.strategy !== strategy)
+      throw new Error("Index configuration mismatch");
+    for (const o of m.objects) {
+      const bytes = await readFile(join(out, "objects", o.key));
+      if (
+        bytes.length !== o.size ||
+        createHash("sha256").update(bytes).digest("hex") !== o.sha256
+      )
+        throw new Error("Object checksum mismatch");
+    }
+  }
   const load = performance.now(),
     bytes = await readFile(join(out, "bundle.bin")),
     index = new BinaryIndex(bytes),
     loadMs = performance.now() - load;
+  if (createHash("sha256").update(bytes).digest("hex") !== m.bundleSha256)
+    throw new Error("Bundle checksum mismatch");
   const construct = performance.now();
   for (let i = 0; i < 100; i++) new BinaryIndex(bytes);
   const constructorMs = (performance.now() - construct) / 100;
@@ -67,11 +99,16 @@ try {
     JSON.stringify(
       {
         status: "ok",
+        buildMeasurement: reuse
+          ? "Inherited original v3 build timing/RSS; query metrics remeasured"
+          : "Fresh build",
         ...m,
         loadMs,
         constructorMs,
         throughput: m.documents / (m.buildMs / 1000),
-        storageBytes: m.bundleBytes + m.objects.reduce((s, o) => s + o.size, 0),
+        storageBytes:
+          m.bundleBytes +
+          m.objects.reduce((s: number, o: { size: number }) => s + o.size, 0),
         zeroReadPercent:
           (100 * good.filter((x) => x.fullyLocal).length) / good.length,
         avgRequests: mean("indexRequests"),

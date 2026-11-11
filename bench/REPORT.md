@@ -1,37 +1,39 @@
 # Local benchmark report
 
-Measured 2026-11-11T16:51:56.378Z on Apple M3, darwin/arm64, Node v26.7.0.
+Measured 2026-11-11T17:07:18.487Z on Apple M3, darwin/arm64, Node v26.7.0.
+
+Index construction: Reused byte-verified v3 indexes; build timings/RSS inherited from a68426a baseline, not remeasured. When indexes are reused, build throughput/timing/RSS are inherited baseline measurements; query timings and query-process RSS are newly measured, without the builder in that process. Do not compare the query-only peak to an older combined build+query process peak.
 
 Deterministic seed 42; 40 sampled vocabulary tokens plus 4 common/category tokens per document; 20,000-word vocabulary. 12 queries, three passes each, ID-only AND, top 20. Includes common, rare, mixed and missing terms. Workload selection is evaluated on its training queries, so its advantage is optimistic.
 
-Latency is the in-process HTTP handler with filesystem ranged reads and warm OS caches. It is **not deployed Cloudflare latency**, and excludes public-network transport. Peak RSS is measured in a fresh child process per build/configuration and includes Node and the builder. CPU is process user+system time, not Worker billing CPU. Constructor timing measures 100 binary-view constructions, not isolate startup.
+Latency is the in-process HTTP handler with filesystem ranged reads and warm OS caches. It is **not deployed Cloudflare latency**, and excludes public-network transport. Peak RSS is measured in a fresh child process per configuration; it includes the builder only for fresh-build runs. CPU is process user+system time, not Worker billing CPU. Constructor timing measures 100 binary-view constructions, not isolate startup.
 
 |    Docs | MiB budget | Strategy | Build s | Docs/s | Bundle MiB | Storage MiB | Zero reads % | Reads/query | Bytes/query | P50 ms | P95 ms | CPU ms/query | Peak RSS MiB |
 | ------: | ---------: | -------- | ------: | -----: | ---------: | ----------: | -----------: | ----------: | ----------: | -----: | -----: | -----------: | -----------: |
-|   10000 |          8 | smallest |    0.69 |  14393 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   4.69 |         3.07 |       358.45 |
-|   10000 |          8 | workload |    0.69 |  14389 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   4.87 |         3.25 |       341.05 |
-|   10000 |         16 | smallest |    0.71 |  14030 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.21 |   4.73 |         3.17 |       340.56 |
-|   10000 |         16 | workload |    0.71 |  14137 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.26 |   4.71 |         3.16 |       342.33 |
-|   10000 |         32 | smallest |    0.69 |  14470 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.22 |   4.74 |         3.27 |       343.08 |
-|   10000 |         32 | workload |    0.70 |  14386 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   4.76 |         3.16 |       343.52 |
-|   10000 |         48 | smallest |    0.69 |  14482 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   4.71 |         3.00 |       343.66 |
-|   10000 |         48 | workload |    0.69 |  14402 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.22 |   4.72 |         3.20 |       340.16 |
-|  100000 |          8 | smallest |    4.92 |  20316 |       8.00 |       28.82 |         25.0 |        1.08 |      202272 |   0.87 |  26.93 |         9.14 |       653.55 |
-|  100000 |          8 | workload |    5.03 |  19881 |       8.00 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.00 |         8.93 |       637.69 |
-|  100000 |         16 | smallest |    4.87 |  20532 |      16.00 |       28.82 |         50.0 |        0.67 |      200717 |   0.89 |  32.67 |         8.32 |       612.64 |
-|  100000 |         16 | workload |    4.82 |  20762 |      16.00 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.47 |         8.56 |       728.06 |
-|  100000 |         32 | smallest |    4.83 |  20685 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.79 |  26.28 |         8.22 |       728.16 |
-|  100000 |         32 | workload |    4.82 |  20727 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.32 |         8.16 |       692.09 |
-|  100000 |         48 | smallest |    4.75 |  21067 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.79 |  26.33 |         8.80 |       710.14 |
-|  100000 |         48 | workload |    4.81 |  20779 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.68 |         8.99 |       643.53 |
-| 1000000 |          8 | smallest |   71.37 |  14011 |       8.00 |      282.72 |         16.7 |        1.17 |     2022124 |   6.52 | 200.63 |        49.26 |      1920.58 |
-| 1000000 |          8 | workload |   74.56 |  13412 |       8.00 |      282.72 |         58.3 |        0.50 |     1951922 |   6.08 | 161.87 |        46.82 |      1640.89 |
-| 1000000 |         16 | smallest |   69.64 |  14359 |      16.00 |      282.72 |         16.7 |        1.17 |     2022124 |   6.49 | 161.40 |        45.64 |      1533.80 |
-| 1000000 |         16 | workload |   72.27 |  13836 |      16.00 |      282.72 |         91.7 |        0.17 |      666667 |   3.90 | 161.45 |        45.47 |      1764.98 |
-| 1000000 |         32 | smallest |   71.06 |  14073 |      32.00 |      282.72 |         16.7 |        1.17 |     2022124 |   5.56 | 163.87 |        46.88 |      1627.77 |
-| 1000000 |         32 | workload |   68.68 |  14561 |      32.00 |      282.72 |        100.0 |        0.00 |           0 |   3.74 | 154.67 |        43.36 |      1599.92 |
-| 1000000 |         48 | smallest |   73.75 |  13559 |      48.00 |      282.72 |         25.0 |        1.08 |     2021735 |   5.66 | 164.52 |        46.51 |      1983.31 |
-| 1000000 |         48 | workload |   69.23 |  14444 |      48.00 |      282.72 |        100.0 |        0.00 |           0 |   5.02 | 152.88 |        45.12 |      1713.88 |
+|   10000 |          8 | smallest |    0.69 |  14393 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.22 |   6.70 |         3.51 |       131.03 |
+|   10000 |          8 | workload |    0.69 |  14389 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   5.10 |         3.28 |        88.75 |
+|   10000 |         16 | smallest |    0.71 |  14030 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.22 |   4.99 |         3.47 |        88.27 |
+|   10000 |         16 | workload |    0.71 |  14137 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.24 |   5.07 |         3.44 |        86.97 |
+|   10000 |         32 | smallest |    0.69 |  14470 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.29 |   5.14 |         3.30 |        87.88 |
+|   10000 |         32 | workload |    0.70 |  14386 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.24 |   5.02 |         3.42 |        88.41 |
+|   10000 |         48 | smallest |    0.69 |  14482 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   5.10 |         3.06 |        88.48 |
+|   10000 |         48 | workload |    0.69 |  14402 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   5.06 |         3.49 |        88.75 |
+|  100000 |          8 | smallest |    4.92 |  20316 |       8.00 |       28.82 |         25.0 |        1.08 |      202272 |   1.04 |  27.06 |         9.95 |       172.20 |
+|  100000 |          8 | workload |    5.03 |  19881 |       8.00 |       28.82 |        100.0 |        0.00 |           0 |   0.79 |  27.36 |         9.45 |       184.66 |
+|  100000 |         16 | smallest |    4.87 |  20532 |      16.00 |       28.82 |         50.0 |        0.67 |      200717 |   0.91 |  27.01 |         9.64 |       171.56 |
+|  100000 |         16 | workload |    4.82 |  20762 |      16.00 |       28.82 |        100.0 |        0.00 |           0 |   0.77 |  26.97 |         9.00 |       163.63 |
+|  100000 |         32 | smallest |    4.83 |  20685 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.79 |  26.82 |         9.64 |       149.80 |
+|  100000 |         32 | workload |    4.82 |  20727 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.77 |  26.68 |         9.67 |       149.38 |
+|  100000 |         48 | smallest |    4.75 |  21067 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.93 |         9.59 |       148.63 |
+|  100000 |         48 | workload |    4.81 |  20779 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.81 |  26.80 |         9.66 |       146.53 |
+| 1000000 |          8 | smallest |   71.37 |  14011 |       8.00 |      282.72 |         16.7 |        1.17 |     2022124 |   4.11 | 167.30 |        44.60 |       640.75 |
+| 1000000 |          8 | workload |   74.56 |  13412 |       8.00 |      282.72 |         58.3 |        0.50 |     1951922 |   4.49 | 164.71 |        46.01 |       577.25 |
+| 1000000 |         16 | smallest |   69.64 |  14359 |      16.00 |      282.72 |         16.7 |        1.17 |     2022124 |   4.18 | 164.68 |        46.53 |       634.23 |
+| 1000000 |         16 | workload |   72.27 |  13836 |      16.00 |      282.72 |         91.7 |        0.17 |      666667 |   3.92 | 162.35 |        43.80 |       569.77 |
+| 1000000 |         32 | smallest |   71.06 |  14073 |      32.00 |      282.72 |         16.7 |        1.17 |     2022124 |   4.16 | 166.46 |        46.63 |       566.48 |
+| 1000000 |         32 | workload |   68.68 |  14561 |      32.00 |      282.72 |        100.0 |        0.00 |           0 |   3.98 | 160.91 |        43.39 |       619.55 |
+| 1000000 |         48 | smallest |   73.75 |  13559 |      48.00 |      282.72 |         25.0 |        1.08 |     2021735 |   4.13 | 164.04 |        45.44 |       596.47 |
+| 1000000 |         48 | workload |   69.23 |  14444 |      48.00 |      282.72 |        100.0 |        0.00 |           0 |   3.97 | 161.38 |        43.37 |       596.19 |
 
 ## Interpretation and costs
 

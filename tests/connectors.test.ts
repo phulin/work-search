@@ -357,7 +357,7 @@ it("bounds positional expansion explicitly rather than silently dropping matches
     );
   expect(() =>
     positionalMatcher(
-      parse("red /s fox"),
+      parse("(red AND fox) /s fox"),
       new Map([
         ["red", red],
         ["fox", fox],
