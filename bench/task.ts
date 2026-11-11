@@ -23,18 +23,11 @@ try {
         workload: queries,
       });
   if (reuse) {
-    const old = JSON.parse(
-      await readFile(
-        "bench/baseline-v3/results/" +
-          m.documents +
-          "-" +
-          budget +
-          "-" +
-          strategy +
-          ".json",
-        "utf8",
-      ),
-    );
+    const old = JSON.parse(await readFile(resultFile, "utf8"));
+    if (old.format !== m.format || old.bundleSha256 !== m.bundleSha256)
+      throw new Error(
+        "Reuse requires a prior construction record for this exact format/index",
+      );
     m.buildMs = old.buildMs;
     m.peakRssBytes = old.peakRssBytes;
     if (m.budget !== Number(budget) * 1024 * 1024 || m.strategy !== strategy)
@@ -100,7 +93,7 @@ try {
       {
         status: "ok",
         buildMeasurement: reuse
-          ? "Inherited original v3 build timing/RSS; query metrics remeasured"
+          ? "Inherited matching construction timing/RSS; query metrics remeasured"
           : "Fresh build",
         ...m,
         loadMs,

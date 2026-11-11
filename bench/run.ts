@@ -74,7 +74,7 @@ for (const n of sizes) {
               date: new Date().toISOString(),
               format: row.format,
               indexConstruction: args.includes("--reuse-indexes")
-                ? "Reused byte-verified v3 indexes; build timings/RSS inherited from a68426a baseline, not remeasured"
+                ? "Reused byte-verified indexes; build timings/RSS inherited from matching construction records, not remeasured"
                 : "Fresh build",
               platform: os.platform(),
               arch: os.arch(),
@@ -93,4 +93,4 @@ for (const n of sizes) {
 }
 await import("./report.js");
 await import("./details.js");
-await import("./connectors-report.js");
+await import("./split-postings-report.js");

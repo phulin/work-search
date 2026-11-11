@@ -47,21 +47,21 @@ The basic order follows [Lexis connector priority](https://www.lexisnexis.com/do
 
 The AST determines the exact matching document set; BM25 then ranks matching documents using the distinct positively occurring query terms and the existing title boost. Negated-only terms do not add score. A double negation restores positive scoring. Scores are term-based, with no extra phrase/proximity bonus. Ties use internal input order. `total` remains exact. Pure complement-only matches have score zero.
 
-The dictionary stays bundled. The planner prunes missing-term clauses before fetching postings: an impossible AND/phrase/proximity returns without R2 reads, while an OR can retain its other branches. Referenced surviving terms are fetched once each with concurrency four. Positions use the same local/remote decoder. ID-only queries still need no metadata reads, and fully embedded phrase/connector queries can make zero R2 requests. Metadata remains a separate opt-in step.
+The dictionary stays bundled. The planner prunes missing-term clauses before fetching postings: an impossible AND/phrase/proximity returns without R2 reads, while an OR can retain its other branches. Each surviving frequency stream is fetched at most once. Positions are fetched separately only for location-dependent terms, at most once per term. All jobs share concurrency four. Each stream kind uses the same decoder for local and remote bytes. ID-only queries still need no metadata reads, and fully embedded phrase/connector queries can make zero R2 requests. Metadata remains a separate opt-in step.
 
-Plain Boolean queries do not allocate positional-offset arrays. Phrase/proximity queries allocate one u32 byte offset per posting, retain compressed position bytes, and decode positions only for one candidate document at a time into reusable per-term buffers. Boolean existence checks stop at the first valid phrase/proximity match, while nested compound expressions retain the locations their parents need. Scratch retains at most the observed per-term field-frequency peaks; conservative guard accounting includes buffer growth. No positions are expanded for the full corpus. Candidate sets are sorted; evaluation never stores a corpus-sized map of spans. Lengths keep their compressed block cache and reusable scoring result.
+Plain Boolean queries read, checksum and decode only frequency payloads; they never access positional payloads, locally or remotely, and do not allocate positional-offset arrays. Phrase/proximity queries allocate one u32 byte offset per posting, retain compressed position bytes, and decode positions only for one candidate document at a time into reusable per-term buffers. Boolean existence checks stop at the first valid phrase/proximity match, while nested compound expressions retain the locations their parents need. Scratch retains at most the observed per-term field-frequency peaks; conservative guard accounting includes buffer growth. No positions are expanded for the full corpus. Candidate sets are sorted; evaluation never stores a corpus-sized map of spans. Lengths keep their compressed block cache and reusable scoring result.
 
 Safeguards: 2,048 query characters, 16 distinct terms, 256 lexer tokens, 256 tokens per phrase, 32 nesting levels, numeric distance 1–255, limit 1–100, at most 4,096 materialized compound spans per field/operand/document and 32,768 retained compound-span slots per query and ten million span comparisons/checks per query. Estimated encoded/decoded working sets are bounded by the lesser of 56 MiB and `104 MiB - bundle bytes`, with an additional per-document position-allocation check. Resource exhaustion returns **503**, not partial results or a false zero count. Common-term positional queries can be expensive, and the per-query guard cannot guarantee safety for many concurrent requests in one isolate. Large corpora/common phrases generally need Workers Paid CPU allowances.
 
 ## Examples
 
 ```sh
-npm run build-index -- --input corpus.jsonl --out indexes/terms-v3 --budget-mib 8
-npm run search-local -- --out indexes/terms-v3 \
+npm run build-index -- --input corpus.jsonl --out indexes/terms-v4 --budget-mib 8
+npm run search-local -- --out indexes/terms-v4 \
   --query '(negligence OR malpractice) AND "standard of care"'
-npm run search-local -- --out indexes/terms-v3 \
+npm run search-local -- --out indexes/terms-v4 \
   --query '(contract OR agreement) /p breach AND NOT "criminal law"'
-npm run dev -- --out indexes/terms-v3
+npm run dev -- --out indexes/terms-v4
 curl --get 'http://localhost:8787/search' \
   --data-urlencode 'q=(red OR blue) /s "fox jumps"' \
   --data-urlencode 'limit=20'
@@ -71,4 +71,4 @@ Unsupported: stemming/automatic plurals, root expansion `!`, wildcards `*`/`?`, 
 
 ## Version migration
 
-Container format **v3** adds positional payloads. Rebuild the entire index generation, upload its immutable objects, and deploy the v3 Worker with its matching bundle. v1/v2 bundles are rejected. Existing v2 indexes cannot recover discarded positions and cannot be upgraded solely by deploying new query code. The compressed document-table subformat remains DTC2; it does not need separate migration. Keep old Workers and generations together for rollback.
+Container format **v4** separates frequency and positional payloads. Rebuild the entire index generation, upload its immutable objects, and deploy the v4 Worker with its matching bundle. v1/v2/v3 bundles are rejected. Older indexes cannot be served by the v4 reader. Rebuild a new immutable generation; deploying query code alone is insufficient. The compressed document-table subformat remains DTC2; it does not need separate migration. Keep old Workers and generations together for rollback.

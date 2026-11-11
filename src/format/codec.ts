@@ -77,6 +77,7 @@ export function encodePostings(list: Posting[]): Uint8Array {
   return Uint8Array.from(out);
 }
 export interface DecodedPostings {
+  frequencyCrc?: number;
   docs: Uint32Array;
   body: Uint32Array;
   title: Uint32Array;
@@ -144,4 +145,124 @@ export function postingPositions(
     }
   }
   return result;
+}
+
+// V4 independently addressable streams. The v3 codec above is retained only
+// for frozen reference tests; the Worker reads these frequency/position codecs.
+export function encodeFrequencies(list: Posting[]): Uint8Array {
+  const out: number[] = [];
+  varint(out, list.length);
+  let previous = 0;
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i];
+    if (p.doc < previous || (i && p.doc === previous) || (!p.body && !p.title))
+      throw new Error("Invalid posting");
+    varint(out, p.doc - previous);
+    varint(out, p.body);
+    varint(out, p.title);
+    previous = p.doc;
+  }
+  return Uint8Array.from(out);
+}
+export function encodePositions(
+  list: Posting[],
+  frequencyCrc = crc32(encodeFrequencies(list)),
+): Uint8Array {
+  const out: number[] = [];
+  varint(out, list.length);
+  for (let i = 0; i < 4; i++) out.push((frequencyCrc >>> (i * 8)) & 255);
+  for (const p of list)
+    for (const [count, positions] of [
+      [p.body, p.bodyPositions],
+      [p.title, p.titlePositions],
+    ] as const) {
+      if (count !== (positions?.length ?? 0))
+        throw new Error("Position frequency mismatch");
+      let previous = 0;
+      for (let i = 0; i < count; i++) {
+        const position = positions![i];
+        if (position < previous || (i && position === previous))
+          throw new Error("Unsorted positions");
+        varint(out, position - previous);
+        previous = position;
+      }
+    }
+  return Uint8Array.from(out);
+}
+export function decodeFrequencies(
+  bytes: Uint8Array,
+  expected?: number,
+  expectedCrc?: number,
+): DecodedPostings {
+  const frequencyCrc = crc32(bytes);
+  if (expectedCrc !== undefined && frequencyCrc !== expectedCrc)
+    throw new Error("Frequency checksum mismatch");
+  const p = { i: 0 },
+    n = readVarint(bytes, p);
+  if (
+    (expected !== undefined && n !== expected) ||
+    n > Math.floor((bytes.length - p.i) / 3)
+  )
+    throw new Error("Invalid posting count");
+  const docs = new Uint32Array(n),
+    body = new Uint32Array(n),
+    title = new Uint32Array(n);
+  let doc = 0;
+  for (let i = 0; i < n; i++) {
+    const delta = readVarint(bytes, p);
+    if (i && delta === 0) throw new Error("Unsorted postings");
+    doc += delta;
+    if (doc > 0xffffffff) throw new Error("Document overflow");
+    docs[i] = doc;
+    body[i] = readVarint(bytes, p);
+    title[i] = readVarint(bytes, p);
+    if (!body[i] && !title[i]) throw new Error("Empty frequency");
+  }
+  if (p.i !== bytes.length) throw new Error("Trailing frequency data");
+  return { docs, body, title, bytes: new Uint8Array(0), frequencyCrc };
+}
+export function attachPositions(
+  frequencies: DecodedPostings,
+  bytes: Uint8Array,
+  expectedCrc?: number,
+): void {
+  if (expectedCrc !== undefined && crc32(bytes) !== expectedCrc)
+    throw new Error("Position checksum mismatch");
+  const p = { i: 0 },
+    n = readVarint(bytes, p);
+  if (
+    n !== frequencies.docs.length ||
+    p.i + 4 > bytes.length ||
+    n > bytes.length - p.i - 4
+  )
+    throw new Error("Invalid position count");
+  const boundCrc = new DataView(
+    bytes.buffer,
+    bytes.byteOffset,
+    bytes.byteLength,
+  ).getUint32(p.i, true);
+  p.i += 4;
+  if (
+    frequencies.frequencyCrc === undefined ||
+    boundCrc !== frequencies.frequencyCrc
+  )
+    throw new Error("Frequency/position stream mismatch");
+  const offsets = new Uint32Array(n);
+  for (let i = 0; i < n; i++) {
+    offsets[i] = p.i;
+    if (frequencies.body[i] + frequencies.title[i] > bytes.length - p.i)
+      throw new Error("Invalid position count");
+    for (const count of [frequencies.body[i], frequencies.title[i]]) {
+      let position = 0;
+      for (let j = 0; j < count; j++) {
+        const delta = readVarint(bytes, p);
+        if (j && delta === 0) throw new Error("Unsorted positions");
+        position += delta;
+        if (position > 0xffffffff) throw new Error("Position overflow");
+      }
+    }
+  }
+  if (p.i !== bytes.length) throw new Error("Trailing position data");
+  frequencies.bytes = bytes;
+  frequencies.positionOffsets = offsets;
 }

@@ -1,0 +1,662 @@
+{
+  "environment": {
+    "date": "2026-11-11T17:34:57.663Z",
+    "format": 4,
+    "indexConstruction": "Fresh build",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3",
+    "node": "v26.7.0",
+    "queryMode": "Node HTTP handler + filesystem ranges, warm OS cache; not Cloudflare latency"
+  },
+  "rows": [
+    {
+      "documents": 10000,
+      "budgetMiB": 8,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 0.9877500000000055,
+        "p95Ms": 6.325209000000001,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 1.4193330000000515,
+        "p95Ms": 7.061207999999965,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 8,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 1.0664170000000013,
+        "p95Ms": 6.404917000000012,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 1.599375000000009,
+        "p95Ms": 8.257124999999974,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 16,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 0.9743749999999949,
+        "p95Ms": 6.044499999999999,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 1.6402499999999236,
+        "p95Ms": 7.677958999999987,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 16,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 1.0336249999999865,
+        "p95Ms": 6.521917000000002,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 1.6530410000000302,
+        "p95Ms": 8.852166999999781,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 32,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 1.0405000000000086,
+        "p95Ms": 7.1100840000000005,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 1.4013750000001437,
+        "p95Ms": 8.331999999999994,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 32,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 1.048833000000002,
+        "p95Ms": 6.101499999999987,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 1.7646670000000313,
+        "p95Ms": 8.231624999999894,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 48,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 1.0482920000000036,
+        "p95Ms": 6.569625000000002,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 1.6990840000000844,
+        "p95Ms": 7.999584000000027,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 48,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 1.0019160000000085,
+        "p95Ms": 6.006040999999996,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 1.9643330000000105,
+        "p95Ms": 8.260875000000055,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 8,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 7.018500000000017,
+        "p95Ms": 38.926041,
+        "avgRequests": 2.2857142857142856,
+        "avgBytes": 470265.5714285714,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 8.664082999999664,
+        "p95Ms": 36.8496669999995,
+        "avgRequests": 4.285714285714286,
+        "avgBytes": 467341.4285714286,
+        "frequencyRequests": 2.2857142857142856,
+        "positionRequests": 2,
+        "positionBytes": 130331.85714285714,
+        "zeroReadPercent": 0,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 8,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 9.410708999999997,
+        "p95Ms": 40.27129200000002,
+        "avgRequests": 0.14285714285714285,
+        "avgBytes": 714.5714285714286,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 85.71428571428571,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 8.8725000000004,
+        "p95Ms": 45.64137500000015,
+        "avgRequests": 2.142857142857143,
+        "avgBytes": 130760.71428571429,
+        "frequencyRequests": 0.14285714285714285,
+        "positionRequests": 2,
+        "positionBytes": 130331.85714285714,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 16,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 6.7631660000000124,
+        "p95Ms": 38.404083000000014,
+        "avgRequests": 1.5714285714285714,
+        "avgBytes": 466692.71428571426,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 7.599958000000697,
+        "p95Ms": 37.69129099999918,
+        "avgRequests": 2.7142857142857144,
+        "avgBytes": 387467.85714285716,
+        "frequencyRequests": 0.8571428571428571,
+        "positionRequests": 1.8571428571428572,
+        "positionBytes": 130322.42857142857,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 16,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 6.884999999999991,
+        "p95Ms": 37.31545799999998,
+        "avgRequests": 0.14285714285714285,
+        "avgBytes": 714.5714285714286,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 85.71428571428571,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 8.424417000000176,
+        "p95Ms": 36.561249999999745,
+        "avgRequests": 1.4285714285714286,
+        "avgBytes": 129736.28571428571,
+        "frequencyRequests": 0,
+        "positionRequests": 1.4285714285714286,
+        "positionBytes": 129736.28571428571,
+        "zeroReadPercent": 28.571428571428573,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 32,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 6.931333999999993,
+        "p95Ms": 35.571708,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 7.513667000000169,
+        "p95Ms": 34.97691699999996,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 32,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 6.7217919999999935,
+        "p95Ms": 37.019541000000004,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 7.234165999999277,
+        "p95Ms": 34.98450000000048,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 48,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 6.886209000000008,
+        "p95Ms": 35.464124999999996,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 7.241917000000285,
+        "p95Ms": 35.09270800000013,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 48,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 6.704415999999981,
+        "p95Ms": 35.80712500000004,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 7.299958999999944,
+        "p95Ms": 35.048791000000165,
+        "avgRequests": 0,
+        "avgBytes": 0,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 100,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 8,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 60.212167000000136,
+        "p95Ms": 307.6054589999994,
+        "avgRequests": 2.2857142857142856,
+        "avgBytes": 4701597.142857143,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 56.873334000003524,
+        "p95Ms": 300.6045419999864,
+        "avgRequests": 4.285714285714286,
+        "avgBytes": 4672105.857142857,
+        "frequencyRequests": 2.2857142857142856,
+        "positionRequests": 2,
+        "positionBytes": 1301833.857142857,
+        "zeroReadPercent": 0,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 8,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 57.03895900000043,
+        "p95Ms": 295.36129100000016,
+        "avgRequests": 1.2857142857142858,
+        "avgBytes": 4523627.428571428,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 28.571428571428573,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 59.276582999998936,
+        "p95Ms": 310.6704170000012,
+        "avgRequests": 3,
+        "avgBytes": 4543999.571428572,
+        "frequencyRequests": 1.2857142857142858,
+        "positionRequests": 1.7142857142857142,
+        "positionBytes": 1301635.2857142857,
+        "zeroReadPercent": 28.571428571428573,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 16,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 58.765041000000565,
+        "p95Ms": 303.1282090000004,
+        "avgRequests": 2.2857142857142856,
+        "avgBytes": 4701597.142857143,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 60.92433299998811,
+        "p95Ms": 326.664832999988,
+        "avgRequests": 4.285714285714286,
+        "avgBytes": 4672105.857142857,
+        "frequencyRequests": 2.2857142857142856,
+        "positionRequests": 2,
+        "positionBytes": 1301833.857142857,
+        "zeroReadPercent": 0,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 16,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 60.51320799999985,
+        "p95Ms": 309.80212500000016,
+        "avgRequests": 0.8571428571428571,
+        "avgBytes": 2864288.1428571427,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 42.857142857142854,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 137.47791700001108,
+        "p95Ms": 621.809500000003,
+        "avgRequests": 2.142857142857143,
+        "avgBytes": 2163065,
+        "frequencyRequests": 0.42857142857142855,
+        "positionRequests": 1.7142857142857142,
+        "positionBytes": 1301635.2857142857,
+        "zeroReadPercent": 28.571428571428573,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 32,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 57.803959000000305,
+        "p95Ms": 307.539166,
+        "avgRequests": 2.2857142857142856,
+        "avgBytes": 4701597.142857143,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 57.59804099999019,
+        "p95Ms": 305.3104999999923,
+        "avgRequests": 4.285714285714286,
+        "avgBytes": 4672105.857142857,
+        "frequencyRequests": 2.2857142857142856,
+        "positionRequests": 2,
+        "positionBytes": 1301833.857142857,
+        "zeroReadPercent": 0,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 32,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 55.6106249999998,
+        "p95Ms": 316.0353339999999,
+        "avgRequests": 0.14285714285714285,
+        "avgBytes": 7143.142857142857,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 85.71428571428571,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 64.96004200000607,
+        "p95Ms": 343.91395800000464,
+        "avgRequests": 2.142857142857143,
+        "avgBytes": 1306119.857142857,
+        "frequencyRequests": 0.14285714285714285,
+        "positionRequests": 2,
+        "positionBytes": 1301833.857142857,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 48,
+      "strategy": "smallest",
+      "before": {
+        "p50Ms": 59.55945900000006,
+        "p95Ms": 303.17254199999934,
+        "avgRequests": 2.2857142857142856,
+        "avgBytes": 4701597.142857143,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 14.285714285714286,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 60.220083000007435,
+        "p95Ms": 307.7728749999951,
+        "avgRequests": 4.285714285714286,
+        "avgBytes": 4672105.857142857,
+        "frequencyRequests": 2.2857142857142856,
+        "positionRequests": 2,
+        "positionBytes": 1301833.857142857,
+        "zeroReadPercent": 0,
+        "failures": 0
+      }
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 48,
+      "strategy": "workload",
+      "before": {
+        "p50Ms": 58.07145899999978,
+        "p95Ms": 306.8590829999998,
+        "avgRequests": 0.14285714285714285,
+        "avgBytes": 7143.142857142857,
+        "frequencyRequests": 0,
+        "positionRequests": 0,
+        "positionBytes": 0,
+        "zeroReadPercent": 85.71428571428571,
+        "failures": 0
+      },
+      "after": {
+        "p50Ms": 61.438667000009445,
+        "p95Ms": 308.25945800000045,
+        "avgRequests": 1.8571428571428572,
+        "avgBytes": 1305921.2857142857,
+        "frequencyRequests": 0.14285714285714285,
+        "positionRequests": 1.7142857142857142,
+        "positionBytes": 1301635.2857142857,
+        "zeroReadPercent": 28.571428571428573,
+        "failures": 0
+      }
+    }
+  ]
+}

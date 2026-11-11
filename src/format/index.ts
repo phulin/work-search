@@ -1,9 +1,9 @@
 import { decoder, encoder } from "./codec.js";
 import { DocumentTable } from "./documents.js";
 export const MAGIC = 0x31535742,
-  VERSION = 3,
+  VERSION = 4,
   HEADER = 128,
-  TERM = 28,
+  TERM = 40,
   LOCAL = 0xffffffff;
 export interface Entry {
   term: string;
@@ -12,6 +12,10 @@ export interface Entry {
   offset: number;
   length: number;
   crc: number;
+  positionObject: number;
+  positionOffset: number;
+  positionLength: number;
+  positionCrc: number;
 }
 export class BinaryIndex {
   readonly bytes: Uint8Array;
@@ -83,6 +87,10 @@ export class BinaryIndex {
       offset: v.getUint32(p + 12, true),
       length: v.getUint32(p + 16, true),
       crc: v.getUint32(p + 20, true),
+      positionObject: v.getUint32(p + 24, true),
+      positionOffset: v.getUint32(p + 28, true),
+      positionLength: v.getUint32(p + 32, true),
+      positionCrc: v.getUint32(p + 36, true),
     };
   }
   lookup(term: string): Entry | undefined {
@@ -102,7 +110,7 @@ export class BinaryIndex {
   lengths(i: number, out?: { body: number; title: number }) {
     return this.documents.lengths(i, out);
   }
-  key(object: number, kind = "postings") {
+  key(object: number, kind = "frequencies") {
     return `${this.generation}/${kind}-${object}.bin`;
   }
 }
@@ -139,9 +147,18 @@ export function buildBinary(
   let off = 0;
   entries.forEach((e, i) => {
     let p = HEADER + i * TERM;
-    [off, e.df, e.object, e.offset, e.length, e.crc, 0].forEach((n, j) =>
-      v.setUint32(p + j * 4, n, true),
-    );
+    [
+      off,
+      e.df,
+      e.object,
+      e.offset,
+      e.length,
+      e.crc,
+      e.positionObject,
+      e.positionOffset,
+      e.positionLength,
+      e.positionCrc,
+    ].forEach((n, j) => v.setUint32(p + j * 4, n, true));
     b.set(terms[i], strings + off);
     off += terms[i].length;
   });

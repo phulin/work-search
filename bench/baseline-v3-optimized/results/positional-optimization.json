@@ -1,0 +1,457 @@
+{
+  "baselineEnvironment": {
+    "date": "2026-11-11T16:51:56.378Z",
+    "format": 3,
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3",
+    "node": "v26.7.0",
+    "queryMode": "Node HTTP handler + filesystem ranges, warm OS cache; not Cloudflare latency"
+  },
+  "currentEnvironment": {
+    "date": "2026-11-11T17:07:18.487Z",
+    "format": 3,
+    "indexConstruction": "Reused byte-verified v3 indexes; build timings/RSS inherited from a68426a baseline, not remeasured",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3",
+    "node": "v26.7.0",
+    "queryMode": "Node HTTP handler + filesystem ranges, warm OS cache; not Cloudflare latency"
+  },
+  "checks": [
+    {
+      "name": "10000-8-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "10000-8-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "10000-16-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "10000-16-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "10000-32-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "10000-32-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "10000-48-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "10000-48-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "100000-8-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "100000-8-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "100000-16-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "100000-16-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "100000-32-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "100000-32-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "100000-48-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "100000-48-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "1000000-8-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "1000000-8-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "1000000-16-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "1000000-16-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "1000000-32-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "1000000-32-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "1000000-48-smallest",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    },
+    {
+      "name": "1000000-48-workload",
+      "identicalIndexAndObjects": true,
+      "identicalMatchCountsAndIO": true
+    }
+  ],
+  "rows": [
+    {
+      "name": "10000-8-smallest",
+      "before": {
+        "p50": 1.0015000000000782,
+        "p95": 9.137082999999961,
+        "cpu": 12.115142857142857
+      },
+      "after": {
+        "p50": 0.9877500000000055,
+        "p95": 6.325209000000001,
+        "cpu": 5.882142857142857
+      }
+    },
+    {
+      "name": "10000-8-workload",
+      "before": {
+        "p50": 1.009708000000046,
+        "p95": 9.45733400000006,
+        "cpu": 11.57290476190476
+      },
+      "after": {
+        "p50": 1.0664170000000013,
+        "p95": 6.404917000000012,
+        "cpu": 7.997333333333333
+      }
+    },
+    {
+      "name": "10000-16-smallest",
+      "before": {
+        "p50": 1.0265000000000555,
+        "p95": 8.867875000000026,
+        "cpu": 11.272476190476189
+      },
+      "after": {
+        "p50": 0.9743749999999949,
+        "p95": 6.044499999999999,
+        "cpu": 7.427428571428571
+      }
+    },
+    {
+      "name": "10000-16-workload",
+      "before": {
+        "p50": 1.0286670000000413,
+        "p95": 9.442499999999995,
+        "cpu": 12.427666666666667
+      },
+      "after": {
+        "p50": 1.0336249999999865,
+        "p95": 6.521917000000002,
+        "cpu": 6.160190476190477
+      }
+    },
+    {
+      "name": "10000-32-smallest",
+      "before": {
+        "p50": 1.012124999999969,
+        "p95": 9.586583000000019,
+        "cpu": 11.334666666666667
+      },
+      "after": {
+        "p50": 1.0405000000000086,
+        "p95": 7.1100840000000005,
+        "cpu": 6.861238095238096
+      }
+    },
+    {
+      "name": "10000-32-workload",
+      "before": {
+        "p50": 0.9780420000000731,
+        "p95": 9.091292000000067,
+        "cpu": 11.391666666666667
+      },
+      "after": {
+        "p50": 1.048833000000002,
+        "p95": 6.101499999999987,
+        "cpu": 7.711761904761905
+      }
+    },
+    {
+      "name": "10000-48-smallest",
+      "before": {
+        "p50": 1.0066659999999956,
+        "p95": 9.063834000000043,
+        "cpu": 12.09980952380952
+      },
+      "after": {
+        "p50": 1.0482920000000036,
+        "p95": 6.569625000000002,
+        "cpu": 7.82190476190476
+      }
+    },
+    {
+      "name": "10000-48-workload",
+      "before": {
+        "p50": 1.0178750000000036,
+        "p95": 9.453041999999982,
+        "cpu": 11.662714285714284
+      },
+      "after": {
+        "p50": 1.0019160000000085,
+        "p95": 6.006040999999996,
+        "cpu": 7.39604761904762
+      }
+    },
+    {
+      "name": "100000-8-smallest",
+      "before": {
+        "p50": 7.397041000000172,
+        "p95": 73.52337499999976,
+        "cpu": 48.339761904761914
+      },
+      "after": {
+        "p50": 7.018500000000017,
+        "p95": 38.926041,
+        "cpu": 26.71933333333334
+      }
+    },
+    {
+      "name": "100000-8-workload",
+      "before": {
+        "p50": 8.891834000000017,
+        "p95": 67.06216600000062,
+        "cpu": 38.28195238095238
+      },
+      "after": {
+        "p50": 9.410708999999997,
+        "p95": 40.27129200000002,
+        "cpu": 27.936761904761905
+      }
+    },
+    {
+      "name": "100000-16-smallest",
+      "before": {
+        "p50": 9.291791999999987,
+        "p95": 68.59133399999973,
+        "cpu": 40.71014285714286
+      },
+      "after": {
+        "p50": 6.7631660000000124,
+        "p95": 38.404083000000014,
+        "cpu": 26.389571428571426
+      }
+    },
+    {
+      "name": "100000-16-workload",
+      "before": {
+        "p50": 8.997667000000547,
+        "p95": 66.74354099999982,
+        "cpu": 38.054952380952386
+      },
+      "after": {
+        "p50": 6.884999999999991,
+        "p95": 37.31545799999998,
+        "cpu": 24.7722380952381
+      }
+    },
+    {
+      "name": "100000-32-smallest",
+      "before": {
+        "p50": 8.136875000000146,
+        "p95": 64.8095000000003,
+        "cpu": 38.90371428571429
+      },
+      "after": {
+        "p50": 6.931333999999993,
+        "p95": 35.571708,
+        "cpu": 25.464952380952383
+      }
+    },
+    {
+      "name": "100000-32-workload",
+      "before": {
+        "p50": 8.189416999999594,
+        "p95": 65.49254199999996,
+        "cpu": 36.92071428571429
+      },
+      "after": {
+        "p50": 6.7217919999999935,
+        "p95": 37.019541000000004,
+        "cpu": 26.024047619047618
+      }
+    },
+    {
+      "name": "100000-48-smallest",
+      "before": {
+        "p50": 8.128042000000278,
+        "p95": 66.23350000000028,
+        "cpu": 36.64209523809524
+      },
+      "after": {
+        "p50": 6.886209000000008,
+        "p95": 35.464124999999996,
+        "cpu": 25.69366666666666
+      }
+    },
+    {
+      "name": "100000-48-workload",
+      "before": {
+        "p50": 8.111625000000458,
+        "p95": 66.17145900000014,
+        "cpu": 39.099000000000004
+      },
+      "after": {
+        "p50": 6.704415999999981,
+        "p95": 35.80712500000004,
+        "cpu": 26.185190476190478
+      }
+    },
+    {
+      "name": "1000000-8-smallest",
+      "before": {
+        "p50": 74.66883399999642,
+        "p95": 1130.4243330000027,
+        "cpu": 623.3595238095238
+      },
+      "after": {
+        "p50": 60.212167000000136,
+        "p95": 307.6054589999994,
+        "cpu": 160.44590476190476
+      }
+    },
+    {
+      "name": "1000000-8-workload",
+      "before": {
+        "p50": 74.27279200000339,
+        "p95": 900.2020840000041,
+        "cpu": 700.932761904762
+      },
+      "after": {
+        "p50": 57.03895900000043,
+        "p95": 295.36129100000016,
+        "cpu": 158.32257142857145
+      }
+    },
+    {
+      "name": "1000000-16-smallest",
+      "before": {
+        "p50": 74.01916700000584,
+        "p95": 913.0757500000036,
+        "cpu": 614.3918095238096
+      },
+      "after": {
+        "p50": 58.765041000000565,
+        "p95": 303.1282090000004,
+        "cpu": 158.36328571428575
+      }
+    },
+    {
+      "name": "1000000-16-workload",
+      "before": {
+        "p50": 70.61637499999779,
+        "p95": 725.82633299999,
+        "cpu": 426.57466666666664
+      },
+      "after": {
+        "p50": 60.51320799999985,
+        "p95": 309.80212500000016,
+        "cpu": 158.08228571428577
+      }
+    },
+    {
+      "name": "1000000-32-smallest",
+      "before": {
+        "p50": 75.83720799999719,
+        "p95": 891.7007920000033,
+        "cpu": 699.4312857142858
+      },
+      "after": {
+        "p50": 57.803959000000305,
+        "p95": 307.539166,
+        "cpu": 159.6406666666667
+      }
+    },
+    {
+      "name": "1000000-32-workload",
+      "before": {
+        "p50": 91.88316700000723,
+        "p95": 794.5912499999977,
+        "cpu": 449.5314285714285
+      },
+      "after": {
+        "p50": 55.6106249999998,
+        "p95": 316.0353339999999,
+        "cpu": 160.40333333333334
+      }
+    },
+    {
+      "name": "1000000-48-smallest",
+      "before": {
+        "p50": 73.51612499999464,
+        "p95": 894.614791999993,
+        "cpu": 664.7800476190475
+      },
+      "after": {
+        "p50": 59.55945900000006,
+        "p95": 303.17254199999934,
+        "cpu": 156.38761904761904
+      }
+    },
+    {
+      "name": "1000000-48-workload",
+      "before": {
+        "p50": 74.64991700000246,
+        "p95": 830.6345409999922,
+        "cpu": 479.5462857142857
+      },
+      "after": {
+        "p50": 58.07145899999978,
+        "p95": 306.8590829999998,
+        "cpu": 156.93685714285715
+      }
+    }
+  ]
+}

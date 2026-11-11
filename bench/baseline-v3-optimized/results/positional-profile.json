@@ -1,0 +1,442 @@
+{
+  "kind": "V8 sampled profiles, identical 48 MiB workload index, four passes over three common positional queries; self attribution includes JIT effects and is not a precise function timer",
+  "rows": [
+    {
+      "label": "before",
+      "totalSamples": 6046,
+      "functions": [
+        {
+          "function": "(garbage collector)",
+          "file": "",
+          "selfSamples": 804
+        },
+        {
+          "function": "",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 610
+        },
+        {
+          "function": "spans",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 396
+        },
+        {
+          "function": "crc32",
+          "file": "format/codec.ts",
+          "selfSamples": 344
+        },
+        {
+          "function": "postingPositions",
+          "file": "format/codec.ts",
+          "selfSamples": 318
+        },
+        {
+          "function": "spans",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 214
+        },
+        {
+          "function": "postingPositions",
+          "file": "format/codec.ts",
+          "selfSamples": 173
+        },
+        {
+          "function": "postingPositions",
+          "file": "format/codec.ts",
+          "selfSamples": 167
+        },
+        {
+          "function": "postingPositions",
+          "file": "format/codec.ts",
+          "selfSamples": 165
+        },
+        {
+          "function": "matches",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 154
+        },
+        {
+          "function": "decodePostings",
+          "file": "format/codec.ts",
+          "selfSamples": 151
+        },
+        {
+          "function": "matches",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 150
+        },
+        {
+          "function": "spans",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 144
+        },
+        {
+          "function": "postingPositions",
+          "file": "format/codec.ts",
+          "selfSamples": 142
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 108
+        },
+        {
+          "function": "positions",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 90
+        },
+        {
+          "function": "row",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 78
+        },
+        {
+          "function": "positions",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 55
+        },
+        {
+          "function": "row",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 55
+        },
+        {
+          "function": "positions",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 53
+        },
+        {
+          "function": "positions",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 50
+        },
+        {
+          "function": "row",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 49
+        },
+        {
+          "function": "row",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 43
+        },
+        {
+          "function": "row",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 40
+        },
+        {
+          "function": "positions",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 39
+        },
+        {
+          "function": "row",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 37
+        },
+        {
+          "function": "combine",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 31
+        },
+        {
+          "function": "crc32",
+          "file": "format/codec.ts",
+          "selfSamples": 18
+        },
+        {
+          "function": "",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 16
+        },
+        {
+          "function": "",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 13
+        },
+        {
+          "function": "",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 11
+        },
+        {
+          "function": "",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 8
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 6
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 6
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 4
+        },
+        {
+          "function": "bounded",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 4
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 3
+        },
+        {
+          "function": "bounded",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 3
+        },
+        {
+          "function": "postingPositions",
+          "file": "format/codec.ts",
+          "selfSamples": 3
+        },
+        {
+          "function": "bounded",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "spans",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "positions",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "spans",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "row",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "postingPositions",
+          "file": "format/codec.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "bounded",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "positions",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "positionalMatcher",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "matches",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "",
+          "file": "baseline-v3/evaluate.ts",
+          "selfSamples": 1
+        }
+      ]
+    },
+    {
+      "label": "after",
+      "totalSamples": 2069,
+      "functions": [
+        {
+          "function": "crc32",
+          "file": "format/codec.ts",
+          "selfSamples": 287
+        },
+        {
+          "function": "decodePostings",
+          "file": "format/codec.ts",
+          "selfSamples": 132
+        },
+        {
+          "function": "positions",
+          "file": "query/evaluate.ts",
+          "selfSamples": 90
+        },
+        {
+          "function": "positions",
+          "file": "query/evaluate.ts",
+          "selfSamples": 88
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 82
+        },
+        {
+          "function": "positions",
+          "file": "query/evaluate.ts",
+          "selfSamples": 82
+        },
+        {
+          "function": "phraseMatch",
+          "file": "query/evaluate.ts",
+          "selfSamples": 74
+        },
+        {
+          "function": "phraseMatch",
+          "file": "query/evaluate.ts",
+          "selfSamples": 64
+        },
+        {
+          "function": "truth",
+          "file": "query/evaluate.ts",
+          "selfSamples": 47
+        },
+        {
+          "function": "truth",
+          "file": "query/evaluate.ts",
+          "selfSamples": 37
+        },
+        {
+          "function": "(garbage collector)",
+          "file": "",
+          "selfSamples": 31
+        },
+        {
+          "function": "row",
+          "file": "query/evaluate.ts",
+          "selfSamples": 25
+        },
+        {
+          "function": "row",
+          "file": "query/evaluate.ts",
+          "selfSamples": 25
+        },
+        {
+          "function": "crc32",
+          "file": "format/codec.ts",
+          "selfSamples": 25
+        },
+        {
+          "function": "row",
+          "file": "query/evaluate.ts",
+          "selfSamples": 24
+        },
+        {
+          "function": "",
+          "file": "query/evaluate.ts",
+          "selfSamples": 23
+        },
+        {
+          "function": "spans",
+          "file": "query/evaluate.ts",
+          "selfSamples": 15
+        },
+        {
+          "function": "orderedExists",
+          "file": "query/evaluate.ts",
+          "selfSamples": 12
+        },
+        {
+          "function": "",
+          "file": "query/evaluate.ts",
+          "selfSamples": 9
+        },
+        {
+          "function": "row",
+          "file": "query/evaluate.ts",
+          "selfSamples": 9
+        },
+        {
+          "function": "",
+          "file": "query/evaluate.ts",
+          "selfSamples": 6
+        },
+        {
+          "function": "phraseMatch",
+          "file": "query/evaluate.ts",
+          "selfSamples": 3
+        },
+        {
+          "function": "positions",
+          "file": "query/evaluate.ts",
+          "selfSamples": 3
+        },
+        {
+          "function": "present",
+          "file": "query/evaluate.ts",
+          "selfSamples": 3
+        },
+        {
+          "function": "",
+          "file": "query/evaluate.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "positions",
+          "file": "query/evaluate.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "",
+          "file": "query/evaluate.ts",
+          "selfSamples": 2
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "conjunction",
+          "file": "query/evaluate.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "readVarint",
+          "file": "format/codec.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "",
+          "file": "query/evaluate.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "",
+          "file": "query/evaluate.ts",
+          "selfSamples": 1
+        },
+        {
+          "function": "phraseMatch",
+          "file": "query/evaluate.ts",
+          "selfSamples": 1
+        }
+      ]
+    }
+  ]
+}

@@ -48,7 +48,7 @@ for (const name of [
     const startupWallMs = performance.now() - start;
     const bucket = await mf.getR2Bucket("INDEX");
     for (const o of m.objects)
-      if (o.kind === "postings")
+      if (o.kind === "frequencies" || o.kind === "positions")
         await bucket.put(o.key, await readFile(join(out, "objects", o.key)), {
           customMetadata: { generation: m.generation },
         });

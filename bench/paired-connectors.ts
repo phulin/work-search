@@ -25,7 +25,7 @@ for (const r of configs.filter(
     beforeCpuMs: number;
     afterCpuMs: number;
   }[] = [];
-  async function run(fn: typeof optimized, q: string) {
+  async function run(fn: typeof optimized | typeof baseline, q: string) {
     const t = performance.now(),
       cpu = process.cpuUsage(),
       result = await fn(index, storage, q);

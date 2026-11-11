@@ -85,7 +85,7 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
         const body = (await response.json()) as any;
         expect(body.total, q).toBe(total);
         if (total)
-          expect(body.diagnostics.indexRequests).toBe(name === "full" ? 0 : 2);
+          expect(body.diagnostics.indexRequests).toBe(name === "full" ? 0 : 4);
       }
       expect(
         (
@@ -94,6 +94,18 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
           )
         ).status,
       ).toBe(400);
+      if (name === "remote") {
+        for (const o of manifest.objects)
+          if (o.kind === "positions") await bucket.delete(o.key);
+        const plain = await mf.dispatchFetch(
+          "https://test/search?q=unique&diagnostics=true",
+        );
+        expect(plain.status).toBe(200);
+        const body = (await plain.json()) as any;
+        expect(body.total).toBe(1);
+        expect(body.diagnostics.positionRequests).toBe(0);
+        expect(body.diagnostics.frequencyRequests).toBe(1);
+      }
       expect((await mf.dispatchFetch("https://test/health")).status).toBe(200);
     } finally {
       await mf.dispose();

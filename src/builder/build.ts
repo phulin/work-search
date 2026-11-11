@@ -15,7 +15,8 @@ import { DatabaseSync } from "node:sqlite";
 import { once } from "node:events";
 import { tokenize, type Document } from "../query/tokenize.js";
 import {
-  encodePostings,
+  encodeFrequencies,
+  encodePositions,
   crc32,
   encoder,
   type Posting,
@@ -286,18 +287,25 @@ export async function build(options: BuildOptions) {
       list: Posting[] = [];
     const emit = async () => {
       if (current === undefined) return;
-      const bytes = encodePostings(list);
+      const bytes = encodeFrequencies(list),
+        frequencyCrc = crc32(bytes),
+        positions = encodePositions(list, frequencyCrc);
       entries.push({
         term: current,
         df: list.length,
         object: 0,
         offset: 0,
         length: bytes.length,
-        crc: crc32(bytes),
+        crc: frequencyCrc,
+        positionObject: 0,
+        positionOffset: 0,
+        positionLength: positions.length,
+        positionCrc: crc32(positions),
         spool: spoolOffset,
       });
       await write(spool, bytes);
-      spoolOffset += bytes.length;
+      await write(spool, positions);
+      spoolOffset += bytes.length + positions.length;
     };
     let record;
     while ((record = await merger.next())) {
@@ -327,6 +335,18 @@ export async function build(options: BuildOptions) {
         options.workload,
       ),
       generation = hash.digest("hex");
+    const embeddedFrequencyBytes = entries.reduce(
+      (s, e) => s + (chosen.has(e.term) ? e.length : 0),
+      0,
+    );
+    const chosenPositions = selectPostings(
+      entries
+        .filter((e) => chosen.has(e.term))
+        .map((e) => ({ term: e.term, length: e.positionLength })),
+      budget - baseBytes - embeddedFrequencyBytes,
+      strategy,
+      options.workload,
+    );
     await mkdir(options.out, { recursive: true });
     await mkdir(join(options.out, "objects"), { recursive: true });
     const objectRoot = join(options.out, "objects", generation);
@@ -342,34 +362,58 @@ export async function build(options: BuildOptions) {
       embedded: Uint8Array[] = [],
       objects: { key: string; size: number; sha256: string; kind: string }[] =
         [];
-    let localOffset = 0,
-      object = 0,
-      offset = 0;
-    let remote = createWriteStream(join(objectRoot, "postings-0.bin"));
-    for (const e of entries) {
-      const bytes = new Uint8Array(e.length);
-      await input.read(bytes, 0, e.length, e.spool);
-      if (chosen.has(e.term)) {
-        e.object = LOCAL;
-        e.offset = localOffset;
-        localOffset += e.length;
-        embedded.push(bytes);
-      } else {
-        if (offset && offset + e.length > objectBytes) {
-          await finish(remote);
-          object++;
-          offset = 0;
-          remote = createWriteStream(
-            join(objectRoot, `postings-${object}.bin`),
-          );
+    let localOffset = 0;
+    async function pack(
+      kind: "frequencies" | "positions",
+      selected: Set<string>,
+    ) {
+      let object = 0,
+        offset = 0;
+      let remote = createWriteStream(join(objectRoot, `${kind}-0.bin`));
+      for (const e of entries) {
+        const positional = kind === "positions",
+          length = positional ? e.positionLength : e.length;
+        const bytes = new Uint8Array(length);
+        const { bytesRead } = await input.read(
+          bytes,
+          0,
+          length,
+          e.spool + (positional ? e.length : 0),
+        );
+        if (bytesRead !== length) throw new Error("Truncated postings spool");
+        let location: number, start: number;
+        if (selected.has(e.term)) {
+          location = LOCAL;
+          start = localOffset;
+          localOffset += length;
+          embedded.push(bytes);
+        } else {
+          if (offset && offset + length > objectBytes) {
+            await finish(remote);
+            object++;
+            offset = 0;
+            remote = createWriteStream(
+              join(objectRoot, `${kind}-${object}.bin`),
+            );
+          }
+          location = object;
+          start = offset;
+          offset += length;
+          await write(remote, bytes);
         }
-        e.object = object;
-        e.offset = offset;
-        offset += e.length;
-        await write(remote, bytes);
+        if (positional) {
+          e.positionObject = location;
+          e.positionOffset = start;
+        } else {
+          e.object = location;
+          e.offset = start;
+        }
       }
+      await finish(remote);
+      return object + 1;
     }
-    await finish(remote);
+    const frequencyObjects = await pack("frequencies", chosen),
+      positionObjects = await pack("positions", chosenPositions);
     await input.close();
     for (let i = 0; i < metaFiles.length; i++)
       await writeFile(
@@ -377,7 +421,8 @@ export async function build(options: BuildOptions) {
         await readFile(metaFiles[i]),
       );
     for (const [kind, n] of [
-      ["postings", object + 1],
+      ["frequencies", frequencyObjects],
+      ["positions", positionObjects],
       ["metadata", metaFiles.length],
     ] as const)
       for (let i = 0; i < n; i++) {
@@ -421,6 +466,12 @@ export async function build(options: BuildOptions) {
         documents.length * 24 +
         documents.reduce((s, d) => s + encoder.encode(d.id).length, 0),
       postingsBytes: spoolOffset,
+      frequencyBytes: entries.reduce((s, e) => s + e.length, 0),
+      positionBytes: entries.reduce((s, e) => s + e.positionLength, 0),
+      embeddedFrequencyBytes,
+      embeddedPositionBytes: localOffset - embeddedFrequencyBytes,
+      embeddedPositionTerms: chosenPositions.size,
+      embeddingPolicy: "frequencies-first",
       embeddedBytes: localOffset,
       embeddedTerms: chosen.size,
       objects,

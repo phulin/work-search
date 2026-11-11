@@ -1,4 +1,4 @@
-# Binary format v3
+# Binary format v4
 
 All fixed integers are unsigned little-endian u32; offsets are bytes. Objects and individual sections must fit u32. The index file is at most the configured budget (up to 48 MiB). UTF-8 strings have no terminator. Dictionary order is JavaScript UTF-16 lexicographic order, not UTF-8 byte order. Readers/writers must use that comparator.
 
@@ -9,7 +9,7 @@ All fixed integers are unsigned little-endian u32; offsets are bytes. Objects an
 | Offset | Value                                         |
 | -----: | --------------------------------------------- |
 |      0 | u32 magic 0x31535742 (`BWS1`)                 |
-|      4 | u32 format version, 3                         |
+|      4 | u32 format version, 4                         |
 |      8 | u32 total bundle byte length                  |
 |     12 | u32 document count                            |
 |     16 | u32 term count                                |
@@ -24,7 +24,22 @@ All fixed integers are unsigned little-endian u32; offsets are bytes. Objects an
 |     60 | reserved zero                                 |
 |     64 | 64 ASCII hex characters of generation SHA-256 |
 
-Each term descriptor is 28 bytes: term-string offset relative to term strings, document frequency, object number (0xffffffff = bundled), posting offset, compressed length, CRC32, reserved zero. Term end is the next descriptor's string offset, or document-table start for the last term. Local posting offsets are relative to embedded-posting start; remote offsets are relative to an R2 object's beginning.
+Each term descriptor is **40 bytes**, with u32 fields at these byte offsets:
+
+| Offset | Field                                                  |
+| -----: | ------------------------------------------------------ |
+|      0 | Term-string offset relative to the term-string section |
+|      4 | Document frequency                                     |
+|      8 | Frequency object number (`0xffffffff` = bundled)       |
+|     12 | Frequency offset                                       |
+|     16 | Frequency byte length                                  |
+|     20 | Frequency CRC32                                        |
+|     24 | Position object number (`0xffffffff` = bundled)        |
+|     28 | Position offset                                        |
+|     32 | Position byte length                                   |
+|     36 | Position CRC32                                         |
+
+Term-string end is the next descriptor's string offset, or document-table start for the final term. Each local offset is relative to embedded-posting start, regardless of stream kind. Each remote offset is relative to its own object. Frequency and position streams may be embedded independently; no remote descriptor lookup is needed. Dictionary size grows by twelve bytes per term compared with v3.
 
 ## Compressed document table
 
@@ -55,20 +70,34 @@ Variable-length records follow the packed lengths, one per document:
 
 Prefix comparisons may split a multibyte character; only the fully reconstructed ID is decoded as UTF-8. This preserves arbitrary valid Unicode IDs without sorting or changing internal IDs. A zero metadata tag captures contiguous records; exceptions handle object transitions, gaps and nonmonotonic locations. The block header provides a full restart for both IDs and pointers. Random document retrieval scans at most 32 records, and only top-K winners need IDs during ranking. Remote metadata ranges still hold individual JSON objects `{id,title?,metadata?}`.
 
-The directory and block geometry are checked before accessing a block. Each block's CRC covers its header, packed lengths, IDs and pointers; validation is lazy and remembered in one bit per block (3,907 bytes at one million documents). No document arrays or ID maps are built during Worker startup. Runtime length access caches only the last header in seven numeric scalars; no document-length arrays are expanded. Constant columns return their minima directly, while varying columns extract up to five bytes using bit operations. The length-access optimization remains unchanged in v3; the document-table subformat is still DTC2. Bundle bytes must remain immutable after construction. Corrupt widths, overflowing values, invalid prefixes/pointer tags, truncated records and trailing bytes at a block's end are rejected.
+The directory and block geometry are checked before accessing a block. Each block's CRC covers its header, packed lengths, IDs and pointers; validation is lazy and remembered in one bit per block (3,907 bytes at one million documents). No document arrays or ID maps are built during Worker startup. Runtime length access caches only the last header in seven numeric scalars; no document-length arrays are expanded. Constant columns return their minima directly, while varying columns extract up to five bytes using bit operations. The length-access optimization remains unchanged in v4; the document-table subformat is still DTC2. Bundle bytes must remain immutable after construction. Corrupt widths, overflowing values, invalid prefixes/pointer tags, truncated records and trailing bytes at a block's end are rejected.
 
-## Postings
+## Independent posting streams
 
-Unsigned LEB128 canonical varints (maximum five bytes / u32). Each list begins with document frequency. Every posting encodes `(document gap, body TF, title TF)`, then exactly `body TF` body-position gaps followed by exactly `title TF` title-position gaps. Document and position coordinates are zero-based. The first gap in each field is its first absolute token position, so it may be zero. Later document/position gaps must be positive. Position deltas restart at zero independently for body/title and for every document. At least one TF must be positive.
+All compressed integers use canonical unsigned LEB128 (maximum five bytes / u32). Frequencies and positions are separately encoded, checksummed, embedded and packed into immutable objects. The v3 interleaved codec remains only as a frozen-reference/test helper and is not used by the deployed v4 query path.
 
-The builder stores every normalized token's position, including stop words. Example: body `red fox red`, title `fox` produces body positions `[0,2]` for red and `[1]` for fox; fox has title position `[0]`. Phrase/proximity matching cannot cross field boundaries. Sentence/paragraph delimiters are not encoded: `/s` and `/p` use fixed token distances.
+### Frequencies
 
-The decoder validates counts, canonical/truncated varints, increasing document IDs and field positions, u32 overflow and trailing data. With positional queries it records one u32 compressed-byte offset per posting; plain term/Boolean queries omit that array. Frequencies remain available for BM25 without expanding positions. Position streams for a candidate are decoded on demand into two temporary typed arrays. Offsets and position-allocation limits are accounted for in the query resource guard. Local and ranged R2 payloads use precisely the same decoder and list CRC. Empty lists encode a single zero byte.
+A list begins with varint document frequency, then exactly that many triples `(document-ID gap, body TF, title TF)`. First document gap is its absolute internal ID (possibly zero); subsequent gaps must be positive. At least one TF must be positive. **No position bytes, position lengths, or offset tables occur in this stream.** The decoder validates its CRC, counts, varints, sorted IDs, u32 overflow and trailing data. It allocates only three u32 arrays: IDs and two TFs. It records the frequency CRC for binding a position stream later. Empty lists encode a single zero byte.
 
-Objects are named `<generation>/postings-<number>.bin` and `<generation>/metadata-<number>.bin`. Packing aims for 64 MiB without splitting a single list/document. No remote dictionary exists. Remote object custom metadata `generation` must match the header. Manifest SHA-256 and lengths protect complete files during deployment; per-list CRC32 protects every local/remote posting retrieval. Document blocks also have CRC32 protection. Header, directory and remote metadata arbitrary bit flips are not all detected by runtime CRCs; verify the complete generation before deployment. This format is not authenticated against hostile storage modifications.
+### Positions
+
+A position list begins with varint document frequency and a fixed four-byte little-endian **CRC32 of the complete corresponding frequency stream**. In frequency posting order, it then stores exactly `body TF` body-position gaps and `title TF` title-position gaps for each document. Counts are supplied by the already decoded frequency stream; they are not duplicated in the position payload. First position gap within each field/document is its absolute zero-based token index (possibly zero); subsequent gaps must be positive. Deltas restart independently for body/title and every document. An empty list still has the count plus four-byte binding CRC.
+
+The reader validates the position list's own dictionary CRC and its frequency binding before accepting data, then verifies count agreement, position ordering, overflow, truncation and trailing bytes. Position attachment builds one u32 compressed-byte offset per posting. Candidate-local reusable buffers decode only the needed occurrence streams. An unattached frequency list has no retained position bytes or positional-offset array.
+
+### Object layout and embedding
+
+Objects are named `<generation>/frequencies-N.bin`, `<generation>/positions-N.bin` and `<generation>/metadata-N.bin`. Each kind is packed independently toward the configured object-size target without splitting a single term stream/document. No per-term tiny objects are created. Both posting kinds share the bundle's local byte area, with explicit offsets in each descriptor.
+
+The builder applies smallest-first or workload-aware selection to frequency streams first. After that, positions for selected frequency terms are eligible for remaining bundle space, using the same strategy on positional lengths. This frequency-first policy favors term-only zero-R2 queries. It may leave positions remote even when frequency lists are local; positional queries can then require additional ranged requests. Budget accounting includes the larger dictionary and both embedded stream kinds. Manifest statistics report frequency/position bytes and embedding separately.
+
+Query jobs share one concurrency-four scheduler. Plain Boolean queries request only frequencies. Phrase/proximity queries add positions only for terms whose locations their expression consumes; unrelated Boolean filters and negations do not automatically request positions. The dictionary fully specifies both kinds. Token counting, field boundaries, stop-word handling, phrase/proximity semantics and BM25 are unchanged.
+
+Generation-scoped R2 object metadata must match the bundle. Manifest SHA-256 and lengths protect complete files during deployment. Stream CRCs protect every local/remote payload; the position header binds it to the exact frequency bytes. Document blocks retain their CRCs. These integrity checks do not authenticate against a malicious storage writer; arbitrary header/directory/metadata changes are not all caught by runtime CRCs. Verify the complete generation before deployment.
 
 ## Compatibility
 
-Version 3 rejects v1/v2 bundles; rebuild the complete positional generation and deploy the v3 Worker and bundle together. The generation hash includes the format version, preventing reuse of older object prefixes. Rollback requires the matching older Worker and binary.
+Version 4 rejects v1/v2/v3 bundles; rebuild the complete split-stream generation and deploy the v4 Worker and bundle together. The generation hash includes the format version, preventing reuse of older object prefixes. Rollback requires the matching older Worker and binary.
 
 A reader rejects unknown magic/version, inconsistent total length/section geometry, and malformed payloads. No automatic migration or fallback to another generation. Any format change requires a version bump and full rebuild. Tokenization/scoring changes must also update the builder's format/config generation hash to prevent reusing old generations.

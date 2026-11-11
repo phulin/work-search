@@ -1,0 +1,281 @@
+{
+  "kind": "same-process paired alternating-order microbenchmark; frozen 6799e3d reader vs optimized reader; warm block validation",
+  "rows": [
+    {
+      "name": "constant",
+      "access": "sequential",
+      "documents": 1000000,
+      "baselineMedianMs": 19.664333000000056,
+      "optimizedMedianMs": 4.575333999999998,
+      "samples": [
+        {
+          "baselineMs": 19.90108399999997,
+          "optimizedMs": 7.823750000000018,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.726916999999958,
+          "optimizedMs": 7.675875000000019,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.711791999999946,
+          "optimizedMs": 4.535584000000085,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.579333999999903,
+          "optimizedMs": 4.575333999999998,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.590167000000065,
+          "optimizedMs": 4.665165999999999,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.664333000000056,
+          "optimizedMs": 4.508375000000001,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.668750000000045,
+          "optimizedMs": 4.543000000000006,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.578249999999912,
+          "optimizedMs": 4.525916999999936,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.742165999999997,
+          "optimizedMs": 4.618791999999985,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.62204100000008,
+          "optimizedMs": 4.564459000000056,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.53316600000005,
+          "optimizedMs": 4.522208999999975,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 19.604332999999997,
+          "optimizedMs": 4.643333000000098,
+          "checksum": 47000000
+        }
+      ]
+    },
+    {
+      "name": "constant",
+      "access": "strided",
+      "documents": 1000000,
+      "baselineMedianMs": 58.17820800000004,
+      "optimizedMedianMs": 50.068416999999954,
+      "samples": [
+        {
+          "baselineMs": 59.12195900000006,
+          "optimizedMs": 52.009250000000065,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 58.15408300000013,
+          "optimizedMs": 50.07729100000006,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 60.46654199999989,
+          "optimizedMs": 49.80725000000007,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 57.653999999999996,
+          "optimizedMs": 50.90670799999998,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 57.75700000000006,
+          "optimizedMs": 49.76016600000003,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 58.47974999999997,
+          "optimizedMs": 49.96162500000014,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 58.199125000000095,
+          "optimizedMs": 50.068416999999954,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 58.284042,
+          "optimizedMs": 51.14695800000004,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 58.17820800000004,
+          "optimizedMs": 49.908500000000004,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 57.65416700000014,
+          "optimizedMs": 50.49804200000017,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 57.50241600000027,
+          "optimizedMs": 49.877250000000004,
+          "checksum": 47000000
+        },
+        {
+          "baselineMs": 57.71404100000018,
+          "optimizedMs": 49.898291999999856,
+          "checksum": 47000000
+        }
+      ]
+    },
+    {
+      "name": "varying",
+      "access": "sequential",
+      "documents": 1000000,
+      "baselineMedianMs": 125.85858400000006,
+      "optimizedMedianMs": 14.43166599999995,
+      "samples": [
+        {
+          "baselineMs": 126.09295800000018,
+          "optimizedMs": 14.331250000000182,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 125.5809589999999,
+          "optimizedMs": 14.390000000000327,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 125.9094170000003,
+          "optimizedMs": 14.724459000000024,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 126.31541700000025,
+          "optimizedMs": 14.537375000000338,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 125.85858400000006,
+          "optimizedMs": 14.424749999999676,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 125.26216599999998,
+          "optimizedMs": 14.604917000000114,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 125.25354200000038,
+          "optimizedMs": 14.435624999999618,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 125.28283299999975,
+          "optimizedMs": 14.389374999999745,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 125.33658400000013,
+          "optimizedMs": 14.43166599999995,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 125.26137499999959,
+          "optimizedMs": 14.390957999999955,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 127.03783299999986,
+          "optimizedMs": 14.400791000000027,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 126.58133299999963,
+          "optimizedMs": 14.44287499999973,
+          "checksum": 515501788
+        }
+      ]
+    },
+    {
+      "name": "varying",
+      "access": "strided",
+      "documents": 1000000,
+      "baselineMedianMs": 174.36783300000025,
+      "optimizedMedianMs": 58.461959000000206,
+      "samples": [
+        {
+          "baselineMs": 171.8272079999997,
+          "optimizedMs": 59.756374999999935,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 171.2666250000002,
+          "optimizedMs": 58.34445799999958,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 173.16449999999986,
+          "optimizedMs": 57.894374999999854,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 189.46954199999982,
+          "optimizedMs": 58.461959000000206,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 198.37812500000018,
+          "optimizedMs": 77.99729100000059,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 182.12120799999957,
+          "optimizedMs": 82.9882090000001,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 175.22800000000007,
+          "optimizedMs": 58.78937499999938,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 174.36783300000025,
+          "optimizedMs": 58.58650000000034,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 184.91808299999957,
+          "optimizedMs": 58.0570830000006,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 168.63175000000047,
+          "optimizedMs": 57.32829200000015,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 171.08708399999978,
+          "optimizedMs": 57.765165999999226,
+          "checksum": 515501788
+        },
+        {
+          "baselineMs": 170.22016600000006,
+          "optimizedMs": 58.10833299999922,
+          "checksum": 515501788
+        }
+      ]
+    }
+  ]
+}

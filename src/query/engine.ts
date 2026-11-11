@@ -1,11 +1,16 @@
 import { BinaryIndex, LOCAL } from "../format/index.js";
-import { crc32, decodePostings, decoder } from "../format/codec.js";
+import {
+  decodeFrequencies,
+  attachPositions,
+  decoder,
+} from "../format/codec.js";
 import {
   parse,
   queryTerms,
   positional,
   simplify,
   needsUniverse,
+  positionalTerms,
 } from "./parser.js";
 import { candidateDocuments, positionalMatcher } from "./evaluate.js";
 export { intersect, union } from "./sets.js";
@@ -79,6 +84,7 @@ export async function search(
     terms = queryTerms(ast),
     positiveTerms = new Set(queryTerms(ast, true)),
     needsPositions = positional(ast),
+    positionTerms = positionalTerms(ast),
     limit = options.limit ?? 20,
     boost = options.titleBoost ?? 2;
   if (
@@ -98,6 +104,10 @@ export async function search(
     scoreMs: 0,
     indexRequests: 0,
     indexBytes: 0,
+    frequencyRequests: 0,
+    frequencyBytes: 0,
+    positionRequests: 0,
+    positionBytes: 0,
     metadataRequests: 0,
     metadataBytes: 0,
     fullyLocal: true,
@@ -107,7 +117,11 @@ export async function search(
     fetchStart = performance.now();
   const workingBytes =
     entries.reduce(
-      (s, e) => s + e.length + e.df * (needsPositions ? 24 : 20),
+      (s, e) =>
+        s +
+        e.length +
+        e.df * 20 +
+        (positionTerms.has(e.term) ? e.positionLength + e.df * 4 : 0),
       0,
     ) + (needsUniverse(ast) ? index.count * 8 : 0);
   if (
@@ -115,25 +129,47 @@ export async function search(
     Math.min(56 * 1024 * 1024, 104 * 1024 * 1024 - index.bytes.length)
   )
     throw new Error("Query working set exceeds memory budget");
-  const lists = await parallel(entries, 4, async (e) => {
-    let bytes: Uint8Array;
-    if (e.object === LOCAL) {
-      const p = index.local + e.offset;
-      if (p + e.length > index.bytes.length)
+  const jobs = entries.flatMap((e) => [
+    { e, positions: false },
+    ...(positionTerms.has(e.term) ? [{ e, positions: true }] : []),
+  ]);
+  const payloads = await parallel(jobs, 4, async ({ e, positions }) => {
+    const object = positions ? e.positionObject : e.object,
+      offset = positions ? e.positionOffset : e.offset,
+      length = positions ? e.positionLength : e.length;
+    if (object === LOCAL) {
+      const start = index.local + offset;
+      if (start + length > index.bytes.length)
         throw new Error("Invalid local range");
-      bytes = index.bytes.subarray(p, p + e.length);
-    } else {
-      diagnostics.indexRequests++;
-      diagnostics.indexBytes += e.length;
-      bytes = await storage.read(index.key(e.object), e.offset, e.length);
+      return index.bytes.subarray(start, start + length);
     }
-    if (crc32(bytes) !== e.crc) throw new Error("Posting checksum mismatch");
-    return decodePostings(bytes, e.df, needsPositions);
+    diagnostics.indexRequests++;
+    diagnostics.indexBytes += length;
+    if (positions) {
+      diagnostics.positionRequests++;
+      diagnostics.positionBytes += length;
+    } else {
+      diagnostics.frequencyRequests++;
+      diagnostics.frequencyBytes += length;
+    }
+    return storage.read(
+      index.key(object, positions ? "positions" : "frequencies"),
+      offset,
+      length,
+    );
+  });
+  let payload = 0;
+  const lists = entries.map((e) => {
+    const frequencies = decodeFrequencies(payloads[payload++], e.df, e.crc);
+    if (positionTerms.has(e.term))
+      attachPositions(frequencies, payloads[payload++], e.positionCrc);
+    return frequencies;
   });
   if (
     needsPositions &&
     workingBytes +
       lists.reduce((sum, l) => {
+        if (!l.positionOffsets) return sum;
         let bodyMax = 0,
           titleMax = 0;
         for (let i = 0; i < l.docs.length; i++) {

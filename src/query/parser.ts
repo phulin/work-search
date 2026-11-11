@@ -250,3 +250,26 @@ export function needsUniverse(n: Node): boolean {
     ("left" in n && (needsUniverse(n.left) || needsUniverse(n.right)))
   );
 }
+
+/** Only terms whose occurrence locations are actually used by the expression. */
+export function positionalTerms(ast: Node): Set<string> {
+  const terms = new Set<string>();
+  function visit(n: Node, spans = false) {
+    if (n.kind === "term") {
+      if (spans) terms.add(n.term);
+    } else if (n.kind === "phrase") for (const t of n.terms) terms.add(t);
+    else if (n.kind === "near") {
+      visit(n.left, true);
+      visit(n.right, true);
+    } else if (n.kind === "not") visit(n.child, false);
+    else if (n.kind === "except") {
+      visit(n.left, spans);
+      visit(n.right, false);
+    } else if ("left" in n) {
+      visit(n.left, spans);
+      visit(n.right, spans);
+    }
+  }
+  visit(ast);
+  return terms;
+}

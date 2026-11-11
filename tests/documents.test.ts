@@ -130,7 +130,7 @@ describe("compressed document tables", () => {
   });
   it("rejects old bundles rather than interpreting fixed-width descriptors as compressed blocks", async () => {
     const bytes = Uint8Array.from(await readFile("data/bundle.bin"));
-    for (const version of [1, 2]) {
+    for (const version of [1, 2, 3]) {
       new DataView(bytes.buffer).setUint32(4, version, true);
       expect(() => new BinaryIndex(bytes)).toThrow("version");
     }
