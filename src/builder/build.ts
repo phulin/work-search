@@ -1,5 +1,5 @@
 import { encodeBlocks } from "../format/blocks.js";
-import { createReadStream, createWriteStream } from "node:fs";
+import { createWriteStream } from "node:fs";
 import {
   mkdir,
   readFile,
@@ -8,7 +8,8 @@ import {
   mkdtemp,
   open,
 } from "node:fs/promises";
-import { createInterface } from "node:readline";
+import { jsonLines as lines } from "./jsonl.js";
+export { lines };
 import { createHash } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -34,13 +35,6 @@ export interface BuildOptions {
   workload?: string[];
   chunkDocs?: number;
   objectBytes?: number;
-}
-export async function* lines(path: string) {
-  for await (const line of createInterface({
-    input: createReadStream(path),
-    crlfDelay: Infinity,
-  }))
-    yield line;
 }
 async function write(
   stream: ReturnType<typeof createWriteStream>,

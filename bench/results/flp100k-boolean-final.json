@@ -1,0 +1,53 @@
+{
+  "local": true,
+  "rows": [
+    {
+      "budgetMiB": 8,
+      "policy": "frequency",
+      "infeasible": "Error: Mandatory sections exceed budget"
+    },
+    {
+      "budgetMiB": 8,
+      "policy": "mixed",
+      "infeasible": "Error: Mandatory sections exceed budget"
+    },
+    {
+      "budgetMiB": 16,
+      "policy": "frequency",
+      "infeasible": "Error: Mandatory sections exceed budget"
+    },
+    {
+      "budgetMiB": 16,
+      "policy": "mixed",
+      "infeasible": "Error: Mandatory sections exceed budget"
+    },
+    {
+      "budgetMiB": 32,
+      "policy": "frequency",
+      "file": "flp100k-boolean-wand-final-32-frequency.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 32,
+      "policy": "mixed",
+      "file": "flp100k-boolean-wand-final-32-mixed.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 48,
+      "policy": "frequency",
+      "file": "flp100k-boolean-wand-final-48-frequency.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 48,
+      "policy": "mixed",
+      "file": "flp100k-boolean-wand-final-48-mixed.json",
+      "queries": 6630,
+      "errors": 0
+    }
+  ]
+}

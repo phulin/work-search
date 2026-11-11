@@ -1,0 +1,1256 @@
+{
+  "seed": 20261111,
+  "description": "Artificial legal stress workload, not user query logs; 64 training and 160 disjoint evaluation strings, balanced across four query types. Corpus-derived queries are biased toward having matches.",
+  "train": [
+    {
+      "q": "appellate term",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:5508899"
+    },
+    {
+      "q": "federal arbitration",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "trade secret",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "substantial evidence",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "facts of",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:1514864"
+    },
+    {
+      "q": "court cause",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:4299989"
+    },
+    {
+      "q": "contributory negligence",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "qualified immunity",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "59 of",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:5077858"
+    },
+    {
+      "q": "unjust enrichment",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "our case",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:555011"
+    },
+    {
+      "q": "antitrust injury",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "excessive force",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "to the",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:8431748"
+    },
+    {
+      "q": "future event",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:754298"
+    },
+    {
+      "q": "in an",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:2599534"
+    },
+    {
+      "q": "\"breach contract\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"trade secret\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"search warrant\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"business interests of said\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:9309644"
+    },
+    {
+      "q": "\"subject matter jurisdiction\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"abuse discretion\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"fourth judicial department 211\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:4310738"
+    },
+    {
+      "q": "\"and before the judicial\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:2811565"
+    },
+    {
+      "q": "\"schwabland no 20110394 supreme\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:2460310"
+    },
+    {
+      "q": "\"state have not passed\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:4361981"
+    },
+    {
+      "q": "\"t he judgment that\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:1875921"
+    },
+    {
+      "q": "\"copyright infringement\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"s c 2255 2000\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:8620443"
+    },
+    {
+      "q": "\"actions on the game\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:7728487"
+    },
+    {
+      "q": "\"administrative exhaustion\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"made in recognition of\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:9309953"
+    },
+    {
+      "q": "schwabland /5 supreme",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:2460310"
+    },
+    {
+      "q": "without /5 nunez",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:5930358"
+    },
+    {
+      "q": "intentional /25 infliction",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "fourth /5 211",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:4310738"
+    },
+    {
+      "q": "genuine /75 dispute",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "probable /75 cause",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "judgment /5 favor",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:6759842"
+    },
+    {
+      "q": "bad /5 an",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:1390713"
+    },
+    {
+      "q": "v /5 795",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:680618"
+    },
+    {
+      "q": "mootness /75 standing",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "as /5 necessarily",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:2314686"
+    },
+    {
+      "q": "double /5 jeopardy",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "1970 /5 cattle",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:1209151"
+    },
+    {
+      "q": "qualified /75 immunity",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "federal /75 arbitration",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "ex /25 post facto",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "(res OR judicata) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(in OR an) AND effort",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:2599534"
+    },
+    {
+      "q": "(new OR york) AND it",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:6778639"
+    },
+    {
+      "q": "(rep OR 1063) AND reversed",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:8012916"
+    },
+    {
+      "q": "(2004 OR people) AND bennett",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:2556573"
+    },
+    {
+      "q": "(appellate OR term) AND a",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:5508899"
+    },
+    {
+      "q": "(as OR constitutes) AND necessarily",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:2314686"
+    },
+    {
+      "q": "(irreparable OR harm) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(qualified OR immunity) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(\"and\" OR moore) AND opinion",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:1218740"
+    },
+    {
+      "q": "(box OR 187) AND kansas",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:3440271"
+    },
+    {
+      "q": "(contributory OR negligence) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(on OR that) AND appellant",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:2932349"
+    },
+    {
+      "q": "(\"and\" OR order) AND firmed",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:7436452"
+    },
+    {
+      "q": "(721 OR 377) AND 657",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:8167302"
+    },
+    {
+      "q": "(ineffective OR assistance) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    }
+  ],
+  "test": [
+    {
+      "q": "res judicata",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "the pennsylvania",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:6513479"
+    },
+    {
+      "q": "breach contract",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "fiduciary duty",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "\"and\" absent",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:2158332"
+    },
+    {
+      "q": "insurer \"and\"",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:1655533"
+    },
+    {
+      "q": "a sunroom",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:7643276"
+    },
+    {
+      "q": "affidavit in",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:1372133"
+    },
+    {
+      "q": "due process",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "strict scrutiny",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "before this",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:1995585"
+    },
+    {
+      "q": "material fact",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "acknowledging \"and\"",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:1505249"
+    },
+    {
+      "q": "summary judgment",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "that whoever",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:6780154"
+    },
+    {
+      "q": "13 3145",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:1036885"
+    },
+    {
+      "q": "made in",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:9309953"
+    },
+    {
+      "q": "constitutional violation",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "\"and\" order",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:7436452"
+    },
+    {
+      "q": "within the",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:3538439"
+    },
+    {
+      "q": "case as",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:7242407"
+    },
+    {
+      "q": "the surgeon",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:1773788"
+    },
+    {
+      "q": "prison conditions",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "of texas",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:2855404"
+    },
+    {
+      "q": "without disbursements",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:5930358"
+    },
+    {
+      "q": "s c",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:8620443"
+    },
+    {
+      "q": "agreement 632was",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:5802239"
+    },
+    {
+      "q": "subject matter jurisdiction",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "plain meaning",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "new york",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:6778639"
+    },
+    {
+      "q": "employment discrimination",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "personal jurisdiction",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "medical malpractice",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "rules of",
+      "kind": "plain",
+      "origin": "corpus-derived terms",
+      "document": "courtlistener:6672005"
+    },
+    {
+      "q": "irreparable harm",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "strict liability",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "double jeopardy",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "wrongful termination",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "burden proof",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "plea agreement",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "\"court cause number 2010\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:4299989"
+    },
+    {
+      "q": "\"strict scrutiny\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"and absent a showing\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:2158332"
+    },
+    {
+      "q": "\"on that advice appellant\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:2932349"
+    },
+    {
+      "q": "\"abused her discretion by\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:1622017"
+    },
+    {
+      "q": "\"of texas state from\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:2855404"
+    },
+    {
+      "q": "\"any oral contract because\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:1249436"
+    },
+    {
+      "q": "\"box 187 westmoreland kansas\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:3440271"
+    },
+    {
+      "q": "\"collateral estoppel\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"removal jurisdiction\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"court of appeals second\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:4689626"
+    },
+    {
+      "q": "\"public policy\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"due process\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"15 000 on this\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:7794037"
+    },
+    {
+      "q": "\"721 377 p3d 657\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:8167302"
+    },
+    {
+      "q": "\"reasonable doubt\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"existing in october 1990\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:2261806"
+    },
+    {
+      "q": "\"that whoever enters upon\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:6780154"
+    },
+    {
+      "q": "\"insurer and in favor\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:1655533"
+    },
+    {
+      "q": "\"equal protection\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"176 l ed 2d\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:6797273"
+    },
+    {
+      "q": "\"class certification\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"the officer was struck\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:4496531"
+    },
+    {
+      "q": "\"59 of this court\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:5077858"
+    },
+    {
+      "q": "\"black males 3 another\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:661379"
+    },
+    {
+      "q": "\"v bernard s 795\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:680618"
+    },
+    {
+      "q": "\"this court explicitly adopted\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:2279689"
+    },
+    {
+      "q": "\"him he resisted as\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:3897624"
+    },
+    {
+      "q": "\"plea agreement\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"unreasonable search\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"employment discrimination\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"963 a 2d 844\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:2154193"
+    },
+    {
+      "q": "\"contract interpretation\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"fourth amendment\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"the writ in the\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:1133889"
+    },
+    {
+      "q": "\"rasmussen 980 f 2d\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:7033516"
+    },
+    {
+      "q": "\"medical malpractice\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"1970 fence maintained cattle\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:1209151"
+    },
+    {
+      "q": "\"excessive force\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"new york until it\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:6778639"
+    },
+    {
+      "q": "this /5 of",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:5156117"
+    },
+    {
+      "q": "motion /5 ten",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:5380520"
+    },
+    {
+      "q": "prosecutorial /5 by",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:2000103"
+    },
+    {
+      "q": "subject /5 matter jurisdiction",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "agreement /5 by",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:5802239"
+    },
+    {
+      "q": "high /5 the",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:5596238"
+    },
+    {
+      "q": "fourth /75 amendment",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "unjust /5 enrichment",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "removal /25 jurisdiction",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "dismissed /5 to",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:8445733"
+    },
+    {
+      "q": "case /5 understand",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:7242407"
+    },
+    {
+      "q": "plain /25 meaning",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "search /5 warrant",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "class /25 certification",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "721 /5 657",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:8167302"
+    },
+    {
+      "q": "negligent /5 misrepresentation",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "963 /5 844",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:2154193"
+    },
+    {
+      "q": "it /5 ordered",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:6600425"
+    },
+    {
+      "q": "64 /5 follows",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:5547809"
+    },
+    {
+      "q": "proximate /25 cause",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "59 /5 court",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:5077858"
+    },
+    {
+      "q": "detail /5 regarding",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:4100407"
+    },
+    {
+      "q": "habeas /75 corpus",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "future /5 a",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:754298"
+    },
+    {
+      "q": "prison /75 conditions",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "before /5 which",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:1995585"
+    },
+    {
+      "q": "s /5 75",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:552893"
+    },
+    {
+      "q": "res /75 judicata",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "no /5 in",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:4281242"
+    },
+    {
+      "q": "court /5 2010",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:4299989"
+    },
+    {
+      "q": "fourth /5 affirmative",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:2157578"
+    },
+    {
+      "q": "extract /5 from",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:4500204"
+    },
+    {
+      "q": "abused /5 by",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:1622017"
+    },
+    {
+      "q": "summary /5 judgment",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "him /5 as",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:3897624"
+    },
+    {
+      "q": "writ /5 to",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:7538890"
+    },
+    {
+      "q": "material /75 fact",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "the /5 the",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:1133889"
+    },
+    {
+      "q": "statute /5 limitations",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "jimmie /5 defendants",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:7766188"
+    },
+    {
+      "q": "(fiduciary OR duty) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(agreement OR 632was) AND by",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:5802239"
+    },
+    {
+      "q": "(any OR oral) AND because",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:1249436"
+    },
+    {
+      "q": "(\"and\" OR his) AND was",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:7458652"
+    },
+    {
+      "q": "(case OR prior) AND filing",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:2011419"
+    },
+    {
+      "q": "(mootness OR standing) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(expert OR testimony) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(public OR policy) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(black OR males) AND another",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:661379"
+    },
+    {
+      "q": "(the OR writ) AND the",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:1133889"
+    },
+    {
+      "q": "(fourth OR \"and\") AND affirmative",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:2157578"
+    },
+    {
+      "q": "(\"or\" OR employee) AND the",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:6314811"
+    },
+    {
+      "q": "(unreasonable OR search) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(preliminary OR injunction) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(intentional OR infliction) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(attorney OR fees) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(genuine OR dispute) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(this OR court) AND adopted",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:2279689"
+    },
+    {
+      "q": "(business OR interests) AND said",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:9309644"
+    },
+    {
+      "q": "(unjust OR enrichment) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(t OR he) AND that",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:1875921"
+    },
+    {
+      "q": "(summary OR judgment) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(176 OR l) AND 2d",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:6797273"
+    },
+    {
+      "q": "(la OR app) AND so",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:7485290"
+    },
+    {
+      "q": "(fourth OR judicial) AND 211",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:4310738"
+    },
+    {
+      "q": "(ex OR facto) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(\"and\" OR absent) AND showing",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:2158332"
+    },
+    {
+      "q": "(15 OR 000) AND this",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:7794037"
+    },
+    {
+      "q": "(insurer OR \"and\") AND favor",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:1655533"
+    },
+    {
+      "q": "(strict OR scrutiny) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(search OR warrant) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(there OR there) AND no",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:7204619"
+    },
+    {
+      "q": "(bad OR faith) AND an",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:1390713"
+    },
+    {
+      "q": "(reasonable OR suspicion) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(negligent OR misrepresentation) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(trade OR secret) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "(rules OR of) AND rule",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:6672005"
+    },
+    {
+      "q": "(of OR the) AND limit",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:1655462"
+    },
+    {
+      "q": "(firm OR s) AND \"or\"",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:7304300"
+    },
+    {
+      "q": "(due OR process) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    }
+  ]
+}

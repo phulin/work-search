@@ -117,3 +117,17 @@ Remote misses still fetch full frequency streams to avoid amplifying R2 requests
 WAND's cold benefit is CPU/decoded-memory, not a claim of reduced network bytes.
 See bench/BOOLEAN-WAND.md for sequential experiments, held-out OR measurements,
 local workerd validation and remaining warm-cache tradeoffs.
+
+## Larger real-corpus runs
+
+FLP benchmark scripts accept FLP_ROOT/FLP_PREFIX to isolate corpus sizes and
+results; FLP_QUERY_SOURCE freezes the original training/evaluation strings.
+Infeasible dictionary/table budgets are retained as failures, never reported as
+zero-latency queries. The sampler stores per-shard JSONL checkpoints with hashes
+and source rows, then shuffles byte offsets so full texts do not all reside in RAM.
+The 100k sample retains the original 10k decisions under the same revision/seed.
+
+JSONL ingestion explicitly splits LF/CRLF records rather than using readline:
+recent Node readline versions split literal U+2028/U+2029 inside otherwise-valid
+JSON strings. These characters occur in the larger legal sample. The shared
+reader preserves their text and is regression-tested across chunk boundaries.

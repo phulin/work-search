@@ -1,0 +1,155 @@
+[
+  {
+    "kind": "full corpus ingestion",
+    "ms": 132723.784667,
+    "manifest": {
+      "format": 8,
+      "generation": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151",
+      "documents": 100000,
+      "terms": 632909,
+      "budget": 50331648,
+      "strategy": "smallest",
+      "bundleBytes": 50331648,
+      "dictionaryBytes": 30122328,
+      "documentTableBytes": 1539238,
+      "documentTableUncompressedBytes": 4490160,
+      "postingsBytes": 381312430,
+      "frequencyBytes": 90981544,
+      "positionBytes": 290330886,
+      "embeddedFrequencyBytes": 18669854,
+      "embeddedPositionBytes": 228,
+      "embeddedPositionTerms": 38,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 18670082,
+      "embeddedTerms": 623706,
+      "objects": [
+        {
+          "key": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151/frequencies-0.bin",
+          "size": 67102369,
+          "sha256": "5da7d98d802a37756ad45921b07c587c8e24a369355ded1bb0bce0bcebe34488",
+          "kind": "frequencies"
+        },
+        {
+          "key": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151/frequencies-1.bin",
+          "size": 5209321,
+          "sha256": "c4f583423766a85af1b6e51d015505f9aa4a4acfa52a53713c4cda28001809f5",
+          "kind": "frequencies"
+        },
+        {
+          "key": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151/positions-0.bin",
+          "size": 67103331,
+          "sha256": "b0a0f6b7b863582c852f9914b9c2214a1316d5d77d40534e5aa68308059d95dd",
+          "kind": "positions"
+        },
+        {
+          "key": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151/positions-1.bin",
+          "size": 64237399,
+          "sha256": "2ac5de51c502657bf9d40fb6f5959036b01de80b9fb0152446df21508cc1a76c",
+          "kind": "positions"
+        },
+        {
+          "key": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151/positions-2.bin",
+          "size": 67105221,
+          "sha256": "056cf3b7c67cc4bccdbac52413626adf9ff3d35f8f27c94edc56220b8ee2542a",
+          "kind": "positions"
+        },
+        {
+          "key": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151/positions-3.bin",
+          "size": 61915011,
+          "sha256": "5507e4a05b0e6bae028de2af2c7e9eaf3d1e3d7a654c8b78e280ed2a4225ace8",
+          "kind": "positions"
+        },
+        {
+          "key": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151/positions-4.bin",
+          "size": 29969696,
+          "sha256": "8f6828eecbbe5af23f8a84a2a259982514220eec1fad22e42c7086aa65b7e37a",
+          "kind": "positions"
+        },
+        {
+          "key": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151/metadata-0.bin",
+          "size": 37240792,
+          "sha256": "b315102c48cc1790aba25faefb8f788a70c90d08546d2552f346678d7e9dfddf",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "47b7ca327195f25435b5273742cbfb374841b1fd69db804e4a3e732e6434ca79",
+      "buildMs": 132464.737,
+      "peakRssBytes": 1269121024
+    }
+  },
+  {
+    "kind": "legacy varint stream conversion for storage comparison",
+    "source": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151",
+    "generation": "261d0f6c72a4e33a6ee0e78d7186b24007af63893bd219f32be33976595c5c8d",
+    "budget": 50331648,
+    "policy": "frequency",
+    "buildKind": "Repacked existing encoded streams; not corpus build throughput",
+    "ms": 30544.785000000003,
+    "peakRssBytes": 2876014592,
+    "bundleBytes": 50331645
+  },
+  {
+    "budgetMiB": 8,
+    "policy": "frequency",
+    "error": "Error: Mandatory sections exceed budget"
+  },
+  {
+    "budgetMiB": 8,
+    "policy": "mixed",
+    "error": "Error: Mandatory sections exceed budget"
+  },
+  {
+    "budgetMiB": 16,
+    "policy": "frequency",
+    "error": "Error: Mandatory sections exceed budget"
+  },
+  {
+    "budgetMiB": 16,
+    "policy": "mixed",
+    "error": "Error: Mandatory sections exceed budget"
+  },
+  {
+    "budgetMiB": 32,
+    "source": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151",
+    "generation": "9e7b4500f38607ef28834503b1c59c4abcd58b7800daf5e512eeb67abe485d2d",
+    "budget": 33554432,
+    "policy": "frequency",
+    "buildKind": "Repacked existing encoded streams; not corpus build throughput",
+    "ms": 2389.078333000012,
+    "peakRssBytes": 2876014592,
+    "bundleBytes": 33554432
+  },
+  {
+    "budgetMiB": 32,
+    "source": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151",
+    "generation": "5eac79e70291dd032d16522dcabcafea6032ef388ffbe20df820ffb848c3bb5e",
+    "budget": 33554432,
+    "policy": "mixed",
+    "buildKind": "Repacked existing encoded streams; not corpus build throughput",
+    "ms": 3106.3979999999865,
+    "peakRssBytes": 2919137280,
+    "bundleBytes": 33554428
+  },
+  {
+    "budgetMiB": 48,
+    "source": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151",
+    "generation": "acf8b17da8502fd68e4d54cf8ca2c55b71ca36732bf63b248d341933b34b8308",
+    "budget": 50331648,
+    "policy": "frequency",
+    "buildKind": "Repacked existing encoded streams; not corpus build throughput",
+    "ms": 2774.6891250000044,
+    "peakRssBytes": 2919137280,
+    "bundleBytes": 50331644
+  },
+  {
+    "budgetMiB": 48,
+    "source": "d6907e5b77781894f3e24927664a6655690b3fe760c462241bb7c56bf7ea9151",
+    "generation": "c0e4af84d7b98e19f8d6a2b6453b4683f1a1bd538e9cead39ae922e4326f3946",
+    "budget": 50331648,
+    "policy": "mixed",
+    "buildKind": "Repacked existing encoded streams; not corpus build throughput",
+    "ms": 3436.847207999992,
+    "peakRssBytes": 2919137280,
+    "bundleBytes": 50331648
+  }
+]

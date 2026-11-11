@@ -39,8 +39,28 @@ const queries = [
 queries.unshift(queries.pop()!);
 queries.splice(1, 0, "negligence");
 const rows = [];
+const corpusRoot = process.env.FLP_ROOT ?? "bench/generated/flp";
+const resultStem = process.env.FLP_PREFIX
+  ? `${process.env.FLP_PREFIX}-boolean`
+  : "boolean";
+const builds = process.env.FLP_PREFIX
+  ? JSON.parse(
+      await readFile(
+        `bench/results/${process.env.FLP_PREFIX}-builds.json`,
+        "utf8",
+      ),
+    )
+  : undefined;
 for (const budget of [8, 16, 32, 48]) {
-  const root = `bench/generated/flp/${budget}-mixed`,
+  if (
+    builds?.find(
+      (b: any) => b.budgetMiB === budget && b.policy === "mixed" && b.error,
+    )
+  ) {
+    console.log(`${budget} MiB: infeasible, no Worker deployed`);
+    continue;
+  }
+  const root = `${corpusRoot}/${budget}-mixed`,
     m = JSON.parse(await readFile(root + "/manifest.json", "utf8")),
     bytes = await readFile(root + "/bundle.bin"),
     index = new BinaryIndex(bytes),
@@ -103,6 +123,7 @@ for (const budget of [8, 16, 32, 48]) {
           ms,
           status: response.status,
           diagnostics: body.diagnostics,
+          results: body.results,
         });
       }
     if (!samples.some((s) => s.diagnostics.executor === "wand"))
@@ -120,6 +141,14 @@ for (const budget of [8, 16, 32, 48]) {
         ),
         actual = (await r.json()) as any;
       if (
+        samples
+          .filter((s) => s.q === q)
+          .some(
+            (s) => JSON.stringify(s.results) !== JSON.stringify(exact.results),
+          )
+      )
+        throw Error("Timed Worker exact-score mismatch");
+      if (
         response.status !== 200 ||
         r.status !== 200 ||
         JSON.stringify(actual.results) !== JSON.stringify(exact.results)
@@ -131,7 +160,7 @@ for (const budget of [8, 16, 32, 48]) {
       budget + " MiB: " + samples.length + " measured HTTP queries checked",
     );
     await writeFile(
-      "bench/results/boolean-workerd.json",
+      `bench/results/${resultStem}-workerd.json`,
       JSON.stringify(
         {
           local: true,
@@ -147,3 +176,17 @@ for (const budget of [8, 16, 32, 48]) {
     await mf.dispose();
   }
 }
+
+await writeFile(
+  `bench/results/${resultStem}-workerd.json`,
+  JSON.stringify(
+    {
+      local: true,
+      description:
+        "Local workerd/Miniflare R2 binding; not deployed Cloudflare; actual auto routing; strict same-runtime exhaustive comparison after timed passes",
+      rows,
+    },
+    null,
+    2,
+  ),
+);

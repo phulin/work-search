@@ -6,8 +6,12 @@ import { search } from "../src/query/engine.js";
 import { search as before } from "./baseline-boolean/engine.js";
 import { search as reference } from "./baseline-next.js";
 import { SearchRuntime } from "../src/query/runtime.js";
+const resultStem = process.env.FLP_PREFIX
+  ? `${process.env.FLP_PREFIX}-boolean`
+  : "boolean";
+const corpusRoot = process.env.FLP_ROOT ?? "bench/generated/flp";
 const [budget, policy, phaseName = "boolean"] = process.argv.slice(2),
-  root = `bench/generated/flp/${budget}-${policy}`;
+  root = `${corpusRoot}/${budget}-${policy}`;
 const m = JSON.parse(await readFile(root + "/manifest.json", "utf8")),
   bytes = await readFile(root + "/bundle.bin");
 if (
@@ -20,7 +24,7 @@ const startup = performance.now(),
   indexConstructionMs = performance.now() - startup,
   storage = new FileStorage(root + "/objects");
 const { test: queries } = JSON.parse(
-  await readFile("bench/generated/flp/queries.json", "utf8"),
+  await readFile(corpusRoot + "/queries.json", "utf8"),
 ) as { test: { q: string; kind: string }[] };
 if (phaseName.startsWith("wand")) {
   const groups = [
@@ -238,7 +242,7 @@ const entries = Array.from({ length: index.termCount }, (_, i) =>
   index.entry(i),
 );
 await writeFile(
-  `bench/results/boolean-${phaseName}-${budget}-${policy}.json`,
+  `bench/results/${resultStem}-${phaseName}-${budget}-${policy}.json`,
   JSON.stringify(
     {
       budgetMiB: Number(budget),

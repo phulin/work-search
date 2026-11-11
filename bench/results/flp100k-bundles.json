@@ -1,0 +1,23 @@
+{
+  "dryRun": true,
+  "rows": [
+    {
+      "budgetMiB": 8,
+      "infeasible": true
+    },
+    {
+      "budgetMiB": 16,
+      "infeasible": true
+    },
+    {
+      "budgetMiB": 32,
+      "rawUploadKiB": 32860.99,
+      "gzipKiB": 16316.55
+    },
+    {
+      "budgetMiB": 48,
+      "rawUploadKiB": 49245,
+      "gzipKiB": 29996.1
+    }
+  ]
+}

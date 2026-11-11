@@ -172,3 +172,22 @@ same. [bench/BOOLEAN-WAND.md](bench/BOOLEAN-WAND.md) reports Boolean recovery fi
 then WAND, including a separate OR evaluation set and forced-executor controls.
 `total=true`, positional/negative queries and metadata requests retain the
 materialized executor; default top-K results remain exact.
+
+The same pinned legal corpus can be scaled without overwriting the 10k fixtures:
+
+```sh
+work/flp-venv/bin/python bench/sample-flp.py --count 100000 --out bench/generated/flp-100000
+export FLP_ROOT=bench/generated/flp-100000
+export FLP_PREFIX=flp100k
+export FLP_QUERY_SOURCE=bench/results/flp-queries.json
+node --import tsx bench/flp-prepare.ts
+node --import tsx bench/flp-build.ts
+node --import tsx bench/boolean-run.ts
+node --import tsx bench/boolean-worker.ts
+python3 bench/flp-scale-report.py
+```
+
+This preserves the original query strings and records infeasible budgets instead
+of reducing the corpus or moving the dictionary remotely. Sampling uses hashed
+shard checkpoints and shuffles file offsets rather than full texts in memory.
+See [bench/FLP-100K.md](bench/FLP-100K.md) for the 100k run and comparisons.

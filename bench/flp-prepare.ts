@@ -1,26 +1,24 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { createReadStream } from "node:fs";
-import { createInterface } from "node:readline";
+import { jsonLines } from "../src/builder/jsonl.js";
 import { createHash } from "node:crypto";
 import { tokenize } from "../src/query/tokenize.js";
-const root = "bench/generated/flp";
+const root = process.env.FLP_ROOT ?? "bench/generated/flp";
 await mkdir(root, { recursive: true });
 const lengths: number[] = [],
   titles: number[] = [],
   courts: Record<string, number> = {},
   decades: Record<string, number> = {};
 const examples: { id: string; tokens: string[] }[] = [];
-for await (const line of createInterface({
-  input: createReadStream(root + "/corpus.jsonl"),
-  crlfDelay: Infinity,
-})) {
+for await (const line of jsonLines(root + "/corpus.jsonl")) {
   const d = JSON.parse(line),
     words = tokenize(d.body);
   lengths.push(words.length);
   titles.push(tokenize(d.title ?? "").length);
   courts[d.metadata.court_type ?? "unknown"] =
     (courts[d.metadata.court_type ?? "unknown"] ?? 0) + 1;
-  const decade = d.metadata.date_filed?.slice(0, 3) + "0";
+  const decade = d.metadata.date_filed
+    ? d.metadata.date_filed.slice(0, 3) + "0"
+    : "unknown";
   decades[decade] = (decades[decade] ?? 0) + 1;
   if (examples.length < 100) examples.push({ id: d.id, tokens: words });
 }
@@ -187,18 +185,29 @@ await writeFile(
     2,
   ),
 );
-await writeFile(
-  root + "/queries.json",
-  JSON.stringify(
-    {
-      seed: 20261111,
-      description:
-        "Artificial legal stress workload, not user query logs; 64 training and 160 disjoint evaluation strings, balanced across four query types. Corpus-derived queries are biased toward having matches.",
-      train,
-      test,
-    },
-    null,
-    2,
-  ),
-);
-await writeFile(root + "/training.txt", train.map((q) => q.q).join("\n"));
+if (process.env.FLP_QUERY_SOURCE) {
+  const frozen = JSON.parse(
+    await readFile(process.env.FLP_QUERY_SOURCE, "utf8"),
+  );
+  await writeFile(root + "/queries.json", JSON.stringify(frozen, null, 2));
+  await writeFile(
+    root + "/training.txt",
+    frozen.train.map((q: { q: string }) => q.q).join("\n"),
+  );
+} else {
+  await writeFile(
+    root + "/queries.json",
+    JSON.stringify(
+      {
+        seed: 20261111,
+        description:
+          "Artificial legal stress workload, not user query logs; 64 training and 160 disjoint evaluation strings, balanced across four query types. Corpus-derived queries are biased toward having matches.",
+        train,
+        test,
+      },
+      null,
+      2,
+    ),
+  );
+  await writeFile(root + "/training.txt", train.map((q) => q.q).join("\n"));
+}
