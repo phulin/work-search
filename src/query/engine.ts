@@ -97,7 +97,7 @@ export interface SearchOptions {
   /** Internal benchmark override; never exposed by HTTP. */
   executor?: "auto" | "materialized" | "boolean" | "wand";
 }
-export async function search(
+async function executeSearch(
   index: BinaryIndex,
   storage: Storage,
   q: string,
@@ -107,8 +107,9 @@ export async function search(
   const stage = options.optimizationStage ?? 7;
   const exactTotal = options.exactTotal === true;
   const start = performance.now(),
-    original = parse(q, options.mode ?? "and"),
-    ast = simplify(original, (t) => !!index.lookup(t)),
+    original = parse(q, options.mode ?? "and");
+  await index.prepareTerms(queryTerms(original), storage, options.runtime);
+  const ast = simplify(original, (t) => !!index.lookup(t)),
     terms = queryTerms(ast),
     positiveTerms = new Set(queryTerms(ast, true)),
     needsPositions = positional(ast),
@@ -207,7 +208,7 @@ export async function search(
     ? entries.reduce(
         (sum, e) =>
           sum +
-          (e.object === LOCAL ? 65536 : e.length) +
+          (e.object === LOCAL || index.paged ? 65536 : e.length) +
           Math.ceil(e.df / 256) * 180 +
           4096,
         0,
@@ -336,6 +337,10 @@ export async function search(
       performance.now() - execution - networkMs,
     );
     diagnostics.fullyLocal = diagnostics.indexRequests === 0;
+    await index.resolveDocuments(
+      heap.heap.map((h) => h.doc),
+      storage,
+    );
     const results = heap.heap
       .sort((a, b) => b.score - a.score || a.doc - b.doc)
       .map((h) => ({ id: index.document(h.doc).id, score: h.score }));
@@ -509,6 +514,11 @@ export async function search(
     !exactTotal &&
     (stage < 3 ||
       (candidates.length >= 1024 && boundRows <= candidates.length * 8));
+  await index.prepareLengths(
+    candidates,
+    storage,
+    useBounds ? scoringTerms.map((t) => t.list.docs) : [],
+  );
   const bounds = useBounds
     ? scoringTerms.map((term) => {
         const e = entries.find((e) => e.term === term.term)!;
@@ -596,6 +606,10 @@ export async function search(
     }
     heap.add(doc, score);
   }
+  await index.resolveDocuments(
+    heap.heap.map((h) => h.doc),
+    storage,
+  );
   for (const h of heap.heap) h.id = index.document(h.doc).id;
   const hits = heap.heap.sort((a, b) => b.score - a.score || a.doc - b.doc);
   diagnostics.scoreMs = performance.now() - scoring;
@@ -622,5 +636,36 @@ export async function search(
     results: hits.map(({ doc, ...h }) => h),
     ...(!exactTotal ? {} : { total: candidates.length }),
     diagnostics,
+  };
+}
+
+export async function search(
+  index: BinaryIndex,
+  storage: Storage,
+  q: string,
+  options: SearchOptions = {},
+  skipBlocks = true,
+) {
+  const view = index.queryIndex();
+  const result = await executeSearch(view, storage, q, options, skipBlocks);
+  const pages = view as BinaryIndex & {
+    pageRequests?: number;
+    pageBytes?: number;
+  };
+  const dictionaryDocumentRequests = pages.pageRequests ?? 0;
+  const dictionaryDocumentBytes = pages.pageBytes ?? 0;
+  result.diagnostics.indexRequests += dictionaryDocumentRequests;
+  result.diagnostics.indexBytes += dictionaryDocumentBytes;
+  result.diagnostics.fullyLocal =
+    result.diagnostics.indexRequests + result.diagnostics.metadataRequests ===
+    0;
+  return {
+    ...result,
+    diagnostics: {
+      ...result.diagnostics,
+      paged: view.paged,
+      dictionaryDocumentRequests,
+      dictionaryDocumentBytes,
+    },
   };
 }

@@ -53,6 +53,8 @@ class TermData {
   blocks: Block[] = [];
   full?: DecodedPostings;
   bytes?: Uint8Array;
+  byteOffset = 0;
+  private fetched = new Map<number, DecodedPostings>();
   loading?: Promise<void>;
   recent?: { block: number; list: DecodedPostings };
   readonly prefix: string;
@@ -102,7 +104,14 @@ class TermData {
       this.blocks = directory;
       return;
     }
-    await this.ensureBytes();
+    if (this.index.paged)
+      this.bytes = await this.read(
+        this.e,
+        false,
+        0,
+        directoryLength(this.e.df, this.e.format),
+      );
+    else await this.ensureBytes();
     this.blocks = decodeDirectory(
       this.bytes!.subarray(0, directoryLength(this.e.df, this.e.format)),
       this.e.df,
@@ -125,8 +134,27 @@ class TermData {
     );
     await this.loading;
   }
+  async fetchBlock(i: number) {
+    if (!this.index.paged) return this.ensureBytes();
+    const b = this.blocks[i];
+    if (this.readyBlock(i)) return;
+    const bytes = await this.read(
+      this.e,
+      false,
+      b.offset,
+      Math.min(this.e.length - b.offset, Math.max(b.length, 65536)),
+    );
+    this.byteOffset = b.offset;
+    this.bytes = bytes;
+    const list = this.readyBlock(i)!;
+    this.fetched.set(i, list);
+    if (this.fetched.size > 32)
+      this.fetched.delete(this.fetched.keys().next().value!);
+  }
   readyBlock(i: number): DecodedPostings | undefined {
     if (this.recent?.block === i) return this.recent.list;
+    const fetched = this.fetched.get(i);
+    if (fetched) return fetched;
     const b = this.blocks[i],
       key = this.key("decoded-block", b.offset);
     const cached = this.runtime?.get<DecodedPostings>(key);
@@ -135,14 +163,19 @@ class TermData {
       this.recent = { block: i, list: cached };
       return cached;
     }
-    if (!this.bytes) return;
+    if (
+      !this.bytes ||
+      b.offset < this.byteOffset ||
+      b.offset + b.length > this.byteOffset + this.bytes.length
+    )
+      return;
     const list: DecodedPostings = {
       docs: new Uint32Array(b.count),
       body: new Uint32Array(b.count),
       title: new Uint32Array(b.count),
       bytes: new Uint8Array(0),
     };
-    decodeBlockInto(this.bytes, b.offset, b, list, 0);
+    decodeBlockInto(this.bytes, b.offset - this.byteOffset, b, list, 0);
     this.stats.blocksDecoded++;
     this.recent = { block: i, list };
     // Avoid retaining a scan's worth of oversized local lists, as before.
@@ -226,7 +259,7 @@ class Cursor {
     this.pending = undefined;
     if (target !== undefined) {
       this.data.stats.cursorLoads++;
-      await this.data.ensureBytes();
+      await this.data.fetchBlock(this.block);
       if (!this.advance(target, false)) throw Error("Unresolved block cursor");
     }
   }
@@ -347,6 +380,8 @@ export async function searchBlocks(
   };
   const data = entries.map((e) => new TermData(index, e, read, stats, runtime));
   await Promise.all(data.map((d) => d.init()));
+  if (index.paged)
+    for (const d of data) if (d.full) await index.ensureLengths(d.full.docs);
   if (mode === "wand")
     return runWand(index, data, ast, heap, limit, field, boost, stats);
   const map = new Map(data.map((d) => [d.e.term, d])),
@@ -399,6 +434,7 @@ export async function searchBlocks(
         continue;
       }
     }
+    if (!index.hasLength(doc)) await index.ensureLengths(Uint32Array.of(doc));
     index.lengths(doc, lengths);
     const bn = 1.2 * (1 - 0.75 + (0.75 * lengths.body) / (index.avgBody || 1)),
       tn = 1.2 * (1 - 0.75 + (0.75 * lengths.title) / (index.avgTitle || 1));
@@ -576,6 +612,7 @@ async function runWand(
       }
     }
     if (!match || match(doc)) {
+      if (!index.hasLength(doc)) await index.ensureLengths(Uint32Array.of(doc));
       index.lengths(doc, lengths);
       const bn =
           1.2 * (1 - 0.75 + (0.75 * lengths.body) / (index.avgBody || 1)),

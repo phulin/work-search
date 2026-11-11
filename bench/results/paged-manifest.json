@@ -1,0 +1,90 @@
+{
+  "format": 1,
+  "layout": "paged",
+  "generation": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306",
+  "sourceGeneration": "c0e4af84d7b98e19f8d6a2b6453b4683f1a1bd538e9cead39ae922e4326f3946",
+  "documents": 100000,
+  "terms": 632909,
+  "bundleBytes": 176550,
+  "bundleSha256": "36976c1ff2290bae9f8d6ec4efa63ea00c59e8b8b06ae795dc3de50a6f149c15",
+  "objects": [
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/frequencies-0.bin",
+      "size": 67104860,
+      "sha256": "e12d89993993770a633e45ee3929a10393f09bdd0f5db395ed8d3827addaf9ff",
+      "kind": "frequencies"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/frequencies-1.bin",
+      "size": 18442749,
+      "sha256": "40e9607582a09c61ddc07501bff0be6d81d4e3fa793bc0c710a78809662267ba",
+      "kind": "frequencies"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/positions-0.bin",
+      "size": 67098053,
+      "sha256": "b5d784e1d2714ae6ab180f0b78c10844f4f3fbb91e2e860ccaf1ced0415eac76",
+      "kind": "positions"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/positions-1.bin",
+      "size": 67100801,
+      "sha256": "9cf1534af8893b00a1a95507c4f5dbc9e378e1a8c8bf3ec2eeef8309691ed045",
+      "kind": "positions"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/positions-2.bin",
+      "size": 67058605,
+      "sha256": "86ceb35795284b40c0801d093aa72aaeb4c4e8eac756e4f5d293e874ba005e5e",
+      "kind": "positions"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/positions-3.bin",
+      "size": 66552587,
+      "sha256": "c3589dc451a1eaa0d031a2909ca37432ab20ef6d2707df3abb3b91f17e1fc1f9",
+      "kind": "positions"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/positions-4.bin",
+      "size": 9284693,
+      "sha256": "d1ada15feb2db355ab8d83cb558ba4027455f32e65765304ecdb07f652454cef",
+      "kind": "positions"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/metadata-0.bin",
+      "size": 37240792,
+      "sha256": "b315102c48cc1790aba25faefb8f788a70c90d08546d2552f346678d7e9dfddf",
+      "kind": "metadata"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/frequencies-5.bin",
+      "kind": "frequencies",
+      "size": 5433935,
+      "sha256": "93af678329df927478f70e2c4ac73706b5f4770cbcdde1cd1c6c5bdb707c37f2"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/positions-5.bin",
+      "kind": "positions",
+      "size": 13236147,
+      "sha256": "dfc8e13981f3d28329f2665731e2ae855ea17984b6de48e28a5b05f5561f8d09"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/dictionary-0.bin",
+      "kind": "dictionary",
+      "size": 30488204,
+      "sha256": "dd7fbf028ea9457d3d07aa7ef16fc2108717775c6234e4fe78c4302c5e2d966d"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/norms-0.bin",
+      "kind": "norms",
+      "size": 800000,
+      "sha256": "02e559c2a7d37c9efab088389fba0e1be935f3b13308119ab35ca143f9f08578"
+    },
+    {
+      "key": "0a3fbe054a6dea03dfd7513715a63eb06d10740f51f564e5f0110badbe52c306/documents-0.bin",
+      "kind": "documents",
+      "size": 1539718,
+      "sha256": "4387180c8137def020eebf9968b484631120510711a0852d3d8e49eb8861d15f"
+    }
+  ]
+}

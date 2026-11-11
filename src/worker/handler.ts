@@ -19,6 +19,7 @@ export function handler(
         generation: index.generation,
         documents: index.count,
         format: VERSION,
+        layout: index.paged ? "paged" : "bundled",
       });
     if (url.pathname !== "/search")
       return Response.json({ error: "Not found" }, { status: 404 });

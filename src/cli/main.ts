@@ -1,3 +1,5 @@
+import { openIndex } from "../format/paged.js";
+import { pageIndex } from "../builder/page-index.js";
 import { readFile, writeFile, mkdir, copyFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -27,10 +29,10 @@ async function manifest() {
   const { createHash } = await import("node:crypto");
   const binary = await readFile(join(out, "bundle.bin"));
   if (
-    !SUPPORTED_VERSIONS.includes(m.format) ||
-    new BinaryIndex(binary).format !== m.format ||
+    !(m.layout === "paged" || SUPPORTED_VERSIONS.includes(m.format)) ||
+    (m.layout !== "paged" && new BinaryIndex(binary).format !== m.format) ||
     createHash("sha256").update(binary).digest("hex") !== m.bundleSha256 ||
-    new BinaryIndex(binary).generation !== m.generation
+    openIndex(binary).generation !== m.generation
   )
     throw new Error("Bundle/manifest mismatch");
   for (const o of m.objects) {
@@ -51,6 +53,14 @@ try {
       Number(arg("count", "100")),
       Number(arg("seed", "42")),
     );
+  } else if (command === "page") {
+    console.log(
+      JSON.stringify(
+        await pageIndex(arg("source", "indexes/current"), out),
+        null,
+        2,
+      ),
+    );
   } else if (command === "build") {
     const strategy = arg("strategy", "smallest");
     if (!["smallest", "workload", "mixed"].includes(strategy))
@@ -60,18 +70,22 @@ try {
           .split(/\r?\n/)
           .filter(Boolean)
       : [];
-    const result = await build({
+    const paged = arg("layout", "bundled") === "paged";
+    const builtOut = paged ? out + ".staging" : out;
+    const built = await build({
       input: arg("input", "data/sample.jsonl"),
-      out,
+      out: builtOut,
+      pagedStaging: paged,
       budget: Number(arg("budget-mib", "8")) * 1024 * 1024,
       strategy: strategy as "smallest" | "workload" | "mixed",
       workload,
       chunkDocs: Number(arg("chunk-docs", "5000")),
     });
+    const result = paged ? await pageIndex(builtOut, out) : built;
     await copyFile(join(out, "bundle.bin"), "data/bundle.bin");
     console.log(JSON.stringify(result, null, 2));
   } else if (command === "search") {
-    const index = new BinaryIndex(await readFile(join(out, "bundle.bin")));
+    const index = openIndex(await readFile(join(out, "bundle.bin")));
     console.log(
       JSON.stringify(
         await search(

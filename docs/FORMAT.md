@@ -148,3 +148,27 @@ columns use typed-array fills. Decoders check bounds, ordering, overflow, nonemp
 frequencies, exact byte exhaustion and directory endpoints. The encoder picks the
 smaller of packed and canonical-varint blocks, including all headers; v5 frequency
 blocks and positional blocks remain valid within the extended directory.
+
+## Paged root v1 (optional layout)
+
+`bundle.bin` may instead start with little-endian magic `0x31504752`, followed by
+u32 payload length, u32 CRC32, and a UTF-8 JSON routing payload. This small routing
+payload is capped at 8 MiB; it contains corpus statistics, a 64-hex generation,
+first-term/page-boundary descriptors and page offsets/lengths/CRCs. It contains no
+complete term vocabulary or per-document records. Root version is 1; backing
+posting/dictionary format remains v8. `openIndex` distinguishes both layouts.
+
+`dictionary-0.bin` packs independent 256-term binary dictionary pages (existing
+v8 header + descriptors + term strings, empty document table, all postings
+remote). `norms-0.bin` packs 4096-document pages of exact little-endian u32 body
+and title lengths (8 bytes per document). `documents-0.bin` packs independent
+4096-document DTC2 tables containing external IDs and metadata pointers. The last
+page of each section can be partial. Page payloads are addressed by root ranges;
+CRCs are verified before cache insertion. All objects use the root generation
+prefix and the normal R2 custom-metadata generation check. Upload manifests
+include object SHA256 and root SHA256. Source postings are copied unchanged under
+the new generation, and formerly embedded streams are moved into packed objects.
+
+The converter is deterministic for a source generation. Direct paged builds use
+an offline staging generation with no embedded postings, permitting dictionaries
+larger than the serving bundle budget; this intermediate is never deployed.

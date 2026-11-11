@@ -1,9 +1,9 @@
 import { SearchRuntime } from "../query/runtime.js";
 import binary from "../../data/bundle.bin";
-import { BinaryIndex } from "../format/index.js";
+import { openIndex } from "../format/paged.js";
 import { R2Storage } from "../storage/r2.js";
 import { handler } from "./handler.js";
-const index = new BinaryIndex(new Uint8Array(binary));
+const index = openIndex(new Uint8Array(binary));
 let runtime: SearchRuntime | undefined;
 export default {
   fetch(

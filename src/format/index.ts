@@ -20,6 +20,28 @@ export interface Entry {
   positionCrc: number;
 }
 export class BinaryIndex {
+  readonly paged: boolean = false;
+  hasLength(_doc: number) {
+    return true;
+  }
+  async ensureLengths(_docs: Uint32Array) {}
+  queryIndex(): BinaryIndex {
+    return this;
+  }
+  async prepareTerms(
+    _terms: string[],
+    _storage: import("../storage/types.js").Storage,
+    _runtime?: import("../query/runtime.js").SearchRuntime,
+  ) {}
+  async prepareLengths(
+    _docs: Uint32Array,
+    _storage: import("../storage/types.js").Storage,
+    _additional: Uint32Array[] = [],
+  ) {}
+  async resolveDocuments(
+    _docs: number[],
+    _storage: import("../storage/types.js").Storage,
+  ) {}
   readonly format: number;
   readonly bytes: Uint8Array;
   readonly view: DataView;

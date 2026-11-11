@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import { readFile, mkdtemp, writeFile, rm, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { pageIndex } from "../src/builder/page-index.js";
 import { build } from "../src/builder/build.js";
 it("executes actual bundled Worker in workerd with local and ranged R2 postings", async () => {
   const dry = spawnSync(
@@ -43,9 +44,11 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
     out: join(root, "remote"),
     budget: full.bundleBytes - full.embeddedBytes,
   });
+  const paged = await pageIndex(join(root, "full"), join(root, "paged"));
   for (const [name, manifest] of [
     ["full", full],
     ["remote", m],
+    ["paged", paged],
   ] as const) {
     const mf = new Miniflare({
       modules: [
@@ -75,7 +78,10 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
       expect(res.status).toBe(200);
       const json = (await res.json()) as any;
       expect(json.results[0].id).toBe("remote");
-      expect(json.diagnostics.indexRequests).toBe(name === "full" ? 0 : 1);
+      if (name !== "paged")
+        expect(json.diagnostics.indexRequests).toBe(name === "full" ? 0 : 1);
+      else
+        expect(json.diagnostics.dictionaryDocumentRequests).toBeGreaterThan(0);
       const ranked = await mf.dispatchFetch(
         "https://test/search?q=common&limit=7&diagnostics=true",
       );
@@ -101,7 +107,7 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
         expect(response.status).toBe(200);
         const body = (await response.json()) as any;
         expect(body.total, q).toBe(total);
-        if (total)
+        if (total && name !== "paged")
           expect(body.diagnostics.indexRequests).toBe(name === "full" ? 0 : 5);
       }
       expect(

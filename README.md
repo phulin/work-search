@@ -191,3 +191,35 @@ This preserves the original query strings and records infeasible budgets instead
 of reducing the corpus or moving the dictionary remotely. Sampling uses hashed
 shard checkpoints and shuffles file offsets rather than full texts in memory.
 See [bench/FLP-100K.md](bench/FLP-100K.md) for the 100k run and comparisons.
+
+### R2-backed paged layout
+
+Use `npm run build-index -- --input corpus.jsonl --out indexes/paged --layout paged`
+for a small bundled routing root with the complete dictionary, lengths, IDs and
+postings stored in immutable R2 objects. The offline `.staging` sibling is an
+intermediate and must not be deployed. It can be removed after verification.
+The existing builder's document/term bookkeeping still consumes offline RAM.
+
+To convert a completed index without tokenizing again:
+
+```sh
+node --import tsx src/cli/main.ts page --source indexes/current --out indexes/paged
+npm run search-local -- --out indexes/paged --query '"summary judgment"'
+node --import tsx src/cli/main.ts verify --out indexes/paged
+npm run dev -- --out indexes/paged
+npm run deploy -- --out indexes/paged
+```
+
+Both layouts use the same API and R2 upload/generation checks. The paged root
+contains page boundaries, locations, checksums and corpus statistics; it does not
+contain the full vocabulary. Missing terms can require dictionary reads. Resolving
+external IDs can require reads even when postings are cached. Diagnostics include
+`paged`, `dictionaryDocumentRequests` and `dictionaryDocumentBytes`; these page
+reads are also included in aggregate `indexRequests`/`indexBytes` and `fullyLocal`.
+Legacy phase durations do not separately isolate all paged I/O; use end-to-end
+latency for comparisons. The per-isolate LRU remains bounded and query page views
+are isolated between concurrent requests.
+
+See [the 100k paged comparison](bench/PAGED-INDEX.md) for real local measurements
+and per-read simulated R2 latency at 0, 5 and 20 ms. No Cloudflare deployment
+latencies are claimed.

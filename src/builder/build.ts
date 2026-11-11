@@ -35,6 +35,8 @@ export interface BuildOptions {
   workload?: string[];
   chunkDocs?: number;
   objectBytes?: number;
+  /** Offline intermediate for paged output; never deploy this bundle. */
+  pagedStaging?: boolean;
 }
 async function write(
   stream: ReturnType<typeof createWriteStream>,
@@ -130,6 +132,7 @@ export async function build(options: BuildOptions) {
     const hash = createHash("sha256").update(
       JSON.stringify({
         version: VERSION,
+        ...(options.pagedStaging ? { pagedStaging: true } : {}),
         budget,
         strategy,
         workload: options.workload ?? [],
@@ -323,19 +326,24 @@ export async function build(options: BuildOptions) {
       entries.length * TERM +
       entries.reduce((s, e) => s + encoder.encode(e.term).length, 0) +
       compressedDocuments.length;
-    if (baseBytes > budget)
+    const embeddingBudget = options.pagedStaging ? baseBytes : budget;
+    if (baseBytes > embeddingBudget)
       throw new Error(
         `Required dictionary/doc tables ${baseBytes} bytes exceed bundle budget ${budget}`,
       );
     const joint =
       strategy === "mixed"
-        ? selectStreams(entries, budget - baseBytes, options.workload ?? [])
+        ? selectStreams(
+            entries,
+            embeddingBudget - baseBytes,
+            options.workload ?? [],
+          )
         : undefined;
     const chosen =
         joint?.frequencies ??
         selectPostings(
           entries,
-          budget - baseBytes,
+          embeddingBudget - baseBytes,
           strategy as "smallest" | "workload",
           options.workload,
         ),
@@ -350,7 +358,7 @@ export async function build(options: BuildOptions) {
         entries
           .filter((e) => chosen.has(e.term))
           .map((e) => ({ term: e.term, length: e.positionLength })),
-        budget - baseBytes - embeddedFrequencyBytes,
+        embeddingBudget - baseBytes - embeddedFrequencyBytes,
         strategy as "smallest" | "workload",
         options.workload,
       );

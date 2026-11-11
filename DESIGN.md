@@ -131,3 +131,18 @@ JSONL ingestion explicitly splits LF/CRLF records rather than using readline:
 recent Node readline versions split literal U+2028/U+2029 inside otherwise-valid
 JSON strings. These characters occur in the larger legal sample. The shared
 reader preserves their text and is regression-tested across chunk boundaries.
+
+Paged R2 layout (v1): the bundle can contain only a routing root. Terms are routed
+by the first term of each 256-term dictionary page. Dictionary pages reuse the
+v8 binary dictionary/descriptor decoder. Exact lengths occupy separate 4096-doc
+u32 body/title pages, and result records use the existing compressed document
+codec in independent 4096-doc pages. Selected ranges are coalesced to at most
+256 KiB; streaming frequencies use 64 KiB read-ahead. Directory and block CRCs
+remain independently verified. The root and pages are generation-bound; page CRCs
+are verified before inserting into the shared weighted LRU. Query-local views
+prevent concurrent requests from changing each other's synchronous lookup data.
+
+This implementation prioritizes equivalence and explicit tradeoffs: no new ranking
+model, forward index or persistent cursor state. The bundled layout remains the
+baseline; the paged layout removes mandatory bundle growth but can add read phases.
+Both are supported by the same Worker, CLI, local filesystem and R2 adapters.
