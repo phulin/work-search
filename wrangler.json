@@ -1,0 +1,8 @@
+{
+  "name": "worker-bundle-search",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "rules": [{ "type": "Data", "globs": ["**/*.bin"], "fallthrough": true }],
+  "r2_buckets": [{ "binding": "INDEX", "bucket_name": "worker-search-index" }],
+  "vars": { "DIAGNOSTICS": "false" }
+}

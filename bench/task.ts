@@ -1,0 +1,93 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { build } from "../src/builder/build.js";
+import { BinaryIndex } from "../src/format/index.js";
+import { FileStorage } from "../src/storage/filesystem.js";
+import { search } from "../src/query/engine.js";
+import { handler } from "../src/worker/handler.js";
+const [input, out, budget, strategy, queryFile, resultFile] =
+  process.argv.slice(2);
+const queries = (await readFile(queryFile, "utf8")).split("\n").filter(Boolean);
+try {
+  const cpuStart = process.cpuUsage();
+  const m = await build({
+    input,
+    out,
+    budget: Number(budget) * 1024 * 1024,
+    strategy: strategy as "smallest" | "workload",
+    workload: queries,
+  });
+  const load = performance.now(),
+    bytes = await readFile(join(out, "bundle.bin")),
+    index = new BinaryIndex(bytes),
+    loadMs = performance.now() - load;
+  const construct = performance.now();
+  for (let i = 0; i < 100; i++) new BinaryIndex(bytes);
+  const constructorMs = (performance.now() - construct) / 100;
+  const store = new FileStorage(join(out, "objects")),
+    h = handler(index, store, true);
+  const samples: any[] = [];
+  for (let repeat = 0; repeat < 3; repeat++)
+    for (const q of queries) {
+      const start = performance.now(),
+        cpu = process.cpuUsage();
+      try {
+        const response = await h(
+          new Request(
+            "https://local/search?diagnostics=true&q=" + encodeURIComponent(q),
+          ),
+        );
+        const result = (await response.json()) as any;
+        if (response.status !== 200) throw new Error(result.error);
+        const usage = process.cpuUsage(cpu);
+        samples.push({
+          q,
+          ms: performance.now() - start,
+          cpuMs: (usage.user + usage.system) / 1000,
+          ...result.diagnostics,
+          total: result.total,
+        });
+      } catch (e) {
+        samples.push({ q, error: String(e) });
+      }
+    }
+  const good = samples.filter((x) => !x.error),
+    sorted = good.map((x) => x.ms).sort((a, b) => a - b),
+    mean = (key: string) => good.reduce((s, x) => s + x[key], 0) / good.length;
+  const cpu = process.cpuUsage(cpuStart);
+  await writeFile(
+    resultFile,
+    JSON.stringify(
+      {
+        status: "ok",
+        ...m,
+        loadMs,
+        constructorMs,
+        throughput: m.documents / (m.buildMs / 1000),
+        storageBytes: m.bundleBytes + m.objects.reduce((s, o) => s + o.size, 0),
+        zeroReadPercent:
+          (100 * good.filter((x) => x.fullyLocal).length) / good.length,
+        avgRequests: mean("indexRequests"),
+        avgBytes: mean("indexBytes"),
+        p50Ms: sorted[Math.ceil(sorted.length * 0.5) - 1],
+        p95Ms: sorted[Math.ceil(sorted.length * 0.95) - 1],
+        avgCpuMs: mean("cpuMs"),
+        queryPeakRssBytes: process.resourceUsage().maxRSS * 1024,
+        totalCpuMs: (cpu.user + cpu.system) / 1000,
+        samples,
+      },
+      null,
+      2,
+    ),
+  );
+} catch (e) {
+  await writeFile(
+    resultFile,
+    JSON.stringify({
+      status: "infeasible",
+      error: String(e),
+      budgetMiB: Number(budget),
+      strategy,
+    }),
+  );
+}

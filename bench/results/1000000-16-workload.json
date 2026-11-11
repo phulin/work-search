@@ -1,0 +1,1 @@
+{"status":"infeasible","error":"Error: Required dictionary/doc tables 34621837 bytes exceed bundle budget 16777216","budgetMiB":16,"strategy":"workload"}

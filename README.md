@@ -1,0 +1,111 @@
+# Worker Bundle Search
+
+A standalone TypeScript full-text search engine. The Worker contains a binary term dictionary, document IDs and lengths, and selected compressed postings. Remaining postings use immutable R2 objects and byte-range reads. No remote dictionary, database, framework, or external search service.
+
+## Run locally
+
+Requires Node **22.13+** (24+ recommended), npm, and enough temporary disk for external-sort runs. Node's built-in SQLite is used only by the offline builder to detect duplicate IDs on disk.
+
+```sh
+npm ci
+npm run generate-sample
+npm run build-index -- --input data/sample.jsonl
+npm run search-local -- --query 'search engine'
+npm run check
+npm test
+npm run dev
+# In another terminal:
+curl 'http://localhost:8787/search?q=search+engine&limit=20'
+curl 'http://localhost:8787/health'
+```
+
+`dev` first seeds Wrangler's persistent local R2 with the selected generation, including the generation metadata checked by the storage adapter. The checked-in sample binary supports `npm test` and dry runs immediately. It contains 100 deterministic synthetic documents; `generate-sample` recreates its JSONL source. Local indexing needs no Cloudflare account.
+
+## Input and indexing
+
+JSONL documents require a nonempty string `id` and string `body`; `title` and arbitrary JSON `metadata` are optional. Blank lines are skipped. Empty corpora and empty bodies are valid. Malformed JSON, invalid fields, and duplicate external IDs fail with a line number. Internal IDs are zero-based input order and remain stable across budgets and spill sizes for the same ordered corpus. Updating/reordering a corpus creates a new generation.
+
+```sh
+npm run build-index -- --input corpus.jsonl --out indexes/v2 --budget-mib 16
+npm run build-index -- --input corpus.jsonl --out indexes/v3 --budget-mib 8 \
+  --strategy workload --workload queries.txt --chunk-docs 5000
+npm run search-local -- --out indexes/v3 --query 'example text' --mode or --metadata
+npx tsx src/cli/main.ts verify --out indexes/v3
+```
+
+Use a fresh output directory for each build. A generation's objects are never overwritten by the builder. `queries.txt` contains one query per line; repeated lines supply frequencies. The bundle budget includes dictionary, document tables, IDs, and embedded postings. A budget too small for mandatory tables is rejected. `build-index` selects the resulting binary for the next Worker build by copying it to `data/bundle.bin`.
+
+The builder streams documents, spills term-sorted runs, merges at most 32 streams per pass, compresses one merged term at a time, and packs remote objects up to 64 MiB (an individual larger posting stays contiguous). IDs are checked in an on-disk SQLite uniqueness table. RAM scales with the document table, vocabulary, one input chunk, largest term list, and final bundle—not the entire corpus postings. Title/body text and metadata are not retained in memory. A single very large input document or dominant term can still consume substantial builder RAM.
+
+## Search API
+
+```text
+GET /search?q=example+text&limit=20
+GET /search?q=example+text&mode=or&field=title&titleBoost=3
+GET /search?q=example&metadata=true
+GET /health
+```
+
+Default AND; optional OR. NFKC Unicode normalization, lowercase, and Unicode letter/number tokenization. No stemming, stop words, or language-specific word segmentation. Tokens with no separator (for example a CJK sentence) form one token. Duplicate query terms count once. Empty queries return no matches; AND queries containing missing terms return immediately without reads. `field` is `all`, `title`, or `body`; `titleBoost` defaults to 2 (0–20); `limit` defaults to 20 (1–100). Queries allow at most 16 distinct terms and 2,048 UTF-16 characters. Invalid requests return 400, unknown routes 404, storage/corruption failures 503.
+
+Results contain external IDs and scores. `total` is an **exact** count of matching documents: this implementation exhaustively combines lists before ranking. Ties use internal input order. BM25 is computed separately for title/body lengths, using the union document frequency for each term, then summed with title boost. Field restrictions reuse that union DF. Metadata/title are fetched only with `metadata=true`; body text is not returned.
+
+Enable `DIAGNOSTICS="true"` in Wrangler's vars, then request `diagnostics=true`. Production defaults to off. Diagnostics separate lookup, fetch/decode/checksum, scoring, index request/bytes, metadata request/bytes, and `fullyLocal`. Byte counts are requested payload bytes, not network/protocol overhead. Request counts are attempted adapter reads. No cache hides reads. A fully embedded ID-only query makes zero R2 calls. Metadata uses one range per returned hit, with concurrency four. Metadata duration is included in total client latency but not index-fetch timing.
+
+## Cloudflare deployment
+
+Edit `wrangler.json` for your Worker and bucket names; create the bucket:
+
+```sh
+npx wrangler login
+npx wrangler r2 bucket create worker-search-index
+# Export variables shown in .env.example. R2 S3 credentials are separate from Wrangler auth.
+# Build a new generation, then:
+npm run deploy -- --out indexes/v3 --bucket worker-search-index
+```
+
+`deploy` verifies the bundle and every object SHA-256 against the manifest; signs R2 S3 HEAD/PUT requests; skips already-present objects only if generation, checksum metadata, and length match; uses conditional creation for missing objects; selects the exact binary; then runs Wrangler deployment. Upload must complete before the Worker changes. Runtime R2 access uses **only the binding**, never S3 or public HTTP. S3 credentials stay on the build machine. `--bucket` must match the bucket binding in `wrangler.json`. Credentials were unavailable during development: cloud upload/deployment has **not** been validated against an account.
+
+```sh
+npm run bundle  # actual Wrangler binary-module dry run and upload-size report
+curl 'https://YOUR_WORKER.workers.dev/health' # confirm expected generation
+curl 'https://YOUR_WORKER.workers.dev/search?q=example'
+npx tsx bench/remote.ts https://YOUR_WORKER.workers.dev 'example' 'common rare'
+```
+
+A failed upload leaves the old Worker intact. A failed deployment may leave unreferenced immutable objects, which are safe to collect later. Runtime keys contain the bundle's generation; R2 object custom metadata must match it, and each posting has a bundle-resident CRC32. Never edit object contents or metadata manually. Roll back by deploying the old binary and retaining its objects.
+
+**Garbage collection:** inventory all live deployments, gradual rollout versions, and rollback candidates; keep every referenced generation; after old requests and your rollback retention period expire, delete only unreferenced generation prefixes. There is deliberately no automatic destructive collector.
+
+## Limits and tuning
+
+Cloudflare's [current limits](https://developers.cloudflare.com/workers/platform/limits/) checked November 11, 2026 list 64 MiB **uncompressed** Worker size, 128 MiB isolate memory, and 1 second startup. The default 8 MiB index leaves room for code, per-isolate runtime, and decoding. Configurable budgets up to 48 MiB are experiments, not a universal memory guarantee. Always inspect `npm run bundle` and validate startup on your account. At one million documents the bundled external-ID/length table alone makes the smaller budgets infeasible; see the benchmark report.
+
+Queries retrieve up to four remote lists concurrently. A conservative working-set estimate rejects oversized queries rather than allocating unbounded typed arrays. Concurrent requests share an isolate and can still exhaust memory; large, common-term queries may exceed the Free plan's 10 ms CPU limit. Paid Workers are appropriate for that workload. This is exhaustive BM25, without WAND or block skips. There is no persistent query/posting cache. Phrase search, positions, metadata filters, and incremental updates are not implemented.
+
+## Benchmarks and layout
+
+```sh
+npm run bench  # 10k, 100k, 1m; 8/16/32/48 MiB; both strategies
+npm run bench -- --sizes 10000 --budgets 8,16
+npm run bench -- --sizes 100000 --input /absolute/path/real.jsonl --queries queries.txt
+npx tsx bench/runtime.ts  # startup and HTTP measurements in local workerd
+npx tsx bench/bundle.ts   # dry-run the 48 MiB bundle, then restore sample binary
+```
+
+For supplied corpora, `--sizes` labels the corpus; the actual document count is also recorded in successful results. The runner creates a new child process per configuration and preserves failed/infeasible configurations. Generated corpora and indexes are ignored by Git. Results are in [bench/RESOURCES.md](bench/RESOURCES.md), [bench/WORKERD.md](bench/WORKERD.md), [bench/REPORT.md](bench/REPORT.md), [bench/results/results.json](bench/results/results.json), and individual sample JSON files. Local filesystem/HTTP-handler times are separated from local workerd and deployed network measurements. Cost formulas and caveats are in the report.
+
+```text
+src/builder/   streaming construction, external merge, embedding selection
+src/format/    versioned binary layout, varints, posting codecs, CRC32
+src/query/     normalization, sorted intersection/union, BM25, bounded top-K
+src/storage/   range-read abstraction, filesystem and R2 adapters
+src/worker/    HTTP validation, health, binary module entry point
+src/cli/       generator, build/search/verify/seed/deploy, signed R2 uploads
+tests/         independent brute-force reference, unit/integration/workerd tests
+bench/         matrix runner, raw measurements, reports, deployed-latency runner
+data/          sample corpus and selected Worker binary
+docs/          binary format specification
+```
+
+See [DESIGN.md](DESIGN.md) for tradeoffs and the highest-value next optimizations.
