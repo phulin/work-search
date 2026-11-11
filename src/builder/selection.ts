@@ -1,4 +1,4 @@
-import { tokenize } from "../query/tokenize.js";
+import { parse, queryTerms, simplify } from "../query/parser.js";
 export interface Item {
   term: string;
   length: number;
@@ -14,7 +14,7 @@ export function selectPostings(
     sizes = new Map(items.map((x) => [x.term, x.length]));
   let left = budget;
   const queries = workload
-    .map((q) => [...new Set(tokenize(q))])
+    .map((q) => queryTerms(simplify(parse(q), (t) => sizes.has(t))))
     .filter((q) => q.length && q.every((t) => sizes.has(t)));
   if (strategy === "workload") {
     const packages = new Map<string, string[]>();

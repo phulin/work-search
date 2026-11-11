@@ -1,6 +1,6 @@
 # Local benchmark report
 
-Measured 2026-11-11T16:11:43.617Z on Apple M3, darwin/arm64, Node v26.7.0.
+Measured 2026-11-11T16:51:56.378Z on Apple M3, darwin/arm64, Node v26.7.0.
 
 Deterministic seed 42; 40 sampled vocabulary tokens plus 4 common/category tokens per document; 20,000-word vocabulary. 12 queries, three passes each, ID-only AND, top 20. Includes common, rare, mixed and missing terms. Workload selection is evaluated on its training queries, so its advantage is optimistic.
 
@@ -8,34 +8,34 @@ Latency is the in-process HTTP handler with filesystem ranged reads and warm OS 
 
 |    Docs | MiB budget | Strategy | Build s | Docs/s | Bundle MiB | Storage MiB | Zero reads % | Reads/query | Bytes/query | P50 ms | P95 ms | CPU ms/query | Peak RSS MiB |
 | ------: | ---------: | -------- | ------: | -----: | ---------: | ----------: | -----------: | ----------: | ----------: | -----: | -----: | -----------: | -----------: |
-|   10000 |          8 | smallest |    0.52 |  19142 |       2.28 |        3.06 |        100.0 |        0.00 |           0 |   0.21 |   4.09 |         2.60 |       223.80 |
-|   10000 |          8 | workload |    0.56 |  17949 |       2.28 |        3.06 |        100.0 |        0.00 |           0 |   0.24 |   3.92 |         2.54 |       223.73 |
-|   10000 |         16 | smallest |    0.59 |  16869 |       2.28 |        3.06 |        100.0 |        0.00 |           0 |   0.21 |   4.31 |         2.60 |       225.06 |
-|   10000 |         16 | workload |    0.61 |  16390 |       2.28 |        3.06 |        100.0 |        0.00 |           0 |   0.22 |   4.43 |         2.83 |       226.41 |
-|   10000 |         32 | smallest |    0.52 |  19067 |       2.28 |        3.06 |        100.0 |        0.00 |           0 |   0.21 |   4.23 |         2.43 |       224.88 |
-|   10000 |         32 | workload |    0.53 |  18974 |       2.28 |        3.06 |        100.0 |        0.00 |           0 |   0.20 |   3.85 |         2.47 |       223.84 |
-|   10000 |         48 | smallest |    0.52 |  19361 |       2.28 |        3.06 |        100.0 |        0.00 |           0 |   0.23 |   3.84 |         2.44 |       223.95 |
-|   10000 |         48 | workload |    0.54 |  18538 |       2.28 |        3.06 |        100.0 |        0.00 |           0 |   0.21 |   4.21 |         2.54 |       223.84 |
-|  100000 |          8 | smallest |    3.30 |  30296 |       8.00 |       24.34 |         25.0 |        1.08 |      138328 |   0.79 |  21.65 |         7.91 |       451.94 |
-|  100000 |          8 | workload |    3.26 |  30681 |       8.00 |       24.34 |        100.0 |        0.00 |           0 |   0.63 |  20.52 |         7.68 |       441.00 |
-|  100000 |         16 | smallest |    3.44 |  29079 |      15.84 |       24.34 |         91.7 |        0.17 |       50001 |   0.82 |  28.00 |         9.30 |       448.89 |
-|  100000 |         16 | workload |    3.55 |  28145 |      15.97 |       24.34 |        100.0 |        0.00 |           0 |   0.65 |  22.06 |         7.99 |       456.56 |
-|  100000 |         32 | smallest |    3.39 |  29517 |      16.41 |       24.34 |        100.0 |        0.00 |           0 |   0.65 |  21.58 |         7.86 |       441.39 |
-|  100000 |         32 | workload |    3.49 |  28682 |      16.41 |       24.34 |        100.0 |        0.00 |           0 |   0.77 |  21.95 |         8.30 |       460.36 |
-|  100000 |         48 | smallest |    3.42 |  29217 |      16.41 |       24.34 |        100.0 |        0.00 |           0 |   0.64 |  21.23 |         7.66 |       393.06 |
-|  100000 |         48 | workload |    3.38 |  29589 |      16.41 |       24.34 |        100.0 |        0.00 |           0 |   0.64 |  29.05 |         8.51 |       423.70 |
-| 1000000 |          8 | smallest |   44.61 |  22417 |       8.00 |      237.90 |         16.7 |        1.17 |     1383773 |   5.41 | 135.33 |        39.80 |      1347.41 |
-| 1000000 |          8 | workload |   46.17 |  21659 |       8.00 |      237.90 |         58.3 |        0.50 |     1333317 |   3.57 | 128.44 |        35.14 |      1218.41 |
-| 1000000 |         16 | smallest |   44.96 |  22242 |      16.00 |      237.90 |         16.7 |        1.17 |     1383773 |   4.37 | 128.80 |        35.92 |      1235.64 |
-| 1000000 |         16 | workload |   43.68 |  22893 |      16.00 |      237.90 |         91.7 |        0.08 |      250000 |   3.63 | 129.59 |        35.35 |      1320.81 |
-| 1000000 |         32 | smallest |   42.48 |  23538 |      32.00 |      237.90 |         25.0 |        1.08 |     1383463 |   4.40 | 143.38 |        36.93 |      1282.53 |
-| 1000000 |         32 | workload |   40.69 |  24575 |      32.00 |      237.90 |        100.0 |        0.00 |           0 |   3.60 | 119.78 |        30.96 |      1257.77 |
-| 1000000 |         48 | smallest |   40.23 |  24859 |      48.00 |      237.90 |         25.0 |        1.08 |     1383463 |   5.64 | 126.27 |        37.54 |      1246.39 |
-| 1000000 |         48 | workload |   40.37 |  24773 |      48.00 |      237.90 |        100.0 |        0.00 |           0 |   3.08 | 132.65 |        31.96 |      1216.47 |
+|   10000 |          8 | smallest |    0.69 |  14393 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   4.69 |         3.07 |       358.45 |
+|   10000 |          8 | workload |    0.69 |  14389 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   4.87 |         3.25 |       341.05 |
+|   10000 |         16 | smallest |    0.71 |  14030 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.21 |   4.73 |         3.17 |       340.56 |
+|   10000 |         16 | workload |    0.71 |  14137 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.26 |   4.71 |         3.16 |       342.33 |
+|   10000 |         32 | smallest |    0.69 |  14470 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.22 |   4.74 |         3.27 |       343.08 |
+|   10000 |         32 | workload |    0.70 |  14386 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   4.76 |         3.16 |       343.52 |
+|   10000 |         48 | smallest |    0.69 |  14482 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.23 |   4.71 |         3.00 |       343.66 |
+|   10000 |         48 | workload |    0.69 |  14402 |       2.73 |        3.51 |        100.0 |        0.00 |           0 |   0.22 |   4.72 |         3.20 |       340.16 |
+|  100000 |          8 | smallest |    4.92 |  20316 |       8.00 |       28.82 |         25.0 |        1.08 |      202272 |   0.87 |  26.93 |         9.14 |       653.55 |
+|  100000 |          8 | workload |    5.03 |  19881 |       8.00 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.00 |         8.93 |       637.69 |
+|  100000 |         16 | smallest |    4.87 |  20532 |      16.00 |       28.82 |         50.0 |        0.67 |      200717 |   0.89 |  32.67 |         8.32 |       612.64 |
+|  100000 |         16 | workload |    4.82 |  20762 |      16.00 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.47 |         8.56 |       728.06 |
+|  100000 |         32 | smallest |    4.83 |  20685 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.79 |  26.28 |         8.22 |       728.16 |
+|  100000 |         32 | workload |    4.82 |  20727 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.32 |         8.16 |       692.09 |
+|  100000 |         48 | smallest |    4.75 |  21067 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.79 |  26.33 |         8.80 |       710.14 |
+|  100000 |         48 | workload |    4.81 |  20779 |      20.89 |       28.82 |        100.0 |        0.00 |           0 |   0.80 |  26.68 |         8.99 |       643.53 |
+| 1000000 |          8 | smallest |   71.37 |  14011 |       8.00 |      282.72 |         16.7 |        1.17 |     2022124 |   6.52 | 200.63 |        49.26 |      1920.58 |
+| 1000000 |          8 | workload |   74.56 |  13412 |       8.00 |      282.72 |         58.3 |        0.50 |     1951922 |   6.08 | 161.87 |        46.82 |      1640.89 |
+| 1000000 |         16 | smallest |   69.64 |  14359 |      16.00 |      282.72 |         16.7 |        1.17 |     2022124 |   6.49 | 161.40 |        45.64 |      1533.80 |
+| 1000000 |         16 | workload |   72.27 |  13836 |      16.00 |      282.72 |         91.7 |        0.17 |      666667 |   3.90 | 161.45 |        45.47 |      1764.98 |
+| 1000000 |         32 | smallest |   71.06 |  14073 |      32.00 |      282.72 |         16.7 |        1.17 |     2022124 |   5.56 | 163.87 |        46.88 |      1627.77 |
+| 1000000 |         32 | workload |   68.68 |  14561 |      32.00 |      282.72 |        100.0 |        0.00 |           0 |   3.74 | 154.67 |        43.36 |      1599.92 |
+| 1000000 |         48 | smallest |   73.75 |  13559 |      48.00 |      282.72 |         25.0 |        1.08 |     2021735 |   5.66 | 164.52 |        46.51 |      1983.31 |
+| 1000000 |         48 | workload |   69.23 |  14444 |      48.00 |      282.72 |        100.0 |        0.00 |           0 |   5.02 | 152.88 |        45.12 |      1713.88 |
 
 ## Interpretation and costs
 
-The 10k corpus can fit entirely in the bundle, so budgets larger than that index do not improve I/O. Format v2 uses compressed restart blocks for mandatory document data, making all requested budgets feasible for the million-document synthetic corpus. The original v1 measurements are preserved in baseline-v1/ and COMPARISON.md reports the changes. Different corpora may still exceed the minimum budget. An infeasible budget is rejected rather than silently exceeded. Query failures, if any, are preserved in per-query JSON samples and excluded from latency percentiles; inspect those samples before comparing configurations.
+The 10k corpus can fit entirely in the bundle, so budgets larger than that index do not improve I/O. Format v3 retains compressed document blocks and adds token positions to postings, making all requested budgets feasible for the million-document synthetic corpus. The original v1 measurements are preserved in baseline-v1/ and CONNECTORS.md reports the new syntax and positional-index tradeoffs. The v2 optimized baseline is preserved in baseline-v2-optimized/. Different corpora may still exceed the minimum budget. An infeasible budget is rejected rather than silently exceeded. Query failures, if any, are preserved in per-query JSON samples and excluded from latency percentiles; inspect those samples before comparing configurations.
 
 R2 Standard list prices checked 2026-11-11: $0.015/GB-month storage, $0.36/million Class B reads, $4.50/million Class A writes, zero Internet egress fee. Before free tiers, estimated monthly R2 cost = remote bytes / 1e9 * 0.015 + monthly queries / 1e6 * average reads * 0.36. Metadata reads add separately; benchmark queries omit metadata. For one million monthly queries, the read charge is $0.36 times reads/query. These are estimates, not an account invoice. Workers Paid adds a $5/month minimum, usage beyond included request/CPU allowances, and deployment storage may vary. See [R2 pricing](https://developers.cloudflare.com/r2/pricing/) and [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/).
 

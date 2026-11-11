@@ -130,8 +130,10 @@ describe("compressed document tables", () => {
   });
   it("rejects old bundles rather than interpreting fixed-width descriptors as compressed blocks", async () => {
     const bytes = Uint8Array.from(await readFile("data/bundle.bin"));
-    new DataView(bytes.buffer).setUint32(4, 1, true);
-    expect(() => new BinaryIndex(bytes)).toThrow("version");
+    for (const version of [1, 2]) {
+      new DataView(bytes.buffer).setUint32(4, version, true);
+      expect(() => new BinaryIndex(bytes)).toThrow("version");
+    }
   });
   it("keeps predictable document data below seven bytes per document without expanding at read time", () => {
     // A smaller representative slice covers the same restart and delta patterns at low test cost.

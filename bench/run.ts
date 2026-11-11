@@ -87,4 +87,4 @@ for (const n of sizes) {
 }
 await import("./report.js");
 await import("./details.js");
-await import("./compare.js");
+await import("./connectors-report.js");

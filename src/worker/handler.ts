@@ -1,4 +1,5 @@
 import { BinaryIndex, VERSION } from "../format/index.js";
+import { QuerySyntaxError } from "../query/parser.js";
 import { search, type SearchOptions } from "../query/engine.js";
 import type { Storage } from "../storage/types.js";
 export function handler(
@@ -53,7 +54,7 @@ export function handler(
       }
       return Response.json(result);
     } catch (e) {
-      if (e instanceof Error && e.message === "At most 16 distinct query terms")
+      if (e instanceof QuerySyntaxError)
         return Response.json({ error: e.message }, { status: 400 });
       console.error(e);
       return Response.json({ error: "Search unavailable" }, { status: 503 });

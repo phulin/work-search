@@ -1,0 +1,87 @@
+{
+  "kind": "V8 CPU self-samples, same 48 MiB workload index and query sequence; approximate attribution including JIT effects",
+  "profiles": [
+    {
+      "name": "before",
+      "totalSamples": 2293,
+      "documentFunctions": [
+        {
+          "function": "lengths",
+          "samples": 97
+        },
+        {
+          "function": "block",
+          "samples": 260
+        },
+        {
+          "function": "",
+          "samples": 13
+        },
+        {
+          "function": "unpack",
+          "samples": 42
+        },
+        {
+          "function": "block",
+          "samples": 4
+        },
+        {
+          "function": "document",
+          "samples": 3
+        },
+        {
+          "function": "block",
+          "samples": 3
+        },
+        {
+          "function": "lengths",
+          "samples": 4
+        },
+        {
+          "function": "block",
+          "samples": 3
+        }
+      ],
+      "documentSelfSamples": 429
+    },
+    {
+      "name": "after",
+      "totalSamples": 2020,
+      "documentFunctions": [
+        {
+          "function": "lengths",
+          "samples": 49
+        },
+        {
+          "function": "block",
+          "samples": 5
+        },
+        {
+          "function": "block",
+          "samples": 1
+        },
+        {
+          "function": "document",
+          "samples": 4
+        },
+        {
+          "function": "block",
+          "samples": 1
+        },
+        {
+          "function": "lengths",
+          "samples": 4
+        },
+        {
+          "function": "block",
+          "samples": 1
+        },
+        {
+          "function": "",
+          "samples": 1
+        }
+      ],
+      "documentSelfSamples": 66
+    }
+  ]
+}

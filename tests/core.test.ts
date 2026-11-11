@@ -79,8 +79,14 @@ describe("binary primitives", () => {
   });
   it("round trips posting lists", () => {
     const p = [
-      { doc: 0, body: 1, title: 0 },
-      { doc: 132, body: 5, title: 2 },
+      { doc: 0, body: 1, title: 0, bodyPositions: [0], titlePositions: [] },
+      {
+        doc: 132,
+        body: 5,
+        title: 2,
+        bodyPositions: [0, 1, 5, 200, 400],
+        titlePositions: [3, 1000],
+      },
     ];
     const d = decodePostings(encodePostings(p));
     expect([...d.docs]).toEqual([0, 132]);

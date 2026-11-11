@@ -25,7 +25,7 @@ for (const name of [
   ...[8, 16, 32, 48].flatMap((budget) =>
     ["smallest", "workload"].map((strategy) => `1000000-${budget}-${strategy}`),
   ),
-]) {
+].filter((name) => !process.argv[2] || name === process.argv[2])) {
   const out = join("bench/generated", name),
     m = JSON.parse(await readFile(join(out, "manifest.json"), "utf8")),
     start = performance.now();
@@ -59,6 +59,10 @@ for (const name of [
         "category1",
         "word19999",
         "word0 word19999",
+        '"search engine"',
+        "document /s engine",
+        "category1 /p word0",
+        "(word10 OR word20) AND category1",
       ]) {
         const t = performance.now(),
           r = await mf.dispatchFetch(
@@ -88,7 +92,7 @@ await writeFile(
   ),
 );
 let report =
-  "# Local workerd measurements\n\nMiniflare starts an actual workerd process and imports the Wrangler-generated ES module and binary Data module. These are local wall-clock measurements, including process creation/IPC. They do not measure Cloudflare isolate startup CPU or account limits. Twelve HTTP queries per configuration (four types × three passes), sequential, no artificial latency, R2 simulated by Miniflare.\n\n|Configuration|Startup wall ms|HTTP P50 ms|HTTP P95 ms|Failed requests|\n|---|---:|---:|---:|---:|\n";
+  "# Local workerd measurements\n\nMiniflare starts an actual workerd process and imports the Wrangler-generated ES module and binary Data module. These are local wall-clock measurements, including process creation/IPC. They do not measure Cloudflare isolate startup CPU or account limits. Twenty-four HTTP queries per configuration (eight types × three passes), sequential, no artificial latency, R2 simulated by Miniflare.\n\n|Configuration|Startup wall ms|HTTP P50 ms|HTTP P95 ms|Failed requests|\n|---|---:|---:|---:|---:|\n";
 for (const r of rows) {
   const lat = r.samples.map((s) => s.ms).sort((a, b) => a - b);
   report += `|${r.name}|${r.startupWallMs.toFixed(1)}|${lat[Math.ceil(lat.length * 0.5) - 1].toFixed(2)}|${lat[Math.ceil(lat.length * 0.95) - 1].toFixed(2)}|${r.samples.filter((s) => s.status !== 200).length}|\n`;

@@ -209,13 +209,22 @@ export async function build(options: BuildOptions) {
         ["body", body],
         ["title", title],
       ] as const)
-        for (const term of tokens) {
+        for (const [position, term] of tokens.entries()) {
           let p = frequencies.get(term);
           if (!p) {
-            p = { doc, body: 0, title: 0 };
+            p = {
+              doc,
+              body: 0,
+              title: 0,
+              bodyPositions: [],
+              titlePositions: [],
+            };
             frequencies.set(term, p);
           }
           p[field]++;
+          p[field === "body" ? "bodyPositions" : "titlePositions"]!.push(
+            position,
+          );
         }
       for (const [term, p] of frequencies) {
         const list = chunk.get(term);

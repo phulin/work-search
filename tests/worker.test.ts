@@ -68,6 +68,32 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
       const json = (await res.json()) as any;
       expect(json.results[0].id).toBe("remote");
       expect(json.diagnostics.indexRequests).toBe(name === "full" ? 0 : 1);
+      for (const [q, total] of [
+        ['"unique common"', 1],
+        ["unique /1 common", 1],
+        ["unique /s common", 1],
+        ["unique /p common", 1],
+        ["unique AND NOT common", 0],
+        ['"common unique"', 0],
+      ] as const) {
+        const response = await mf.dispatchFetch(
+          "https://test/search?q=" +
+            encodeURIComponent(q) +
+            "&diagnostics=true",
+        );
+        expect(response.status).toBe(200);
+        const body = (await response.json()) as any;
+        expect(body.total, q).toBe(total);
+        if (total)
+          expect(body.diagnostics.indexRequests).toBe(name === "full" ? 0 : 2);
+      }
+      expect(
+        (
+          await mf.dispatchFetch(
+            "https://test/search?q=" + encodeURIComponent("unique /0 common"),
+          )
+        ).status,
+      ).toBe(400);
       expect((await mf.dispatchFetch("https://test/health")).status).toBe(200);
     } finally {
       await mf.dispose();

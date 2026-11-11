@@ -5,6 +5,7 @@ import { BinaryIndex } from "../src/format/index.js";
 import { FileStorage } from "../src/storage/filesystem.js";
 import { search } from "../src/query/engine.js";
 import { handler } from "../src/worker/handler.js";
+import { connectorQueries } from "./connector-queries.js";
 const [input, out, budget, strategy, queryFile, resultFile] =
   process.argv.slice(2);
 const queries = (await readFile(queryFile, "utf8")).split("\n").filter(Boolean);
@@ -26,31 +27,37 @@ try {
   const constructorMs = (performance.now() - construct) / 100;
   const store = new FileStorage(join(out, "objects")),
     h = handler(index, store, true);
-  const samples: any[] = [];
-  for (let repeat = 0; repeat < 3; repeat++)
-    for (const q of queries) {
-      const start = performance.now(),
-        cpu = process.cpuUsage();
-      try {
-        const response = await h(
-          new Request(
-            "https://local/search?diagnostics=true&q=" + encodeURIComponent(q),
-          ),
-        );
-        const result = (await response.json()) as any;
-        if (response.status !== 200) throw new Error(result.error);
-        const usage = process.cpuUsage(cpu);
-        samples.push({
-          q,
-          ms: performance.now() - start,
-          cpuMs: (usage.user + usage.system) / 1000,
-          ...result.diagnostics,
-          total: result.total,
-        });
-      } catch (e) {
-        samples.push({ q, error: String(e) });
+  async function measure(queryList: string[]) {
+    const samples: any[] = [];
+    for (let repeat = 0; repeat < 3; repeat++)
+      for (const q of queryList) {
+        const start = performance.now(),
+          cpu = process.cpuUsage();
+        try {
+          const response = await h(
+            new Request(
+              "https://local/search?diagnostics=true&q=" +
+                encodeURIComponent(q),
+            ),
+          );
+          const result = (await response.json()) as any;
+          if (response.status !== 200) throw new Error(result.error);
+          const usage = process.cpuUsage(cpu);
+          samples.push({
+            q,
+            ms: performance.now() - start,
+            cpuMs: (usage.user + usage.system) / 1000,
+            ...result.diagnostics,
+            total: result.total,
+          });
+        } catch (e) {
+          samples.push({ q, error: String(e) });
+        }
       }
-    }
+    return samples;
+  }
+  const samples = await measure(queries),
+    connectorSamples = await measure(connectorQueries);
   const good = samples.filter((x) => !x.error),
     sorted = good.map((x) => x.ms).sort((a, b) => a - b),
     mean = (key: string) => good.reduce((s, x) => s + x[key], 0) / good.length;
@@ -75,6 +82,7 @@ try {
         queryPeakRssBytes: process.resourceUsage().maxRSS * 1024,
         totalCpuMs: (cpu.user + cpu.system) / 1000,
         samples,
+        connectorSamples,
       },
       null,
       2,

@@ -1,4 +1,4 @@
-# Binary format v2
+# Binary format v3
 
 All fixed integers are unsigned little-endian u32; offsets are bytes. Objects and individual sections must fit u32. The index file is at most the configured budget (up to 48 MiB). UTF-8 strings have no terminator. Dictionary order is JavaScript UTF-16 lexicographic order, not UTF-8 byte order. Readers/writers must use that comparator.
 
@@ -9,7 +9,7 @@ All fixed integers are unsigned little-endian u32; offsets are bytes. Objects an
 | Offset | Value                                         |
 | -----: | --------------------------------------------- |
 |      0 | u32 magic 0x31535742 (`BWS1`)                 |
-|      4 | u32 format version, 2                         |
+|      4 | u32 format version, 3                         |
 |      8 | u32 total bundle byte length                  |
 |     12 | u32 document count                            |
 |     16 | u32 term count                                |
@@ -55,16 +55,20 @@ Variable-length records follow the packed lengths, one per document:
 
 Prefix comparisons may split a multibyte character; only the fully reconstructed ID is decoded as UTF-8. This preserves arbitrary valid Unicode IDs without sorting or changing internal IDs. A zero metadata tag captures contiguous records; exceptions handle object transitions, gaps and nonmonotonic locations. The block header provides a full restart for both IDs and pointers. Random document retrieval scans at most 32 records, and only top-K winners need IDs during ranking. Remote metadata ranges still hold individual JSON objects `{id,title?,metadata?}`.
 
-The directory and block geometry are checked before accessing a block. Each block's CRC covers its header, packed lengths, IDs and pointers; validation is lazy and remembered in one bit per block (3,907 bytes at one million documents). No document arrays or ID maps are built during Worker startup. Runtime length access caches only the last header in seven numeric scalars; no document-length arrays are expanded. Constant columns return their minima directly, while varying columns extract up to five bytes using bit operations. This is a reader-only optimization and does not change v2 bytes or require rebuilding existing v2 generations. Bundle bytes must remain immutable after construction. Corrupt widths, overflowing values, invalid prefixes/pointer tags, truncated records and trailing bytes at a block's end are rejected.
+The directory and block geometry are checked before accessing a block. Each block's CRC covers its header, packed lengths, IDs and pointers; validation is lazy and remembered in one bit per block (3,907 bytes at one million documents). No document arrays or ID maps are built during Worker startup. Runtime length access caches only the last header in seven numeric scalars; no document-length arrays are expanded. Constant columns return their minima directly, while varying columns extract up to five bytes using bit operations. The length-access optimization remains unchanged in v3; the document-table subformat is still DTC2. Bundle bytes must remain immutable after construction. Corrupt widths, overflowing values, invalid prefixes/pointer tags, truncated records and trailing bytes at a block's end are rejected.
 
 ## Postings
 
-Unsigned LEB128 canonical varints (maximum 5 bytes / u32). Each list: document frequency followed by `(document gap, body TF, title TF)` for every document. First gap is the first internal ID (so it may be zero). Later gaps must be positive. At least one TF is positive. No positions. Decoder rejects trailing data, invalid frequency, malformed/truncated integers, and unordered IDs. Runtime also checks document bounds. Empty lists encode as a single zero byte, although no dictionary term points to one.
+Unsigned LEB128 canonical varints (maximum five bytes / u32). Each list begins with document frequency. Every posting encodes `(document gap, body TF, title TF)`, then exactly `body TF` body-position gaps followed by exactly `title TF` title-position gaps. Document and position coordinates are zero-based. The first gap in each field is its first absolute token position, so it may be zero. Later document/position gaps must be positive. Position deltas restart at zero independently for body/title and for every document. At least one TF must be positive.
+
+The builder stores every normalized token's position, including stop words. Example: body `red fox red`, title `fox` produces body positions `[0,2]` for red and `[1]` for fox; fox has title position `[0]`. Phrase/proximity matching cannot cross field boundaries. Sentence/paragraph delimiters are not encoded: `/s` and `/p` use fixed token distances.
+
+The decoder validates counts, canonical/truncated varints, increasing document IDs and field positions, u32 overflow and trailing data. With positional queries it records one u32 compressed-byte offset per posting; plain term/Boolean queries omit that array. Frequencies remain available for BM25 without expanding positions. Position streams for a candidate are decoded on demand into two temporary typed arrays. Offsets and position-allocation limits are accounted for in the query resource guard. Local and ranged R2 payloads use precisely the same decoder and list CRC. Empty lists encode a single zero byte.
 
 Objects are named `<generation>/postings-<number>.bin` and `<generation>/metadata-<number>.bin`. Packing aims for 64 MiB without splitting a single list/document. No remote dictionary exists. Remote object custom metadata `generation` must match the header. Manifest SHA-256 and lengths protect complete files during deployment; per-list CRC32 protects every local/remote posting retrieval. Document blocks also have CRC32 protection. Header, directory and remote metadata arbitrary bit flips are not all detected by runtime CRCs; verify the complete generation before deployment. This format is not authenticated against hostile storage modifications.
 
 ## Compatibility
 
-Version 2 intentionally rejects v1 bundles; rebuild the complete generation and deploy the v2 Worker and bundle together. The generation hash includes the format version, preventing reuse of v1 object prefixes. Rollback requires the matching older Worker and binary.
+Version 3 rejects v1/v2 bundles; rebuild the complete positional generation and deploy the v3 Worker and bundle together. The generation hash includes the format version, preventing reuse of older object prefixes. Rollback requires the matching older Worker and binary.
 
 A reader rejects unknown magic/version, inconsistent total length/section geometry, and malformed payloads. No automatic migration or fallback to another generation. Any format change requires a version bump and full rebuild. Tokenization/scoring changes must also update the builder's format/config generation hash to prevent reusing old generations.

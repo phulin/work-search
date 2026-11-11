@@ -1,6 +1,14 @@
 import { BinaryIndex, LOCAL } from "../format/index.js";
 import { crc32, decodePostings, decoder } from "../format/codec.js";
-import { parseQuery } from "./tokenize.js";
+import {
+  parse,
+  queryTerms,
+  positional,
+  simplify,
+  needsUniverse,
+} from "./parser.js";
+import { candidateDocuments, positionalMatcher } from "./evaluate.js";
+export { intersect, union } from "./sets.js";
 import { parallel, type Storage } from "../storage/types.js";
 export function bm25(
   tf: number,
@@ -15,32 +23,6 @@ export function bm25(
     ? (Math.log(1 + (n - df + 0.5) / (df + 0.5)) * (tf * (k1 + 1))) /
         (tf + k1 * (1 - b + (b * len) / (avg || 1)))
     : 0;
-}
-export function intersect(a: Uint32Array, b: Uint32Array) {
-  const out: number[] = [];
-  let i = 0,
-    j = 0;
-  while (i < a.length && j < b.length) {
-    if (a[i] === b[j]) {
-      out.push(a[i++]);
-      j++;
-    } else if (a[i] < b[j]) i++;
-    else j++;
-  }
-  return Uint32Array.from(out);
-}
-export function union(a: Uint32Array, b: Uint32Array) {
-  const out: number[] = [];
-  let i = 0,
-    j = 0;
-  while (i < a.length || j < b.length) {
-    const x = i < a.length ? a[i] : Infinity,
-      y = j < b.length ? b[j] : Infinity;
-    out.push(Math.min(x, y));
-    if (x <= y) i++;
-    if (y <= x) j++;
-  }
-  return Uint32Array.from(out);
 }
 interface Hit {
   id: string;
@@ -92,7 +74,11 @@ export async function search(
   options: SearchOptions = {},
 ) {
   const start = performance.now(),
-    terms = parseQuery(q),
+    original = parse(q, options.mode ?? "and"),
+    ast = simplify(original, (t) => !!index.lookup(t)),
+    terms = queryTerms(ast),
+    positiveTerms = new Set(queryTerms(ast, true)),
+    needsPositions = positional(ast),
     limit = options.limit ?? 20,
     boost = options.titleBoost ?? 2;
   if (
@@ -116,17 +102,17 @@ export async function search(
     metadataBytes: 0,
     fullyLocal: true,
   };
-  if (
-    !terms.length ||
-    ((options.mode ?? "and") === "and" && found.some((x) => !x))
-  )
-    return { results: [], total: 0, diagnostics };
+  if (ast.kind === "empty") return { results: [], total: 0, diagnostics };
   const entries = found.filter((x) => x !== undefined),
     fetchStart = performance.now();
-  const workingBytes = entries.reduce((s, e) => s + e.length + e.df * 20, 0);
+  const workingBytes =
+    entries.reduce(
+      (s, e) => s + e.length + e.df * (needsPositions ? 24 : 20),
+      0,
+    ) + (needsUniverse(ast) ? index.count * 8 : 0);
   if (
     workingBytes >
-    Math.min(48 * 1024 * 1024, 104 * 1024 * 1024 - index.bytes.length)
+    Math.min(56 * 1024 * 1024, 104 * 1024 * 1024 - index.bytes.length)
   )
     throw new Error("Query working set exceeds memory budget");
   const lists = await parallel(entries, 4, async (e) => {
@@ -142,22 +128,34 @@ export async function search(
       bytes = await storage.read(index.key(e.object), e.offset, e.length);
     }
     if (crc32(bytes) !== e.crc) throw new Error("Posting checksum mismatch");
-    return decodePostings(bytes, e.df);
+    return decodePostings(bytes, e.df, needsPositions);
   });
+  if (
+    needsPositions &&
+    workingBytes +
+      lists.reduce((sum, l) => {
+        let max = 0;
+        for (let i = 0; i < l.docs.length; i++)
+          max = Math.max(max, l.body[i] + l.title[i]);
+        return sum + max * 4;
+      }, 0) >
+      Math.min(56 * 1024 * 1024, 104 * 1024 * 1024 - index.bytes.length)
+  )
+    throw new Error("Position decoding exceeds memory budget");
   diagnostics.fetchMs = performance.now() - fetchStart;
   const scoring = performance.now();
-  let candidates: Uint32Array = new Uint32Array(0);
-  const filtered = lists.map((l) => {
-    if (!options.field || options.field === "all") return l.docs;
-    const f = options.field === "title" ? l.title : l.body;
-    return l.docs.filter((_, i) => f[i] > 0);
-  });
-  if ((options.mode ?? "and") === "and") {
-    const order = [...filtered].sort((a, b) => a.length - b.length);
-    candidates = order[0] ?? candidates;
-    for (let i = 1; i < order.length; i++)
-      candidates = intersect(candidates, order[i]);
-  } else for (const docs of filtered) candidates = union(candidates, docs);
+  const byTerm = new Map(entries.map((e, i) => [e.term, lists[i]]));
+  let candidates = candidateDocuments(
+    ast,
+    byTerm,
+    index.count,
+    options.field ?? "all",
+    !needsPositions,
+  );
+  if (needsPositions)
+    candidates = candidates.filter(
+      positionalMatcher(ast, byTerm, options.field ?? "all"),
+    );
   const cursors = lists.map(() => 0),
     heap = new TopK(limit),
     lengths = { body: 0, title: 0 };
@@ -166,6 +164,7 @@ export async function search(
     const d = index.lengths(doc, lengths);
     let score = 0;
     lists.forEach((l, j) => {
+      if (!positiveTerms.has(entries[j].term)) return;
       let p = cursors[j];
       while (p < l.docs.length && l.docs[p] < doc) p++;
       cursors[j] = p;
