@@ -135,21 +135,31 @@ export function decodePostings(
   if (p.i !== b.length) throw new Error("Trailing posting data");
   return { docs, body, title, bytes: b, positionOffsets };
 }
+// Zero block ends denote eagerly validated legacy positional blocks. A term can
+// mix those with dense seek-table blocks, so the presence of the array alone is
+// not sufficient to select the row-access format.
+export function positionRowEnd(
+  list: DecodedPostings,
+  row: number,
+): number | undefined {
+  const end = list.positionEnds?.[Math.floor(row / 256)];
+  if (!end) return undefined;
+  return row % 256 === 255 || row === list.docs.length - 1
+    ? end
+    : list.positionOffsets![row + 1];
+}
 export function postingPositions(
   list: DecodedPostings,
   row: number,
 ): { body: Uint32Array; title: Uint32Array } {
   if (!list.positionOffsets || row < 0 || row >= list.docs.length)
     throw new Error("Positions unavailable");
-  const bytes = list.positionEnds
-    ? list.bytes.subarray(
-        list.positionOffsets[row],
-        row % 256 === 255 || row === list.docs.length - 1
-          ? list.positionEnds[Math.floor(row / 256)]
-          : list.positionOffsets[row + 1],
-      )
-    : list.bytes;
-  const p = { i: list.positionEnds ? 0 : list.positionOffsets[row] };
+  const rowEnd = positionRowEnd(list, row);
+  const bytes =
+    rowEnd === undefined
+      ? list.bytes
+      : list.bytes.subarray(list.positionOffsets[row], rowEnd);
+  const p = { i: rowEnd === undefined ? list.positionOffsets[row] : 0 };
   const result = {
     body: new Uint32Array(list.body[row]),
     title: new Uint32Array(list.title[row]),
@@ -164,7 +174,7 @@ export function postingPositions(
       field[i] = value;
     }
   }
-  if (list.positionEnds && p.i !== bytes.length)
+  if (rowEnd !== undefined && p.i !== bytes.length)
     throw new Error("Trailing position data");
   return result;
 }

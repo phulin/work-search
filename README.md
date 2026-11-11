@@ -142,3 +142,25 @@ python3 bench/next-report.py
 ```
 
 The new matrix converts existing immutable index streams offline, then reselects embedding within the original budgets. Conversion timings are not corpus-ingestion throughput. See the report for fixture preparation and cold/warm definitions.
+
+A real-text Free Law Project/CourtListener sample is available through the
+reproducible COLD Cases sampler:
+
+```sh
+uv venv work/flp-venv
+uv pip install --python work/flp-venv/bin/python -r bench/flp-requirements.txt
+work/flp-venv/bin/python bench/sample-flp.py
+node --import tsx bench/flp-prepare.ts
+node --import tsx bench/flp-build.ts
+node --import tsx bench/flp-run.ts
+node --import tsx bench/flp-worker.ts
+python3 bench/flp-report.py
+npm run search-local -- --out bench/generated/flp/8-mixed --query '"summary judgment"'
+```
+
+The sampler selects 10,000 untruncated decisions across all 32 source shards,
+pins the dataset revision and seed, and records source row locations and corpus
+SHA-256. Full texts and indexes stay in ignored generated files. The benchmark
+uses disjoint embedding-training/evaluation strings, randomized paired execution
+variants, and shuffled cache traffic. See [bench/FREE-LAW-PROJECT.md](bench/FREE-LAW-PROJECT.md)
+for results, corpus distributions, sampling limitations, and local-runtime caveats.

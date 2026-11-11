@@ -98,3 +98,9 @@ The internal optimizationStage switch is never exposed by HTTP. Running npm run 
 
 ## Limits
 Direct block execution supports positive Boolean term trees; phrases, negation, metadata and exact-total requests use the established executor. AND aligns cursors; positive OR trees use a block-max union iterator, not pivot-WAND. Broad remote streams still use full frequency reads, so decoding/memory improvements do not imply fewer R2 bytes. Position seek tables avoid semantic scans but keep block CRC reads. The fixed 4 MiB cache does not bound simultaneous query working sets. No phrase accelerators, document reordering or scoring changes were added. v8 builds require a new immutable generation; current readers also support v5–v7.
+
+Timing audit after publication: the historical Node wall-clock samples above
+include result-comparison and memory-sampling overhead. CPU counters stop before
+those operations. The current harness excludes them; the historical JSON has not
+been rewritten. Prefer the separately labeled Free Law Project benchmark for
+measurements using the corrected timing boundary.

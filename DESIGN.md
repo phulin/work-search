@@ -77,3 +77,21 @@ The v5 index bytes and budgets remain unchanged. Full-list scans bypass sparse s
   switch only, never an HTTP option. See bench/NEXT-OPTIMIZATIONS.md for sequential
   measurements and limitations. Cache capacity still does not bound simultaneous
   query working sets across an isolate.
+
+## Real-text corpus evaluation
+
+The COLD Cases sampler uses a pinned Harvard/Free Law Project dataset revision.
+Shard allocations follow row counts; one row group per shard is selected with
+probability proportional to its size, then distinct nonempty decisions are sampled
+within it. This reduces source reads while retaining all shards, but is a
+clustered sample, not independent uniform sampling. Opinions are concatenated per
+decision, without truncation or artificial length normalization. The corpus and
+source-row manifest have deterministic serving order and hashes.
+
+The FLP workload is a labeled artificial legal stress test, not a user-query log.
+Embedding training and evaluation strings are disjoint. Execution variants share
+the same encoded v8 index to isolate executor behavior; varint/v8 storage is
+compared separately. Paired variant order and mixed cache traffic are shuffled.
+Correctness comparisons and memory sampling occur outside the timer. Historical
+next-stage raw measurements retain their original timing boundary; future runs
+of bench/next.ts now exclude those validation/sampling costs as well.

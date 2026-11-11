@@ -46,6 +46,7 @@ for (const budget of [8, 16, 32, 48]) {
         } catch (e) {
           throw new Error(`${stage}/${budget}/${q}`, { cause: e });
         }
+        const elapsedMs = performance.now() - start;
         const used = process.cpuUsage(cpu);
         if (JSON.stringify(r.results) !== JSON.stringify(expected.results))
           throw Error(`Mismatch ${stage} ${budget} ${q}`);
@@ -56,7 +57,7 @@ for (const budget of [8, 16, 32, 48]) {
           pass,
           rss: process.memoryUsage().rss,
           heapUsed: process.memoryUsage().heapUsed,
-          ms: performance.now() - start,
+          ms: elapsedMs,
           cpuMs: (used.user + used.system) / 1000,
           ...r.diagnostics,
         });

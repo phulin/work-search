@@ -1,5 +1,9 @@
 import type { Node } from "./parser.js";
-import { readVarint, type DecodedPostings } from "../format/codec.js";
+import {
+  readVarint,
+  positionRowEnd,
+  type DecodedPostings,
+} from "../format/codec.js";
 import { intersect, union, difference } from "./sets.js";
 export interface Span {
   field: "body" | "title";
@@ -179,11 +183,7 @@ class TermCursor {
         if (!l.positionOffsets) throw new Error("Positions unavailable");
         const p = this.byteCursor;
         const bytes = l.bytes;
-        const rowEnd = l.positionEnds
-          ? row % 256 === 255 || row === l.docs.length - 1
-            ? l.positionEnds[Math.floor(row / 256)]
-            : l.positionOffsets[row + 1]
-          : 0;
+        const rowEnd = positionRowEnd(l, row);
         p.i = l.positionOffsets[row];
         for (let f = 0; f < 2; f++) {
           const count = f === 0 ? l.body[row] : l.title[row],
@@ -198,18 +198,18 @@ class TermCursor {
             // decodePostings already validated this immutable byte stream.
             const byte = bytes[p.i];
             const delta = byte < 128 ? (p.i++, byte) : readVarint(bytes, p);
-            if (l.positionEnds && i && !delta)
+            if (rowEnd !== undefined && i && !delta)
               throw new Error("Unsorted positions");
             position += delta;
-            if (l.positionEnds && position > 0xffffffff)
+            if (rowEnd !== undefined && position > 0xffffffff)
               throw new Error("Position overflow");
             if (wanted) buffer[i] = position;
           }
           this.runs[f].starts = this.runs[f].ends = buffer;
           this.runs[f].count = wanted ? count : 0;
-          if (this.field === "body" && !l.positionEnds) break;
+          if (this.field === "body" && rowEnd === undefined) break;
         }
-        if (l.positionEnds && p.i !== rowEnd)
+        if (rowEnd !== undefined && p.i !== rowEnd)
           throw new Error("Trailing position data");
       }
       this.decodedDoc = doc;

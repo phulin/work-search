@@ -97,44 +97,58 @@ it("dense positional blocks seek rows at restart and partial-block boundaries", 
     bodyPositions: Array.from({ length: 12 }, (_, j) => j * 128 + i),
     titlePositions: [1, 300],
   }));
-  const b = encodeBlocks(rows, {
-    packed: true,
-    seekPositions: true,
-    count: 6000,
-    avgBody: 12,
-    avgTitle: 2,
-    lengths: () => ({ body: 12, title: 2 }),
-  });
-  const e = {
-    format: 8,
-    term: "dense",
-    df: rows.length,
-    object: 0,
-    offset: 0,
-    length: b.frequencies.length,
-    crc: b.crc,
-    positionObject: 0,
-    positionOffset: 0,
-    positionLength: b.positions.length,
-    positionCrc: crc32(b.positions),
-  };
-  for (const candidates of [undefined, new Uint32Array([0, 1792, 5432])]) {
-    const decoded = await loadPosting(
-      e,
-      true,
-      async (_, p, offset, length) =>
-        (p ? b.positions : b.frequencies).subarray(offset, offset + length),
-      candidates,
+  for (const denseBlocks of [[0, 1, 2, 3], [0, 2], [1, 3], [0], [3]]) {
+    const varied = rows.map((r, i) =>
+      denseBlocks.includes(Math.floor(i / 256))
+        ? r
+        : { ...r, body: 1, title: 0, bodyPositions: [i], titlePositions: [] },
     );
-    expect(decoded.positionEnds).toBeDefined();
-    for (let row = 0; row < decoded.docs.length; row++) {
-      const original = rows[decoded.docs[row] / 7];
-      expect([...postingPositions(decoded, row).body]).toEqual(
-        original.bodyPositions,
+    const b = encodeBlocks(varied, {
+      packed: true,
+      seekPositions: true,
+      count: 6000,
+      avgBody: 12,
+      avgTitle: 2,
+      lengths: () => ({ body: 12, title: 2 }),
+    });
+    const e = {
+      format: 8,
+      term: "dense",
+      df: rows.length,
+      object: 0,
+      offset: 0,
+      length: b.frequencies.length,
+      crc: b.crc,
+      positionObject: 0,
+      positionOffset: 0,
+      positionLength: b.positions.length,
+      positionCrc: crc32(b.positions),
+    };
+    for (const candidates of [
+      undefined,
+      new Uint32Array([0, 5432]),
+      new Uint32Array([1792, 5432]),
+    ]) {
+      const decoded = await loadPosting(
+        e,
+        true,
+        async (_, p, offset, length) =>
+          (p ? b.positions : b.frequencies).subarray(offset, offset + length),
+        candidates,
       );
-      expect([...postingPositions(decoded, row).title]).toEqual(
-        original.titlePositions,
-      );
+      if (decoded.positionEnds)
+        expect(decoded.positionEnds.length).toBe(
+          Math.ceil(decoded.docs.length / 256),
+        );
+      for (let row = 0; row < decoded.docs.length; row++) {
+        const original = varied[decoded.docs[row] / 7];
+        expect([...postingPositions(decoded, row).body]).toEqual(
+          original.bodyPositions,
+        );
+        expect([...postingPositions(decoded, row).title]).toEqual(
+          original.titlePositions,
+        );
+      }
     }
   }
 });
