@@ -14,6 +14,9 @@ export class SearchRuntime {
     )
       throw new Error("Invalid cache capacity");
   }
+  peek<T>(key: string): T | undefined {
+    return this.values.get(key)?.value as T | undefined;
+  }
   get<T>(key: string): T | undefined {
     const entry = this.values.get(key);
     if (!entry) return;
@@ -62,4 +65,21 @@ export function postingSize(l: DecodedPostings) {
     (l.blocks?.length ?? 0) * 128 +
     (l.blockRows?.byteLength ?? 0)
   );
+}
+
+// The materialized and block executors share complete verified posting entries.
+export function postingKey(
+  generation: string,
+  e: import("../format/index.js").Entry,
+  positions = false,
+) {
+  return JSON.stringify([
+    generation,
+    "posting",
+    e.term,
+    e.df,
+    e.crc,
+    e.positionCrc,
+    positions,
+  ]);
 }

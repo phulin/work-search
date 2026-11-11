@@ -1,0 +1,61 @@
+{
+  "local": true,
+  "rows": [
+    {
+      "budgetMiB": 8,
+      "policy": "frequency",
+      "file": "boolean-wand-final-8-frequency.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 8,
+      "policy": "mixed",
+      "file": "boolean-wand-final-8-mixed.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 16,
+      "policy": "frequency",
+      "file": "boolean-wand-final-16-frequency.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 16,
+      "policy": "mixed",
+      "file": "boolean-wand-final-16-mixed.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 32,
+      "policy": "frequency",
+      "file": "boolean-wand-final-32-frequency.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 32,
+      "policy": "mixed",
+      "file": "boolean-wand-final-32-mixed.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 48,
+      "policy": "frequency",
+      "file": "boolean-wand-final-48-frequency.json",
+      "queries": 6630,
+      "errors": 0
+    },
+    {
+      "budgetMiB": 48,
+      "policy": "mixed",
+      "file": "boolean-wand-final-48-mixed.json",
+      "queries": 6630,
+      "errors": 0
+    }
+  ]
+}

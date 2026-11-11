@@ -12,11 +12,11 @@
 - **Compiled positional execution.** Query-local compiled plans replace candidate-local Maps. Per-term exact-capacity position scratch avoids repeated typed-array allocation. Phrase existence anchors at the shortest list; proximity existence sweeps ordered intervals or binary-searches when nested ends are not monotone. Compound parents request complete location lists, with windowed joins, sorted OR union and bounded materialization; truth-only leaves short-circuit. The positional evaluator remains independent of the v4 stream layout. A global 32,768-slot compound-scratch cap and conservative position-buffer growth accounting fit existing memory headroom.
 - **Exact search baseline.** Sorted intersections start with the shortest filtered list; OR uses sorted unions. Ranking scans candidates and maintains an O(K) min-heap. Ties use input order. Only final winners decode external IDs. Document frequency is the union across fields, with independent length normalization and boosted title BM25. Exact total is available because all candidates are visited.
 - **Resource limits.** Four reads in flight respect the six-connection limit with headroom. At most 16 distinct terms and 100 returned hits. The working-set guard accounts for encoded, decoded, and candidate arrays, with headroom for runtime. It cannot guarantee safety for many concurrent requests. No code or binary budget is presented as proof of deployment viability; workerd and account validation are separate.
-- **Block-max score pruning.** Default total=false builds/caches title-aware bounds and safely skips ranking/positional checks for uncompetitive document windows. Exact counts require total=true. This does not implement pivot-WAND or avoid frequency decoding; persistent score bounds and block iterators remain future work.
+- **Block-max score pruning.** Default total=false builds/caches title-aware bounds and safely skips ranking/positional checks for uncompetitive document windows. Exact counts require total=true. That fallback does not avoid frequency decoding; eligible v6–v8 positive queries also support persisted bounds, Boolean block iterators and pivot WAND as documented below.
 
 ## Next optimizations
 
-1. Persist score bounds alongside blocks to reduce cache-cold pruning overhead, then investigate pivot-WAND iterators that also avoid decoding.
+1. Improve cost-based routing and cold R2 block reads for the implemented Boolean/pivot-WAND iterators; persisted score bounds are already available.
 2. Profile rare nested conjunctions that still need Cartesian covering spans; add lazy compound iterators if real workloads justify the complexity.
 3. Calibrate adaptive range costs on deployed R2 and evaluate mixed embedding/cache locality on larger held-out real query traces.
 4. Bound per-isolate concurrent search working sets; a bounded retained cache alone does not solve concurrent request peaks.
@@ -36,7 +36,7 @@ An obligatory rare term is a safe anchor even in nested Boolean/positional expre
 
 The v5 index bytes and budgets remain unchanged. Full-list scans bypass sparse selection, run construction, async per-run scheduling and offset rebasing. A dedicated bounded decoder writes frequencies and absolute positional offsets into final arrays, rather than constructing per-block posting objects, typed-array views for every column, and temporary offset tables. Directory decoding reads fixed fields directly without nine-element temporary arrays. One-byte varints return immediately; the existing canonical five-byte fallback validates longer values. Each block still has its own frequency/position CRC, cross-stream binding, sorted IDs/positions, boundary checks and trailing-byte checks. Range-indexed CRC loops avoid iterator/subarray overhead during checksum calculation. No decoded-list or validation cache is added; sparse queries retain the same block/range planning. See bench/BLOCK-DECODING.md.
 
-## Mixed workloads, planning, score pruning and caching
+## Historical mixed-workload, planning, pruning and cache experiments
 
 - `mixed` embedding purchases complete frequency/position query packages jointly, preserving query duplicates as weights. The deterministic heuristic favors complete local queries plus a small avoided-stream-read utility, then fills by read utility per byte. Previous smallest/frequency-first policies remain available. V5 bytes/layout are unchanged; a new placement needs a new generation.
 - Adaptive necessary candidate predicates cover rare disjunctions under conjunction/proximity. Selective positional queries combine frequencies before attaching intersecting positional blocks, reusing arrays/directories. Cost-based range partitions select profitable byte gaps under four ranges; 64 KiB per request is an explicit estimated default. Galloping intersections handle skewed lists.
@@ -44,7 +44,7 @@ The v5 index bytes and budgets remain unchanged. Full-list scans bypass sparse s
 - `SearchRuntime` is a weighted LRU (Worker default 4 MiB; 0–8 configurable) shared by complete verified decoded postings and score maxima. Generation/CRC-scoped keys prevent mixing generations; incomplete positional lists are never stored as complete. Request cursors and attachments stay private. Oversized entries are rejected; conservative query headroom can lower the cache ceiling. The configured capacity is a retained-cache bound, not a guarantee for concurrent search working sets. No arrays are expanded at Worker startup.
 - Benchmarks separately measure placement, planning, cache-cold/warm and pruning-cold/warm cases. Identical encoded v5 streams are repacked for policy comparisons; repacking is not reported as document-index throughput. Query-process RSS includes multiple reference index fixtures, so it is not isolate memory. See bench/REMAINING-OPTIMIZATIONS.md.
 
-## Seven sequential execution/index experiments
+## Historical seven sequential execution/index experiments
 
 - Scoring cursors now switch from eight sequential steps to galloping seeks.
   With no exact total, documents that cannot beat the heap skip positional
@@ -95,3 +95,25 @@ compared separately. Paired variant order and mixed cache traffic are shuffled.
 Correctness comparisons and memory sampling occur outside the timer. Historical
 next-stage raw measurements retain their original timing boundary; future runs
 of bench/next.ts now exclude those validation/sampling costs as well.
+
+## Boolean recovery and pivot WAND
+
+Small/cached mixed AND/OR queries use materialized sorted-set execution. Large
+positive trees can use cost-ordered composable iterators: OR produces its union,
+AND drives its smallest estimated child, and duplicate term occurrences have
+independent cursors sharing immutable term data. Query-local block reuse and the
+same complete-posting LRU keys avoid duplicate decoding and permit direct cached
+array cursors. Block bounds remain valid over cached document-ID intervals.
+
+Pure disjunctions can use literal pivot WAND with existing global/per-block
+impacts. Partial upper bounds are summed in the scorer's original term/field
+order, then memoized by subset (at most 512 KiB temporary memory at 16 terms,
+charged to the existing working-set guard). This preserves exact scores/ties
+without lossy score quantization or new index bytes. Automatic routing considers
+query shape, df disparity, top-K, field, and complete cache availability; internal
+forced modes exist for validation, not HTTP users. Materialized execution remains
+available for exact totals, negation, positions, metadata and small/cached lists.
+Remote misses still fetch full frequency streams to avoid amplifying R2 requests;
+WAND's cold benefit is CPU/decoded-memory, not a claim of reduced network bytes.
+See bench/BOOLEAN-WAND.md for sequential experiments, held-out OR measurements,
+local workerd validation and remaining warm-cache tradeoffs.

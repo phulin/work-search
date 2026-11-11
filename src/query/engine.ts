@@ -1,7 +1,12 @@
-import { blockEligible, searchBlocks } from "./block-search.js";
+import {
+  blockEligible,
+  pureConjunction,
+  pureDisjunction,
+  searchBlocks,
+} from "./block-search.js";
 import { candidatePlan } from "./planning.js";
 import { lowerBound } from "./sets.js";
-import { SearchRuntime, postingSize } from "./runtime.js";
+import { SearchRuntime, postingSize, postingKey } from "./runtime.js";
 import { scoreBounds, SCORE_BLOCK } from "./pruning.js";
 import {
   loadPosting,
@@ -89,6 +94,8 @@ export interface SearchOptions {
   blockCache?: boolean;
   /** Internal cumulative benchmark switch; HTTP does not expose this. */
   optimizationStage?: number;
+  /** Internal benchmark override; never exposed by HTTP. */
+  executor?: "auto" | "materialized" | "boolean" | "wand";
 }
 export async function search(
   index: BinaryIndex,
@@ -141,6 +148,15 @@ export async function search(
     prunedCandidates: 0,
     deferredPositions: false,
     skippedBlocks: 0,
+    executor: "materialized",
+    visitedDocuments: 0,
+    cursorSeeks: 0,
+    cursorLoads: 0,
+    blocksDecoded: 0,
+    blockCacheHits: 0,
+    fullPostingCacheHits: 0,
+    wandPivots: 0,
+    wandSkips: 0,
   };
   if (ast.kind === "empty")
     return {
@@ -150,7 +166,36 @@ export async function search(
     };
   const entries = found.filter((x) => x !== undefined),
     fetchStart = performance.now();
+  const cachedRows = entries.reduce(
+    (sum, e) =>
+      sum +
+      (options.runtime?.peek(postingKey(index.generation, e)) ||
+      options.runtime?.peek(postingKey(index.generation, e, true))
+        ? e.df
+        : 0),
+    0,
+  );
+  const totalRows = entries.reduce((sum, e) => sum + e.df, 0);
+  const wantWand =
+    options.executor === "wand" ||
+    (options.executor !== "boolean" &&
+      options.executor !== "materialized" &&
+      pureDisjunction(ast) &&
+      entries.length >= 2 &&
+      totalRows >= 4096 &&
+      limit <= 20 &&
+      options.field !== "title" &&
+      Math.max(...entries.map((e) => e.df)) >=
+        2 * Math.min(...entries.map((e) => e.df)) &&
+      cachedRows < totalRows / 2);
+  const useBlocks =
+    wantWand ||
+    options.executor === "boolean" ||
+    (options.executor !== "materialized" &&
+      !(cachedRows > totalRows / 2 && totalRows * 12 <= 8 * 1048576) &&
+      (pureConjunction(ast) || (index.count > 50000 && totalRows > 100000)));
   const streaming =
+    useBlocks &&
     stage >= 4 &&
     skipBlocks &&
     index.format >= 6 &&
@@ -166,7 +211,9 @@ export async function search(
           Math.ceil(e.df / 256) * 180 +
           4096,
         0,
-      )
+      ) +
+      q.length * 1024 +
+      (wantWand ? 8 * (1 << entries.length) : 0)
     : entries.reduce(
         (s, e) =>
           s +
@@ -269,7 +316,17 @@ export async function search(
       options.field ?? "all",
       boost,
       stage >= 6 && options.blockCache !== false ? runtime : undefined,
+      wantWand ? "wand" : "boolean",
     );
+    diagnostics.executor = wantWand ? "wand" : "boolean-blocks";
+    diagnostics.wandPivots = stats.wandPivots;
+    diagnostics.wandSkips = stats.wandSkips;
+    diagnostics.visitedDocuments = stats.visitedDocuments;
+    diagnostics.cursorSeeks = stats.cursorSeeks;
+    diagnostics.cursorLoads = stats.cursorLoads;
+    diagnostics.blocksDecoded = stats.blocksDecoded;
+    diagnostics.blockCacheHits = stats.blockCacheHits;
+    diagnostics.fullPostingCacheHits = stats.fullPostingCacheHits;
     diagnostics.scoredDocuments = stats.scored;
     diagnostics.skippedBlocks = stats.skippedBlocks;
     diagnostics.cacheBytes = runtime?.bytes ?? 0;
@@ -290,15 +347,7 @@ export async function search(
   }
   const adaptive = options.planning !== "legacy";
   const cacheKey = (e: (typeof entries)[number], positions: boolean) =>
-    JSON.stringify([
-      index.generation,
-      "posting",
-      e.term,
-      e.df,
-      e.crc,
-      e.positionCrc,
-      positions,
-    ]);
+    postingKey(index.generation, e, positions);
   const load = async (
     e: (typeof entries)[number],
     positions: boolean,
@@ -507,6 +556,7 @@ export async function search(
       }
     }
     if (stage < 2 && match && !match(doc)) continue;
+    diagnostics.visitedDocuments++;
     diagnostics.scoredDocuments++;
     if (doc >= index.count) throw new Error("Posting document out of range");
     const d = index.lengths(doc, lengths),
