@@ -1,9 +1,6 @@
+import { loadPosting, requiredTerms } from "./load.js";
 import { BinaryIndex, LOCAL } from "../format/index.js";
-import {
-  decodeFrequencies,
-  attachPositions,
-  decoder,
-} from "../format/codec.js";
+import { decoder } from "../format/codec.js";
 import {
   parse,
   queryTerms,
@@ -83,6 +80,7 @@ export async function search(
   storage: Storage,
   q: string,
   options: SearchOptions = {},
+  skipBlocks = true,
 ) {
   const start = performance.now(),
     original = parse(q, options.mode ?? "and"),
@@ -135,42 +133,68 @@ export async function search(
     Math.min(56 * 1024 * 1024, 104 * 1024 * 1024 - index.bytes.length)
   )
     throw new Error("Query working set exceeds memory budget");
-  const jobs = entries.flatMap((e) => [
-    { e, positions: false },
-    ...(positionTerms.has(e.term) ? [{ e, positions: true }] : []),
-  ]);
-  const payloads = await parallel(jobs, 4, async ({ e, positions }) => {
+  // All phases share one four-read semaphore, including parallel block streams.
+  let active = 0;
+  const waiters: (() => void)[] = [];
+  const read = async (
+    e: (typeof entries)[number],
+    positions: boolean,
+    relative: number,
+    length: number,
+  ) => {
     const object = positions ? e.positionObject : e.object,
-      offset = positions ? e.positionOffset : e.offset,
-      length = positions ? e.positionLength : e.length;
+      offset = (positions ? e.positionOffset : e.offset) + relative;
     if (object === LOCAL) {
       const start = index.local + offset;
       if (start + length > index.bytes.length)
         throw new Error("Invalid local range");
       return index.bytes.subarray(start, start + length);
     }
-    diagnostics.indexRequests++;
-    diagnostics.indexBytes += length;
-    if (positions) {
-      diagnostics.positionRequests++;
-      diagnostics.positionBytes += length;
-    } else {
-      diagnostics.frequencyRequests++;
-      diagnostics.frequencyBytes += length;
+    if (active >= 4)
+      await new Promise<void>((resolve) => waiters.push(resolve));
+    else active++;
+    try {
+      diagnostics.indexRequests++;
+      diagnostics.indexBytes += length;
+      if (positions) {
+        diagnostics.positionRequests++;
+        diagnostics.positionBytes += length;
+      } else {
+        diagnostics.frequencyRequests++;
+        diagnostics.frequencyBytes += length;
+      }
+      return await storage.read(
+        index.key(object, positions ? "positions" : "frequencies"),
+        offset,
+        length,
+      );
+    } finally {
+      const next = waiters.shift();
+      if (next) next();
+      else active--;
     }
-    return storage.read(
-      index.key(object, positions ? "positions" : "frequencies"),
-      offset,
-      length,
+  };
+  const required = requiredTerms(ast);
+  const anchor = entries
+    .filter((e) => required.has(e.term))
+    .sort((a, b) => a.df - b.df)[0];
+  // Pay the extra planning phase only when an obligatory term is selective.
+  const selective =
+    skipBlocks &&
+    anchor &&
+    entries.some((e) => e.df > Math.max(256, anchor.df * 8));
+  let anchorList: Awaited<ReturnType<typeof loadPosting>> | undefined;
+  if (selective)
+    anchorList = await loadPosting(
+      anchor,
+      positionTerms.has(anchor.term),
+      read,
     );
-  });
-  let payload = 0;
-  const lists = entries.map((e) => {
-    const frequencies = decodeFrequencies(payloads[payload++], e.df, e.crc);
-    if (positionTerms.has(e.term))
-      attachPositions(frequencies, payloads[payload++], e.positionCrc);
-    return frequencies;
-  });
+  const lists = await parallel(entries, 4, async (e) =>
+    selective && e === anchor
+      ? anchorList!
+      : loadPosting(e, positionTerms.has(e.term), read, anchorList?.docs),
+  );
   if (
     needsPositions &&
     workingBytes +

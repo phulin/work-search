@@ -1,4 +1,4 @@
-# Binary format v4
+# Binary format v5
 
 All fixed integers are unsigned little-endian u32; offsets are bytes. Objects and individual sections must fit u32. The index file is at most the configured budget (up to 48 MiB). UTF-8 strings have no terminator. Dictionary order is JavaScript UTF-16 lexicographic order, not UTF-8 byte order. Readers/writers must use that comparator.
 
@@ -9,7 +9,7 @@ All fixed integers are unsigned little-endian u32; offsets are bytes. Objects an
 | Offset | Value                                         |
 | -----: | --------------------------------------------- |
 |      0 | u32 magic 0x31535742 (`BWS1`)                 |
-|      4 | u32 format version, 4                         |
+|      4 | u32 format version, 5                         |
 |      8 | u32 total bundle byte length                  |
 |     12 | u32 document count                            |
 |     16 | u32 term count                                |
@@ -33,7 +33,7 @@ Each term descriptor is **40 bytes**, with u32 fields at these byte offsets:
 |      8 | Frequency object number (`0xffffffff` = bundled)       |
 |     12 | Frequency offset                                       |
 |     16 | Frequency byte length                                  |
-|     20 | Frequency CRC32                                        |
+|     20 | Frequency CRC32 (directory CRC for blocked lists)       |
 |     24 | Position object number (`0xffffffff` = bundled)        |
 |     28 | Position offset                                        |
 |     32 | Position byte length                                   |
@@ -74,7 +74,7 @@ The directory and block geometry are checked before accessing a block. Each bloc
 
 ## Independent posting streams
 
-All compressed integers use canonical unsigned LEB128 (maximum five bytes / u32). Frequencies and positions are separately encoded, checksummed, embedded and packed into immutable objects. The v3 interleaved codec remains only as a frozen-reference/test helper and is not used by the deployed v4 query path.
+The following payload encoding applies to terms with df <= 256 and to each restart block of larger terms. All compressed integers use canonical unsigned LEB128 (maximum five bytes / u32). Frequencies and positions are separately encoded, checksummed, embedded and packed into immutable objects. The v3 interleaved codec remains only as a frozen-reference/test helper and is not used by the deployed v5 query path.
 
 ### Frequencies
 
@@ -98,6 +98,16 @@ Generation-scoped R2 object metadata must match the bundle. Manifest SHA-256 and
 
 ## Compatibility
 
-Version 4 rejects v1/v2/v3 bundles; rebuild the complete split-stream generation and deploy the v4 Worker and bundle together. The generation hash includes the format version, preventing reuse of older object prefixes. Rollback requires the matching older Worker and binary.
+Version 5 rejects v1/v2/v3/v4 bundles; rebuild the complete block-stream generation and deploy the v5 Worker and bundle together. The generation hash includes the format version, preventing reuse of older object prefixes. Rollback requires the matching older Worker and binary.
 
 A reader rejects unknown magic/version, inconsistent total length/section geometry, and malformed payloads. No automatic migration or fallback to another generation. Any format change requires a version bump and full rebuild. Tokenization/scoring changes must also update the builder's format/config generation hash to prevent reusing old generations.
+
+## V5 block-based postings and skip pointers
+
+Terms with `df <= 256` retain the small-list frequency/position encodings above, including whole-stream CRCs. For `df > 256`, the frequency payload begins with a directory: 16-byte header (`u32 magic 0x354b4c42`, df, block size 256, block count), followed by `ceil(df/256)` entries of 36 bytes. Each entry has nine u32 values: first doc ID, last doc ID, frequency offset, frequency length, frequency CRC32, position offset, position length, position CRC32, document count. Offsets are relative to the corresponding term stream. The dictionary frequency CRC covers this directory. The dictionary position CRC remains a build/whole-stream integrity value; query reads use directory block CRCs. Directory geometry, contiguous offsets, counts, and ordered disjoint doc ranges are checked before use.
+
+Frequency block payloads follow the directory and each use the small-list frequency encoding, restarting doc gaps from zero (the first doc is absolute). The position stream concatenates matching small-list position blocks; each binds to its frequency block CRC. Each last block may contain fewer than 256 documents. This permits selected blocks to be independently read and validated. Corruption of skipped block payloads is detected when those blocks are read, rather than by scanning an entire term on every query.
+
+The term dictionary still fully specifies objects/ranges locally. A remote block directory is read as a prefix range of that term's frequency payload, not a remote term lookup. Its size is computable from df. Full scans read it together with payload in one range. Sparse plans fetch it before choosing ranges. All directory bytes count toward index storage and, when local, the configured bundle budget. No per-block R2 objects are created.
+
+The planner derives terms obligatory for every result (AND/proximity unions, OR intersection, left side of exclusion, no required term under NOT). If one term is more than eight times rarer than a large peer, it is decoded first as an anchor. Longer lists seek the anchor's sorted IDs against block endpoints, skipping nonoverlapping ranges. To limit R2 requests, fragmented selections are read through at most four contiguous windows per term stream, but only selected blocks are decoded/checksummed. This may transfer intervening unneeded bytes. All reads share one four-request concurrency bound. General OR/NOT expressions with no obligatory anchor retain exhaustive exact evaluation. Exact totals and BM25 scores are preserved.

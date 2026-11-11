@@ -10,7 +10,7 @@ import { reference } from "./reference.js";
 it("merges multiple external-sort passes and preserves ranking and top-K", async () => {
   const root = await mkdtemp(join(tmpdir(), "search-merge-"));
   try {
-    const docs = Array.from({ length: 150 }, (_, i) => ({
+    const docs = Array.from({ length: 600 }, (_, i) => ({
       id: `id${i}`,
       body: `common word${i % 17} word${i % 7} café`,
       title: `word${i % 5}`,
@@ -26,6 +26,7 @@ it("merges multiple external-sort passes and preserves ranking and top-K", async
     for (const mode of ["and", "or"] as const)
       for (const q of [
         "common",
+        "common word1",
         "word1 word2",
         "café word3",
         "missing word5",

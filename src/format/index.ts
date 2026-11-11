@@ -1,7 +1,7 @@
 import { decoder, encoder } from "./codec.js";
 import { DocumentTable } from "./documents.js";
 export const MAGIC = 0x31535742,
-  VERSION = 4,
+  VERSION = 5,
   HEADER = 128,
   TERM = 40,
   LOCAL = 0xffffffff;

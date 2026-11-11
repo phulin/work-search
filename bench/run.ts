@@ -93,4 +93,4 @@ for (const n of sizes) {
 }
 await import("./report.js");
 await import("./details.js");
-await import("./split-postings-report.js");
+if (results[0]?.format === 4) await import("./split-postings-report.js");

@@ -26,14 +26,14 @@ curl 'http://localhost:8787/health'
 JSONL documents require a nonempty string `id` and string `body`; `title` and arbitrary JSON `metadata` are optional. Blank lines are skipped. Empty corpora and empty bodies are valid. Malformed JSON, invalid fields, and duplicate external IDs fail with a line number. Internal IDs are zero-based input order and remain stable across budgets and spill sizes for the same ordered corpus. Updating/reordering a corpus creates a new generation.
 
 ```sh
-npm run build-index -- --input corpus.jsonl --out indexes/basic-v4 --budget-mib 16
-npm run build-index -- --input corpus.jsonl --out indexes/terms-v4 --budget-mib 8 \
+npm run build-index -- --input corpus.jsonl --out indexes/basic-v5 --budget-mib 16
+npm run build-index -- --input corpus.jsonl --out indexes/terms-v5 --budget-mib 8 \
   --strategy workload --workload queries.txt --chunk-docs 5000
-npm run search-local -- --out indexes/terms-v4 --query 'example text' --mode or --metadata
-npx tsx src/cli/main.ts verify --out indexes/terms-v4
+npm run search-local -- --out indexes/terms-v5 --query 'example text' --mode or --metadata
+npx tsx src/cli/main.ts verify --out indexes/terms-v5
 ```
 
-The current binary format is **v4** and rejects v1/v2/v3 indexes. Rebuild into a fresh directory (for example `--out indexes/terms-v4`) before running `dev`, local search, or deployment with an existing checkout. A complete corpus rebuild is required to split frequency and positional streams; there is no in-place migration from older indexes. After rebuilding, use `npm run dev -- --out indexes/terms-v4` and `npm run search-local -- --out indexes/terms-v4 --query "search"` to select that directory.
+The current binary format is **v5** and rejects v1/v2/v3/v4 indexes. Rebuild into a fresh directory (for example `--out indexes/terms-v5`) before running `dev`, local search, or deployment with an existing checkout. A complete corpus rebuild is required to add independently readable posting blocks; there is no in-place migration from older indexes. After rebuilding, use `npm run dev -- --out indexes/terms-v5` and `npm run search-local -- --out indexes/terms-v5 --query "search"` to select that directory.
 
 Use a fresh output directory for each build. A generation's objects are never overwritten by the builder. `queries.txt` contains one query per line; repeated lines supply frequencies. The bundle budget includes dictionary, document tables, IDs, and embedded postings. A budget too small for mandatory tables is rejected. `build-index` selects the resulting binary for the next Worker build by copying it to `data/bundle.bin`.
 
@@ -65,7 +65,7 @@ npx wrangler login
 npx wrangler r2 bucket create worker-search-index
 # Export variables shown in .env.example. R2 S3 credentials are separate from Wrangler auth.
 # Build a new generation, then:
-npm run deploy -- --out indexes/terms-v4 --bucket worker-search-index
+npm run deploy -- --out indexes/terms-v5 --bucket worker-search-index
 ```
 
 `deploy` verifies the bundle and every object SHA-256 against the manifest; signs R2 S3 HEAD/PUT requests; skips already-present objects only if generation, checksum metadata, and length match; uses conditional creation for missing objects; selects the exact binary; then runs Wrangler deployment. Upload must complete before the Worker changes. Runtime R2 access uses **only the binding**, never S3 or public HTTP. S3 credentials stay on the build machine. `--bucket` must match the bucket binding in `wrangler.json`. Credentials were unavailable during development: cloud upload/deployment has **not** been validated against an account.
@@ -85,7 +85,7 @@ A failed upload leaves the old Worker intact. A failed deployment may leave unre
 
 Cloudflare's [current limits](https://developers.cloudflare.com/workers/platform/limits/) checked November 11, 2026 list 64 MiB **uncompressed** Worker size, 128 MiB isolate memory, and 1 second startup. The default 8 MiB index leaves room for code, per-isolate runtime, and decoding. Configurable budgets up to 48 MiB are experiments, not a universal memory guarantee. Always inspect `npm run bundle` and validate startup on your account. Format v4 retains the compressed bundled document table using 32-document restart blocks, bit-packed length deltas, front-coded IDs and metadata pointer deltas. The million-document synthetic corpus now fits all benchmark budgets; less compressible IDs or lengths may still require more space. See the before/after benchmark report.
 
-Queries retrieve up to four remote lists concurrently. A conservative working-set estimate rejects oversized queries rather than allocating unbounded typed arrays. Concurrent requests share an isolate and can still exhaust memory; large, common-term queries may exceed the Free plan's 10 ms CPU limit. Paid Workers are appropriate for that workload. This is exhaustive BM25, without WAND or block skips. There is no persistent query/posting cache. Metadata filters, root expansion/wildcards, automatic word variants, and incremental updates are not implemented. Position/phrase queries add storage and CPU costs; see [bench/SPLIT-POSTINGS.md](bench/SPLIT-POSTINGS.md).
+Queries retrieve up to four remote ranges concurrently. A conservative working-set estimate rejects oversized queries rather than allocating unbounded typed arrays. Concurrent requests share an isolate and can still exhaust memory; large, common-term queries may exceed the Free plan's 10 ms CPU limit. Paid Workers are appropriate for that workload. BM25 still scores every matching candidate; v5 skips irrelevant posting blocks for queries with an obligatory rare term, but does not implement WAND. There is no persistent query/posting cache. Metadata filters, root expansion/wildcards, automatic word variants, and incremental updates are not implemented. Position/phrase queries add storage and CPU costs; see [bench/SPLIT-POSTINGS.md](bench/SPLIT-POSTINGS.md).
 
 ## Benchmarks and layout
 
@@ -98,7 +98,7 @@ npx tsx bench/runtime.ts  # startup and HTTP measurements in local workerd
 npx tsx bench/bundle.ts   # dry-run the 48 MiB bundle, then restore sample binary
 ```
 
-For supplied corpora, `--sizes` labels the corpus; the actual document count is also recorded in successful results. The runner creates a new child process per configuration and preserves failed/infeasible configurations. Generated corpora and indexes are ignored by Git. The execution optimization is documented in [bench/POSITIONAL-OPTIMIZATION.md](bench/POSITIONAL-OPTIMIZATION.md); that historical execution-only optimization retained v3 compatibility; the new v4 stream split requires rebuilding. The latest format-change comparison is [bench/SPLIT-POSTINGS.md](bench/SPLIT-POSTINGS.md), with the optimized v3 baseline under `bench/baseline-v3-optimized/`. The historical positional-feature comparison is [bench/CONNECTORS.md](bench/CONNECTORS.md), with the optimized v2 baseline under `bench/baseline-v2-optimized/`. The historical v1 baseline is preserved under `bench/baseline-v1/`, and the original compressed-reader measurements under `bench/baseline-v2/`. [bench/OPTIMIZATION.md](bench/OPTIMIZATION.md) compares the reader optimization. Historical `bench/length-access.ts`, `bench/paired.ts` and `bench/optimization-report.ts` require v2-generated indexes; run them from the preceding v2 commit to reproduce that experiment. After those runs, `npx tsx bench/optimization-report.ts` regenerates the optimization comparison. The current runner regenerates SPLIT-POSTINGS.md after the matrix; historical `bench/compare.ts` is for the v1/v2 experiment; the report is [bench/COMPARISON.md](bench/COMPARISON.md).
+For supplied corpora, `--sizes` labels the corpus; the actual document count is also recorded in successful results. The runner creates a new child process per configuration and preserves failed/infeasible configurations. Generated corpora and indexes are ignored by Git. The execution optimization is documented in [bench/POSITIONAL-OPTIMIZATION.md](bench/POSITIONAL-OPTIMIZATION.md); that historical execution-only optimization retained v3 compatibility; the new v4 stream split requires rebuilding. The v4 format-change comparison is [bench/SPLIT-POSTINGS.md](bench/SPLIT-POSTINGS.md), with the optimized v3 baseline under `bench/baseline-v3-optimized/`. The historical positional-feature comparison is [bench/CONNECTORS.md](bench/CONNECTORS.md), with the optimized v2 baseline under `bench/baseline-v2-optimized/`. The historical v1 baseline is preserved under `bench/baseline-v1/`, and the original compressed-reader measurements under `bench/baseline-v2/`. [bench/OPTIMIZATION.md](bench/OPTIMIZATION.md) compares the reader optimization. Historical `bench/length-access.ts`, `bench/paired.ts` and `bench/optimization-report.ts` require v2-generated indexes; run them from the preceding v2 commit to reproduce that experiment. After those runs, `npx tsx bench/optimization-report.ts` regenerates the optimization comparison. The v4 runner regenerated SPLIT-POSTINGS.md after its matrix; historical `bench/compare.ts` is for the v1/v2 experiment; the report is [bench/COMPARISON.md](bench/COMPARISON.md).
 
 Results are in [bench/RESOURCES.md](bench/RESOURCES.md), [bench/WORKERD.md](bench/WORKERD.md), [bench/REPORT.md](bench/REPORT.md), [bench/results/results.json](bench/results/results.json), and individual sample JSON files. Local filesystem/HTTP-handler times are separated from local workerd and deployed network measurements. Cost formulas and caveats are in the report.
 
@@ -118,3 +118,5 @@ docs/          binary format and query-language specifications
 See [DESIGN.md](DESIGN.md) for tradeoffs and the highest-value next optimizations.
 
 Latest scoring-loop measurements: [benchmark report](bench/SCORING-OPTIMIZATION.md).
+
+Block-based postings and skip planning: [benchmark report](bench/BLOCK-POSTINGS.md). Format v5 counts all block directories and embedded payloads against the same configured bundle budget.

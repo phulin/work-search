@@ -193,6 +193,7 @@ export function decodeFrequencies(
   bytes: Uint8Array,
   expected?: number,
   expectedCrc?: number,
+  output?: { list: DecodedPostings; offset: number },
 ): DecodedPostings {
   const frequencyCrc = crc32(bytes);
   if (expectedCrc !== undefined && frequencyCrc !== expectedCrc)
@@ -204,9 +205,24 @@ export function decodeFrequencies(
     n > Math.floor((bytes.length - p.i) / 3)
   )
     throw new Error("Invalid posting count");
-  const docs = new Uint32Array(n),
-    body = new Uint32Array(n),
-    title = new Uint32Array(n);
+  if (
+    output &&
+    (!Number.isInteger(output.offset) ||
+      output.offset < 0 ||
+      output.offset + n > output.list.docs.length ||
+      output.offset + n > output.list.body.length ||
+      output.offset + n > output.list.title.length)
+  )
+    throw new Error("Invalid posting output range");
+  const docs = output
+      ? output.list.docs.subarray(output.offset, output.offset + n)
+      : new Uint32Array(n),
+    body = output
+      ? output.list.body.subarray(output.offset, output.offset + n)
+      : new Uint32Array(n),
+    title = output
+      ? output.list.title.subarray(output.offset, output.offset + n)
+      : new Uint32Array(n);
   let doc = 0;
   for (let i = 0; i < n; i++) {
     const delta = readVarint(bytes, p);

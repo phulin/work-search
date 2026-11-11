@@ -1,0 +1,1322 @@
+{
+  "environment": {
+    "date": "2026-11-11T18:17:29.378Z",
+    "format": 5,
+    "indexConstruction": "Fresh build",
+    "platform": "darwin",
+    "arch": "arm64",
+    "cpu": "Apple M3",
+    "node": "v26.7.0",
+    "queryMode": "Construction records only; final query measurements are in results.json"
+  },
+  "results": [
+    {
+      "documents": 10000,
+      "budgetMiB": 8,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "fa542a5cbb8ac15d16e1434139276b5592f9a302d9bb31f7fa7741468e8c660e",
+      "terms": 20099,
+      "budget": 8388608,
+      "bundleBytes": 3225357,
+      "dictionaryBytes": 973950,
+      "documentTableBytes": 61969,
+      "documentTableUncompressedBytes": 318890,
+      "postingsBytes": 2189438,
+      "frequencyBytes": 1616711,
+      "positionBytes": 572727,
+      "embeddedFrequencyBytes": 1616711,
+      "embeddedPositionBytes": 572727,
+      "embeddedPositionTerms": 20099,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 2189438,
+      "embeddedTerms": 20099,
+      "objects": [
+        {
+          "key": "fa542a5cbb8ac15d16e1434139276b5592f9a302d9bb31f7fa7741468e8c660e/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "fa542a5cbb8ac15d16e1434139276b5592f9a302d9bb31f7fa7741468e8c660e/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "fa542a5cbb8ac15d16e1434139276b5592f9a302d9bb31f7fa7741468e8c660e/metadata-0.bin",
+          "size": 815780,
+          "sha256": "3800f628b822c79badb65a53c4d835132b2604cc90490f612baeeec4f603eb42",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "7a644d8d5d84bbe26eb7c7a5c360077e801d453446bdbafe80f19d042dbd92ca",
+      "buildMs": 913.761166,
+      "peakRssBytes": 369967104,
+      "throughput": 10943.77871602392,
+      "storageBytes": 4041137
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 8,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "d46d785821c10a3ed4050dc7abd7e362cb62786ba0c509c93c24feb00083626b",
+      "terms": 20099,
+      "budget": 8388608,
+      "bundleBytes": 3225357,
+      "dictionaryBytes": 973950,
+      "documentTableBytes": 61969,
+      "documentTableUncompressedBytes": 318890,
+      "postingsBytes": 2189438,
+      "frequencyBytes": 1616711,
+      "positionBytes": 572727,
+      "embeddedFrequencyBytes": 1616711,
+      "embeddedPositionBytes": 572727,
+      "embeddedPositionTerms": 20099,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 2189438,
+      "embeddedTerms": 20099,
+      "objects": [
+        {
+          "key": "d46d785821c10a3ed4050dc7abd7e362cb62786ba0c509c93c24feb00083626b/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "d46d785821c10a3ed4050dc7abd7e362cb62786ba0c509c93c24feb00083626b/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "d46d785821c10a3ed4050dc7abd7e362cb62786ba0c509c93c24feb00083626b/metadata-0.bin",
+          "size": 815780,
+          "sha256": "3800f628b822c79badb65a53c4d835132b2604cc90490f612baeeec4f603eb42",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "e941f4c949109623146f43cbf9d7ab3abacb25cca84a727c7ae3f54bab0cabf7",
+      "buildMs": 916.496917,
+      "peakRssBytes": 351141888,
+      "throughput": 10911.111444578923,
+      "storageBytes": 4041137
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 16,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "2b11594cd6a747c008f4a2c5ea3a986206d187f1dbfbaca90c9dc9702644389c",
+      "terms": 20099,
+      "budget": 16777216,
+      "bundleBytes": 3225357,
+      "dictionaryBytes": 973950,
+      "documentTableBytes": 61969,
+      "documentTableUncompressedBytes": 318890,
+      "postingsBytes": 2189438,
+      "frequencyBytes": 1616711,
+      "positionBytes": 572727,
+      "embeddedFrequencyBytes": 1616711,
+      "embeddedPositionBytes": 572727,
+      "embeddedPositionTerms": 20099,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 2189438,
+      "embeddedTerms": 20099,
+      "objects": [
+        {
+          "key": "2b11594cd6a747c008f4a2c5ea3a986206d187f1dbfbaca90c9dc9702644389c/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "2b11594cd6a747c008f4a2c5ea3a986206d187f1dbfbaca90c9dc9702644389c/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "2b11594cd6a747c008f4a2c5ea3a986206d187f1dbfbaca90c9dc9702644389c/metadata-0.bin",
+          "size": 815780,
+          "sha256": "3800f628b822c79badb65a53c4d835132b2604cc90490f612baeeec4f603eb42",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "c138ad67c71fdca7db6fd9b01d48b510bc3701dd8503895c986e1b217b9b943f",
+      "buildMs": 909.620083,
+      "peakRssBytes": 351420416,
+      "throughput": 10993.600720664828,
+      "storageBytes": 4041137
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 16,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "dda99e71551c43bc2c4a47bd2e9e80b5613120ababad89143a818ff1f3e9362a",
+      "terms": 20099,
+      "budget": 16777216,
+      "bundleBytes": 3225357,
+      "dictionaryBytes": 973950,
+      "documentTableBytes": 61969,
+      "documentTableUncompressedBytes": 318890,
+      "postingsBytes": 2189438,
+      "frequencyBytes": 1616711,
+      "positionBytes": 572727,
+      "embeddedFrequencyBytes": 1616711,
+      "embeddedPositionBytes": 572727,
+      "embeddedPositionTerms": 20099,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 2189438,
+      "embeddedTerms": 20099,
+      "objects": [
+        {
+          "key": "dda99e71551c43bc2c4a47bd2e9e80b5613120ababad89143a818ff1f3e9362a/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "dda99e71551c43bc2c4a47bd2e9e80b5613120ababad89143a818ff1f3e9362a/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "dda99e71551c43bc2c4a47bd2e9e80b5613120ababad89143a818ff1f3e9362a/metadata-0.bin",
+          "size": 815780,
+          "sha256": "3800f628b822c79badb65a53c4d835132b2604cc90490f612baeeec4f603eb42",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "b7556964e3f480c3c9d10aeeb83e936473b7cf5d2fcdd96442a8869513b2f53e",
+      "buildMs": 896.790667,
+      "peakRssBytes": 355549184,
+      "throughput": 11150.874298739775,
+      "storageBytes": 4041137
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 32,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "68d78c862b873531dc2b71f5ca33997e5bc9888f1d131bf4bc88864cc63a4741",
+      "terms": 20099,
+      "budget": 33554432,
+      "bundleBytes": 3225357,
+      "dictionaryBytes": 973950,
+      "documentTableBytes": 61969,
+      "documentTableUncompressedBytes": 318890,
+      "postingsBytes": 2189438,
+      "frequencyBytes": 1616711,
+      "positionBytes": 572727,
+      "embeddedFrequencyBytes": 1616711,
+      "embeddedPositionBytes": 572727,
+      "embeddedPositionTerms": 20099,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 2189438,
+      "embeddedTerms": 20099,
+      "objects": [
+        {
+          "key": "68d78c862b873531dc2b71f5ca33997e5bc9888f1d131bf4bc88864cc63a4741/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "68d78c862b873531dc2b71f5ca33997e5bc9888f1d131bf4bc88864cc63a4741/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "68d78c862b873531dc2b71f5ca33997e5bc9888f1d131bf4bc88864cc63a4741/metadata-0.bin",
+          "size": 815780,
+          "sha256": "3800f628b822c79badb65a53c4d835132b2604cc90490f612baeeec4f603eb42",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "c77e932d6170fd7832ecb79f8a3b3c6b595baafece967c27a5e3170743035b48",
+      "buildMs": 876.8322909999999,
+      "peakRssBytes": 353304576,
+      "throughput": 11404.689474420828,
+      "storageBytes": 4041137
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 32,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "5c8edf17afd9843fc6114447e12086063f3ad74a23daa4b0cd66b7059c01a937",
+      "terms": 20099,
+      "budget": 33554432,
+      "bundleBytes": 3225357,
+      "dictionaryBytes": 973950,
+      "documentTableBytes": 61969,
+      "documentTableUncompressedBytes": 318890,
+      "postingsBytes": 2189438,
+      "frequencyBytes": 1616711,
+      "positionBytes": 572727,
+      "embeddedFrequencyBytes": 1616711,
+      "embeddedPositionBytes": 572727,
+      "embeddedPositionTerms": 20099,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 2189438,
+      "embeddedTerms": 20099,
+      "objects": [
+        {
+          "key": "5c8edf17afd9843fc6114447e12086063f3ad74a23daa4b0cd66b7059c01a937/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "5c8edf17afd9843fc6114447e12086063f3ad74a23daa4b0cd66b7059c01a937/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "5c8edf17afd9843fc6114447e12086063f3ad74a23daa4b0cd66b7059c01a937/metadata-0.bin",
+          "size": 815780,
+          "sha256": "3800f628b822c79badb65a53c4d835132b2604cc90490f612baeeec4f603eb42",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "3469308024a25df83ec3f6c88baa7e343e69f71d59f6a797f0db0a90ea6e091e",
+      "buildMs": 879.6326250000001,
+      "peakRssBytes": 352993280,
+      "throughput": 11368.38234029803,
+      "storageBytes": 4041137
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 48,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "9f6a304e6d375cef5dd9ab377cdf12e5c02aa0f237c776dc453e1ecde3e3fbcc",
+      "terms": 20099,
+      "budget": 50331648,
+      "bundleBytes": 3225357,
+      "dictionaryBytes": 973950,
+      "documentTableBytes": 61969,
+      "documentTableUncompressedBytes": 318890,
+      "postingsBytes": 2189438,
+      "frequencyBytes": 1616711,
+      "positionBytes": 572727,
+      "embeddedFrequencyBytes": 1616711,
+      "embeddedPositionBytes": 572727,
+      "embeddedPositionTerms": 20099,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 2189438,
+      "embeddedTerms": 20099,
+      "objects": [
+        {
+          "key": "9f6a304e6d375cef5dd9ab377cdf12e5c02aa0f237c776dc453e1ecde3e3fbcc/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "9f6a304e6d375cef5dd9ab377cdf12e5c02aa0f237c776dc453e1ecde3e3fbcc/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "9f6a304e6d375cef5dd9ab377cdf12e5c02aa0f237c776dc453e1ecde3e3fbcc/metadata-0.bin",
+          "size": 815780,
+          "sha256": "3800f628b822c79badb65a53c4d835132b2604cc90490f612baeeec4f603eb42",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "77d8c8a3739d7528f4c3aaef755e4cd1bcd4d647bb6ad3daddbfdcec7b973105",
+      "buildMs": 889.618542,
+      "peakRssBytes": 353370112,
+      "throughput": 11240.772901965885,
+      "storageBytes": 4041137
+    },
+    {
+      "documents": 10000,
+      "budgetMiB": 48,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "51738cf445a91e973067fde3fecb8f19a72225a4589577d55e3ff274345e4180",
+      "terms": 20099,
+      "budget": 50331648,
+      "bundleBytes": 3225357,
+      "dictionaryBytes": 973950,
+      "documentTableBytes": 61969,
+      "documentTableUncompressedBytes": 318890,
+      "postingsBytes": 2189438,
+      "frequencyBytes": 1616711,
+      "positionBytes": 572727,
+      "embeddedFrequencyBytes": 1616711,
+      "embeddedPositionBytes": 572727,
+      "embeddedPositionTerms": 20099,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 2189438,
+      "embeddedTerms": 20099,
+      "objects": [
+        {
+          "key": "51738cf445a91e973067fde3fecb8f19a72225a4589577d55e3ff274345e4180/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "51738cf445a91e973067fde3fecb8f19a72225a4589577d55e3ff274345e4180/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "51738cf445a91e973067fde3fecb8f19a72225a4589577d55e3ff274345e4180/metadata-0.bin",
+          "size": 815780,
+          "sha256": "3800f628b822c79badb65a53c4d835132b2604cc90490f612baeeec4f603eb42",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "4353f0e18e8dc5b3c61eda1145e7b958e25efdec8ae51a9c15e0334d75fc5f6a",
+      "buildMs": 920.814125,
+      "peakRssBytes": 354140160,
+      "throughput": 10859.955042501113,
+      "storageBytes": 4041137
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 8,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "906386dd2e5896a31d22bacd1771608626a208953806bfbe1d1f058466f165c4",
+      "terms": 20104,
+      "budget": 8388608,
+      "bundleBytes": 8388568,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 622500,
+      "documentTableUncompressedBytes": 3288890,
+      "postingsBytes": 21196679,
+      "frequencyBytes": 16338622,
+      "positionBytes": 4858057,
+      "embeddedFrequencyBytes": 6791272,
+      "embeddedPositionBytes": 601,
+      "embeddedPositionTerms": 11,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 6791873,
+      "embeddedTerms": 16093,
+      "objects": [
+        {
+          "key": "906386dd2e5896a31d22bacd1771608626a208953806bfbe1d1f058466f165c4/frequencies-0.bin",
+          "size": 9547350,
+          "sha256": "3f0e4145e783f9f3413720588c2885e21173a6c189427513843f015712e533cd",
+          "kind": "frequencies"
+        },
+        {
+          "key": "906386dd2e5896a31d22bacd1771608626a208953806bfbe1d1f058466f165c4/positions-0.bin",
+          "size": 4857456,
+          "sha256": "03b3a8364a3d8f335e345868a93a4ccdfdb45b4622ce762d0a91ee93da6ffc87",
+          "kind": "positions"
+        },
+        {
+          "key": "906386dd2e5896a31d22bacd1771608626a208953806bfbe1d1f058466f165c4/metadata-0.bin",
+          "size": 8313340,
+          "sha256": "defef185f134b7144f71f63e7eb526badf13c4c8d8d7c13e63d19ffeaa1bdd96",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "a436d1db95fa1b7deecce51df76b4ae8961cea7d34ab16e666946e8438d2cac9",
+      "buildMs": 5562.214542,
+      "peakRssBytes": 829652992,
+      "throughput": 17978.450713273476,
+      "storageBytes": 31106714
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 8,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "786152970c1065ed8adb882add131e543205f2aa9d0f8a6e1506ddfe85934055",
+      "terms": 20104,
+      "budget": 8388608,
+      "bundleBytes": 8388593,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 622500,
+      "documentTableUncompressedBytes": 3288890,
+      "postingsBytes": 21196679,
+      "frequencyBytes": 16338622,
+      "positionBytes": 4858057,
+      "embeddedFrequencyBytes": 6791631,
+      "embeddedPositionBytes": 267,
+      "embeddedPositionTerms": 3,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 6791898,
+      "embeddedTerms": 14261,
+      "objects": [
+        {
+          "key": "786152970c1065ed8adb882add131e543205f2aa9d0f8a6e1506ddfe85934055/frequencies-0.bin",
+          "size": 9546991,
+          "sha256": "a38779b4ee314078f11514b89d721101d91831cd23f099ea857ef3f7ecdb9836",
+          "kind": "frequencies"
+        },
+        {
+          "key": "786152970c1065ed8adb882add131e543205f2aa9d0f8a6e1506ddfe85934055/positions-0.bin",
+          "size": 4857790,
+          "sha256": "1f789d35c808f3e8ccd6f7e388cb6c149e73907b23a80242150c54fb5bef5c10",
+          "kind": "positions"
+        },
+        {
+          "key": "786152970c1065ed8adb882add131e543205f2aa9d0f8a6e1506ddfe85934055/metadata-0.bin",
+          "size": 8313340,
+          "sha256": "defef185f134b7144f71f63e7eb526badf13c4c8d8d7c13e63d19ffeaa1bdd96",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "902db251ccc330865a4c5ca532b28b20f02c4c980d412b7c5cf01033ade6b7a1",
+      "buildMs": 5766.936583,
+      "peakRssBytes": 630095872,
+      "throughput": 17340.228830465017,
+      "storageBytes": 31106714
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 16,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "f8473e7ca0fe1a5ef7443bd24936b83e4a81289c95b9222cf911e831d6144b5d",
+      "terms": 20104,
+      "budget": 16777216,
+      "bundleBytes": 16777141,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 622500,
+      "documentTableUncompressedBytes": 3288890,
+      "postingsBytes": 21196679,
+      "frequencyBytes": 16338622,
+      "positionBytes": 4858057,
+      "embeddedFrequencyBytes": 15076258,
+      "embeddedPositionBytes": 104188,
+      "embeddedPositionTerms": 1454,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 15180446,
+      "embeddedTerms": 20100,
+      "objects": [
+        {
+          "key": "f8473e7ca0fe1a5ef7443bd24936b83e4a81289c95b9222cf911e831d6144b5d/frequencies-0.bin",
+          "size": 1262364,
+          "sha256": "70c84c0305e19fc4da83f7e55ef6dfc3c7aae268344a052d165f3dd5fcb3ace3",
+          "kind": "frequencies"
+        },
+        {
+          "key": "f8473e7ca0fe1a5ef7443bd24936b83e4a81289c95b9222cf911e831d6144b5d/positions-0.bin",
+          "size": 4753869,
+          "sha256": "df4b3b82515723f40e001f506cf0eeae6513d18e54e3984eec92689e9d842cef",
+          "kind": "positions"
+        },
+        {
+          "key": "f8473e7ca0fe1a5ef7443bd24936b83e4a81289c95b9222cf911e831d6144b5d/metadata-0.bin",
+          "size": 8313340,
+          "sha256": "defef185f134b7144f71f63e7eb526badf13c4c8d8d7c13e63d19ffeaa1bdd96",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "09c6fc00d8db7ce2a8db0d8847735e817decd8a309908be76b59bff7f70af34e",
+      "buildMs": 5227.27275,
+      "peakRssBytes": 623525888,
+      "throughput": 19130.43469943289,
+      "storageBytes": 31106714
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 16,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "2bdc3b14ee9c8b5583002b66d0d9de0f2f1e6bd74822292a69628875ce0c7bb1",
+      "terms": 20104,
+      "budget": 16777216,
+      "bundleBytes": 16777180,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 622500,
+      "documentTableUncompressedBytes": 3288890,
+      "postingsBytes": 21196679,
+      "frequencyBytes": 16338622,
+      "positionBytes": 4858057,
+      "embeddedFrequencyBytes": 15176060,
+      "embeddedPositionBytes": 4425,
+      "embeddedPositionTerms": 29,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 15180485,
+      "embeddedTerms": 20077,
+      "objects": [
+        {
+          "key": "2bdc3b14ee9c8b5583002b66d0d9de0f2f1e6bd74822292a69628875ce0c7bb1/frequencies-0.bin",
+          "size": 1162562,
+          "sha256": "6cc7485f70953e0b66f1ff08799b34942ac115020e842320fba4992be38ca534",
+          "kind": "frequencies"
+        },
+        {
+          "key": "2bdc3b14ee9c8b5583002b66d0d9de0f2f1e6bd74822292a69628875ce0c7bb1/positions-0.bin",
+          "size": 4853632,
+          "sha256": "918e611b97acebe742b0cb6192030ff3342ed70b08744a110f62a1e841e846d3",
+          "kind": "positions"
+        },
+        {
+          "key": "2bdc3b14ee9c8b5583002b66d0d9de0f2f1e6bd74822292a69628875ce0c7bb1/metadata-0.bin",
+          "size": 8313340,
+          "sha256": "defef185f134b7144f71f63e7eb526badf13c4c8d8d7c13e63d19ffeaa1bdd96",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "76ed131eb220838ddcd345842576e839b3c36cd452f34f94e02c45cd552c92dc",
+      "buildMs": 5335.47875,
+      "peakRssBytes": 622690304,
+      "throughput": 18742.460552391854,
+      "storageBytes": 31106714
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 32,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "661ebae5fb4be56567ced6a96e94f772f53d73d127385b320fa3b77b74ea68df",
+      "terms": 20104,
+      "budget": 33554432,
+      "bundleBytes": 22793374,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 622500,
+      "documentTableUncompressedBytes": 3288890,
+      "postingsBytes": 21196679,
+      "frequencyBytes": 16338622,
+      "positionBytes": 4858057,
+      "embeddedFrequencyBytes": 16338622,
+      "embeddedPositionBytes": 4858057,
+      "embeddedPositionTerms": 20104,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 21196679,
+      "embeddedTerms": 20104,
+      "objects": [
+        {
+          "key": "661ebae5fb4be56567ced6a96e94f772f53d73d127385b320fa3b77b74ea68df/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "661ebae5fb4be56567ced6a96e94f772f53d73d127385b320fa3b77b74ea68df/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "661ebae5fb4be56567ced6a96e94f772f53d73d127385b320fa3b77b74ea68df/metadata-0.bin",
+          "size": 8313340,
+          "sha256": "defef185f134b7144f71f63e7eb526badf13c4c8d8d7c13e63d19ffeaa1bdd96",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "df580b72e52c4ae76873c2f3b6705f836b269aee7dc0f4bd1f30a9ab746b48be",
+      "buildMs": 5209.805,
+      "peakRssBytes": 634028032,
+      "throughput": 19194.576380497925,
+      "storageBytes": 31106714
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 32,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "01f4977964dc5562f579b42826d3cd23fc431cdd5de14c29e18f9405c7fdeac3",
+      "terms": 20104,
+      "budget": 33554432,
+      "bundleBytes": 22793374,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 622500,
+      "documentTableUncompressedBytes": 3288890,
+      "postingsBytes": 21196679,
+      "frequencyBytes": 16338622,
+      "positionBytes": 4858057,
+      "embeddedFrequencyBytes": 16338622,
+      "embeddedPositionBytes": 4858057,
+      "embeddedPositionTerms": 20104,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 21196679,
+      "embeddedTerms": 20104,
+      "objects": [
+        {
+          "key": "01f4977964dc5562f579b42826d3cd23fc431cdd5de14c29e18f9405c7fdeac3/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "01f4977964dc5562f579b42826d3cd23fc431cdd5de14c29e18f9405c7fdeac3/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "01f4977964dc5562f579b42826d3cd23fc431cdd5de14c29e18f9405c7fdeac3/metadata-0.bin",
+          "size": 8313340,
+          "sha256": "defef185f134b7144f71f63e7eb526badf13c4c8d8d7c13e63d19ffeaa1bdd96",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "57f9cfeb0dfec91e21fc6d45a62bc00e1b69290c132dad3dcdfa5002e143b59f",
+      "buildMs": 5134.926708999999,
+      "peakRssBytes": 623525888,
+      "throughput": 19474.47464532059,
+      "storageBytes": 31106714
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 48,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "99b7ac1b172a127ed709b27c7357ce35b255a8381855fa7ca0da4e4e7f2a08f4",
+      "terms": 20104,
+      "budget": 50331648,
+      "bundleBytes": 22793374,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 622500,
+      "documentTableUncompressedBytes": 3288890,
+      "postingsBytes": 21196679,
+      "frequencyBytes": 16338622,
+      "positionBytes": 4858057,
+      "embeddedFrequencyBytes": 16338622,
+      "embeddedPositionBytes": 4858057,
+      "embeddedPositionTerms": 20104,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 21196679,
+      "embeddedTerms": 20104,
+      "objects": [
+        {
+          "key": "99b7ac1b172a127ed709b27c7357ce35b255a8381855fa7ca0da4e4e7f2a08f4/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "99b7ac1b172a127ed709b27c7357ce35b255a8381855fa7ca0da4e4e7f2a08f4/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "99b7ac1b172a127ed709b27c7357ce35b255a8381855fa7ca0da4e4e7f2a08f4/metadata-0.bin",
+          "size": 8313340,
+          "sha256": "defef185f134b7144f71f63e7eb526badf13c4c8d8d7c13e63d19ffeaa1bdd96",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "45d3bfe0f69f555cc98713f2fdf04ad2d59a77519bd941e396e6556517f0b2f9",
+      "buildMs": 5811.2417909999995,
+      "peakRssBytes": 632291328,
+      "throughput": 17208.026028941393,
+      "storageBytes": 31106714
+    },
+    {
+      "documents": 100000,
+      "budgetMiB": 48,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "d97e868fda7022fc5fa9be6e4ff8701d6c48b523e3bf593b871c58694ea53167",
+      "terms": 20104,
+      "budget": 50331648,
+      "bundleBytes": 22793374,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 622500,
+      "documentTableUncompressedBytes": 3288890,
+      "postingsBytes": 21196679,
+      "frequencyBytes": 16338622,
+      "positionBytes": 4858057,
+      "embeddedFrequencyBytes": 16338622,
+      "embeddedPositionBytes": 4858057,
+      "embeddedPositionTerms": 20104,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 21196679,
+      "embeddedTerms": 20104,
+      "objects": [
+        {
+          "key": "d97e868fda7022fc5fa9be6e4ff8701d6c48b523e3bf593b871c58694ea53167/frequencies-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "frequencies"
+        },
+        {
+          "key": "d97e868fda7022fc5fa9be6e4ff8701d6c48b523e3bf593b871c58694ea53167/positions-0.bin",
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "kind": "positions"
+        },
+        {
+          "key": "d97e868fda7022fc5fa9be6e4ff8701d6c48b523e3bf593b871c58694ea53167/metadata-0.bin",
+          "size": 8313340,
+          "sha256": "defef185f134b7144f71f63e7eb526badf13c4c8d8d7c13e63d19ffeaa1bdd96",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "51ee41902cc2158a111aa878aec26ed8545da257779e783a9e15808a6f153cf0",
+      "buildMs": 5239.547,
+      "peakRssBytes": 642531328,
+      "throughput": 19085.61942473271,
+      "storageBytes": 31106714
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 8,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "b54432b70ebbee3958a8a5b3ab9e4d5c9a8a472d5ef09a43006f2dcc6cfdaa8b",
+      "terms": 20104,
+      "budget": 8388608,
+      "bundleBytes": 8388496,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 6256097,
+      "documentTableUncompressedBytes": 33888890,
+      "postingsBytes": 214014818,
+      "frequencyBytes": 165910369,
+      "positionBytes": 48104449,
+      "embeddedFrequencyBytes": 1158204,
+      "embeddedPositionBytes": 0,
+      "embeddedPositionTerms": 0,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 1158204,
+      "embeddedTerms": 404,
+      "objects": [
+        {
+          "key": "b54432b70ebbee3958a8a5b3ab9e4d5c9a8a472d5ef09a43006f2dcc6cfdaa8b/frequencies-0.bin",
+          "size": 67108470,
+          "sha256": "3c7c95fd77701c7e937360f10a0b6efbf11922fa5fb7bfa11986879062fa7a0a",
+          "kind": "frequencies"
+        },
+        {
+          "key": "b54432b70ebbee3958a8a5b3ab9e4d5c9a8a472d5ef09a43006f2dcc6cfdaa8b/frequencies-1.bin",
+          "size": 67087478,
+          "sha256": "83f7aad8bd13f6a3b7aa6a0c98731c9b9e34eeb60a851f7fec79cc80c86b0532",
+          "kind": "frequencies"
+        },
+        {
+          "key": "b54432b70ebbee3958a8a5b3ab9e4d5c9a8a472d5ef09a43006f2dcc6cfdaa8b/frequencies-2.bin",
+          "size": 30556217,
+          "sha256": "96772bf10d3c1a31e42e238ea16f2ad3f9462e88bc50a579627fec7f98c33a84",
+          "kind": "frequencies"
+        },
+        {
+          "key": "b54432b70ebbee3958a8a5b3ab9e4d5c9a8a472d5ef09a43006f2dcc6cfdaa8b/positions-0.bin",
+          "size": 48104449,
+          "sha256": "96f28f64d4f1097e5a3bcda251ca957561e6543a0e7f74b3620d7a704a6362ec",
+          "kind": "positions"
+        },
+        {
+          "key": "b54432b70ebbee3958a8a5b3ab9e4d5c9a8a472d5ef09a43006f2dcc6cfdaa8b/metadata-0.bin",
+          "size": 67108855,
+          "sha256": "40d5e6de08bbdf0a6b8853e926d68317e23f3878a7a667faef247ca758374ace",
+          "kind": "metadata"
+        },
+        {
+          "key": "b54432b70ebbee3958a8a5b3ab9e4d5c9a8a472d5ef09a43006f2dcc6cfdaa8b/metadata-1.bin",
+          "size": 17024535,
+          "sha256": "3723c631aa21935985fba04aa46b8d4ba2f0d950a8f1de511cafad89d3fa56ae",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "018dd4ba7cd147c5f019519fe62bfc5099aef9ffa20fd267cc28785cb5ec12a2",
+      "buildMs": 70851.626875,
+      "peakRssBytes": 1569751040,
+      "throughput": 14114.001951772401,
+      "storageBytes": 305378500
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 8,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "2445fc28d15d5d359436e6ef362b00253f624460a091bbd49520c299ac3000ec",
+      "terms": 20104,
+      "budget": 8388608,
+      "bundleBytes": 8388082,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 6256097,
+      "documentTableUncompressedBytes": 33888890,
+      "postingsBytes": 214014818,
+      "frequencyBytes": 165910369,
+      "positionBytes": 48104449,
+      "embeddedFrequencyBytes": 1156120,
+      "embeddedPositionBytes": 1670,
+      "embeddedPositionTerms": 2,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 1157790,
+      "embeddedTerms": 202,
+      "objects": [
+        {
+          "key": "2445fc28d15d5d359436e6ef362b00253f624460a091bbd49520c299ac3000ec/frequencies-0.bin",
+          "size": 67108250,
+          "sha256": "f0dff3904cc1f235fa1c1f8c2e577a8658a4e15cbc3e33698a48e755d6bd2608",
+          "kind": "frequencies"
+        },
+        {
+          "key": "2445fc28d15d5d359436e6ef362b00253f624460a091bbd49520c299ac3000ec/frequencies-1.bin",
+          "size": 67089782,
+          "sha256": "2866b775055a7cbdfe24e162fcc5447387311aae90ece28f8e49c63089f8f1cf",
+          "kind": "frequencies"
+        },
+        {
+          "key": "2445fc28d15d5d359436e6ef362b00253f624460a091bbd49520c299ac3000ec/frequencies-2.bin",
+          "size": 30556217,
+          "sha256": "96772bf10d3c1a31e42e238ea16f2ad3f9462e88bc50a579627fec7f98c33a84",
+          "kind": "frequencies"
+        },
+        {
+          "key": "2445fc28d15d5d359436e6ef362b00253f624460a091bbd49520c299ac3000ec/positions-0.bin",
+          "size": 48102779,
+          "sha256": "7719d4e760e7ce97bf53c4832255569b210a20d2a120ceebc6defc88bf1235d4",
+          "kind": "positions"
+        },
+        {
+          "key": "2445fc28d15d5d359436e6ef362b00253f624460a091bbd49520c299ac3000ec/metadata-0.bin",
+          "size": 67108855,
+          "sha256": "40d5e6de08bbdf0a6b8853e926d68317e23f3878a7a667faef247ca758374ace",
+          "kind": "metadata"
+        },
+        {
+          "key": "2445fc28d15d5d359436e6ef362b00253f624460a091bbd49520c299ac3000ec/metadata-1.bin",
+          "size": 17024535,
+          "sha256": "3723c631aa21935985fba04aa46b8d4ba2f0d950a8f1de511cafad89d3fa56ae",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "4a3e9baf45f9b5ec8dec27c8deb963ca4fcdf1d567f5ace883ecad85987948e6",
+      "buildMs": 70849.299834,
+      "peakRssBytes": 1558790144,
+      "throughput": 14114.46552531925,
+      "storageBytes": 305378500
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 16,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "1e3c46b1a46ca63e3deab7359b3f9e410041474231fbcba142d6c3987c7e888d",
+      "terms": 20104,
+      "budget": 16777216,
+      "bundleBytes": 16777047,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 6256097,
+      "documentTableUncompressedBytes": 33888890,
+      "postingsBytes": 214014818,
+      "frequencyBytes": 165910369,
+      "positionBytes": 48104449,
+      "embeddedFrequencyBytes": 9545435,
+      "embeddedPositionBytes": 1320,
+      "embeddedPositionTerms": 2,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 9546755,
+      "embeddedTerms": 3102,
+      "objects": [
+        {
+          "key": "1e3c46b1a46ca63e3deab7359b3f9e410041474231fbcba142d6c3987c7e888d/frequencies-0.bin",
+          "size": 67106604,
+          "sha256": "85b777e2c58a6d70f1ea58329d485118554920a4ce0b8b53af02383fd9cf02b3",
+          "kind": "frequencies"
+        },
+        {
+          "key": "1e3c46b1a46ca63e3deab7359b3f9e410041474231fbcba142d6c3987c7e888d/frequencies-1.bin",
+          "size": 67104579,
+          "sha256": "1edb426affd0f2f0fec591c42858ac4684048bb5489474207357666510fe0a1f",
+          "kind": "frequencies"
+        },
+        {
+          "key": "1e3c46b1a46ca63e3deab7359b3f9e410041474231fbcba142d6c3987c7e888d/frequencies-2.bin",
+          "size": 22153751,
+          "sha256": "fbbd52d3128f0a6536ddf31c1986bb1a1f71d26361cffe570bb2f59c0c1efdba",
+          "kind": "frequencies"
+        },
+        {
+          "key": "1e3c46b1a46ca63e3deab7359b3f9e410041474231fbcba142d6c3987c7e888d/positions-0.bin",
+          "size": 48103129,
+          "sha256": "d94a7e37a167552e2ca53615acaae381c860ab8c3cf6c1df682bed9f3d95a764",
+          "kind": "positions"
+        },
+        {
+          "key": "1e3c46b1a46ca63e3deab7359b3f9e410041474231fbcba142d6c3987c7e888d/metadata-0.bin",
+          "size": 67108855,
+          "sha256": "40d5e6de08bbdf0a6b8853e926d68317e23f3878a7a667faef247ca758374ace",
+          "kind": "metadata"
+        },
+        {
+          "key": "1e3c46b1a46ca63e3deab7359b3f9e410041474231fbcba142d6c3987c7e888d/metadata-1.bin",
+          "size": 17024535,
+          "sha256": "3723c631aa21935985fba04aa46b8d4ba2f0d950a8f1de511cafad89d3fa56ae",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "8fae8750199a1339d2eae6b4c75a10bc06dc43b334a13e34ed2230a121b74216",
+      "buildMs": 70661.404666,
+      "peakRssBytes": 1544749056,
+      "throughput": 14151.997186112661,
+      "storageBytes": 305378500
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 16,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "f32013bb3323e14bf4ac28e89a77b97ea67868a7f5d20402bb89b415c804d271",
+      "terms": 20104,
+      "budget": 16777216,
+      "bundleBytes": 16777067,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 6256097,
+      "documentTableUncompressedBytes": 33888890,
+      "postingsBytes": 214014818,
+      "frequencyBytes": 165910369,
+      "positionBytes": 48104449,
+      "embeddedFrequencyBytes": 9544383,
+      "embeddedPositionBytes": 2392,
+      "embeddedPositionTerms": 3,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 9546775,
+      "embeddedTerms": 72,
+      "objects": [
+        {
+          "key": "f32013bb3323e14bf4ac28e89a77b97ea67868a7f5d20402bb89b415c804d271/frequencies-0.bin",
+          "size": 67108463,
+          "sha256": "e9b3d4ba2d04cfc208b209ddbfe65a2c004bf544212ec78e8a1a26da3e1e579e",
+          "kind": "frequencies"
+        },
+        {
+          "key": "f32013bb3323e14bf4ac28e89a77b97ea67868a7f5d20402bb89b415c804d271/frequencies-1.bin",
+          "size": 67103772,
+          "sha256": "b55e383df5aa2ee0cd5636136f228484c867a2291164ab0a21e71a5d0e046422",
+          "kind": "frequencies"
+        },
+        {
+          "key": "f32013bb3323e14bf4ac28e89a77b97ea67868a7f5d20402bb89b415c804d271/frequencies-2.bin",
+          "size": 22153751,
+          "sha256": "fbbd52d3128f0a6536ddf31c1986bb1a1f71d26361cffe570bb2f59c0c1efdba",
+          "kind": "frequencies"
+        },
+        {
+          "key": "f32013bb3323e14bf4ac28e89a77b97ea67868a7f5d20402bb89b415c804d271/positions-0.bin",
+          "size": 48102057,
+          "sha256": "caf81a1f17d7529214332b31163f67af5e5f813e4db5aa470a34e06db684209b",
+          "kind": "positions"
+        },
+        {
+          "key": "f32013bb3323e14bf4ac28e89a77b97ea67868a7f5d20402bb89b415c804d271/metadata-0.bin",
+          "size": 67108855,
+          "sha256": "40d5e6de08bbdf0a6b8853e926d68317e23f3878a7a667faef247ca758374ace",
+          "kind": "metadata"
+        },
+        {
+          "key": "f32013bb3323e14bf4ac28e89a77b97ea67868a7f5d20402bb89b415c804d271/metadata-1.bin",
+          "size": 17024535,
+          "sha256": "3723c631aa21935985fba04aa46b8d4ba2f0d950a8f1de511cafad89d3fa56ae",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "5511a6fb07e796c9f3ae2b4b0137bb8d63aa92536af5fad54775122dee3ded8d",
+      "buildMs": 72429.545666,
+      "peakRssBytes": 1434124288,
+      "throughput": 13806.520402756323,
+      "storageBytes": 305378500
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 32,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "7de0b60b3ec897021825544f804b8bd84046cf8dad80b8eeb039772fb20cc862",
+      "terms": 20104,
+      "budget": 33554432,
+      "bundleBytes": 33554133,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 6256097,
+      "documentTableUncompressedBytes": 33888890,
+      "postingsBytes": 214014818,
+      "frequencyBytes": 165910369,
+      "positionBytes": 48104449,
+      "embeddedFrequencyBytes": 26323181,
+      "embeddedPositionBytes": 660,
+      "embeddedPositionTerms": 1,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 26323841,
+      "embeddedTerms": 7775,
+      "objects": [
+        {
+          "key": "7de0b60b3ec897021825544f804b8bd84046cf8dad80b8eeb039772fb20cc862/frequencies-0.bin",
+          "size": 67102184,
+          "sha256": "2efd6896ef458dd505029b267192020e94631499583c200cd672efc13221c3b7",
+          "kind": "frequencies"
+        },
+        {
+          "key": "7de0b60b3ec897021825544f804b8bd84046cf8dad80b8eeb039772fb20cc862/frequencies-1.bin",
+          "size": 67106474,
+          "sha256": "94d83cbf277f07780aa41cc46b8fd48cac1dbb75e4548b23f193612f6a576f49",
+          "kind": "frequencies"
+        },
+        {
+          "key": "7de0b60b3ec897021825544f804b8bd84046cf8dad80b8eeb039772fb20cc862/frequencies-2.bin",
+          "size": 5378530,
+          "sha256": "4143536a12df6a9fd859351f2d8527c0be0861ab7d54177380d367809bae79be",
+          "kind": "frequencies"
+        },
+        {
+          "key": "7de0b60b3ec897021825544f804b8bd84046cf8dad80b8eeb039772fb20cc862/positions-0.bin",
+          "size": 48103789,
+          "sha256": "6bc950f2f85a65c826daa6948f577acac2c891aafdb061f776a02b4d01a8bd72",
+          "kind": "positions"
+        },
+        {
+          "key": "7de0b60b3ec897021825544f804b8bd84046cf8dad80b8eeb039772fb20cc862/metadata-0.bin",
+          "size": 67108855,
+          "sha256": "40d5e6de08bbdf0a6b8853e926d68317e23f3878a7a667faef247ca758374ace",
+          "kind": "metadata"
+        },
+        {
+          "key": "7de0b60b3ec897021825544f804b8bd84046cf8dad80b8eeb039772fb20cc862/metadata-1.bin",
+          "size": 17024535,
+          "sha256": "3723c631aa21935985fba04aa46b8d4ba2f0d950a8f1de511cafad89d3fa56ae",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "9acde78e307ab9f69af28d8804f0d9f320680cc6612469b03569382018fe1982",
+      "buildMs": 71727.923083,
+      "peakRssBytes": 1491599360,
+      "throughput": 13941.571943228433,
+      "storageBytes": 305378500
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 32,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "7fb3ee8e716f4d714728be642a0123ffc542880972b1320e35214adc563ae979",
+      "terms": 20104,
+      "budget": 33554432,
+      "bundleBytes": 33554203,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 6256097,
+      "documentTableUncompressedBytes": 33888890,
+      "postingsBytes": 214014818,
+      "frequencyBytes": 165910369,
+      "positionBytes": 48104449,
+      "embeddedFrequencyBytes": 26321519,
+      "embeddedPositionBytes": 2392,
+      "embeddedPositionTerms": 3,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 26323911,
+      "embeddedTerms": 4379,
+      "objects": [
+        {
+          "key": "7fb3ee8e716f4d714728be642a0123ffc542880972b1320e35214adc563ae979/frequencies-0.bin",
+          "size": 67103846,
+          "sha256": "b9e496bf3fed2e4a0b2019e0c71ac63ba4e0cda28692cb90a25153b0cc6f0eb1",
+          "kind": "frequencies"
+        },
+        {
+          "key": "7fb3ee8e716f4d714728be642a0123ffc542880972b1320e35214adc563ae979/frequencies-1.bin",
+          "size": 67106474,
+          "sha256": "94d83cbf277f07780aa41cc46b8fd48cac1dbb75e4548b23f193612f6a576f49",
+          "kind": "frequencies"
+        },
+        {
+          "key": "7fb3ee8e716f4d714728be642a0123ffc542880972b1320e35214adc563ae979/frequencies-2.bin",
+          "size": 5378530,
+          "sha256": "4143536a12df6a9fd859351f2d8527c0be0861ab7d54177380d367809bae79be",
+          "kind": "frequencies"
+        },
+        {
+          "key": "7fb3ee8e716f4d714728be642a0123ffc542880972b1320e35214adc563ae979/positions-0.bin",
+          "size": 48102057,
+          "sha256": "caf81a1f17d7529214332b31163f67af5e5f813e4db5aa470a34e06db684209b",
+          "kind": "positions"
+        },
+        {
+          "key": "7fb3ee8e716f4d714728be642a0123ffc542880972b1320e35214adc563ae979/metadata-0.bin",
+          "size": 67108855,
+          "sha256": "40d5e6de08bbdf0a6b8853e926d68317e23f3878a7a667faef247ca758374ace",
+          "kind": "metadata"
+        },
+        {
+          "key": "7fb3ee8e716f4d714728be642a0123ffc542880972b1320e35214adc563ae979/metadata-1.bin",
+          "size": 17024535,
+          "sha256": "3723c631aa21935985fba04aa46b8d4ba2f0d950a8f1de511cafad89d3fa56ae",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "486e7595038faf36934514628d846064ca470015ed3ca97f536efc8acbd9367e",
+      "buildMs": 68969.518291,
+      "peakRssBytes": 1663795200,
+      "throughput": 14499.158828118021,
+      "storageBytes": 305378500
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 48,
+      "strategy": "smallest",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "2b2f7f0104e5e85b39f7e730137447e0b7758a4c2f1637f9fafa0397db133cff",
+      "terms": 20104,
+      "budget": 50331648,
+      "bundleBytes": 50331280,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 6256097,
+      "documentTableUncompressedBytes": 33888890,
+      "postingsBytes": 214014818,
+      "frequencyBytes": 165910369,
+      "positionBytes": 48104449,
+      "embeddedFrequencyBytes": 43100328,
+      "embeddedPositionBytes": 660,
+      "embeddedPositionTerms": 1,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 43100988,
+      "embeddedTerms": 11567,
+      "objects": [
+        {
+          "key": "2b2f7f0104e5e85b39f7e730137447e0b7758a4c2f1637f9fafa0397db133cff/frequencies-0.bin",
+          "size": 67017684,
+          "sha256": "2b25f6641f96d5d7ec3699a4c8942018efc7886ab9746bbad06e76bf8dcd3382",
+          "kind": "frequencies"
+        },
+        {
+          "key": "2b2f7f0104e5e85b39f7e730137447e0b7758a4c2f1637f9fafa0397db133cff/frequencies-1.bin",
+          "size": 55792357,
+          "sha256": "f4528af5735fa9ceaef70e6b0179fa02d0d76023e99788c3388bc12b060b2bb1",
+          "kind": "frequencies"
+        },
+        {
+          "key": "2b2f7f0104e5e85b39f7e730137447e0b7758a4c2f1637f9fafa0397db133cff/positions-0.bin",
+          "size": 48103789,
+          "sha256": "6bc950f2f85a65c826daa6948f577acac2c891aafdb061f776a02b4d01a8bd72",
+          "kind": "positions"
+        },
+        {
+          "key": "2b2f7f0104e5e85b39f7e730137447e0b7758a4c2f1637f9fafa0397db133cff/metadata-0.bin",
+          "size": 67108855,
+          "sha256": "40d5e6de08bbdf0a6b8853e926d68317e23f3878a7a667faef247ca758374ace",
+          "kind": "metadata"
+        },
+        {
+          "key": "2b2f7f0104e5e85b39f7e730137447e0b7758a4c2f1637f9fafa0397db133cff/metadata-1.bin",
+          "size": 17024535,
+          "sha256": "3723c631aa21935985fba04aa46b8d4ba2f0d950a8f1de511cafad89d3fa56ae",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "0088d6da1a65b87ea9c76ef7cd53453780621a420b0dca6e681694b2d8cc831b",
+      "buildMs": 67353.09583399999,
+      "peakRssBytes": 1863254016,
+      "throughput": 14847.127479702245,
+      "storageBytes": 305378500
+    },
+    {
+      "documents": 1000000,
+      "budgetMiB": 48,
+      "strategy": "workload",
+      "status": "ok",
+      "buildMeasurement": "Fresh build",
+      "format": 5,
+      "generation": "c9cda07cb311efac017a77b89858cca68123392eb4d1101f530834712142b585",
+      "terms": 20104,
+      "budget": 50331648,
+      "bundleBytes": 50331431,
+      "dictionaryBytes": 974195,
+      "documentTableBytes": 6256097,
+      "documentTableUncompressedBytes": 33888890,
+      "postingsBytes": 214014818,
+      "frequencyBytes": 165910369,
+      "positionBytes": 48104449,
+      "embeddedFrequencyBytes": 43099725,
+      "embeddedPositionBytes": 1414,
+      "embeddedPositionTerms": 2,
+      "embeddingPolicy": "frequencies-first",
+      "embeddedBytes": 43101139,
+      "embeddedTerms": 8830,
+      "objects": [
+        {
+          "key": "c9cda07cb311efac017a77b89858cca68123392eb4d1101f530834712142b585/frequencies-0.bin",
+          "size": 67105814,
+          "sha256": "04051be8851965350d24b5e311e6203f400ab51f1c49d9d938c3e895ab560107",
+          "kind": "frequencies"
+        },
+        {
+          "key": "c9cda07cb311efac017a77b89858cca68123392eb4d1101f530834712142b585/frequencies-1.bin",
+          "size": 55704830,
+          "sha256": "387caa47a4857b60f24cd25247465c73a25d8297b80bf4c8854f71a52507798a",
+          "kind": "frequencies"
+        },
+        {
+          "key": "c9cda07cb311efac017a77b89858cca68123392eb4d1101f530834712142b585/positions-0.bin",
+          "size": 48103035,
+          "sha256": "b8f1c236cc287c78bf4677b9c445f24cc7397fc2dc19b4eab2e6c834c06f1d9f",
+          "kind": "positions"
+        },
+        {
+          "key": "c9cda07cb311efac017a77b89858cca68123392eb4d1101f530834712142b585/metadata-0.bin",
+          "size": 67108855,
+          "sha256": "40d5e6de08bbdf0a6b8853e926d68317e23f3878a7a667faef247ca758374ace",
+          "kind": "metadata"
+        },
+        {
+          "key": "c9cda07cb311efac017a77b89858cca68123392eb4d1101f530834712142b585/metadata-1.bin",
+          "size": 17024535,
+          "sha256": "3723c631aa21935985fba04aa46b8d4ba2f0d950a8f1de511cafad89d3fa56ae",
+          "kind": "metadata"
+        }
+      ],
+      "bundleSha256": "20365a79a51b61e179e288f5bec432b7283270a86502eb3c110727f50385186a",
+      "buildMs": 67806.767458,
+      "peakRssBytes": 1235369984,
+      "throughput": 14747.790485948282,
+      "storageBytes": 305378500
+    }
+  ]
+}

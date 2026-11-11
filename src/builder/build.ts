@@ -1,3 +1,4 @@
+import { encodeBlocks } from "../format/blocks.js";
 import { createReadStream, createWriteStream } from "node:fs";
 import {
   mkdir,
@@ -14,13 +15,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { once } from "node:events";
 import { tokenize, type Document } from "../query/tokenize.js";
-import {
-  encodeFrequencies,
-  encodePositions,
-  crc32,
-  encoder,
-  type Posting,
-} from "../format/codec.js";
+import { crc32, encoder, type Posting } from "../format/codec.js";
 import {
   buildBinary,
   HEADER,
@@ -287,9 +282,11 @@ export async function build(options: BuildOptions) {
       list: Posting[] = [];
     const emit = async () => {
       if (current === undefined) return;
-      const bytes = encodeFrequencies(list),
-        frequencyCrc = crc32(bytes),
-        positions = encodePositions(list, frequencyCrc);
+      const {
+        frequencies: bytes,
+        positions,
+        crc: frequencyCrc,
+      } = encodeBlocks(list);
       entries.push({
         term: current,
         df: list.length,

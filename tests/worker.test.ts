@@ -24,7 +24,15 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
   const root = await mkdtemp(join(tmpdir(), "worker-runtime-"));
   await writeFile(
     join(root, "docs"),
-    '{"id":"remote","body":"unique common"}\n{"id":"other","body":"common"}',
+    [
+      { id: "remote", body: "unique common" },
+      ...Array.from({ length: 1024 }, (_, i) => ({
+        id: `other-${i}`,
+        body: "common",
+      })),
+    ]
+      .map((d) => JSON.stringify(d))
+      .join("\n"),
   );
   const full = await build({
     input: join(root, "docs"),
@@ -85,7 +93,7 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
         const body = (await response.json()) as any;
         expect(body.total, q).toBe(total);
         if (total)
-          expect(body.diagnostics.indexRequests).toBe(name === "full" ? 0 : 4);
+          expect(body.diagnostics.indexRequests).toBe(name === "full" ? 0 : 5);
       }
       expect(
         (
