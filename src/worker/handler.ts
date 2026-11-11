@@ -1,3 +1,4 @@
+import type { SearchRuntime } from "../query/runtime.js";
 import { BinaryIndex, VERSION } from "../format/index.js";
 import { QuerySyntaxError } from "../query/parser.js";
 import { search, type SearchOptions } from "../query/engine.js";
@@ -6,6 +7,7 @@ export function handler(
   index: BinaryIndex,
   storage: Storage,
   diagnostics = false,
+  runtime?: SearchRuntime,
 ) {
   return async (request: Request) => {
     const url = new URL(request.url);
@@ -26,6 +28,7 @@ export function handler(
       limit = Number(p.get("limit") ?? 20),
       titleBoost = Number(p.get("titleBoost") ?? 2);
     if (
+      (p.has("total") && !["true", "false"].includes(p.get("total")!)) ||
       !["and", "or"].includes(mode) ||
       !["all", "title", "body"].includes(field) ||
       !Number.isInteger(limit) ||
@@ -47,6 +50,8 @@ export function handler(
         limit,
         titleBoost,
         metadata: p.get("metadata") === "true",
+        exactTotal: p.get("total") !== "false",
+        runtime,
       } as SearchOptions);
       if (!diagnostics || p.get("diagnostics") !== "true") {
         const { diagnostics: _, ...publicResult } = result;

@@ -82,6 +82,9 @@ export function encodePostings(list: Posting[]): Uint8Array {
   return Uint8Array.from(out);
 }
 export interface DecodedPostings {
+  positionsComplete?: boolean;
+  blocks?: import("./blocks.js").Block[];
+  blockRows?: Uint32Array;
   frequencyCrc?: number;
   docs: Uint32Array;
   body: Uint32Array;

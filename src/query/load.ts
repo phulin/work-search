@@ -1,3 +1,5 @@
+import { rangeGroups } from "./ranges.js";
+import { decodePositionsInto } from "../format/decode-block.js";
 import { decodeBlockInto } from "../format/decode-block.js";
 import {
   BLOCK_SIZE,
@@ -61,6 +63,7 @@ export async function loadPosting(
   positions: boolean,
   read: Read,
   candidates?: Uint32Array,
+  adaptiveRanges = true,
 ): Promise<DecodedPostings> {
   if (candidates?.length === 0) return merge([], positions);
   if (e.df <= BLOCK_SIZE) {
@@ -69,7 +72,10 @@ export async function loadPosting(
       positions ? read(e, true, 0, e.positionLength) : undefined,
     ]);
     const list = decodeFrequencies(f, e.df, e.crc);
-    if (p) attachPositions(list, p, e.positionCrc);
+    if (p) {
+      attachPositions(list, p, e.positionCrc);
+      list.positionsComplete = true;
+    }
     return list;
   }
   // For dense/full scans, one frequency range includes directory and all blocks.
@@ -103,8 +109,13 @@ export async function loadPosting(
       bytes: eagerPositions ?? new Uint8Array(0),
       positionOffsets: positions ? new Uint32Array(e.df) : undefined,
     };
-    let row = 0;
+    result.positionsComplete = positions;
+    result.blocks = blocks;
+    result.blockRows = new Uint32Array(blocks.length);
+    let row = 0,
+      blockIndex = 0;
     for (const block of blocks) {
+      result.blockRows[blockIndex++] = row;
       decodeBlockInto(
         frequency,
         block.offset,
@@ -156,6 +167,18 @@ export async function loadPosting(
     if (runs.reduce((sum, run) => sum + cost(run), 0) >= cost(selected) * 0.75)
       runs = [selected];
   }
+  if (adaptiveRanges)
+    runs = rangeGroups(
+      selected,
+      (i) => ({
+        start: blocks[i].offset + (positions ? blocks[i].positionOffset : 0),
+        end:
+          blocks[i].offset +
+          blocks[i].length +
+          (positions ? blocks[i].positionOffset + blocks[i].positionLength : 0),
+      }),
+      65536 * (positions ? 2 : 1),
+    );
   let count = 0,
     byteCount = 0;
   const offsets = runs.map((run) => {
@@ -178,6 +201,14 @@ export async function loadPosting(
         : new Uint8Array(0),
     positionOffsets: positions ? new Uint32Array(count) : undefined,
   };
+  const flat = runs.flat();
+  result.blocks = flat.map((i) => blocks[i]);
+  result.blockRows = new Uint32Array(flat.length);
+  let blockRow = 0;
+  for (let i = 0; i < flat.length; i++) {
+    result.blockRows[i] = blockRow;
+    blockRow += blocks[flat[i]].count;
+  }
   await parallel(
     runs.map((run, i) => ({ run, ...offsets[i] })),
     4,
@@ -223,5 +254,72 @@ export async function loadPosting(
       }
     },
   );
+  result.positionsComplete = positions && result.docs.length === e.df;
+  return result;
+}
+
+// Attach only positional blocks intersecting the already-combined coarse set.
+// Frequency arrays/directories are reused, so this stage does not refetch them.
+export async function attachCandidatePositions(
+  e: Entry,
+  list: DecodedPostings,
+  read: Read,
+  candidates: Uint32Array,
+): Promise<DecodedPostings> {
+  const result = { ...list, positionsComplete: false };
+  if (!candidates.length) {
+    result.bytes = new Uint8Array(0);
+    result.positionOffsets = new Uint32Array(list.docs.length);
+    return result;
+  }
+  if (e.df <= BLOCK_SIZE) {
+    attachPositions(
+      result,
+      await read(e, true, 0, e.positionLength),
+      e.positionCrc,
+    );
+    result.positionsComplete = true;
+    return result;
+  }
+  const blocks = list.blocks!,
+    rows = list.blockRows!;
+  const selected = selectBlocks(blocks, candidates),
+    runs = rangeGroups(selected, (i) => ({
+      start: blocks[i].positionOffset,
+      end: blocks[i].positionOffset + blocks[i].positionLength,
+    }));
+  const payloads = await parallel(runs, 4, (run) => {
+    const first = blocks[run[0]],
+      last = blocks[run[run.length - 1]];
+    return read(
+      e,
+      true,
+      first.positionOffset,
+      last.positionOffset + last.positionLength - first.positionOffset,
+    );
+  });
+  result.bytes =
+    payloads.length === 1
+      ? payloads[0]
+      : new Uint8Array(payloads.reduce((s, b) => s + b.length, 0));
+  result.positionsComplete = selected.length === blocks.length;
+  result.positionOffsets = new Uint32Array(list.docs.length);
+  let base = 0;
+  for (let i = 0; i < runs.length; i++) {
+    const run = runs[i],
+      bytes = payloads[i],
+      first = blocks[run[0]];
+    if (payloads.length > 1) result.bytes.set(bytes, base);
+    for (const blockIndex of run)
+      decodePositionsInto(
+        bytes,
+        blocks[blockIndex].positionOffset - first.positionOffset,
+        blocks[blockIndex],
+        result,
+        rows[blockIndex],
+        base,
+      );
+    base += bytes.length;
+  }
   return result;
 }

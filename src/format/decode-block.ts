@@ -56,13 +56,24 @@ export function decodeBlockInto(
   if (cursor.i !== f.length) throw new Error("Trailing frequency data");
   if (result.docs[row] !== block.first || doc !== block.last)
     throw new Error("Block skip boundary mismatch");
-  if (!positions) return;
+  if (positions)
+    decodePositionsInto(positions, pstart, block, result, row, positionBase);
+}
+export function decodePositionsInto(
+  positions: Uint8Array,
+  pstart: number,
+  block: Block,
+  result: DecodedPostings,
+  row: number,
+  positionBase = 0,
+) {
+  const end = row + block.count;
   const pend = pstart + block.positionLength;
   if (pstart < 0 || pend > positions.length || !result.positionOffsets)
     throw new Error("Invalid position block range");
   checksum(positions, pstart, pend, block.positionCrc);
   const p = positions.subarray(pstart, pend);
-  cursor.i = 0;
+  const cursor = { i: 0 };
   if (readVarint(p, cursor) !== block.count || cursor.i + 4 > p.length)
     throw new Error("Invalid position count");
   const i = cursor.i;

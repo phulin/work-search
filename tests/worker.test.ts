@@ -59,7 +59,7 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
       modulesRoot: process.cwd(),
       scriptPath: join(process.cwd(), "dist/index.js"),
       r2Buckets: ["INDEX"],
-      bindings: { DIAGNOSTICS: "true" },
+      bindings: { DIAGNOSTICS: "true", CACHE_MIB: "0" },
     });
     try {
       const bucket = await mf.getR2Bucket("INDEX");
@@ -118,6 +118,48 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
     } finally {
       await mf.dispose();
     }
+  }
+  const cachedWorker = new Miniflare({
+    modules: [
+      { type: "ESModule", path: join(process.cwd(), "dist/index.js") },
+      {
+        type: "Data",
+        path: join(process.cwd(), "dist", binaryName),
+        contents: await readFile(join(root, "remote", "bundle.bin")),
+      },
+    ],
+    modulesRoot: process.cwd(),
+    scriptPath: join(process.cwd(), "dist/index.js"),
+    r2Buckets: ["INDEX"],
+    bindings: { DIAGNOSTICS: "true", CACHE_MIB: "2" },
+  });
+  try {
+    const bucket = await cachedWorker.getR2Bucket("INDEX");
+    for (const o of m.objects)
+      await bucket.put(
+        o.key,
+        await readFile(join(root, "remote", "objects", o.key)),
+        { customMetadata: { generation: m.generation } },
+      );
+    const first = await cachedWorker.dispatchFetch(
+      "https://test/search?q=unique&diagnostics=true",
+    );
+    expect(first.status).toBe(200);
+    const firstResults = ((await first.json()) as any).results;
+    for (const o of m.objects)
+      if (o.kind === "frequencies") await bucket.delete(o.key);
+    const again = await cachedWorker.dispatchFetch(
+      "https://test/search?q=unique&diagnostics=true&total=false",
+    );
+    expect(again.status).toBe(200);
+    const result = (await again.json()) as any;
+    expect(result.results[0].id).toBe("remote");
+    expect(result.results).toEqual(firstResults);
+    expect(result).not.toHaveProperty("total");
+    expect(result.diagnostics.indexRequests).toBe(0);
+    expect(result.diagnostics.postingCacheHits).toBeGreaterThan(0);
+  } finally {
+    await cachedWorker.dispose();
   }
   await rm(root, { recursive: true, force: true });
 }, 60000);

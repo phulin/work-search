@@ -41,7 +41,7 @@ for (const name of [
     modulesRoot: process.cwd(),
     scriptPath: join(process.cwd(), "dist/index.js"),
     r2Buckets: ["INDEX"],
-    bindings: { DIAGNOSTICS: "true" },
+    bindings: { DIAGNOSTICS: "true", CACHE_MIB: "0" },
   });
   try {
     await mf.ready;

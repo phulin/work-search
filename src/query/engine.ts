@@ -1,4 +1,12 @@
-import { loadPosting, requiredTerms } from "./load.js";
+import { candidatePlan } from "./planning.js";
+import { lowerBound } from "./sets.js";
+import { SearchRuntime, postingSize } from "./runtime.js";
+import { scoreBounds, SCORE_BLOCK } from "./pruning.js";
+import {
+  loadPosting,
+  requiredTerms,
+  attachCandidatePositions,
+} from "./load.js";
 import { BinaryIndex, LOCAL } from "../format/index.js";
 import { decoder } from "../format/codec.js";
 import {
@@ -74,6 +82,9 @@ export interface SearchOptions {
   titleBoost?: number;
   field?: "all" | "title" | "body";
   metadata?: boolean;
+  exactTotal?: boolean;
+  planning?: "legacy" | "adaptive";
+  runtime?: SearchRuntime;
 }
 export async function search(
   index: BinaryIndex,
@@ -115,8 +126,21 @@ export async function search(
     metadataRequests: 0,
     metadataBytes: 0,
     fullyLocal: true,
+    postingCacheHits: 0,
+    postingCacheMisses: 0,
+    cacheBytes: 0,
+    boundsMs: 0,
+    boundsCacheHits: 0,
+    scoredDocuments: 0,
+    prunedCandidates: 0,
+    deferredPositions: false,
   };
-  if (ast.kind === "empty") return { results: [], total: 0, diagnostics };
+  if (ast.kind === "empty")
+    return {
+      results: [],
+      ...(options.exactTotal === false ? {} : { total: 0 }),
+      diagnostics,
+    };
   const entries = found.filter((x) => x !== undefined),
     fetchStart = performance.now();
   const workingBytes =
@@ -174,27 +198,124 @@ export async function search(
       else active--;
     }
   };
-  const required = requiredTerms(ast);
-  const anchor = entries
-    .filter((e) => required.has(e.term))
-    .sort((a, b) => a.df - b.df)[0];
-  // Pay the extra planning phase only when an obligatory term is selective.
-  const selective =
-    skipBlocks &&
-    anchor &&
-    entries.some((e) => e.df > Math.max(256, anchor.df * 8));
-  let anchorList: Awaited<ReturnType<typeof loadPosting>> | undefined;
-  if (selective)
-    anchorList = await loadPosting(
-      anchor,
-      positionTerms.has(anchor.term),
-      read,
-    );
-  const lists = await parallel(entries, 4, async (e) =>
-    selective && e === anchor
-      ? anchorList!
-      : loadPosting(e, positionTerms.has(e.term), read, anchorList?.docs),
+  const runtime = options.runtime;
+  const memoryHeadroom = Math.max(
+    0,
+    104 * 1024 * 1024 - index.bytes.length - workingBytes,
   );
+  runtime?.setLimit(memoryHeadroom);
+  const adaptive = options.planning !== "legacy";
+  const cacheKey = (e: (typeof entries)[number], positions: boolean) =>
+    JSON.stringify([
+      index.generation,
+      "posting",
+      e.term,
+      e.df,
+      e.crc,
+      e.positionCrc,
+      positions,
+    ]);
+  const load = async (
+    e: (typeof entries)[number],
+    positions: boolean,
+    candidates?: Uint32Array,
+  ) => {
+    const key = cacheKey(e, positions),
+      cached =
+        runtime?.get<Awaited<ReturnType<typeof loadPosting>>>(key) ??
+        (!positions
+          ? runtime?.get<Awaited<ReturnType<typeof loadPosting>>>(
+              cacheKey(e, true),
+            )
+          : undefined);
+    if (cached) {
+      diagnostics.postingCacheHits++;
+      return cached;
+    }
+    diagnostics.postingCacheMisses++;
+    const list = await loadPosting(e, positions, read, candidates, adaptive);
+    if (list.docs.length === e.df) runtime?.set(key, list, postingSize(list));
+    return list;
+  };
+  const plan = adaptive
+    ? candidatePlan(ast, (t) => index.lookup(t)!.df)
+    : undefined;
+  const required = requiredTerms(ast),
+    anchor = entries
+      .filter((e) => required.has(e.term))
+      .sort((a, b) => a.df - b.df)[0];
+  const maxDf = Math.max(0, ...entries.map((e) => e.df));
+  const planned =
+    skipBlocks && plan && maxDf > Math.max(256, plan.estimate * 8);
+  const selective =
+    skipBlocks && anchor && maxDf > Math.max(256, anchor.df * 8);
+  const defer = adaptive && needsPositions && !!planned;
+  diagnostics.deferredPositions = defer;
+  const prepared = new Map<string, Awaited<ReturnType<typeof loadPosting>>>();
+  let plannedCandidates: Uint32Array | undefined;
+  if (planned) {
+    await parallel(
+      entries.filter((e) => plan.terms.has(e.term)),
+      4,
+      async (e) => {
+        prepared.set(
+          e.term,
+          await load(e, !defer && positionTerms.has(e.term)),
+        );
+      },
+    );
+    plannedCandidates = candidateDocuments(
+      plan.node,
+      prepared,
+      index.count,
+      options.field ?? "all",
+      true,
+    );
+  } else if (selective) {
+    const list = await load(anchor, positionTerms.has(anchor.term));
+    prepared.set(anchor.term, list);
+    plannedCandidates = list.docs;
+  }
+  let lists = await parallel(
+    entries,
+    4,
+    async (e) =>
+      prepared.get(e.term) ??
+      load(e, !defer && positionTerms.has(e.term), plannedCandidates),
+  );
+  if (defer) {
+    const coarse = candidateDocuments(
+      ast,
+      new Map(entries.map((e, i) => [e.term, lists[i]])),
+      index.count,
+      options.field ?? "all",
+      false,
+    );
+    lists = await parallel(
+      entries.map((e, i) => ({ e, i })),
+      4,
+      async ({ e, i }) => {
+        if (!positionTerms.has(e.term)) return lists[i];
+        const cached = runtime?.get<Awaited<ReturnType<typeof loadPosting>>>(
+          cacheKey(e, true),
+        );
+        if (cached) {
+          diagnostics.postingCacheHits++;
+          return cached;
+        }
+        const attached = await attachCandidatePositions(
+          e,
+          lists[i],
+          read,
+          coarse,
+        );
+        if (attached.positionsComplete && attached.docs.length === e.df)
+          runtime?.set(cacheKey(e, true), attached, postingSize(attached));
+        return attached;
+      },
+    );
+  }
+  runtime?.setLimit(memoryHeadroom);
   if (
     needsPositions &&
     workingBytes +
@@ -221,7 +342,7 @@ export async function search(
     options.field ?? "all",
     !needsPositions,
   );
-  if (needsPositions)
+  if (needsPositions && options.exactTotal !== false)
     candidates = candidates.filter(
       positionalMatcher(ast, byTerm, options.field ?? "all"),
     );
@@ -230,6 +351,7 @@ export async function search(
     positiveTerms.has(e.term)
       ? [
           {
+            term: e.term,
             list: lists[j],
             cursor: 0,
             idf: Math.log(1 + (index.count - e.df + 0.5) / (e.df + 0.5)),
@@ -243,7 +365,56 @@ export async function search(
     titleEnabled = options.field !== "body",
     avgBody = index.avgBody || 1,
     avgTitle = index.avgTitle || 1;
-  for (const doc of candidates) {
+  const boundsStart = performance.now();
+  const bounds =
+    options.exactTotal === false
+      ? scoringTerms.map((term) => {
+          const e = entries.find((e) => e.term === term.term)!;
+          const result = scoreBounds(index, e, term.list, term.idf, runtime);
+          if (result.hit) diagnostics.boundsCacheHits++;
+          return result.bounds;
+        })
+      : undefined;
+  diagnostics.boundsMs = performance.now() - boundsStart;
+  const match =
+    needsPositions && options.exactTotal === false
+      ? positionalMatcher(ast, byTerm, options.field ?? "all")
+      : undefined;
+  let bucket = -1,
+    upper = 0;
+  for (
+    let candidateIndex = 0;
+    candidateIndex < candidates.length;
+    candidateIndex++
+  ) {
+    const doc = candidates[candidateIndex];
+    if (bounds && heap.heap.length === limit) {
+      const current = Math.floor(doc / SCORE_BLOCK);
+      if (current !== bucket) {
+        bucket = current;
+        upper = 0;
+        for (let j = 0; j < bounds.length; j++) {
+          if (bodyEnabled) upper += bounds[j][bucket * 2];
+          if (titleEnabled) upper += boost * bounds[j][bucket * 2 + 1];
+        }
+      }
+      const threshold = heap.heap[0];
+      if (
+        upper < threshold.score ||
+        (upper === threshold.score && doc > threshold.doc)
+      ) {
+        const next = lowerBound(
+          candidates,
+          (bucket + 1) * SCORE_BLOCK,
+          candidateIndex + 1,
+        );
+        diagnostics.prunedCandidates += next - candidateIndex;
+        candidateIndex = next - 1;
+        continue;
+      }
+    }
+    if (match && !match(doc)) continue;
+    diagnostics.scoredDocuments++;
     if (doc >= index.count) throw new Error("Posting document out of range");
     const d = index.lengths(doc, lengths),
       bodyNorm = 1.2 * (1 - 0.75 + (0.75 * d.body) / avgBody),
@@ -283,11 +454,13 @@ export async function search(
       h.metadata = m.metadata;
       h.title = m.title;
     });
+  runtime?.setLimit(memoryHeadroom);
+  diagnostics.cacheBytes = runtime?.bytes ?? 0;
   diagnostics.fullyLocal =
     diagnostics.indexRequests + diagnostics.metadataRequests === 0;
   return {
     results: hits.map(({ doc, ...h }) => h),
-    total: candidates.length,
+    ...(options.exactTotal === false ? {} : { total: candidates.length }),
     diagnostics,
   };
 }

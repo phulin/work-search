@@ -72,3 +72,9 @@ Unsupported: stemming/automatic plurals, root expansion `!`, wildcards `*`/`?`, 
 ## Version migration
 
 Container format **v4** separates frequency and positional payloads. Rebuild the entire index generation, upload its immutable objects, and deploy the v4 Worker with its matching bundle. v1/v2/v3 bundles are rejected. Older indexes cannot be served by the v4 reader. Rebuild a new immutable generation; deploying query code alone is insufficient. The compressed document-table subformat remains DTC2; it does not need separate migration. Keep old Workers and generations together for rollback.
+
+## Exact top-K without a count
+
+`GET /search?q=...&total=false` enables block-max score pruning and omits `total` entirely. Returned IDs, BM25 scores and tie ordering remain exact, including Boolean and positional queries. The default `total=true` computes an exact count. Other `total` values are rejected. CLI `--no-total` selects the same mode. Pruning bounds are built from decoded frequencies and can be retained in the bounded warm-isolate cache; the first call pays that construction cost and still reads/decodes frequencies. This is not an approximate result mode.
+
+Diagnostics now also report `postingCacheHits`, `postingCacheMisses`, `cacheBytes`, `boundsMs`, `boundsCacheHits`, `scoredDocuments`, `prunedCandidates`, and `deferredPositions`. R2 request/byte counters still count actual remote ranges; cache hits do not appear as R2 transfers. Metadata reads remain separate. Set Worker `CACHE_MIB=0` to benchmark uncached behavior; normal default is 4 MiB of retained cache per isolate (maximum 8).

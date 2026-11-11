@@ -1,10 +1,11 @@
 
  ⛅️ wrangler 4.160.0 (update available 4.160.1)
 ───────────────────────────────────────────────
-Total Upload: 49207.22 KiB / gzip: 18371.95 KiB
+Total Upload: 49220.23 KiB / gzip: 18375.12 KiB
 Your Worker has access to the following bindings:
-Binding                                    Resource                  
-env.INDEX (worker-search-index)            R2 Bucket                 
-env.DIAGNOSTICS ("false")                  Environment Variable      
+Binding                                    Resource
+env.INDEX (worker-search-index)            R2 Bucket
+env.DIAGNOSTICS ("false")                  Environment Variable
+env.CACHE_MIB ("4")                        Environment Variable
 
 --dry-run: exiting now.

@@ -242,3 +242,26 @@ it("validates canonical varints and never reads beyond a selected block", async 
   );
   expect(() => decodeFrequencies(new Uint8Array([0x80]))).toThrow("Truncated");
 });
+
+it("never caches an empty or partial attachment as complete when its input was complete", async () => {
+  const { attachCandidatePositions } = await import("../src/query/load.js");
+  const { e, read } = fixture();
+  const complete = await loadPosting(e, true, read);
+  expect(complete.positionsComplete).toBe(true);
+  const empty = await attachCandidatePositions(
+    e,
+    complete,
+    read,
+    new Uint32Array(),
+  );
+  expect(empty.positionsComplete).toBe(false);
+  const partial = await attachCandidatePositions(
+    e,
+    complete,
+    read,
+    new Uint32Array([0]),
+  );
+  expect(partial.positionsComplete).toBe(false);
+  expect(complete.positionsComplete).toBe(true);
+  expect([...postingPositions(complete, 300).body]).toEqual([1, 200]);
+});

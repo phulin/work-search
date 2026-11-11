@@ -52,7 +52,7 @@ try {
     );
   } else if (command === "build") {
     const strategy = arg("strategy", "smallest");
-    if (!["smallest", "workload"].includes(strategy))
+    if (!["smallest", "workload", "mixed"].includes(strategy))
       throw new Error("Unknown strategy");
     const workload = args.includes("--workload")
       ? (await readFile(arg("workload", ""), "utf8"))
@@ -63,7 +63,7 @@ try {
       input: arg("input", "data/sample.jsonl"),
       out,
       budget: Number(arg("budget-mib", "8")) * 1024 * 1024,
-      strategy: strategy as "smallest" | "workload",
+      strategy: strategy as "smallest" | "workload" | "mixed",
       workload,
       chunkDocs: Number(arg("chunk-docs", "5000")),
     });
@@ -81,6 +81,7 @@ try {
             mode: arg("mode", "and") as "and" | "or",
             limit: Number(arg("limit", "20")),
             metadata: args.includes("--metadata"),
+            exactTotal: !args.includes("--no-total"),
           },
         ),
         null,

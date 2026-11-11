@@ -25,12 +25,12 @@ import {
   type Entry,
 } from "../format/index.js";
 import { encodeDocuments } from "../format/documents.js";
-import { selectPostings } from "./selection.js";
+import { selectPostings, selectStreams } from "./selection.js";
 export interface BuildOptions {
   input: string;
   out: string;
   budget?: number;
-  strategy?: "smallest" | "workload";
+  strategy?: "smallest" | "workload" | "mixed";
   workload?: string[];
   chunkDocs?: number;
   objectBytes?: number;
@@ -117,6 +117,7 @@ export async function build(options: BuildOptions) {
     chunkDocs = options.chunkDocs ?? 5000,
     objectBytes = options.objectBytes ?? 64 * 1024 * 1024;
   if (
+    !["smallest", "workload", "mixed"].includes(strategy) ||
     !Number.isSafeInteger(budget) ||
     budget < 0 ||
     budget > 48 * 1024 * 1024 ||
@@ -325,25 +326,33 @@ export async function build(options: BuildOptions) {
       throw new Error(
         `Required dictionary/doc tables ${baseBytes} bytes exceed bundle budget ${budget}`,
       );
-    const chosen = selectPostings(
-        entries,
-        budget - baseBytes,
-        strategy,
-        options.workload,
-      ),
+    const joint =
+      strategy === "mixed"
+        ? selectStreams(entries, budget - baseBytes, options.workload ?? [])
+        : undefined;
+    const chosen =
+        joint?.frequencies ??
+        selectPostings(
+          entries,
+          budget - baseBytes,
+          strategy as "smallest" | "workload",
+          options.workload,
+        ),
       generation = hash.digest("hex");
     const embeddedFrequencyBytes = entries.reduce(
       (s, e) => s + (chosen.has(e.term) ? e.length : 0),
       0,
     );
-    const chosenPositions = selectPostings(
-      entries
-        .filter((e) => chosen.has(e.term))
-        .map((e) => ({ term: e.term, length: e.positionLength })),
-      budget - baseBytes - embeddedFrequencyBytes,
-      strategy,
-      options.workload,
-    );
+    const chosenPositions =
+      joint?.positions ??
+      selectPostings(
+        entries
+          .filter((e) => chosen.has(e.term))
+          .map((e) => ({ term: e.term, length: e.positionLength })),
+        budget - baseBytes - embeddedFrequencyBytes,
+        strategy as "smallest" | "workload",
+        options.workload,
+      );
     await mkdir(options.out, { recursive: true });
     await mkdir(join(options.out, "objects"), { recursive: true });
     const objectRoot = join(options.out, "objects", generation);
@@ -468,7 +477,8 @@ export async function build(options: BuildOptions) {
       embeddedFrequencyBytes,
       embeddedPositionBytes: localOffset - embeddedFrequencyBytes,
       embeddedPositionTerms: chosenPositions.size,
-      embeddingPolicy: "frequencies-first",
+      embeddingPolicy:
+        strategy === "mixed" ? "joint-streams" : "frequencies-first",
       embeddedBytes: localOffset,
       embeddedTerms: chosen.size,
       objects,
