@@ -1,4 +1,4 @@
-import { openIndex } from "../format/paged.js";
+import { openIndex, PagedIndex } from "../format/paged.js";
 import { pageIndex } from "../builder/page-index.js";
 import { readFile, writeFile, mkdir, copyFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
@@ -28,7 +28,11 @@ async function manifest() {
   const m = JSON.parse(await readFile(join(out, "manifest.json"), "utf8"));
   const { createHash } = await import("node:crypto");
   const binary = await readFile(join(out, "bundle.bin"));
+  const index = openIndex(binary);
   if (
+    (m.layout === "paged"
+      ? !(index instanceof PagedIndex) || index.root.version !== m.format
+      : index.paged) ||
     !(m.layout === "paged" || SUPPORTED_VERSIONS.includes(m.format)) ||
     (m.layout !== "paged" && new BinaryIndex(binary).format !== m.format) ||
     createHash("sha256").update(binary).digest("hex") !== m.bundleSha256 ||
@@ -56,7 +60,10 @@ try {
   } else if (command === "page") {
     console.log(
       JSON.stringify(
-        await pageIndex(arg("source", "indexes/current"), out),
+        await pageIndex(arg("source", "indexes/current"), out, {
+          localTables: args.includes("--local-tables"),
+          budget: Number(arg("budget-mib", "8")) * 1048576,
+        }),
         null,
         2,
       ),
@@ -81,7 +88,12 @@ try {
       workload,
       chunkDocs: Number(arg("chunk-docs", "5000")),
     });
-    const result = paged ? await pageIndex(builtOut, out) : built;
+    const result = paged
+      ? await pageIndex(builtOut, out, {
+          localTables: args.includes("--local-tables"),
+          budget: Number(arg("budget-mib", "8")) * 1048576,
+        })
+      : built;
     await copyFile(join(out, "bundle.bin"), "data/bundle.bin");
     console.log(JSON.stringify(result, null, 2));
   } else if (command === "search") {

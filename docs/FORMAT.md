@@ -172,3 +172,22 @@ the new generation, and formerly embedded streams are moved into packed objects.
 The converter is deterministic for a source generation. Direct paged builds use
 an offline staging generation with no embedded postings, permitting dictionaries
 larger than the serving bundle budget; this intermediate is never deployed.
+
+## Hybrid paged root v2
+
+Magic `0x32504752` selects a 28-byte little-endian header: magic, routing JSON
+length, routing CRC32, local norm length, norm CRC32, compact ID length, ID CRC32.
+Sections follow in that order: routing JSON, norms, IDs. The routing schema and
+remote object layout remain the same as v1; `version` is 2. Norms are exactly
+`documentCount * 8` bytes of u32 body/title lengths. IDs use magic `0x31534449`,
+u32 document count, u32 restart size (32), u32 block count, `blocks+1` absolute
+u32 offsets, then independently front-coded blocks. Each ID stores varint UTF-8
+prefix length, varint suffix byte length, and suffix bytes. The root's ID-section
+CRC covers both offsets and payload. Decoder access requires at most 32 ID
+reconstructions and does not materialize a full string array at startup.
+
+The routing JSON stays capped at 8 MiB. The total hybrid bundle is capped at the
+configured builder budget (default 8 MiB, maximum 48 MiB), including both local
+tables. A v2 root requires both tables, and v1 readers remain supported. Metadata
+pointer records are fetched only when metadata is requested. The new generation
+hash distinguishes v2 from v1, preserving immutable object and cache identities.

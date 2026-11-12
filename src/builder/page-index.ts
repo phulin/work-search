@@ -7,11 +7,19 @@ import {
   LOCAL,
   type Entry,
 } from "../format/index.js";
+import { encodeIds } from "../format/ids.js";
 import { encodeDocuments } from "../format/documents.js";
 import { crc32 } from "../format/codec.js";
 import { encodeRoot, type Root, type Page } from "../format/paged.js";
 /** Repack a completed offline generation without tokenizing or changing posting codecs. */
-export async function pageIndex(source: string, out: string) {
+export async function pageIndex(
+  source: string,
+  out: string,
+  options: { localTables?: boolean; budget?: number } = {},
+) {
+  const budget = options.budget ?? 8 * 1048576;
+  if (!Number.isSafeInteger(budget) || budget < 0 || budget > 48 * 1048576)
+    throw Error("Invalid paged bundle budget");
   await mkdir(out, { recursive: true });
   const existing = await readFile(join(out, "manifest.json")).then(
     () => true,
@@ -25,7 +33,14 @@ export async function pageIndex(source: string, out: string) {
     createHash("sha256").update(b).digest("hex");
   if (hash(binary) !== old.bundleSha256 || index.generation !== old.generation)
     throw Error("Source manifest mismatch");
-  const generation = hash(index.generation + ":paged-v1:256:4096");
+  if (options.localTables && index.count * 8 > budget)
+    throw Error("Exact local norms exceed bundle budget");
+  const generation = hash(
+    index.generation +
+      (options.localTables
+        ? ":paged-v2:256:4096:local-tables"
+        : ":paged-v1:256:4096"),
+  );
   const directory = join(out, "objects", generation);
   await mkdir(directory, { recursive: true });
   const objects: { key: string; size: number; sha256: string; kind: string }[] =
@@ -90,7 +105,7 @@ export async function pageIndex(source: string, out: string) {
     objects.push({ key, kind, size: b.length, sha256: hash(b) });
   }
   const root: Root = {
-    version: 1,
+    version: options.localTables ? 2 : 1,
     generation,
     count: index.count,
     terms: index.termCount,
@@ -152,10 +167,28 @@ export async function pageIndex(source: string, out: string) {
     const bytes = await readFile(join(out, "objects", key));
     objects.push({ key, kind, size: bytes.length, sha256: hash(bytes) });
   }
-  const bundle = encodeRoot(root);
+  const localNorms = options.localTables
+    ? new Uint8Array(index.count * 8)
+    : new Uint8Array(0);
+  if (options.localTables) {
+    const v = new DataView(localNorms.buffer);
+    for (let i = 0; i < index.count; i++) {
+      const d = index.lengths(i);
+      v.setUint32(i * 8, d.body, true);
+      v.setUint32(i * 8 + 4, d.title, true);
+    }
+  }
+  const ids = options.localTables
+    ? encodeIds(index.count, (i) => index.document(i).id)
+    : new Uint8Array(0);
+  const bundle = encodeRoot(root, localNorms, ids);
+  if (bundle.length > budget)
+    throw Error("Paged bundle exceeds configured budget");
   await writeFile(join(out, "bundle.bin"), bundle);
   const manifest = {
-    format: 1,
+    format: root.version,
+    localNormBytes: localNorms.length,
+    localIdBytes: ids.length,
     layout: "paged",
     generation,
     sourceGeneration: index.generation,

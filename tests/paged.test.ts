@@ -103,3 +103,115 @@ it("paged R2 dictionary, norms and results preserve exact terms/connectors, fiel
     await rm(dir, { recursive: true, force: true });
   }
 }, 60000);
+
+it("bundles exact norms and compact IDs while keeping dictionary and metadata paged", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "hybrid-"));
+  try {
+    const docs = Array.from({ length: 4200 }, (_, i) => ({
+      id: `判例:😀:${i}`,
+      body: i % 3 ? "court summary judgment" : "court qualified immunity",
+      title: "Title " + i,
+      metadata: { i },
+    }));
+    await writeFile(
+      join(dir, "docs"),
+      docs.map((d) => JSON.stringify(d)).join("\n"),
+    );
+    await build({ input: join(dir, "docs"), out: join(dir, "old") });
+    const manifest = await pageIndex(join(dir, "old"), join(dir, "hybrid"), {
+      localTables: true,
+    });
+    expect(manifest.localNormBytes).toBe(4200 * 8);
+    expect(manifest.localIdBytes).toBeGreaterThan(0);
+    const bytes = await readFile(join(dir, "hybrid/bundle.bin")),
+      hybrid = openIndex(bytes),
+      old = openIndex(await readFile(join(dir, "old/bundle.bin"))),
+      storage = new FileStorage(join(dir, "hybrid/objects")),
+      a = new FileStorage(join(dir, "old/objects"));
+    const reads: string[] = [];
+    const tracked = {
+      read: async (key: string, o: number, n: number) => {
+        reads.push(key);
+        return storage.read(key, o, n);
+      },
+    };
+    await Promise.all(
+      [
+        "court summary",
+        "court OR immunity",
+        "(court AND judgment) OR immunity",
+        '"summary judgment"',
+        "court /25 judgment",
+        "NOT immunity",
+      ].map(async (q) => {
+        const got = await search(hybrid, tracked, q);
+        expect(got.results, q).toEqual(
+          (await search(old, a, q, { exactTotal: true })).results,
+        );
+      }),
+    );
+    expect(
+      reads.some((k) => k.includes("/norms-") || k.includes("/documents-")),
+    ).toBe(false);
+    for (const q of [
+      "court OR immunity",
+      "(court AND judgment) OR court",
+      "court summary",
+      '"summary judgment"',
+    ])
+      for (const pagedReadPolicy of ["fixed", "adaptive"] as const) {
+        const actual = await search(hybrid, tracked, q, { pagedReadPolicy });
+        expect(actual.results).toEqual(
+          (await search(old, a, q, { exactTotal: true })).results,
+        );
+      }
+    for (const field of ["all", "body", "title"] as const)
+      for (const titleBoost of [0, 0.3, 20]) {
+        const opts = { field, titleBoost, limit: 17 };
+        expect(
+          (await search(hybrid, tracked, "court OR immunity", opts)).results,
+        ).toEqual(
+          (
+            await search(old, a, "court OR immunity", {
+              ...opts,
+              exactTotal: true,
+            })
+          ).results,
+        );
+      }
+    const fixed = await search(hybrid, tracked, "court", {
+        pagedReadPolicy: "fixed",
+      }),
+      adaptive = await search(hybrid, tracked, "court", {
+        pagedReadPolicy: "adaptive",
+      });
+    expect(adaptive.results).toEqual(fixed.results);
+    expect(adaptive.diagnostics.frequencyRequests).toBeLessThan(
+      fixed.diagnostics.frequencyRequests,
+    );
+    const got = await search(hybrid, tracked, "court", {
+      metadata: true,
+      exactTotal: true,
+    });
+    expect(got.results).toEqual(
+      (await search(old, a, "court", { metadata: true, exactTotal: true }))
+        .results,
+    );
+    expect(reads.some((k) => k.includes("/documents-"))).toBe(true);
+    await pageIndex(join(dir, "old"), join(dir, "again"), {
+      localTables: true,
+    });
+    expect(await readFile(join(dir, "again/bundle.bin"))).toEqual(bytes);
+    const corrupt = bytes.slice();
+    corrupt[corrupt.length - 1] ^= 1;
+    expect(() => openIndex(corrupt)).toThrow();
+    await expect(
+      pageIndex(join(dir, "old"), join(dir, "tiny"), {
+        localTables: true,
+        budget: 100,
+      }),
+    ).rejects.toThrow("budget");
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}, 60000);

@@ -83,6 +83,7 @@ class TopK {
   }
 }
 export interface SearchOptions {
+  pagedReadPolicy?: "fixed" | "adaptive";
   mode?: "and" | "or";
   limit?: number;
   titleBoost?: number;
@@ -208,7 +209,14 @@ async function executeSearch(
     ? entries.reduce(
         (sum, e) =>
           sum +
-          (e.object === LOCAL || index.paged ? 65536 : e.length) +
+          (e.object === LOCAL
+            ? 65536
+            : index.paged
+              ? Math.min(
+                  e.length,
+                  index.pagedReadPolicy === "adaptive" ? 1048576 : 65536,
+                )
+              : e.length) +
           Math.ceil(e.df / 256) * 180 +
           4096,
         0,
@@ -609,6 +617,7 @@ async function executeSearch(
   await index.resolveDocuments(
     heap.heap.map((h) => h.doc),
     storage,
+    options.metadata === true,
   );
   for (const h of heap.heap) h.id = index.document(h.doc).id;
   const hits = heap.heap.sort((a, b) => b.score - a.score || a.doc - b.doc);
@@ -647,6 +656,8 @@ export async function search(
   skipBlocks = true,
 ) {
   const view = index.queryIndex();
+  if (view.paged && options.pagedReadPolicy)
+    view.pagedReadPolicy = options.pagedReadPolicy;
   const result = await executeSearch(view, storage, q, options, skipBlocks);
   const pages = view as BinaryIndex & {
     pageRequests?: number;
@@ -664,6 +675,7 @@ export async function search(
     diagnostics: {
       ...result.diagnostics,
       paged: view.paged,
+      pagedReadPolicy: view.paged ? view.pagedReadPolicy : undefined,
       dictionaryDocumentRequests,
       dictionaryDocumentBytes,
     },

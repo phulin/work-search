@@ -21,6 +21,7 @@ export interface Entry {
 }
 export class BinaryIndex {
   readonly paged: boolean = false;
+  pagedReadPolicy: "fixed" | "adaptive" = "fixed";
   hasLength(_doc: number) {
     return true;
   }
@@ -41,6 +42,7 @@ export class BinaryIndex {
   async resolveDocuments(
     _docs: number[],
     _storage: import("../storage/types.js").Storage,
+    _metadata = false,
   ) {}
   readonly format: number;
   readonly bytes: Uint8Array;

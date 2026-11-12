@@ -146,3 +146,19 @@ This implementation prioritizes equivalence and explicit tradeoffs: no new ranki
 model, forward index or persistent cursor state. The bundled layout remains the
 baseline; the paged layout removes mandatory bundle growth but can add read phases.
 Both are supported by the same Worker, CLI, local filesystem and R2 adapters.
+
+Hybrid paged v2 adds opt-in local exact lengths and an independent front-coded
+external-ID table. This is a bounded bundle allocation, not a corpus-wide serving
+requirement: callers can retain fully remote document tables when these sections
+do not fit. Scoring arithmetic and token lengths remain exact. Metadata pointers
+stay remote, so metadata retrieval remains a separate measured operation.
+Validated routing metadata and immutable local tables are shared across query
+views rather than reparsing the routing JSON for every search.
+
+Adaptive reads trade extra bytes for fewer dependent R2 operations. A stream up
+to 256 KiB is fetched whole; a larger stream starts with directory + 64 KiB and
+increases sequential read-ahead to at most 1 MiB, resetting after a jump. Memory
+estimation charges the maximum read window. Fixed reads remain available for
+ablations and v1 compatibility. The benchmark's optional bandwidth model reserves
+transfer time on one FIFO link shared by a query's concurrent reads; it is a
+sensitivity model, not measured R2 behavior.

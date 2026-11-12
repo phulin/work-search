@@ -54,6 +54,8 @@ class TermData {
   full?: DecodedPostings;
   bytes?: Uint8Array;
   byteOffset = 0;
+  private lastReadEnd = 0;
+  private readAhead = 65536;
   private fetched = new Map<number, DecodedPostings>();
   loading?: Promise<void>;
   recent?: { block: number; list: DecodedPostings };
@@ -104,14 +106,17 @@ class TermData {
       this.blocks = directory;
       return;
     }
-    if (this.index.paged)
-      this.bytes = await this.read(
-        this.e,
-        false,
-        0,
-        directoryLength(this.e.df, this.e.format),
-      );
-    else await this.ensureBytes();
+    if (this.index.paged) {
+      const header = directoryLength(this.e.df, this.e.format);
+      const length =
+        this.index.pagedReadPolicy === "adaptive"
+          ? this.e.length <= 262144
+            ? this.e.length
+            : Math.min(this.e.length, header + 65536)
+          : header;
+      this.bytes = await this.read(this.e, false, 0, length);
+      this.lastReadEnd = length;
+    } else await this.ensureBytes();
     this.blocks = decodeDirectory(
       this.bytes!.subarray(0, directoryLength(this.e.df, this.e.format)),
       this.e.df,
@@ -138,14 +143,29 @@ class TermData {
     if (!this.index.paged) return this.ensureBytes();
     const b = this.blocks[i];
     if (this.readyBlock(i)) return;
-    const bytes = await this.read(
-      this.e,
-      false,
-      b.offset,
-      Math.min(this.e.length - b.offset, Math.max(b.length, 65536)),
-    );
-    this.byteOffset = b.offset;
+    let offset = b.offset,
+      length = Math.min(this.e.length - offset, Math.max(b.length, 65536));
+    if (this.index.pagedReadPolicy === "adaptive") {
+      if (this.e.length <= 262144) {
+        offset = 0;
+        length = this.e.length;
+      } else {
+        const sequential =
+          b.offset + b.length >= this.lastReadEnd &&
+          b.offset <= this.lastReadEnd + 65536;
+        this.readAhead = sequential
+          ? Math.min(1048576, this.readAhead * 2)
+          : 65536;
+        length = Math.min(
+          this.e.length - offset,
+          Math.max(b.length, this.readAhead),
+        );
+      }
+    }
+    const bytes = await this.read(this.e, false, offset, length);
+    this.byteOffset = offset;
     this.bytes = bytes;
+    this.lastReadEnd = offset + length;
     const list = this.readyBlock(i)!;
     this.fetched.set(i, list);
     if (this.fetched.size > 32)

@@ -223,3 +223,27 @@ are isolated between concurrent requests.
 See [the 100k paged comparison](bench/PAGED-INDEX.md) for real local measurements
 and per-read simulated R2 latency at 0, 5 and 20 ms. No Cloudflare deployment
 latencies are claimed.
+
+For faster paged searches on a corpus whose scoring lengths and ID mapping fit
+in the budget, add `--local-tables`:
+
+```sh
+npm run build-index -- --input corpus.jsonl --out indexes/hybrid --layout paged --local-tables --budget-mib 8
+# Or repack an existing bundled generation:
+node --import tsx src/cli/main.ts page --source indexes/current --out indexes/hybrid --local-tables --budget-mib 8
+```
+
+This embeds exact body/title lengths and a separate compact external-ID table.
+Dictionary pages, postings, positions and full metadata remain in R2. Metadata
+requests still resolve remote document records; ID-only searches avoid those
+reads. The builder rejects a bundle that exceeds the chosen budget. For larger
+corpora, omit `--local-tables` to retain the fully paged document tables.
+
+Hybrid roots use adaptive frequency reads by default: lists up to 256 KiB use
+one read; larger streams combine the directory with initial data and grow
+sequential read-ahead from 64 KiB up to 1 MiB. Library callers can set
+`pagedReadPolicy: "fixed"` to compare the previous policy. The existing v1
+paged layout keeps its fixed-read default.
+
+The [hybrid benchmark report](bench/HYBRID-INDEX.md) measures each change, using
+fixed per-read delays and a separate shared-bandwidth sensitivity run.

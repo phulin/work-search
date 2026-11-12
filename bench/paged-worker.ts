@@ -20,8 +20,10 @@ if (packed.status) throw Error(packed.stdout + packed.stderr);
 const code = await readFile("dist/index.js", "utf8"),
   name = code.match(/["']\.\/([^"']+\.bin)["']/)![1],
   rows = [];
-for (const design of ["32-mixed", "48-mixed", "paged"]) {
-  const root = `bench/generated/flp-100000/${design}`,
+for (const design of (
+  process.env.PAGED_DESIGNS ?? "32-mixed,48-mixed,paged"
+).split(",")) {
+  const root = `bench/generated/flp-100000/${design === "hybrid-adaptive" ? "hybrid-tables" : design}`,
     bytes = await readFile(root + "/bundle.bin"),
     manifest = JSON.parse(await readFile(root + "/manifest.json", "utf8"));
   const mf = new Miniflare({
@@ -90,7 +92,7 @@ for (const design of ["32-mixed", "48-mixed", "paged"]) {
   }
 }
 await writeFile(
-  "bench/results/paged-workerd.json",
+  `bench/results/${process.env.PAGED_PREFIX ?? "paged"}-workerd.json`,
   JSON.stringify(rows, null, 2) + "\n",
 );
 console.log(`${rows.length} real local Worker HTTP searches verified`);
