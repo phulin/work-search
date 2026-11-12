@@ -9,17 +9,24 @@ export interface ResultCard {
   title?: string;
   metadata?: any;
   body: number[];
+  passages?: number[];
+  passageGeneration?: string;
 }
 const instances = new WeakMap<R2Bucket, ResultCards>();
-export function resultCards(bucket: R2Bucket) {
-  let r = instances.get(bucket);
-  if (!r) instances.set(bucket, (r = new ResultCards(bucket)));
+const passageInstances = new WeakMap<R2Bucket, ResultCards>();
+export function resultCards(bucket: R2Bucket, passages = false) {
+  const registry = passages ? passageInstances : instances;
+  let r = registry.get(bucket);
+  if (!r) registry.set(bucket, (r = new ResultCards(bucket, passages)));
   return r;
 }
 export class ResultCards {
   private cache = new SearchRuntime(4 * 1048576);
   private loading = new Map<string, Promise<any>>();
-  constructor(private bucket: R2Bucket) {}
+  constructor(
+    private bucket: R2Bucket,
+    private passages = false,
+  ) {}
   private async root(generation: string) {
     if (!/^[a-f0-9]{64}$/.test(generation))
       throw Error("Invalid card generation");
@@ -29,7 +36,9 @@ export class ResultCards {
       return cached.missing ? null : cached;
     if (this.loading.has(key)) return this.loading.get(key);
     const task = (async () => {
-      const o = await this.bucket.get(generation + "/cardroot-0.bin");
+      const o = await this.bucket.get(
+        generation + (this.passages ? "/passageroot-0.bin" : "/cardroot-0.bin"),
+      );
       if (!o) {
         this.cache.set(key, { missing: true, until: Date.now() + 30000 }, 64);
         return null;
@@ -82,7 +91,10 @@ export class ResultCards {
       return cached;
     }
     const root = await this.root(generation);
-    if (!root) return null;
+    if (!root)
+      return this.passages
+        ? resultCards(this.bucket).get(generation, doc, id)
+        : null;
     if (doc >= root.count) throw Error("Card document out of range");
     const p = HEADER + Math.floor(doc / BLOCK) * 16,
       obj = root.v.getUint32(p, true),
@@ -138,6 +150,7 @@ export class ResultCards {
       card.body.some((n) => !Number.isInteger(n) || n < 0 || n > 0xffffffff)
     )
       throw Error("Card identity or pointer mismatch");
+    if (card.passages) card.passageGeneration = root.generation;
     this.cache.set(key, card, JSON.stringify(card).length * 4 + 512);
     return card;
   }

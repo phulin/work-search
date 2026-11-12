@@ -27,6 +27,12 @@ export interface RoutesRoot {
   generation: string;
   shards: Record<string, string>;
   hot: string[];
+  stats?: {
+    count: number;
+    bodyTokens: number;
+    titleTokens: number;
+    df: Record<string, number>;
+  };
   pages: { object: number; offset: number; length: number; crc: number }[];
 }
 export function encodeRoutes(root: RoutesRoot) {

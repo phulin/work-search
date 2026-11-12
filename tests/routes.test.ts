@@ -157,3 +157,54 @@ it("uses exact covered DFs, includes new generations, pins pagination and conser
     ).toBe(oldRouter ? 2 : 1);
   }
 });
+it("skips all statistics calls only for an explicitly pinned snapshot, including hot terms", async () => {
+  for (const pinned of [true, false])
+    for (const q of ["rare", "court"]) {
+      const f = fixture();
+      f.root.stats = {
+        count: 20,
+        bodyTokens: 40,
+        titleTokens: 0,
+        df: { court: 10 },
+      };
+      const calls: any[] = [];
+      const env: any = {
+        ROLE: "root",
+        PERF_LEVEL: "4",
+        ROUTE_SNAPSHOT: pinned ? f.root.generation : "wrong",
+        INTERNAL_TOKEN: "test",
+        GLOBAL_ROUTES: encodeRoutes(f.root),
+        INDEX: f.bucket,
+        CHILDREN: JSON.stringify([{ binding: "GROUP", min: 0, max: 1 }]),
+        GROUP: {
+          fetch: async (url: string, init: RequestInit) => {
+            const b = JSON.parse(init.body as string);
+            calls.push({ url, b });
+            return Response.json(
+              url.endsWith("stats")
+                ? {
+                    apiVersion: 2,
+                    count: 20,
+                    bodyTokens: 40,
+                    titleTokens: 0,
+                    df: { rare: 1, court: 10 },
+                    generations: f.root.shards,
+                  }
+                : { results: [] },
+            );
+          },
+        },
+      };
+      const r = await gateway.fetch(
+        new Request("https://test/api/search?q=" + q),
+        env,
+      );
+      expect(r.status).toBe(200);
+      expect(calls.filter((c) => c.url.endsWith("stats")).length).toBe(
+        pinned ? 0 : 1,
+      );
+      expect(
+        calls.find((c) => c.url.endsWith("search")).b.globalStats.df[q],
+      ).toBe(q === "court" ? 10 : 1);
+    }
+});

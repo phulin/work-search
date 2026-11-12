@@ -1,8 +1,16 @@
-import { readFile, writeFile, mkdir, open, rename } from "node:fs/promises";
-import { createReadStream } from "node:fs";
+import {
+  readFile,
+  writeFile,
+  mkdir,
+  open,
+  rename,
+  unlink,
+} from "node:fs/promises";
+import { createReadStream, createWriteStream } from "node:fs";
 import { createInterface } from "node:readline";
 import { createHash } from "node:crypto";
-import { gzipSync } from "node:zlib";
+import { pipeline } from "node:stream/promises";
+import { gzipSync, createGzip, createGunzip } from "node:zlib";
 import { openIndex, type PagedIndex } from "../format/paged.js";
 import { BinaryIndex, type Entry } from "../format/index.js";
 import { crc32 } from "../format/codec.js";
@@ -85,14 +93,27 @@ export async function buildRoutes(
 ) {
   await mkdir(out + "/segments", { recursive: true });
   const sources: AsyncIterable<RouteRow>[] = [];
-  const fresh = shards;
+  const fresh = [...shards].sort((a, b) => a.id - b.id);
+  const totals: Record<
+    string,
+    { count: number; bodyTokens: number; titleTokens: number }
+  > = {};
   await parallel(fresh, 3, async (s) => {
     const path = out + "/segments/" + s.id;
     const done = await readFile(path + ".generation", "utf8").catch(() => "");
-    if (done === s.generation) return;
+    const saved = await readFile(path + ".stats", "utf8").catch(() => "");
+    if (done === s.generation && saved) {
+      totals[s.id] = JSON.parse(saved);
+      return;
+    }
     const index = openIndex(await loadBundle(s)) as PagedIndex;
     if (index.generation !== s.generation || !index.root)
       throw Error("Routing bundle generation mismatch");
+    totals[s.id] = {
+      count: index.count,
+      bodyTokens: index.count * index.avgBody,
+      titleTokens: index.count * index.avgTitle,
+    };
     const bytes = await loadDictionary(s),
       hot = new Map<string, Entry>();
     if (index.hotIndex)
@@ -133,12 +154,21 @@ export async function buildRoutes(
     } finally {
       await file.close();
     }
-    await rename(path + ".next", path + ".jsonl");
+    await pipeline(
+      createReadStream(path + ".next"),
+      createGzip({ level: 1 }),
+      createWriteStream(path + ".gz.next"),
+    );
+    await rename(path + ".gz.next", path + ".jsonl.gz");
+    await unlink(path + ".next");
+    await writeFile(path + ".stats", JSON.stringify(totals[s.id]));
     await writeFile(path + ".generation", s.generation);
     console.log("Prepared route segment", s.id, rows.length);
   });
   async function* segment(id: number) {
-    const stream = createReadStream(out + "/segments/" + id + ".jsonl"),
+    const stream = createReadStream(out + "/segments/" + id + ".jsonl.gz").pipe(
+        createGunzip(),
+      ),
       lines = createInterface({ input: stream, crlfDelay: Infinity });
     try {
       for await (const line of lines) yield JSON.parse(line) as RouteRow;
@@ -212,10 +242,24 @@ export async function buildRoutes(
   while (pages.length < ROUTE_BUCKETS) await flush([]);
   await close();
   candidates.sort(hotCompare);
+  const stats = {
+    count: 0,
+    bodyTokens: 0,
+    titleTokens: 0,
+    df: Object.fromEntries(
+      candidates.slice(0, 8192).map((c) => [c.term, c.df]),
+    ),
+  };
+  for (const shard of fresh) {
+    const t = totals[shard.id];
+    stats.count += t.count;
+    stats.bodyTokens += Math.round(t.bodyTokens);
+    stats.titleTokens += Math.round(t.titleTokens);
+  }
   const hot = candidates.slice(0, 8192).map((c) => c.term),
     generations = Object.fromEntries(shards.map((s) => [s.id, s.generation])),
     generation = createHash("sha256")
-      .update(JSON.stringify({ shards: generations, objects, hot }))
+      .update(JSON.stringify({ shards: generations, objects, hot, stats }))
       .digest("hex"),
     binary = encodeRoutes({
       version: 1,
@@ -223,6 +267,7 @@ export async function buildRoutes(
       shards: generations,
       hot,
       pages,
+      stats,
     });
   if (binary.length > 1048576) throw Error("Routing root exceeds 1 MiB");
   await writeFile(out + "/root.bin", binary);

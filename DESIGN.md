@@ -252,3 +252,32 @@ retain the entire topology vector and global statistics even when execution can
 skip some partitions. Directory objects upload before the bundled pointer is
 atomically replaced. The directory can lag an ongoing import without omitting
 opinions; rebuild it periodically for performance, not correctness.
+
+### Pinned corpus statistics and targeted passages
+
+A route root can carry corpus totals and exact DFs for its hot terms. Other DFs
+are summed from its complete remote directory. `ROUTE_SNAPSHOT` enables this path
+only on a gateway deployed with immutable router membership matching that root.
+Unpinned/live gateways retain topology and uncovered-generation checks. Snapshot
+publication uploads objects first, validates deployed leaf generations, then
+publishes dedicated routers and the gateway. Leaf generation mismatches fail
+rather than mixing statistics and postings. New ingestion becomes visible in a
+snapshot on its next publication; the continuously growing demo remains separate.
+
+Result-card construction can additionally pack independently gzipped text frames
+(target 8192 UTF-16 units, boundaries between tokens, 160/240 units of context).
+Each document has a compressed directory containing frame addresses, CRCs and
+1024-byte four-probe term Bloom filters. Filters are built with the query's Unicode
+normalization. False positives cause a frame read and exact verification; filters
+do not suppress matching terms. No positions or document text enter Worker bundles.
+The gateway uses this path for opinions at least 32 KiB compressed; smaller bodies
+retain one streamed body read. A bounded 2-MiB cache stores decoded directories and
+frames. Full opinion viewing retains the original body representation, so this
+trades additional R2 storage for fewer bytes scanned for late matches.
+
+Backfills publish `passageroot-0.bin` separately from immutable `cardroot-0.bin`;
+new index publications upload both roots when passage data is present. Missing
+passage roots fall back to original cards and bodies. This is corpus-derived text
+chunking, not a workload-selected phrase accelerator. The benchmark builds passage
+fixtures for all recorded result documents only; full-corpus text backfill remains
+an explicit operation and must not be inferred from fixture measurements.

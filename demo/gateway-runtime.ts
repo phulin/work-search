@@ -5,6 +5,7 @@ import { encodeCursor, decodeCursor } from "./cursor.js";
 import { excerpt, opinionText, opinionInfo } from "../src/content/read.js";
 import { caseMetadata } from "../src/content/case-metadata.js";
 import { TermRoutes, decodeRoutes, possible } from "../src/format/routes.js";
+import { passageExcerpt } from "../src/content/passages.js";
 import { resultCards } from "../src/content/cards.js";
 interface Child {
   binding: string;
@@ -239,13 +240,26 @@ export default {
                     env.GLOBAL_ROUTES as Uint8Array | undefined,
                   )
                 : undefined;
+            // Enabled only by deployments whose immutable router membership matches this root.
+            const pinned =
+              Number(env.PERF_LEVEL ?? 0) >= 4 &&
+              routing?.root.stats &&
+              env.ROUTE_SNAPSHOT === routing.root.generation
+                ? routing.root
+                : null;
             const [routed, topology] =
               routing && !terms.every((t) => routing.hot.has(t))
                 ? await Promise.all([
                     routing.lookup(env.INDEX, terms),
                     cursor
                       ? Promise.resolve({ generations: cursor.generations })
-                      : stats(""),
+                      : pinned
+                        ? Promise.resolve({
+                            ...pinned.stats,
+                            generations: pinned.shards,
+                            apiVersion: 2,
+                          })
+                        : stats(""),
                   ])
                 : [null, null];
             const covered = routed
@@ -264,7 +278,14 @@ export default {
               : {};
             let s: any = null;
             if (!cursor) {
-              if (!routed) s = await stats(q);
+              if (!routed)
+                s = pinned
+                  ? {
+                      ...pinned.stats,
+                      generations: pinned.shards,
+                      apiVersion: 2,
+                    }
+                  : await stats(q);
               else {
                 const tail = Object.keys(uncovered).length
                   ? await stats(q, uncovered)
@@ -327,20 +348,33 @@ export default {
             const fast =
               Number(env.PERF_LEVEL ?? 0) >= 1
                 ? await parallel(hits as any[], 6, async (h) => {
-                    const card = await resultCards(env.INDEX).get(
-                      generations[h.shard],
-                      h.doc,
-                      h.id,
-                    );
+                    const card = await resultCards(
+                      env.INDEX,
+                      Number(env.PERF_LEVEL ?? 0) >= 5,
+                    ).get(generations[h.shard], h.doc, h.id);
                     return card
                       ? {
                           info: { ...card, shard: h.shard },
-                          snippet: await excerpt(
-                            env.INDEX,
-                            generations[h.shard],
-                            h.doc,
-                            terms,
-                            card.body,
+                          snippet: await (
+                            Number(env.PERF_LEVEL ?? 0) >= 5 &&
+                            card.body[2] >= 32768 &&
+                            card.passages &&
+                            card.passageGeneration
+                              ? passageExcerpt(
+                                  env.INDEX,
+                                  {
+                                    generation: card.passageGeneration,
+                                    pointer: card.passages,
+                                  },
+                                  terms,
+                                )
+                              : excerpt(
+                                  env.INDEX,
+                                  generations[h.shard],
+                                  h.doc,
+                                  terms,
+                                  card.body,
+                                )
                           ).catch(() => null),
                         }
                       : null;

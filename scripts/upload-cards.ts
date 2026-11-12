@@ -1,10 +1,13 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import { parallel } from "../src/storage/types.js";
-export async function uploadCards(out: string) {
+export async function uploadCards(out: string, passages = false) {
   const m = JSON.parse(await readFile(out + "/manifest.json", "utf8"));
   if (
-    await readFile(out + "/uploaded", "utf8").then(
+    await readFile(
+      out + (passages ? "/passages-uploaded" : "/uploaded"),
+      "utf8",
+    ).then(
       (x) => x === m.cardGeneration,
       () => false,
     )
@@ -28,7 +31,7 @@ export async function uploadCards(out: string) {
               "content-length": String(o.size),
               "x-sha256": o.sha256,
             },
-            body: createReadStream(out + "/" + o.name),
+            body: createReadStream(out + "/" + (o.fileName ?? o.name)),
             duplex: "half",
           } as any,
         );
@@ -40,7 +43,17 @@ export async function uploadCards(out: string) {
       }
   };
   await parallel(m.objects as any[], 3, (o) => put(o, m.cardGeneration));
-  await put(m.root, m.indexGeneration);
-  await writeFile(out + "/uploaded", m.cardGeneration);
+  await put(
+    {
+      ...m.root,
+      name: passages ? "passageroot-0.bin" : m.root.name,
+      fileName: m.root.name,
+    },
+    m.indexGeneration,
+  );
+  await writeFile(
+    out + (passages ? "/passages-uploaded" : "/uploaded"),
+    m.cardGeneration,
+  );
   console.log("Uploaded result cards", m.indexGeneration, m.count);
 }

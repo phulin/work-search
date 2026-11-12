@@ -82,3 +82,20 @@ it("falls back when older generations have no cards and caches that absence brie
   expect(await cards.get("a".repeat(64), 2, "y")).toBeNull();
   expect(calls).toBe(1);
 });
+it("uses a separate immutable passage root and falls back to original cards", async () => {
+  const generation = "a".repeat(64);
+  let calls = 0;
+  const cards = new ResultCards(
+    {
+      get: async () => {
+        calls++;
+        return null;
+      },
+    } as unknown as R2Bucket,
+    true,
+  );
+  expect(await cards.get(generation, 0, "x")).toBeNull();
+  expect(calls).toBe(2);
+  expect(await cards.get(generation, 1, "x")).toBeNull();
+  expect(calls).toBe(2);
+});

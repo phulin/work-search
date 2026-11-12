@@ -1,6 +1,7 @@
 import { readFile, writeFile, open } from "node:fs/promises";
 import { createShard } from "../demo/shard-runtime.js";
 import gateway from "../demo/gateway-runtime.js";
+import { decodeRoutes } from "../src/format/routes.js";
 import { SearchRuntime } from "../src/query/runtime.js";
 import { openIndex, type PagedIndex } from "../src/format/paged.js";
 import {
@@ -20,10 +21,10 @@ export interface LocalTrace extends Trace {
 
 export async function createDemoGraph(hydrate = false) {
   const level = Number(process.env.DEMO_OPT_STAGE ?? 0);
-  const artifacts = await readFile(root + "/cards.json", "utf8").then(
-    JSON.parse,
-    () => ({}),
-  );
+  const artifacts = await readFile(
+    root + (level >= 5 ? "/passages.json" : "/cards.json"),
+    "utf8",
+  ).then(JSON.parse, () => ({}));
   if (level >= 3)
     Object.assign(
       artifacts,
@@ -52,7 +53,12 @@ export async function createDemoGraph(hydrate = false) {
     profiles: any[] = [];
   const bucket = {
     get: async (key: string, options?: any) => {
-      if (key.endsWith("/cardroot-0.bin") && !artifacts[key]) return null;
+      if (
+        (key.endsWith("/cardroot-0.bin") ||
+          key.endsWith("/passageroot-0.bin")) &&
+        !artifacts[key]
+      )
+        return null;
       const t = traces(),
         bytes = artifacts[key]
           ? await artifactBytes(key, options)
@@ -187,6 +193,8 @@ export async function createDemoGraph(hydrate = false) {
     children.push({ binding, min: g * 32, max: g * 32 + 31 });
   }
   env.CHILDREN = JSON.stringify(children);
+  if (level >= 4)
+    env.ROUTE_SNAPSHOT = decodeRoutes(env.GLOBAL_ROUTES)!.generation;
   await writeFile(
     root + "/corpus.json",
     JSON.stringify(

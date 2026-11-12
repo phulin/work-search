@@ -219,3 +219,44 @@ node --import tsx scripts/redeploy-demo.ts
 
 The tested directory covers the frozen 67 partitions. The public corpus continues
 to grow; new partitions use the ordinary path until a refresh includes them.
+
+### Publish a directory snapshot without the statistics round trip
+
+`npm run publish-search-snapshot` builds a directory for all currently published
+non-preview partitions, uploads immutable packs, and deploys a separate
+`work-search-snapshot` search site. Its pinned router membership and bundled
+statistics let first-page queries skip the statistics fanout entirely. Use
+`SNAPSHOT_WORKER` to choose a different Worker name. The existing growing
+`work-search-demo` remains independent. Repeat publication to include new
+partitions; existing cursor generations still need their leaf Workers retained.
+Do not rebind a pinned router's membership in place. Leaf generation changes
+produce a compatibility error until the snapshot is refreshed.
+
+The route builder now uses compressed sorted temporary segments and resumes
+completed partitions. `scripts/add-route-stats.ts <directory>` can add statistics
+to an older root by reading its exact archived bundles.
+
+### Targeted excerpts
+
+New builds pack text chunks alongside result cards automatically. Snapshot publication defaults to level 4. Level 5 enables
+adaptive targeted excerpts (bodies >=32 KiB compressed); level 4 enables snapshot
+statistics, and level 3 retains the previous behavior for comparison. Full text is
+still available in its original representation. Passage sidecars add R2 storage,
+not index bundle bytes. Corruption and generation mismatches are checked.
+
+Reproduce the frozen benchmark with:
+
+```sh
+node --import tsx scripts/add-route-stats.ts
+node --import tsx bench/build-demo-passages.ts
+node --import tsx bench/demo-next-local.ts
+node --import tsx bench/demo-next-native.ts
+```
+
+The default passage fixture contains only previously recorded benchmark result
+bodies. `bench/build-demo-passages.ts --all` constructs passage cards for every
+opinion in that frozen snapshot; it requires substantially more time, disk and
+network. It writes to `work/demo-bench/passages-all` separately from partial fixtures. Existing
+corpus backfill should use complete cards from each source input with
+`buildInputCards`, then upload the passage root with `uploadCards(out, true)`.
+Never overwrite an existing immutable passage root with different contents.

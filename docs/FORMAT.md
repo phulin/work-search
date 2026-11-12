@@ -33,7 +33,7 @@ Each term descriptor is **40 bytes**, with u32 fields at these byte offsets:
 |      8 | Frequency object number (`0xffffffff` = bundled)       |
 |     12 | Frequency offset                                       |
 |     16 | Frequency byte length                                  |
-|     20 | Frequency CRC32 (directory CRC for blocked lists)       |
+|     20 | Frequency CRC32 (directory CRC for blocked lists)      |
 |     24 | Position object number (`0xffffffff` = bundled)        |
 |     28 | Position offset                                        |
 |     32 | Position byte length                                   |
@@ -208,3 +208,30 @@ refer to the fetched dictionary page that owns that descriptor. Each entire cold
 page is verified by its root CRC; frequency/position codecs retain their existing
 integrity checks. No separate remote dictionary request is needed after a term's
 page is loaded. Full bundle budgeting includes every binary section.
+
+## Snapshot statistics and passage sidecars
+
+Routing v1 roots may include `stats: {count, bodyTokens, titleTokens, df}`. Token
+totals sum each partition's rounded `count * average`, matching the serving stats
+API. `df` contains exact global frequencies for every root `hot` term; other
+frequencies come from the complete route pages. `ROUTE_SNAPSHOT` is a deployment
+contract pinning router membership to the root generation. A live mutable router
+must not opt into it.
+
+Cards may contain `passages: [object, offset, compressedLength, crc32]`. This points
+to a gzip-compressed directory in the card generation's `cards-N.bin` packs.
+`passageroot-0.bin` has the same checked card-root layout as `cardroot-0.bin`, under
+the index generation. It permits an immutable passage upgrade of an existing
+index without replacing its original cards. The reader derives the passage
+object generation from the root rather than accepting an external pointer.
+
+A decompressed passage directory starts with little-endian u32 magic `0x31534750`
+and u32 frame count. Each 1048-byte frame record contains six little-endian u32s
+(object, offset, compressed length, compressed CRC32, core start within frame,
+core length), followed by a 1024-byte Bloom filter. Frames are gzip UTF-8 strings
+with up to 160/240 UTF-16 units of surrounding context. Core boundaries fall
+between original text tokens, targeting 8192 UTF-16 units. Filters include every
+term produced by the engine's tokenizer for each core token. Four bits use
+`(FNV32(term) + i * ((FNV32(term) >>> 16) | 1)) & 8191`, i=0..3. Possible matches
+are verified against decoded text. Directories and frames enforce a 4-MiB
+expansion cap and check compressed CRCs and object generation metadata.

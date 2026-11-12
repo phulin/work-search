@@ -104,6 +104,12 @@ if (cards) {
     key: cards.indexGeneration + "/cardroot-0.bin",
     file: out + "/cards/cardroot-0.bin",
   });
+  if (cards.passageDocuments)
+    await upload({
+      ...cards.root,
+      key: cards.indexGeneration + "/passageroot-0.bin",
+      file: out + "/cards/cardroot-0.bin",
+    });
 }
 
 const lock = root + "/publish.lock";

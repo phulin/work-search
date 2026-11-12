@@ -23,6 +23,7 @@ export async function buildInputCards(
       yield {
         ...source.resolve(original),
         doc,
+        text: original.body,
         body: Array.from({ length: 4 }, (_, i) =>
           view.getUint32(doc * 32 + i * 4, true),
         ),

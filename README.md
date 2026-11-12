@@ -300,3 +300,9 @@ first 100 matches. [Live coverage](https://work-search-demo.phulin.workers.dev/h
 shows whether the full official import is complete. See [demo operations and data
 provenance](demo/README.md). The full import and early-partition text backfill run
 locally; serving runs entirely on Workers and R2.
+
+Directory snapshots can embed corpus statistics and skip the first-query
+statistics fanout: `npm run publish-search-snapshot` publishes a separate pinned
+search site. Optional independently compressed passage sidecars support targeted
+excerpts for larger opinions. See [snapshot and passage operations](demo/README.md)
+and [the benchmark comparison](bench/SNAPSHOT-PASSAGES.md).

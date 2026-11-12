@@ -114,6 +114,8 @@ it("builds complete resumable corpus-derived routing generations without a workl
     expect(Object.values(got.token99).reduce((n, e) => n + e.df, 0)).toBe(2);
     expect(got.missing).toEqual({});
     expect(root.hot).toContain("court");
+    expect(root.stats?.df.court).toBe(200);
+    expect(root.stats?.count).toBe(200);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

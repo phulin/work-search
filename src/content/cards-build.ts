@@ -2,12 +2,13 @@ import { mkdir, writeFile, open, readFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import { createHash } from "node:crypto";
 import { crc32 } from "../format/codec.js";
+import { passageFrames, PASSAGE_RECORD } from "./passages.js";
 import type { ResultCard } from "./cards.js";
 export async function packCards(
   out: string,
   generation: string,
   count: number,
-  records: AsyncIterable<ResultCard>,
+  records: AsyncIterable<ResultCard & { text?: string }>,
   caseGeneration: string,
 ) {
   await mkdir(out, { recursive: true });
@@ -18,8 +19,22 @@ export async function packCards(
     offset = 0,
     block = 0,
     seen = 0,
+    passageDocuments = 0,
     pending: ResultCard[] = [],
     file = await open(out + "/cards-0.bin", "w");
+  const put = async (bytes: Uint8Array) => {
+    if (offset && offset + bytes.length > 64 * 1048576) {
+      await file.close();
+      obj++;
+      offset = 0;
+      names.push(`cards-${obj}.bin`);
+      file = await open(out + `/cards-${obj}.bin`, "w");
+    }
+    const p = [obj, offset, bytes.length, crc32(bytes)];
+    await file.writeFile(bytes);
+    offset += bytes.length;
+    return p;
+  };
   const flush = async () => {
     if (!pending.length) return;
     const raw = Buffer.from(JSON.stringify(pending));
@@ -44,7 +59,36 @@ export async function packCards(
     for await (const card of records) {
       if (card.doc !== seen || seen >= count)
         throw Error("Card input ordering mismatch");
-      pending.push(card);
+      const { text, ...record } = card;
+      if (text !== undefined) {
+        passageDocuments++;
+        const rows: {
+          pointer: number[];
+          filter: Uint8Array;
+          start: number;
+          length: number;
+        }[] = [];
+        for (const frame of passageFrames(text))
+          rows.push({
+            pointer: await put(gzipSync(Buffer.from(frame.text), { level: 1 })),
+            filter: frame.filter,
+            start: frame.localStart,
+            length: frame.coreLength,
+          });
+        const directory = new Uint8Array(8 + rows.length * PASSAGE_RECORD),
+          v = new DataView(directory.buffer);
+        v.setUint32(0, 0x31534750, true);
+        v.setUint32(4, rows.length, true);
+        rows.forEach((r, i) => {
+          const at = 8 + i * PASSAGE_RECORD;
+          [...r.pointer, r.start, r.length].forEach((n, j) =>
+            v.setUint32(at + j * 4, n, true),
+          );
+          directory.set(r.filter, at + 24);
+        });
+        record.passages = await put(gzipSync(directory, { level: 1 }));
+      }
+      pending.push(record);
       seen++;
       if (pending.length === 128) await flush();
     }
@@ -80,6 +124,7 @@ export async function packCards(
     indexGeneration: generation,
     cardGeneration,
     caseGeneration,
+    passageDocuments,
     count,
     objects,
     root: {
