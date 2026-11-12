@@ -1,0 +1,126 @@
+import { readFile, mkdir, writeFile } from "node:fs/promises";
+import { parseArgs } from "node:util";
+import { resolve } from "node:path";
+import { spawn } from "node:child_process";
+import { buildGlobal } from "./build.js";
+import { GlobalIndex } from "./search.js";
+import { PageReader } from "./storage.js";
+import { FileStorage } from "../storage/filesystem.js";
+const command = process.argv[2],
+  { values: v } = parseArgs({
+    args: process.argv.slice(3),
+    options: {
+      input: { type: "string" },
+      source: { type: "string" },
+      out: { type: "string", default: "work/global-index" },
+      budgets: { type: "string", default: "8,16,32,48" },
+      "page-kib": { type: "string", default: "128" },
+      budget: { type: "string", default: "8" },
+      query: { type: "string" },
+      "ids-only": { type: "boolean", default: false },
+      base: { type: "boolean", default: false },
+    },
+  });
+if (command === "build") {
+  if (!v.input) throw Error("--input is required");
+  const result = await buildGlobal({
+    input: v.input,
+    source: v.source,
+    out: v.out!,
+    pageBytes: Number(v["page-kib"]) * 1024,
+    budgets: v.budgets!.split(",").map((n) => Number(n) * 1048576),
+  });
+  console.log(JSON.stringify(result, null, 2));
+} else if (command === "search") {
+  const index = new GlobalIndex(
+      await readFile(
+        v.out + `/${v.base ? "bundle" : "bundle-heads"}-${v.budget}.bin`,
+      ),
+    ),
+    disk = new FileStorage(v.out + "/packs"),
+    reader = new PageReader(index.root, {
+      read: (key, offset, length) =>
+        disk.read(key.split("/").at(-1)!, offset, length),
+    });
+  console.log(
+    JSON.stringify(
+      await index.search(reader, v.query ?? "", {
+        metadata: !v["ids-only"],
+        snippets: !v["ids-only"],
+      }),
+      null,
+      2,
+    ),
+  );
+} else if (command === "dev") {
+  const { Miniflare } = await import("miniflare"),
+    { createHash } = await import("node:crypto");
+  const binaryPath = resolve(
+      v.out + `/${v.base ? "bundle" : "bundle-heads"}-${v.budget}.bin`,
+    ),
+    index = new GlobalIndex(await readFile(binaryPath)),
+    persist = resolve(".wrangler/state"),
+    dir = resolve("work/global-dev");
+  await mkdir(dir, { recursive: true });
+  const mf = new Miniflare({
+    modules: true,
+    script: 'export default {fetch(){return new Response("seed")}}',
+    r2Buckets: { INDEX: "work-search-global" },
+    r2Persist: persist + "/v3/r2",
+  });
+  try {
+    const bucket = await mf.getR2Bucket("INDEX");
+    for (const object of index.root.objects) {
+      const bytes = await readFile(v.out + "/packs/" + object.name);
+      if (
+        bytes.length !== object.size ||
+        createHash("sha256").update(bytes).digest("hex") !== object.sha256
+      )
+        throw Error("Local pack checksum mismatch");
+      await bucket.put(index.root.generation + "/" + object.name, bytes, {
+        customMetadata: {
+          generation: index.root.generation,
+          sha256: object.sha256,
+        },
+      });
+    }
+  } finally {
+    await mf.dispose();
+  }
+  await writeFile(
+    dir + "/entry.ts",
+    `import binary from ${JSON.stringify(binaryPath)};import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};export default createGlobalWorker(new Uint8Array(binary));`,
+  );
+  const config = dir + "/wrangler.json";
+  await writeFile(
+    config,
+    JSON.stringify({
+      name: "work-search-global",
+      main: dir + "/entry.ts",
+      compatibility_date: "2026-11-01",
+      rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
+      r2_buckets: [{ binding: "INDEX", bucket_name: "work-search-global" }],
+      vars: { PAGE_CACHE: "1", PAGE_READ_KIB: "256", DIAGNOSTICS: "1" },
+    }),
+  );
+  const child = spawn(
+    process.execPath,
+    [
+      "node_modules/wrangler/bin/wrangler.js",
+      "dev",
+      "--config",
+      config,
+      "--persist-to",
+      persist,
+    ],
+    { stdio: "inherit" },
+  );
+  await new Promise<void>((done, reject) => {
+    child.once("error", reject);
+    child.once("exit", (code) =>
+      code === 0 || code === null
+        ? done()
+        : reject(Error("Wrangler failed " + code)),
+    );
+  });
+} else throw Error("Use build, search or dev");

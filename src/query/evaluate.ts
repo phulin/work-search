@@ -139,6 +139,10 @@ class TermCursor {
   constructor(
     readonly list: DecodedPostings | undefined,
     readonly field: "all" | "body" | "title",
+    readonly direct?: (
+      doc: number,
+      field: number,
+    ) => ArrayLike<number> | undefined,
   ) {}
   row(doc: number) {
     if (this.rowDoc === doc) return this.rowValue;
@@ -175,6 +179,15 @@ class TermCursor {
     return row >= 0 && !!l && (this.field === "all" || l[this.field][row] > 0);
   }
   positions(doc: number, field: number): SpanList {
+    if (this.direct) {
+      const wanted =
+          this.field === "all" ||
+          this.field === (field === 0 ? "body" : "title"),
+        a = wanted ? this.direct(doc, field) : undefined;
+      return a
+        ? { starts: a, ends: a, count: a.length, monotone: true }
+        : EMPTY;
+    }
     if (this.decodedDoc !== doc) {
       const row = this.row(doc),
         l = this.list;
@@ -227,6 +240,11 @@ export function positionalMatcher(
   ast: Node,
   lists: Map<string, DecodedPostings>,
   field: "all" | "body" | "title",
+  direct?: (
+    term: string,
+    doc: number,
+    field: number,
+  ) => ArrayLike<number> | undefined,
 ) {
   let document = 0,
     epoch = 0,
@@ -236,7 +254,11 @@ export function positionalMatcher(
   const term = (name: string) => {
     let t = terms.get(name);
     if (!t) {
-      t = new TermCursor(lists.get(name), field);
+      t = new TermCursor(
+        lists.get(name),
+        field,
+        direct ? (doc, f) => direct(name, doc, f) : undefined,
+      );
       terms.set(name, t);
     }
     return t;
@@ -454,9 +476,21 @@ export function positionalMatcher(
     };
   }
   const plan = compile(ast);
-  return (doc: number) => {
-    document = doc;
-    epoch++;
-    return plan.truth();
-  };
+  return Object.assign(
+    (doc: number) => {
+      document = doc;
+      epoch++;
+      return plan.truth();
+    },
+    {
+      firstBodySpan(doc: number) {
+        document = doc;
+        epoch++;
+        const spans = plan.spans(0);
+        return spans.count
+          ? { start: spans.starts[0], end: spans.ends[0] }
+          : undefined;
+      },
+    },
+  );
 }

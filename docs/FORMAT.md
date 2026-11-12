@@ -235,3 +235,57 @@ term produced by the engine's tokenizer for each core token. Four bits use
 `(FNV32(term) + i * ((FNV32(term) >>> 16) | 1)) & 8191`, i=0..3. Possible matches
 are verified against decoded text. Directories and frames enforce a 4-MiB
 expansion cap and check compressed CRCs and object generation metadata.
+
+## Global retrieval format GLB1
+
+This independent experimental format lives in `src/global/format.ts`; it is not
+a new version of the BWS/paged index above.
+
+The bundled header contains five little-endian u32s: magic `0x31424c47` (`GLB1`),
+metadata byte length, hot dictionary byte length, metadata CRC32, hot dictionary
+CRC32. The metadata is a small UTF-8 JSON root with version 1, corpus generation,
+document count, average title/body lengths, physical page size, lexical dictionary
+page ranges, and immutable pack names/sizes/SHA-256 hashes. The following binary
+hot dictionary contains selected term plans. Header/metadata/hot lengths and CRCs
+are validated before search.
+
+Dictionaries front-code UTF-16 common-prefix lengths and UTF-8 suffixes, restarting
+every 16 terms. UTF-16 prefixes never split surrogate pairs. A binary restart
+offset table supports exact lookup without expanding the vocabulary into objects.
+Each term's binary plan holds DF, block descriptors, optional complete inline
+frequency/position rows, ranked seed rows, the maximum omitted seed score and
+minimum omitted document ID, and optional 64-document-cell score maxima.
+
+An address is five unsigned varints: object number, byte offset, compressed byte
+length, CRC32 of compressed bytes, and uncompressed byte length. Payloads use gzip;
+records are at most 8 MiB uncompressed. Ordinary records fit within a physical
+page; large dictionary plans may span pages. Packs are at most 64 MiB and padded
+to the configured 64/128/256-KiB alignment. R2 keys are
+`{generation}/plan-{object}.bin`. CRCs and expansion lengths apply identically to
+local, Cache API, CDN and R2 data. R2 objects additionally carry matching generation
+metadata. The source corpus and exact root bundle are SHA-256 checked on build/
+publish; CRCs detect accidental payload corruption, not malicious modifications.
+
+Frequency rows use row version 1: count, delta document ID, UTF-8 external ID,
+body/title TF, float64 little-endian body/title BM25 contribution, result address,
+first body-passage address and first body position. Version 3 appends optional
+inline UTF-8 display JSON and excerpt strings to each row. Position rows use
+version 2: count, delta document IDs, body/title delta-position arrays, and a list
+of token-chunk ID/address pairs. The decoder can skip allocation for unselected
+documents. Frequency-only queries do not request position streams. Each block has
+first/last document, count (at most 128), source tile, separate field score maxima,
+and independent frequency/position addresses.
+
+Display records contain external ID, title, metadata and preview. Passage records
+contain normalized display text, first token and relative token start/end offsets,
+covering 512 core tokens with 24-token overlap. Text remains case preserving;
+token lookup uses the shared NFKC/lowercase Unicode tokenization. Exact positional
+matches address the first and last required passage directly. Plain conjunctions
+use the first matching term's location for the excerpt rather than claiming to
+find a globally best multi-term passage.
+
+Read groups can be larger than physical pages. Shared-cache page IDs encode group
+size as `(log2(pageBytes)-16)*2^40 + object*objectPages + page`; this prevents cache
+collisions between 64-, 128- and 256-KiB grouping. Cache entries are complete 200
+responses, never 206 responses. Optional HTTP page objects use
+`{generation}/page-{pageId}.bin`. A custom domain/CDN is separate from R2 bindings.

@@ -306,3 +306,60 @@ statistics fanout: `npm run publish-search-snapshot` publishes a separate pinned
 search site. Optional independently compressed passage sidecars support targeted
 excerpts for larger opinions. See [snapshot and passage operations](demo/README.md)
 and [the benchmark comparison](bench/SNAPSHOT-PASSAGES.md).
+
+## Global retrieval engine (experimental)
+
+The new engine in `src/global/` replaces partition fanout with a corpus-wide,
+term-driven index. It stores conservative block score bounds, complete rare
+postings, and corpus-frequency-selected term heads in the Worker. Remote posting
+blocks carry direct result-record and passage addresses; the final display fields
+and matching passages are fetched together. All serving runs on Workers/R2.
+It is a separate format and deployment from the existing demo.
+
+```sh
+npm run global:build -- --input corpus.jsonl --out work/my-global-index --budgets 8,16,32,48
+npm run global:search -- --out work/my-global-index --budget 8 --query 'summary /s judgment'
+npm run global:dev -- --out work/my-global-index --budget 8
+# http://localhost:8787/search?q=summary+judgment
+npx wrangler r2 bucket create work-search-global
+GLOBAL_BUCKET=work-search-global GLOBAL_WORKER=my-search \
+  npm run global:deploy -- work/my-global-index
+```
+
+Node 24+ is recommended for the builder's built-in SQLite. An existing compatible
+bundled source index can be reused with `global:build --source PATH`; its canonical
+input generation is verified before conversion. Use a fresh output directory.
+Budgets include the complete root and local data. `--page-kib` sets physical pack
+alignment; deployment defaults to reading 256-KiB groups, as selected by the
+benchmarks. `global:dev` verifies and seeds the complete packs into local R2 before
+starting Wrangler. Use a small corpus for initial local development.
+
+`GET /search` and JSON `POST /search` accept `q`, `limit`, `field`, `titleBoost`,
+`metadata` and `snippets`. Display fields and excerpts are returned by default;
+`metadata=false&snippets=false` returns IDs, scores and internal `doc` values.
+There is no exact total count. Continue with JSON `after: {score, doc}` from the
+last hit and the response's `generation`; a changed generation returns 409.
+The existing terms-and-connectors language is supported, with implicit AND,
+Boolean grouping, phrases, `/n`, `/s` = 25 tokens and `/p` = 75 tokens.
+
+Publishing hashes local packs, uploads/verifies immutable objects through a
+separate authenticated upload Worker, and only then deploys the selected binary
+root. Wrangler configuration and private tokens are generated under ignored
+`work/global-publish/`. No R2 S3 keys are needed. `GLOBAL_BUDGET=16|32|48` changes
+the selected budget; `GLOBAL_HEADS=0` selects the base plan rather than complete
+display heads. Diagnostics remain private unless explicitly enabled. The uploader
+remains authenticated; its generated token file should be retained for reuse.
+
+The Worker uses an 8-MiB memory page cache, then the per-colo Workers Cache API,
+then R2 range reads. This caches immutable pages, not search responses. The
+experimental CDN adapter is a different access path: export full pages using
+`scripts/export-global-pages.ts`, upload them, configure an R2 custom domain and
+set `PAGE_BASE_URL`. Custom-domain/Tiered Cache serving has **not** been deployed
+or benchmarked here. Cache API is not tiered. Smart Placement and an explicit
+US-East placement were tested; neither improved this run's overall latency.
+
+See [the measured comparison and optimization rounds](bench/GLOBAL-INDEX.md),
+[format details](docs/FORMAT.md#global-retrieval-format-glb1), and
+[tradeoffs](DESIGN.md#global-retrieval-engine). The 100k experimental API is
+[available here](https://work-search-global-demo.phulin.workers.dev/search?q=summary+judgment).
+The full-corpus Casework demo and its ongoing import use the existing engine.

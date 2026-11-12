@@ -281,3 +281,69 @@ passage roots fall back to original cards and bodies. This is corpus-derived tex
 chunking, not a workload-selected phrase accelerator. The benchmark builds passage
 fixtures for all recorded result documents only; full-corpus text backfill remains
 an explicit operation and must not be inferred from fixture measurements.
+
+### Global retrieval engine
+
+`src/global/` is a separate, corpus-wide GLB1 engine. Queries do not call document
+partition Workers. An embedded front-coded dictionary routes hot terms directly
+to bounded frequency/position blocks; missing local terms use the embedded
+lexical directory to load their exact remote plan page. There is no preliminary
+statistics broadcast: each plan has global DF and each posting stores exact
+float64 body/title BM25 contributions computed with corpus-wide averages.
+Changing BM25 k1/b requires rebuilding. Title boost and field selection remain
+query options. The complete vocabulary and document tables need not fit locally.
+
+Source blocks contain at most 128 postings within 512-document ranges. Exact
+per-term maxima for 64-document cells tighten scheduling bounds without splitting
+all payloads into tiny R2 objects. Required rare terms lead candidate selection;
+broad queries visit cells in descending conservative score-bound order. Bounds
+use nonnegative float64 values summed in the same term order as scores. Equal-bound windows sort by minimum document ID; seed heuristics cannot override
+that order without invalidating tie stopping. A full
+heap stops only when score and document-ID tie bounds prove the remaining cells
+cannot alter top K. Head candidate lists include an exact omitted-result bound;
+they are not approximate truncation. Search-after filtering precedes admission.
+Negation adds an explicit universe stream when required.
+
+Postings duplicate external IDs, result-record addresses, first-passage addresses,
+and precomputed field contributions. Positional streams additionally map matching
+token chunks directly to passage addresses. Small JSON display records and text
+frames are compressed individually; large postings/dictionaries remain binary.
+After scoring, result records and the selected one/two passage frames are read in
+one concurrent phase. Complete display heads for the 64 highest-DF terms can
+answer some entire requests from the bundle. Selection uses corpus statistics,
+not evaluated query strings or workload-selected phrases. Head bounds remain
+valid for exact single-term stopping; changed boost/field/after options use the
+ordinary exact path.
+
+Optimization rounds retained tighter cell bounds/bulk scheduling, bounded decoded
+block reuse/direct positional access, header/body pipelining, and measured page
+sizes. Six requests may wait for headers; body downloads then overlap, under a
+16-MiB physical page batch cap. Expanded read batches are capped at 8 MiB; heap hits retain display pointers, not
+position arrays. Query-local raw posting batches default to 4 MiB,
+with bounded decoded/raw-position caches and a bundle-dependent plan limit.
+Cache API admission counts operations dynamically: at most 960 get/put calls per
+query, reserving platform headroom. The old fixed-384-lookup policy remains an
+experiment control. No result cache hides query work. Speculative result prefetch
+and competitive positional verification remain disabled after measured regressions.
+The latter scores frequency-only candidates and verifies competitive candidates
+exactly; correctness is preserved, but its extra storage rounds are expensive.
+
+Offline conversion streams documents and source blocks, spills term plans into
+SQLite, and constructs immutable 64-MiB packs. SHA-256 pins the source stream and
+base object set; append-only tighter-bound/display layouts retain that logical
+corpus generation and never rewrite packs. The bundled root's own SHA pins the
+particular layout. Upload checks fail on conflicting remote objects. Garbage
+collection must retain the union of objects referenced by all deployed roots,
+including rollback roots; a generation prefix is not sufficient to distinguish
+append-only layout revisions. A fresh generation build is the safe compaction
+path. Do not delete objects while old Workers or cursors can reference them.
+
+This is a measured 100k prototype, not a completed 10M-corpus migration. It still
+converts a single legacy bundled source index, so merging the live demo's many
+partition generations and removing legacy builder/table limits remain necessary
+for a full-corpus build. Popular-term plans are bounded by a resource error rather
+than a multi-level block-directory tree. Concurrent-load isolate memory and cache
+retention across colos remain unvalidated. Broad phrase searches still scan too
+many position blocks; smaller directly addressed positional groups are the next
+high-value format change. The 200–400 ms warmed-unfamiliar-query goal is not met
+consistently; repeated-query results are reported separately.
