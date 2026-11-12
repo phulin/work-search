@@ -200,7 +200,15 @@ pub fn emit(
     let mut cs = if runs.len() <= fan {
         runs.iter()
             .zip(bases)
-            .map(|(run, &base)| RecordCursor::raw(out, run, base, (count, averages.0, averages.1)))
+            .map(|(run, &base)| {
+                RecordCursor::raw(
+                    out,
+                    run,
+                    base,
+                    (count, averages.0, averages.1),
+                    crate::merge::record_buffer(runs.len()),
+                )
+            })
             .collect::<Result<Vec<_>>>()?
     } else {
         let mut paths = Vec::new();
@@ -209,7 +217,13 @@ pub fn emit(
                 .iter()
                 .enumerate()
                 .map(|(j, r)| {
-                    RecordCursor::raw(out, r, bases[i * fan + j], (count, averages.0, averages.1))
+                    RecordCursor::raw(
+                        out,
+                        r,
+                        bases[i * fan + j],
+                        (count, averages.0, averages.1),
+                        crate::merge::record_buffer(group.len()),
+                    )
                 })
                 .collect::<Result<Vec<_>>>()?;
             let dest = dir.join(format!("ready-{i}.bin"));
@@ -230,9 +244,10 @@ pub fn emit(
             w.flush()?;
             paths.push(dest);
         }
-        crate::merge::bounded_records(paths, out)?
+        let paths = crate::merge::bounded_records(paths, out)?;
+        paths
             .iter()
-            .map(|p| RecordCursor::open(p))
+            .map(|p| RecordCursor::open(p, crate::merge::record_buffer(paths.len())))
             .collect::<Result<Vec<_>>>()?
     };
     let mut heap = BinaryHeap::new();

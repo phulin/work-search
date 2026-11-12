@@ -406,13 +406,19 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
     }
     idout.flush()?;
     let objects = packer.finish()?;
-    let mut names = vec![
+    let names = vec![
         "postings.stage".into(),
         "documents.stage".into(),
         "vocabulary.bin".into(),
         "ids.bin".into(),
     ];
-    names.extend(objects.iter().map(|o| format!("packs/{}", o.name)));
+    let mut files = checked_files(&dir, names)?;
+    // Immutable pack digests were computed while writing; do not reread them.
+    files.extend(
+        objects
+            .iter()
+            .map(|o| (format!("packs/{}", o.name), o.sha256.clone())),
+    );
     phases[3] = stage.elapsed().as_micros();
     let run = Run {
         id: task.id,
@@ -422,7 +428,7 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
         title_tokens,
         input_hash: task.digest,
         objects,
-        files: checked_files(&dir, names)?,
+        files,
         milliseconds: start.elapsed().as_millis() as u64,
         vocabulary: vocabulary.len() as u32,
         postings: rows.len() as u64,

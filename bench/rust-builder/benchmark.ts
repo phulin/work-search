@@ -51,7 +51,11 @@ const hashes = Object.fromEntries(
   ),
 );
 const variants = (process.env.BUILDER_VARIANTS ?? "typescript,rust").split(",");
-if (variants.some((v) => !["typescript", "rust", "rust-v1"].includes(v)))
+if (
+  variants.some(
+    (v) => !["typescript", "rust", "rust-v1", "rust-v2"].includes(v),
+  )
+)
   throw Error("Unknown builder variant");
 const control = resolve(
   process.env.RUST_V1_CONTROL ?? "work/rust-builder-v1-control",
@@ -65,6 +69,14 @@ if (variants.includes("rust-v1"))
     hashes["rust-v1/" + p] = createHash("sha256")
       .update(await readFile(control + "/" + p))
       .digest("hex");
+const controlV2 = resolve(
+  process.env.RUST_V2_CONTROL ?? "work/rust-builder-v2-control",
+);
+if (variants.includes("rust-v2"))
+  for (const p of ["work-search-builder", "Cargo.lock"])
+    hashes["rust-v2/" + p] = createHash("sha256")
+      .update(await readFile(controlV2 + "/" + p))
+      .digest("hex");
 const rows: any[] = [];
 for (const count of counts)
   for (let round = 0; round < repeats; round++) {
@@ -75,7 +87,9 @@ for (const count of counts)
         ? [
             variant === "rust-v1"
               ? control + "/work-search-builder"
-              : "target/release/work-search-builder",
+              : variant === "rust-v2"
+                ? controlV2 + "/work-search-builder"
+                : "target/release/work-search-builder",
             "build",
             "--input",
             resolve(input),

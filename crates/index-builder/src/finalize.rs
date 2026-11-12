@@ -103,16 +103,21 @@ pub fn finalize(run: &Run, out: &Path, resume: bool) -> Result<Finalized> {
     directories.flush()?;
     let mut objects = run.objects.clone();
     objects.extend(packer.finish()?);
-    let mut names = vec![
+    let names = vec![
         "documents.final".into(),
         "directories.stage".into(),
         "mapping.bin".into(),
     ];
-    names.extend(objects.iter().map(|o| format!("packs/{}", o.name)));
+    let mut files = checked_files(&dir, names)?;
+    files.extend(
+        objects
+            .iter()
+            .map(|o| (format!("packs/{}", o.name), o.sha256.clone())),
+    );
     let result = Finalized {
         run: run.id,
         objects,
-        files: checked_files(&dir, names)?,
+        files,
         milliseconds: start.elapsed().as_millis() as u64,
     };
     atomic_json(&checkpoint, &result)?;
