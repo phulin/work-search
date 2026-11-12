@@ -117,3 +117,48 @@ benchmark's directory covers 67 partitions, not all opinions added afterward.
 Use the documented `--all` refresh to extend directory coverage without changing
 the frozen benchmark snapshot. Public smoke checks verified legal fields,
 nonduplicate second-page hits, empty results and hits from uncovered partitions.
+
+## Larger-corpus native cross-check
+
+Because the public corpus grew during this work, a second native comparison
+freezes **5,992,795 opinions across 159 partitions** in dedicated router bindings.
+Baseline level 0 and cumulative level 3 use exactly those same leaf Workers and
+immutable generations. Eight scenarios (common/selective terms, phrase, Boolean,
+NOT, proximity, case name and empty control) run in interleaved balanced order,
+with the order reversed on pass two. Both paths return identical IDs and scores
+in every pair. This is 32 measured responses, not user traffic or a production SLO.
+The leaf Workers may warm one another; backend cache state and placement are not
+controlled. “First observed” does not mean cold storage or fresh leaf isolates.
+
+|Native 5.99M-opinion comparison|Baseline P50 / P95|All three P50 / P95|Reduction|
+|---|---:|---:|---:|
+|First observed pass|1.88s / 8.82s|1.11s / 5.95s|41% / 33%|
+|Second pass|0.64s / 2.71s|0.60s / 1.60s|6% / 41%|
+
+Nearest-rank P95 over eight scenarios is the maximum. Individual second-pass
+queries illustrate why the median gain is smaller than in the original frozen
+simulation:
+
+|Query|Baseline|All three|
+|---|---:|---:|
+|summary judgment|1.01s|1.42s|
+|breach fiduciary duty|2.71s|0.81s|
+|"clear and convincing evidence"|1.44s|1.60s|
+|(standing OR mootness) AND jurisdiction|0.61s|0.34s|
+|qualified AND immunity NOT prison|0.64s|0.60s|
+|qualified /s immunity|0.63s|0.30s|
+|Christenberry Allen|0.97s|0.82s|
+|empty control|0.40s|0.11s|
+
+The changes are not a universal latency improvement. The bigger native check
+supports fewer reads and better tails, while warm common-term execution still
+needs attention. Its directory covers the original 67 partitions; the remaining
+partitions exercise the generation-safe fallback. Public smoke searches at
+roughly six million opinions still included 4–6s responses, so the 2.87M-opinion
+benchmark's sub-second P50 must not be presented as a public production promise.
+
+[Raw compact measurements and exact generation vector](results/demo-opt-full-ab.json).
+Reproduce setup and capture with `node --import tsx bench/demo-ab-live.ts`; use
+`--run-only` to retain the saved memberships. Empty-query readiness checks avoid
+warming postings while new workers.dev routes activate. The report's 154 tests
+and frozen three-stage matrix remain separate from this native cross-check.
