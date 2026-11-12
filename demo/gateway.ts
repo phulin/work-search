@@ -213,6 +213,7 @@ export default {
             const found = await search({
                 q,
                 limit: limit + 1,
+                perfLevel: Number(env.PERF_LEVEL ?? 0),
                 globalStats,
                 generations,
                 after: cursor?.after,

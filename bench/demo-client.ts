@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { assembleRange } from "./range-mirror.js";
+import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
 export const root = "work/demo-bench";
 export const snapshot = JSON.parse(
   await readFile(root + "/snapshot.json", "utf8"),
@@ -23,7 +24,9 @@ export async function remote(path: string, body?: unknown) {
 await mkdir(root + "/ranges", { recursive: true });
 const pending = new Map<string, Promise<Uint8Array>>();
 const coverage = new Map<string, { offset: number; length: number }[]>();
-for (const file of ["hydrate.json", "pages-hydrate.json"])
+for (const file of (await readdir(root)).filter(
+  (f) => /^hydrate.*\.json$/.test(f) || /^pages-hydrate.*\.json$/.test(f),
+))
   try {
     const recorded = JSON.parse(await readFile(root + "/" + file, "utf8"));
     for (const row of recorded.rows)
@@ -63,31 +66,16 @@ export async function range(
   } catch {}
   // Warm page coalescing can request a different union of already mirrored
   // ranges. Assemble those bytes without a network fallback during timing.
-  const intervals = coverage.get(key) ?? [],
-    pieces: Uint8Array[] = [];
-  let cursor = offset;
-  while (cursor < offset + length) {
-    const candidate = intervals
-      .filter((r) => r.offset <= cursor && r.offset + r.length > cursor)
-      .sort((a, b) => b.offset + b.length - (a.offset + a.length))[0];
-    if (!candidate) break;
-    try {
-      const b = await readFile(
-        root + "/ranges/" + rangeName(key, candidate.offset, candidate.length),
-      );
-      const end = Math.min(
-        offset + length,
-        candidate.offset + candidate.length,
-      );
-      pieces.push(
-        b.subarray(cursor - candidate.offset, end - candidate.offset),
-      );
-      cursor = end;
-    } catch {
-      break;
-    }
+  const assembled = await assembleRange(
+    offset,
+    length,
+    coverage.get(key) ?? [],
+    (r) => readFile(root + "/ranges/" + rangeName(key, r.offset, r.length)),
+  );
+  if (assembled) {
+    if (hydrate) await writeFile(path, assembled);
+    return assembled;
   }
-  if (cursor === offset + length) return Buffer.concat(pieces);
   if (!hydrate)
     throw Error(`Unhydrated benchmark range ${key} ${offset} ${length}`);
   if (pending.has(name)) return pending.get(name)!;

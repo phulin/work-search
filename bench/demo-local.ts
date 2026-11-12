@@ -30,7 +30,9 @@ const modes = hydrate
 const rows: any[] = [];
 const output =
   root +
-  (hydrate ? "/hydrate.json" : `/${process.env.DEMO_OUTPUT ?? "local"}.json`);
+  (hydrate
+    ? `/${process.env.DEMO_HYDRATE_OUTPUT ?? "hydrate"}.json`
+    : `/${process.env.DEMO_OUTPUT ?? "local"}.json`);
 await writeFile(output + "l", "");
 for (const mode of modes)
   for (const phase of (process.env.DEMO_PHASES ?? "reset,mixed,repeat").split(

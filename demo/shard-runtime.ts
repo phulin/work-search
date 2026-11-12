@@ -48,6 +48,7 @@ export function createShard(
           const result = await search(index, storage, body.q, {
             limit: body.limit,
             globalStats: body.globalStats,
+            globalSkipping: Number(body.perfLevel ?? 0) >= 2,
             internalDoc: true,
             after: body.after
               ? {

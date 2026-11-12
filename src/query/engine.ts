@@ -84,6 +84,7 @@ class TopK {
   }
 }
 export interface SearchOptions {
+  globalSkipping?: boolean;
   after?: { score: number; doc: number };
   globalStats?: {
     count: number;
@@ -195,10 +196,13 @@ async function executeSearch(
     options.executor === "wand" ||
     (options.executor !== "boolean" &&
       options.executor !== "materialized" &&
-      pureDisjunction(ast) &&
+      (pureDisjunction(ast) ||
+        (options.globalSkipping &&
+          blockEligible(ast) &&
+          !pureConjunction(ast))) &&
       entries.length >= 2 &&
       totalRows >= 4096 &&
-      limit <= 20 &&
+      limit <= (options.globalSkipping ? 21 : 20) &&
       options.field !== "title" &&
       Math.max(...entries.map((e) => e.df)) >=
         2 * Math.min(...entries.map((e) => e.df)) &&
@@ -210,8 +214,8 @@ async function executeSearch(
       !(cachedRows > totalRows / 2 && totalRows * 12 <= 8 * 1048576) &&
       (pureConjunction(ast) || (index.count > 50000 && totalRows > 100000)));
   const streaming =
-    !options.globalStats &&
-    !options.after &&
+    (!options.globalStats || options.globalSkipping === true) &&
+    (!options.after || options.globalSkipping === true) &&
     useBlocks &&
     stage >= 4 &&
     skipBlocks &&
@@ -348,6 +352,7 @@ async function executeSearch(
       boost,
       stage >= 6 && options.blockCache !== false ? runtime : undefined,
       wantWand ? "wand" : "boolean",
+      { globalStats: options.globalStats, after: options.after },
     );
     diagnostics.executor = wantWand ? "wand" : "boolean-blocks";
     diagnostics.wandPivots = stats.wandPivots;

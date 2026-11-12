@@ -11,6 +11,7 @@ import { decodeFrequencies, type DecodedPostings } from "../format/codec.js";
 import { lowerBound } from "./sets.js";
 import type { Node } from "./parser.js";
 import type { Read } from "./load.js";
+import { loadPosting } from "./load.js";
 export function blockEligible(n: Node): boolean {
   return (
     n.kind === "term" ||
@@ -47,6 +48,33 @@ interface Heap {
   heap: { score: number; doc: number }[];
   add(doc: number, score: number): void;
 }
+export interface GlobalScoring {
+  count: number;
+  avgBody: number;
+  avgTitle: number;
+  df: Record<string, number>;
+}
+interface ScoringOptions {
+  globalStats?: GlobalScoring;
+  after?: { score: number; doc: number };
+}
+export function globalBound(
+  local: number,
+  localIdf: number,
+  globalIdf: number,
+  localAverage: number,
+  globalAverage: number,
+) {
+  // (tf+.3+.9*dl/localAvg)/(tf+.3+.9*dl/globalAvg)
+  // is bounded by max(1,globalAvg/localAvg), independently of tf and dl.
+  return (
+    local *
+      (globalIdf / localIdf) *
+      Math.max(1, (globalAverage || 1) / (localAverage || 1)) *
+      (1 + 1e-12) +
+    Number.MIN_VALUE
+  );
+}
 // One immutable data source per distinct term; duplicate AST leaves own cursors
 // so (A AND B) OR A cannot consume A's rows through the other branch.
 class TermData {
@@ -61,15 +89,44 @@ class TermData {
   recent?: { block: number; list: DecodedPostings };
   readonly prefix: string;
   readonly idf: number;
+  readonly localIdf: number;
+  readonly avgBody: number;
+  readonly avgTitle: number;
   constructor(
     readonly index: BinaryIndex,
     readonly e: Entry,
     readonly read: Read,
     readonly stats: BlockStats,
     readonly runtime?: SearchRuntime,
+    readonly globalStats?: GlobalScoring,
   ) {
     this.prefix = JSON.stringify([index.generation, e.term, e.crc]);
-    this.idf = Math.log(1 + (index.count - e.df + 0.5) / (e.df + 0.5));
+    this.localIdf = Math.log(1 + (index.count - e.df + 0.5) / (e.df + 0.5));
+    const count = globalStats?.count ?? index.count,
+      df = globalStats?.df[e.term] ?? e.df;
+    this.idf = Math.log(1 + (count - df + 0.5) / (df + 0.5));
+    this.avgBody = globalStats?.avgBody ?? index.avgBody;
+    this.avgTitle = globalStats?.avgTitle ?? index.avgTitle;
+  }
+  bound(b: Block) {
+    return this.globalStats
+      ? {
+          bodyMax: globalBound(
+            b.bodyMax ?? Infinity,
+            this.localIdf,
+            this.idf,
+            this.index.avgBody,
+            this.avgBody,
+          ),
+          titleMax: globalBound(
+            b.titleMax ?? Infinity,
+            this.localIdf,
+            this.idf,
+            this.index.avgTitle,
+            this.avgTitle,
+          ),
+        }
+      : b;
   }
   key(kind: string, offset = 0) {
     return this.prefix + ":" + kind + ":" + offset;
@@ -117,6 +174,25 @@ class TermData {
       this.bytes = await this.read(this.e, false, 0, length);
       this.lastReadEnd = length;
     } else await this.ensureBytes();
+    if (
+      this.globalStats &&
+      this.e.length <= 262144 &&
+      this.bytes?.length === this.e.length
+    ) {
+      this.full = await loadPosting(
+        this.e,
+        false,
+        async (_e, _positions, offset, length) =>
+          this.bytes!.subarray(offset, offset + length),
+      );
+      this.blocks = this.full.blocks ?? [];
+      this.runtime?.set(
+        postingKey(this.index.generation, this.e),
+        this.full,
+        postingSize(this.full),
+      );
+      return;
+    }
     this.blocks = decodeDirectory(
       this.bytes!.subarray(0, directoryLength(this.e.df, this.e.format)),
       this.e.df,
@@ -291,9 +367,11 @@ class Cursor {
       : Infinity;
   }
   get impact() {
-    return this.data.blocks[
-      this.data.full ? Math.floor(this.row / BLOCK_SIZE) : this.block
-    ];
+    const b =
+      this.data.blocks[
+        this.data.full ? Math.floor(this.row / BLOCK_SIZE) : this.block
+      ];
+    return b ? this.data.bound(b) : undefined;
   }
 }
 interface Iterator {
@@ -385,6 +463,7 @@ export async function searchBlocks(
   boost: number,
   runtime?: SearchRuntime,
   mode: "boolean" | "wand" = "boolean",
+  options: ScoringOptions = {},
 ) {
   const stats: BlockStats = {
     visitedDocuments: 0,
@@ -398,12 +477,14 @@ export async function searchBlocks(
     wandPivots: 0,
     wandSkips: 0,
   };
-  const data = entries.map((e) => new TermData(index, e, read, stats, runtime));
+  const data = entries.map(
+    (e) => new TermData(index, e, read, stats, runtime, options.globalStats),
+  );
   await Promise.all(data.map((d) => d.init()));
   if (index.paged)
     for (const d of data) if (d.full) await index.ensureLengths(d.full.docs);
   if (mode === "wand")
-    return runWand(index, data, ast, heap, limit, field, boost, stats);
+    return runWand(index, data, ast, heap, limit, field, boost, stats, options);
   const map = new Map(data.map((d) => [d.e.term, d])),
     leaves: Cursor[] = [],
     root = booleanIterator(ast, map, field, leaves),
@@ -456,8 +537,18 @@ export async function searchBlocks(
     }
     if (!index.hasLength(doc)) await index.ensureLengths(Uint32Array.of(doc));
     index.lengths(doc, lengths);
-    const bn = 1.2 * (1 - 0.75 + (0.75 * lengths.body) / (index.avgBody || 1)),
-      tn = 1.2 * (1 - 0.75 + (0.75 * lengths.title) / (index.avgTitle || 1));
+    const bn =
+        1.2 *
+        (1 -
+          0.75 +
+          (0.75 * lengths.body) /
+            ((options.globalStats?.avgBody ?? index.avgBody) || 1)),
+      tn =
+        1.2 *
+        (1 -
+          0.75 +
+          (0.75 * lengths.title) /
+            ((options.globalStats?.avgTitle ?? index.avgTitle) || 1));
     let score = 0;
     for (const c of scoring) {
       if (c.doc !== doc) continue;
@@ -468,7 +559,12 @@ export async function searchBlocks(
       if (body && b) score += (idf * (b * 2.2)) / (b + bn);
       if (title && t) score += boost * ((idf * (t * 2.2)) / (t + tn));
     }
-    heap.add(doc, score);
+    if (
+      !options.after ||
+      score < options.after.score ||
+      (score === options.after.score && doc > options.after.doc)
+    )
+      heap.add(doc, score);
     stats.scored++;
     target = doc + 1;
   }
@@ -482,8 +578,9 @@ function globalImpacts(source: TermData): [number, number] {
     title = 0;
   if (source.blocks.length) {
     for (const b of source.blocks) {
-      body = Math.max(body, b.bodyMax!);
-      title = Math.max(title, b.titleMax!);
+      const upper = source.bound(b);
+      body = Math.max(body, upper.bodyMax!);
+      title = Math.max(title, upper.titleMax!);
     }
   } else {
     const l = source.full!,
@@ -498,7 +595,7 @@ function globalImpacts(source: TermData): [number, number] {
           body,
           (source.idf * (b * 2.2)) /
             (b +
-              1.2 * (1 - 0.75 + (0.75 * lengths.body) / (index.avgBody || 1))),
+              1.2 * (1 - 0.75 + (0.75 * lengths.body) / (source.avgBody || 1))),
         );
       if (t)
         title = Math.max(
@@ -506,7 +603,7 @@ function globalImpacts(source: TermData): [number, number] {
           (source.idf * (t * 2.2)) /
             (t +
               1.2 *
-                (1 - 0.75 + (0.75 * lengths.title) / (index.avgTitle || 1))),
+                (1 - 0.75 + (0.75 * lengths.title) / (source.avgTitle || 1))),
         );
     }
   }
@@ -521,6 +618,7 @@ async function runWand(
   field: "all" | "body" | "title",
   boost: number,
   stats: BlockStats,
+  options: ScoringOptions,
 ) {
   const cursors = data.map((d) => new Cursor(d, field)),
     order = data.map((_, i) => i),
@@ -635,8 +733,17 @@ async function runWand(
       if (!index.hasLength(doc)) await index.ensureLengths(Uint32Array.of(doc));
       index.lengths(doc, lengths);
       const bn =
-          1.2 * (1 - 0.75 + (0.75 * lengths.body) / (index.avgBody || 1)),
-        tn = 1.2 * (1 - 0.75 + (0.75 * lengths.title) / (index.avgTitle || 1));
+          1.2 *
+          (1 -
+            0.75 +
+            (0.75 * lengths.body) /
+              ((options.globalStats?.avgBody ?? index.avgBody) || 1)),
+        tn =
+          1.2 *
+          (1 -
+            0.75 +
+            (0.75 * lengths.title) /
+              ((options.globalStats?.avgTitle ?? index.avgTitle) || 1));
       let score = 0;
       for (const c of cursors) {
         if (c.doc !== doc) continue;
@@ -647,7 +754,12 @@ async function runWand(
         if (body && b) score += (idf * (b * 2.2)) / (b + bn);
         if (title && t) score += boost * ((idf * (t * 2.2)) / (t + tn));
       }
-      heap.add(doc, score);
+      if (
+        !options.after ||
+        score < options.after.score ||
+        (score === options.after.score && doc > options.after.doc)
+      )
+        heap.add(doc, score);
       stats.scored++;
     }
     for (const c of cursors) if (c.doc === doc) c.advance(doc + 1);

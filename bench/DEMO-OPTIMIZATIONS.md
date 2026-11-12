@@ -24,3 +24,19 @@ unchanged. This uses no workload-selected phrase accelerator.
 
 Stage 1: 128 timed responses verified; 145 automated tests pass. Raw compact
 measurements are in [results/demo-opt-stage1.json](results/demo-opt-stage1.json).
+
+Stage 2 restores lazy block search/WAND under global BM25 using conservative
+per-field bounds scaled by the global/local IDF ratio and the maximum possible
+average-length ratio. Search-after filtering preserves deterministic ordering.
+Fully fetched frequency streams up to 256 KiB retain complete decoded lists;
+larger lists continue lazy block reads. Bundled index bytes remain unchanged.
+
+|Cumulative change, final warmed pass|Repeated-range P50 / P95|Varied-range P50 / P95|
+|---|---:|---:|
+|2. Global bounds and block skipping|0.87s / 3.08s|1.62s / 5.60s|
+
+This is a mixed result: the varied-range tail improves about 4%, while its median
+regresses about 11%. Phrase/proximity/negative trees retain the materialized
+executor. All 128 simulated responses match baseline IDs, scores and case fields.
+See [stage 2 measurements](results/demo-opt-stage2.json). These are cumulative
+local simulations; timings include normal host noise.
