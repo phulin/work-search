@@ -1,0 +1,171 @@
+{
+  "kind": "Local correctness verification; timings are diagnostics, not live Worker measurements",
+  "oracleSha256": "809e58e890d58e09609abeeb3b3fcb1e56fc778b01c1667b6ef385f5e6d65f2e",
+  "checks": [
+    {
+      "q": "summary judgment",
+      "matched": 20,
+      "wallMs": 170.49895800000002
+    },
+    {
+      "q": "personal jurisdiction",
+      "matched": 20,
+      "wallMs": 118.45266700000002
+    },
+    {
+      "q": "breach fiduciary duty",
+      "matched": 20,
+      "wallMs": 154.90575
+    },
+    {
+      "q": "arbitrary capricious agency",
+      "matched": 20,
+      "wallMs": 143.113333
+    },
+    {
+      "q": "\"clear and convincing evidence\"",
+      "matched": 20,
+      "wallMs": 224.55087500000002
+    },
+    {
+      "q": "\"res ipsa loquitur\"",
+      "matched": 20,
+      "wallMs": 80.85349999999994
+    },
+    {
+      "q": "(standing OR mootness) AND jurisdiction",
+      "matched": 20,
+      "wallMs": 172.51133300000004
+    },
+    {
+      "q": "(copyright OR trademark) AND injunction",
+      "matched": 20,
+      "wallMs": 141.14883399999985
+    },
+    {
+      "q": "qualified AND immunity NOT prison",
+      "matched": 20,
+      "wallMs": 167.37029200000006
+    },
+    {
+      "q": "qualified /s immunity",
+      "matched": 20,
+      "wallMs": 93.29150000000004
+    },
+    {
+      "q": "contract /10 breach",
+      "matched": 20,
+      "wallMs": 140.428625
+    },
+    {
+      "q": "notice /p termination",
+      "matched": 20,
+      "wallMs": 136.22629099999995
+    },
+    {
+      "q": "Christenberry Allen",
+      "matched": 1,
+      "wallMs": 34.21250000000009
+    },
+    {
+      "q": "Twombly Iqbal",
+      "matched": 20,
+      "wallMs": 95.63245800000004
+    },
+    {
+      "q": "court",
+      "matched": 20,
+      "wallMs": 115.87833399999977
+    },
+    {
+      "q": "unfindablebenchmarkzzzz",
+      "matched": 0,
+      "wallMs": 1.6089170000000195
+    },
+    {
+      "q": "res judicata",
+      "matched": 20,
+      "wallMs": 96.44916599999988
+    },
+    {
+      "q": "the pennsylvania",
+      "matched": 20,
+      "wallMs": 206.39350000000013
+    },
+    {
+      "q": "breach contract",
+      "matched": 20,
+      "wallMs": 112.33358400000043
+    },
+    {
+      "q": "fiduciary duty",
+      "matched": 20,
+      "wallMs": 106.6662080000001
+    },
+    {
+      "q": "\"court cause number 2010\"",
+      "matched": 2,
+      "wallMs": 132.9941249999997
+    },
+    {
+      "q": "\"strict scrutiny\"",
+      "matched": 20,
+      "wallMs": 79.85966700000017
+    },
+    {
+      "q": "\"and absent a showing\"",
+      "matched": 20,
+      "wallMs": 245.84104100000013
+    },
+    {
+      "q": "\"on that advice appellant\"",
+      "matched": 1,
+      "wallMs": 166.30262500000026
+    },
+    {
+      "q": "this /5 of",
+      "matched": 20,
+      "wallMs": 244.8293749999998
+    },
+    {
+      "q": "motion /5 ten",
+      "matched": 20,
+      "wallMs": 148.9781250000001
+    },
+    {
+      "q": "prosecutorial /5 by",
+      "matched": 20,
+      "wallMs": 179.27691699999968
+    },
+    {
+      "q": "subject /5 matter jurisdiction",
+      "matched": 20,
+      "wallMs": 205.31020799999988
+    },
+    {
+      "q": "(fiduciary OR duty) AND court",
+      "matched": 20,
+      "wallMs": 200.73029199999974
+    },
+    {
+      "q": "(agreement OR 632was) AND by",
+      "matched": 20,
+      "wallMs": 208.84445899999992
+    },
+    {
+      "q": "(any OR oral) AND because",
+      "matched": 20,
+      "wallMs": 240.1515419999996
+    },
+    {
+      "q": "(\"and\" OR his) AND was",
+      "matched": 20,
+      "wallMs": 281.7667499999998
+    },
+    {
+      "verifiedQueries": 32,
+      "documents": 100000,
+      "generation": "9e863c9de344f0276a375aab109f16318055418358b8fbc89d28e2cc212859b3"
+    }
+  ]
+}

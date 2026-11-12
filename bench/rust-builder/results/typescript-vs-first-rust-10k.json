@@ -1,0 +1,221 @@
+{
+  "kind": "Sequential complete offline builds; compilation excluded; includes source parsing, text compression, sorting, scoring, format construction and publication; OS caches uncontrolled; RSS is the builder process, not total concurrent child-process memory",
+  "node": "v26.7.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "cpus": "Apple M3",
+  "threads": 4,
+  "hashes": {
+    "Cargo.lock": "efe1d881e5434f2d6f46ff8a5e5820f885eecc4924f6db06d0c6b4b96aaed55e",
+    "crates/index-builder/src/main.rs": "a622aed449aed22d934a9e52279f48561316c951f231ca4b14149fb743f0cdd1",
+    "crates/index-builder/src/ingest.rs": "13cc8d24edc7b52caffa1e475bfd3f0d0aeb00f82d765e2e4bdd3c5ef533eba2",
+    "crates/index-builder/src/format.rs": "2d1fb84159b524af1243768f7e0ddc3fbefb9e32f16380b56ed2d66c93ea0284",
+    "crates/index-builder/src/merge.rs": "83e689d37c6c7413407a027e161cd504f0a40cbde3fda878fdf3589a28dcac74",
+    "crates/index-builder/src/finalize.rs": "9557b94f63eb53beb690cbac91ba727f7d570c716366958b1735914341e8dd10",
+    "crates/index-builder/src/publish.rs": "a9cb8791a5d1b6ac9d7233d7f856004cd321c0ab5d1bf028991c1c56ebd7d71d",
+    "crates/index-builder/src/tokenize.rs": "6673e195f38837fc15f6ce459acb8d30de922fc55554c356e71ad93893178129",
+    "crates/index-builder/score-v8.mjs": "b3419bcdf765eac572e4876443bc803562be9a8a3498827c176715787b610c6b",
+    "bench/rust-builder/control/build.ts": "ef1bf564ce7b418f8bca340e62d587fece54396cfdfcadba04da46f3a37d6f6a",
+    "bench/rust-builder/control/format.ts": "f44710940f1f6316bb1a5ed95732020e6da56ccb582f539ba4267b29b1ba7dba"
+  },
+  "rows": [
+    {
+      "variant": "typescript",
+      "count": 10000,
+      "round": 0,
+      "wallMs": 84312.144416,
+      "peakBuilderRssBytes": 521125888,
+      "manifest": {
+        "format": "CWS1",
+        "generation": "01b66b0b7180ed40bf02182d56ed980267493314ca28b2859135484a462b9f8a",
+        "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7",
+        "count": 10000,
+        "terms": 148800,
+        "bodyTokens": 18567256,
+        "titleTokens": 55029,
+        "buildMs": 84148.909375,
+        "bytes": 688899826,
+        "source": "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl",
+        "maxDocuments": 10000
+      },
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/builder-bench-final/10000-0-typescript"
+    },
+    {
+      "variant": "rust",
+      "count": 10000,
+      "round": 0,
+      "wallMs": 7739.647042000011,
+      "peakBuilderRssBytes": 425312256,
+      "manifest": {
+        "builder": "rust-cws1-v1",
+        "format": "CWS1",
+        "generation": "5b5a32920aeb7bc98089a19cd60ed728de0405aef2e06753c92d5d79e19352ae",
+        "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 10000,
+        "terms": 148800,
+        "bodyTokens": 18567256,
+        "titleTokens": 55029,
+        "bytes": 691826271,
+        "buildMs": 7717,
+        "stagesMs": {
+          "ingest": 2584,
+          "vocabularyAndIds": 251,
+          "finalizeAndCanonicalScores": 2470,
+          "relocateAndPublish": 735,
+          "mergeAndEmit": 1673
+        },
+        "threads": 4,
+        "batchBytes": 4194304,
+        "runs": 28,
+        "scorer": "batched V8 float64",
+        "scorerSha256": "b3419bcdf765eac572e4876443bc803562be9a8a3498827c176715787b610c6b",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v1",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 4194304,
+          "max_documents": 10000,
+          "scorer": "b3419bcdf765eac572e4876443bc803562be9a8a3498827c176715787b610c6b",
+          "unicode": "17.0"
+        },
+        "objects": 63
+      },
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/builder-bench-final/10000-0-rust"
+    },
+    {
+      "variant": "rust",
+      "count": 10000,
+      "round": 1,
+      "wallMs": 6478.7439999999915,
+      "peakBuilderRssBytes": 390496256,
+      "manifest": {
+        "builder": "rust-cws1-v1",
+        "format": "CWS1",
+        "generation": "5b5a32920aeb7bc98089a19cd60ed728de0405aef2e06753c92d5d79e19352ae",
+        "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 10000,
+        "terms": 148800,
+        "bodyTokens": 18567256,
+        "titleTokens": 55029,
+        "bytes": 691826271,
+        "buildMs": 6463,
+        "stagesMs": {
+          "ingest": 2422,
+          "vocabularyAndIds": 230,
+          "finalizeAndCanonicalScores": 1470,
+          "relocateAndPublish": 624,
+          "mergeAndEmit": 1715
+        },
+        "threads": 4,
+        "batchBytes": 4194304,
+        "runs": 28,
+        "scorer": "batched V8 float64",
+        "scorerSha256": "b3419bcdf765eac572e4876443bc803562be9a8a3498827c176715787b610c6b",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v1",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 4194304,
+          "max_documents": 10000,
+          "scorer": "b3419bcdf765eac572e4876443bc803562be9a8a3498827c176715787b610c6b",
+          "unicode": "17.0"
+        },
+        "objects": 63
+      },
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/builder-bench-final/10000-1-rust"
+    },
+    {
+      "variant": "typescript",
+      "count": 10000,
+      "round": 1,
+      "wallMs": 82841.11374999999,
+      "peakBuilderRssBytes": 543866880,
+      "manifest": {
+        "format": "CWS1",
+        "generation": "01b66b0b7180ed40bf02182d56ed980267493314ca28b2859135484a462b9f8a",
+        "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7",
+        "count": 10000,
+        "terms": 148800,
+        "bodyTokens": 18567256,
+        "titleTokens": 55029,
+        "buildMs": 82698.992958,
+        "bytes": 688899826,
+        "source": "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl",
+        "maxDocuments": 10000
+      },
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/builder-bench-final/10000-1-typescript"
+    },
+    {
+      "variant": "typescript",
+      "count": 10000,
+      "round": 2,
+      "wallMs": 98426.10212499998,
+      "peakBuilderRssBytes": 496549888,
+      "manifest": {
+        "format": "CWS1",
+        "generation": "01b66b0b7180ed40bf02182d56ed980267493314ca28b2859135484a462b9f8a",
+        "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7",
+        "count": 10000,
+        "terms": 148800,
+        "bodyTokens": 18567256,
+        "titleTokens": 55029,
+        "buildMs": 98277.570708,
+        "bytes": 688899826,
+        "source": "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl",
+        "maxDocuments": 10000
+      },
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/builder-bench-final/10000-2-typescript"
+    },
+    {
+      "variant": "rust",
+      "count": 10000,
+      "round": 2,
+      "wallMs": 7449.334499999997,
+      "peakBuilderRssBytes": 370245632,
+      "manifest": {
+        "builder": "rust-cws1-v1",
+        "format": "CWS1",
+        "generation": "5b5a32920aeb7bc98089a19cd60ed728de0405aef2e06753c92d5d79e19352ae",
+        "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 10000,
+        "terms": 148800,
+        "bodyTokens": 18567256,
+        "titleTokens": 55029,
+        "bytes": 691826271,
+        "buildMs": 7438,
+        "stagesMs": {
+          "ingest": 3058,
+          "vocabularyAndIds": 248,
+          "finalizeAndCanonicalScores": 1689,
+          "relocateAndPublish": 662,
+          "mergeAndEmit": 1779
+        },
+        "threads": 4,
+        "batchBytes": 4194304,
+        "runs": 28,
+        "scorer": "batched V8 float64",
+        "scorerSha256": "b3419bcdf765eac572e4876443bc803562be9a8a3498827c176715787b610c6b",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v1",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 4194304,
+          "max_documents": 10000,
+          "scorer": "b3419bcdf765eac572e4876443bc803562be9a8a3498827c176715787b610c6b",
+          "unicode": "17.0"
+        },
+        "objects": 63
+      },
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/builder-bench-final/10000-2-rust"
+    }
+  ]
+}

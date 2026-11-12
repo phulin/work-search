@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 .wrangler/
 dist/
 indexes/
@@ -9,3 +9,5 @@ bench/generated/
 work/
 
 __pycache__/
+
+/target/

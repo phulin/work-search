@@ -1,0 +1,79 @@
+{
+  "kind": "Sequential complete offline builds; compilation excluded; includes source parsing, text compression, sorting, scoring, format construction and publication; OS caches uncontrolled; time RSS is the maximum individual process; sampledPeakTreeRssBytes is the sum over command descendants sampled every 100 ms, not an exact peak",
+  "node": "v26.7.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "cpus": "Apple M3",
+  "threads": 4,
+  "batchMiB": 4,
+  "hashes": {
+    "target/release/work-search-builder": "83d65a37ad8abaf8ad77b27bc17ac546ff388b08bc9aa79b3ec0b97e397ae62e",
+    "Cargo.lock": "78aaf42c1c4e4c07b5c3ce10015b5f18503b4c27c5940556324589746fbcd696",
+    "crates/index-builder/src/main.rs": "788f00b5409ea0011cff9cecbbac630d66c029c458024d5b78f68edac68e244d",
+    "crates/index-builder/src/ingest.rs": "b7a64bc39cb9e10eb004ade82e126fb2365aa5bf2369f6fe681409237e8ebf65",
+    "crates/index-builder/src/format.rs": "c6d70fdce6f86251fbcd363b9af667c95540199af37722f6f9a0bd829d18b0cc",
+    "crates/index-builder/src/merge.rs": "bfafea4755f07497676d51db566aabe5fc4d23b494b1dfb7b02cdeb9ce3ece9e",
+    "crates/index-builder/src/finalize.rs": "67484d23e8073b38041a9381145a1a97177d2e79faf0815c8f6acbfa2137024f",
+    "crates/index-builder/src/publish.rs": "8493f179d902cb0c2aa1572f6a51ad01214aca9fd0780540ca23cf328d6cc381",
+    "crates/index-builder/src/tokenize.rs": "b9261d65ea712c0981e8b39ce9d3f4e54e028b68cdb5f1976a8a52d32c8d1fea",
+    "crates/index-builder/src/util.rs": "5abf6835d4486ff99e88c26636693ab6748fde4068127dcfeed9730f986da610",
+    "crates/index-builder/Cargo.toml": "160d1bd57f85c0fff61d478dd7ebd46ac8584d8ad3e75fad398032b97e4b2416",
+    "crates/index-builder/build.rs": "d79c387b074a5066889ff2ba378c0ffad30ed56f019b8b3f58586c6e10f058d5",
+    "crates/index-builder/unicode-tables.mjs": "7304b02258797c500f69a901c582597e7c52153c3f3f3d7967337065f3054d9f",
+    "Cargo.toml": "233ec49c3497bf057579a1a11ad70cb9abb4249496b58485dcdd4b6ed7ef4134",
+    "bench/rust-builder/benchmark.ts": "21c861e483d6d9a8b91f1d1da5182d154db375ed300cbbbc47e838ce340dbfea",
+    "bench/rust-builder/control/build.ts": "ef1bf564ce7b418f8bca340e62d587fece54396cfdfcadba04da46f3a37d6f6a",
+    "bench/rust-builder/control/format.ts": "f44710940f1f6316bb1a5ed95732020e6da56ccb582f539ba4267b29b1ba7dba"
+  },
+  "rows": [
+    {
+      "variant": "rust",
+      "count": 100000,
+      "round": 0,
+      "startedAt": "2026-11-12T22:20:53.171Z",
+      "wallMs": 44488.345792,
+      "cpuUserMs": 66740,
+      "cpuSysMs": 7610,
+      "sampledPeakTreeRssBytes": 750927872,
+      "peakBuilderRssBytes": 760823808,
+      "manifest": {
+        "builder": "rust-cws1-v2",
+        "format": "CWS1",
+        "generation": "9e863c9de344f0276a375aab109f16318055418358b8fbc89d28e2cc212859b3",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 6813453638,
+        "buildMs": 44468,
+        "stagesMs": {
+          "ingest": 17735,
+          "vocabularyAndIds": 4120,
+          "forwardEncoding": 2233,
+          "relocateAndPublish": 292,
+          "mergeAndEmit": 20086
+        },
+        "threads": 4,
+        "batchBytes": 4194304,
+        "runs": 280,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 4194304,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 626
+      },
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/builder-publication-check/100000-0-rust"
+    }
+  ]
+}

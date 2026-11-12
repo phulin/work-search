@@ -13,7 +13,7 @@
     "dev": "tsx src/cli/main.ts dev",
     "deploy": "tsx src/cli/main.ts deploy",
     "check": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "yarn builder:compile && vitest run",
     "bench": "tsx bench/run.ts",
     "bench:demo": "tsx bench/demo-run.ts",
     "bundle": "wrangler deploy --dry-run --outdir dist",
@@ -28,7 +28,12 @@
     "global:build-pair-costs": "tsx scripts/build-pair-costs.ts",
     "global:refine-bounds": "tsx scripts/refine-global-bounds.ts",
     "bench:global-retrieval": "tsx bench/global-retrieval-matrix.ts",
-    "bench:global-native-retrieval": "tsx bench/global-native-retrieval.ts"
+    "bench:global-native-retrieval": "tsx bench/global-native-retrieval.ts",
+    "builder:compile": "cargo build --release --locked",
+    "builder:index": "yarn builder:compile && target/release/work-search-builder build",
+    "builder:check": "cargo fmt -- --check && cargo clippy --locked -- -D warnings",
+    "builder:test": "yarn builder:compile && cargo test --locked && vitest run tests/rust-builder.test.ts && node --import tsx bench/rust-builder/unicode.ts",
+    "bench:builder": "node --import tsx bench/rust-builder/benchmark.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261110.1",
