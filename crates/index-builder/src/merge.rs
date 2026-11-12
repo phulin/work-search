@@ -240,15 +240,10 @@ struct RawContext {
     df: u32,
     idf: f64,
 }
-// Keep the entire posting-cursor buffer pool bounded, independent of corpus size.
-// Larger reads amortize storage stalls across many interleaved sorted runs.
-pub fn record_buffer(inputs: usize) -> usize {
-    ((512 * 1048576 / inputs.max(1)) / (64 * 1024) * (64 * 1024)).clamp(256 * 1024, 8 * 1048576)
-}
 impl RecordCursor {
-    pub fn open(p: &Path, capacity: usize) -> Result<Self> {
+    pub fn open(p: &Path) -> Result<Self> {
         let mut c = Self {
-            reader: std::io::BufReader::with_capacity(capacity, std::fs::File::open(p)?),
+            reader: reader(p)?,
             header: [0; 80],
             positions: Vec::new(),
             valid: false,
@@ -257,20 +252,11 @@ impl RecordCursor {
         c.advance()?;
         Ok(c)
     }
-    pub fn raw(
-        out: &Path,
-        run: &Run,
-        base: u32,
-        stats: (u32, f64, f64),
-        capacity: usize,
-    ) -> Result<Self> {
+    pub fn raw(out: &Path, run: &Run, base: u32, stats: (u32, f64, f64)) -> Result<Self> {
         let mapping = std::fs::read(run_dir(out, run.id).join("mapping.bin"))?;
         let docs = std::fs::read(run_dir(out, run.id).join("documents.ready"))?;
         let mut c = Self {
-            reader: std::io::BufReader::with_capacity(
-                capacity,
-                std::fs::File::open(run_dir(out, run.id).join("postings.stage"))?,
-            ),
+            reader: reader(&run_dir(out, run.id).join("postings.stage"))?,
             header: [0; 80],
             positions: Vec::new(),
             valid: false,
@@ -364,7 +350,7 @@ impl RecordCursor {
 pub fn merge_records(paths: &[PathBuf], out: &Path) -> Result<()> {
     let mut cs = paths
         .iter()
-        .map(|p| RecordCursor::open(p, record_buffer(paths.len())))
+        .map(|p| RecordCursor::open(p))
         .collect::<Result<Vec<_>>>()?;
     let mut heap = BinaryHeap::new();
     for (i, c) in cs.iter().enumerate() {

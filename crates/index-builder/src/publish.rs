@@ -80,6 +80,18 @@ struct LeafRow {
     t: f64,
     loc: [u8; 36],
 }
+#[derive(Default)]
+struct EncodedLeaf {
+    term: u32,
+    first: u32,
+    last: u32,
+    count: u32,
+    b: f64,
+    t: f64,
+    scores: Vec<u8>,
+    positions: Vec<u8>,
+    locators: Vec<u8>,
+}
 struct Leaf {
     rows: Vec<LeafRow>,
     positions: Vec<u8>,
@@ -117,7 +129,12 @@ impl Leaf {
         self.offsets.push(self.positions.len().try_into()?);
         Ok(())
     }
-    fn flush(&mut self, tree: &mut Tree, p: &mut Packer) -> Result<()> {
+    fn flush(
+        &mut self,
+        term: u32,
+        send: &std::sync::mpsc::SyncSender<Result<EncodedLeaf>>,
+        free: &std::sync::mpsc::Receiver<EncodedLeaf>,
+    ) -> Result<()> {
         if self.rows.is_empty() {
             return Ok(());
         }
@@ -128,12 +145,10 @@ impl Leaf {
             self.position_buffer.extend_from_slice(&o.to_le_bytes());
         }
         self.position_buffer.extend_from_slice(&self.positions);
-        let pos = p.put(&self.position_buffer)?;
         self.locator_buffer.clear();
         for r in &self.rows {
             self.locator_buffer.extend_from_slice(&r.loc);
         }
-        let loc = p.put(&self.locator_buffer)?;
         let mut docs = [0u32; BLOCK];
         let mut bfs = [0u32; BLOCK];
         let mut tfs = [0u32; BLOCK];
@@ -164,21 +179,19 @@ impl Leaf {
             self.score_buffer[i * 4..i * 4 + 4]
                 .copy_from_slice(&((ends[i + 1] - ends[i]) as u32).to_le_bytes());
         }
-        let score = p.put(&self.score_buffer)?;
-        tree.push(
-            Branch {
-                first: self.rows[0].doc,
-                last: self.rows.last().unwrap().doc,
-                count: self.rows.len() as u32,
-                height: 0,
-                b: self.rows.iter().map(|r| r.b).fold(0.0, f64::max),
-                t: self.rows.iter().map(|r| r.t).fold(0.0, f64::max),
-                score,
-                positions: pos,
-                locators: loc,
-            },
-            p,
-        )?;
+        let reuse = free.try_recv().unwrap_or_default();
+        let block = EncodedLeaf {
+            term,
+            first: self.rows[0].doc,
+            last: self.rows.last().unwrap().doc,
+            count: self.rows.len() as u32,
+            b: self.rows.iter().map(|r| r.b).fold(0.0, f64::max),
+            t: self.rows.iter().map(|r| r.t).fold(0.0, f64::max),
+            scores: std::mem::replace(&mut self.score_buffer, reuse.scores),
+            positions: std::mem::replace(&mut self.position_buffer, reuse.positions),
+            locators: std::mem::replace(&mut self.locator_buffer, reuse.locators),
+        };
+        send.send(Ok(block)).map_err(|_| "posting writer stopped")?;
         self.rows.clear();
         self.positions.clear();
         self.offsets.clear();
@@ -200,15 +213,7 @@ pub fn emit(
     let mut cs = if runs.len() <= fan {
         runs.iter()
             .zip(bases)
-            .map(|(run, &base)| {
-                RecordCursor::raw(
-                    out,
-                    run,
-                    base,
-                    (count, averages.0, averages.1),
-                    crate::merge::record_buffer(runs.len()),
-                )
-            })
+            .map(|(run, &base)| RecordCursor::raw(out, run, base, (count, averages.0, averages.1)))
             .collect::<Result<Vec<_>>>()?
     } else {
         let mut paths = Vec::new();
@@ -217,13 +222,7 @@ pub fn emit(
                 .iter()
                 .enumerate()
                 .map(|(j, r)| {
-                    RecordCursor::raw(
-                        out,
-                        r,
-                        bases[i * fan + j],
-                        (count, averages.0, averages.1),
-                        crate::merge::record_buffer(group.len()),
-                    )
+                    RecordCursor::raw(out, r, bases[i * fan + j], (count, averages.0, averages.1))
                 })
                 .collect::<Result<Vec<_>>>()?;
             let dest = dir.join(format!("ready-{i}.bin"));
@@ -244,10 +243,9 @@ pub fn emit(
             w.flush()?;
             paths.push(dest);
         }
-        let paths = crate::merge::bounded_records(paths, out)?;
-        paths
+        crate::merge::bounded_records(paths, out)?
             .iter()
-            .map(|p| RecordCursor::open(p, crate::merge::record_buffer(paths.len())))
+            .map(|p| RecordCursor::open(p))
             .collect::<Result<Vec<_>>>()?
     };
     let mut heap = BinaryHeap::new();
@@ -259,9 +257,7 @@ pub fn emit(
     let mut p = Packer::new(&out.join("packs"), objects.len() as u32)?;
     let mut plans = writer(&out.join("staging/plans.bin"))?;
     let mut terms = reader(&out.join("staging/vocabulary.global"))?;
-    let mut current = None;
     let mut tree = Tree::new();
-    let mut leaf = Leaf::new();
     let mut hot: BinaryHeap<Reverse<(u32, Reverse<JsKey>, String)>> = BinaryHeap::new();
     fn flush_term(
         id: u32,
@@ -302,56 +298,121 @@ pub fn emit(
         }
         Ok(())
     }
-    let mut previous = None;
-    while let Some(Reverse((_, i))) = heap.pop() {
-        let competitor = heap.peek().map(|Reverse((key, _))| *key);
-        loop {
-            let key = cs[i].key();
-            if previous == Some(key) {
-                return Err("duplicate posting document within term".into());
-            }
-            previous = Some(key);
-            if current != Some(key.0) {
-                if let Some(id) = current {
-                    leaf.flush(&mut tree, &mut p)?;
-                    flush_term(
-                        id,
-                        std::mem::replace(&mut tree, Tree::new()),
-                        &mut terms,
-                        &mut plans,
-                        &mut p,
-                        &mut hot,
-                    )?;
+    // One producer merges/scores/encodes while the consumer hashes and writes.
+    // Bounded queues and buffer recycling overlap I/O without a postings spill
+    // or changing deterministic physical order.
+    std::thread::scope(|scope| -> Result<()> {
+        let (send, receive) = std::sync::mpsc::sync_channel::<Result<EncodedLeaf>>(32);
+        let (recycle, free) = std::sync::mpsc::sync_channel::<EncodedLeaf>(32);
+        let worker = scope.spawn(move || {
+            let produce = (|| -> Result<()> {
+                let mut previous = None;
+                let mut current = None;
+                let mut leaf = Leaf::new();
+                while let Some(Reverse((_, i))) = heap.pop() {
+                    let competitor = heap.peek().map(|Reverse((key, _))| *key);
+                    loop {
+                        let key = cs[i].key();
+                        if previous == Some(key) {
+                            return Err("duplicate posting document within term".into());
+                        }
+                        previous = Some(key);
+                        if current != Some(key.0) {
+                            if let Some(id) = current {
+                                leaf.flush(id, &send, &free)?;
+                            }
+                            current = Some(key.0);
+                        }
+                        if !leaf.rows.is_empty()
+                            && leaf.positions.len() + cs[i].positions.len() + 4 > 65536
+                        {
+                            leaf.flush(key.0, &send, &free)?;
+                        }
+                        leaf.push(&cs[i])?;
+                        if leaf.rows.len() == BLOCK {
+                            leaf.flush(key.0, &send, &free)?;
+                        }
+                        cs[i].advance()?;
+                        if !cs[i].valid {
+                            break;
+                        }
+                        if competitor.is_some_and(|other| cs[i].key() > other) {
+                            heap.push(Reverse((cs[i].key(), i)));
+                            break;
+                        }
+                    }
                 }
-                current = Some(key.0);
+                if let Some(id) = current {
+                    leaf.flush(id, &send, &free)?;
+                }
+                Ok(())
+            })();
+            if let Err(error) = produce {
+                let _ = send.send(Err(error));
             }
-            if !leaf.rows.is_empty() && leaf.positions.len() + cs[i].positions.len() + 4 > 65536 {
-                leaf.flush(&mut tree, &mut p)?;
+        });
+        let consume = (|| -> Result<()> {
+            let mut current = None;
+            for next in &receive {
+                let block = next?;
+                if current != Some(block.term) {
+                    if let Some(id) = current {
+                        flush_term(
+                            id,
+                            std::mem::replace(&mut tree, Tree::new()),
+                            &mut terms,
+                            &mut plans,
+                            &mut p,
+                            &mut hot,
+                        )?;
+                    }
+                    current = Some(block.term);
+                }
+                let positions = p.put(&block.positions)?;
+                let locators = p.put(&block.locators)?;
+                let score = p.put(&block.scores)?;
+                tree.push(
+                    Branch {
+                        first: block.first,
+                        last: block.last,
+                        count: block.count,
+                        height: 0,
+                        b: block.b,
+                        t: block.t,
+                        score,
+                        positions,
+                        locators,
+                    },
+                    &mut p,
+                )?;
+                let _ = recycle.try_send(block);
             }
-            leaf.push(&cs[i])?;
-            if leaf.rows.len() == BLOCK {
-                leaf.flush(&mut tree, &mut p)?;
+            if let Some(id) = current {
+                flush_term(
+                    id,
+                    std::mem::replace(&mut tree, Tree::new()),
+                    &mut terms,
+                    &mut plans,
+                    &mut p,
+                    &mut hot,
+                )?;
             }
-            cs[i].advance()?;
-            if !cs[i].valid {
-                break;
-            }
-            if competitor.is_some_and(|other| cs[i].key() > other) {
-                heap.push(Reverse((cs[i].key(), i)));
-                break;
-            }
+            Ok(())
+        })();
+        // Disconnect before joining so disk errors cannot leave the producer
+        // blocked on a full queue.
+        drop(receive);
+        drop(recycle);
+        if worker.join().is_err() {
+            return Err("posting encoder panicked".into());
         }
-    }
-    if let Some(id) = current {
-        leaf.flush(&mut tree, &mut p)?;
-        flush_term(id, tree, &mut terms, &mut plans, &mut p, &mut hot)?;
-    }
+        consume
+    })?;
     if optional_u32(&mut terms)?.is_some() {
         return Err("unconsumed vocabulary".into());
     }
     plans.flush()?;
     drop(plans);
-    drop(cs);
     let mut documents = Vec::new();
     let mut buffer = Vec::with_capacity(4096 * 36);
     let mut seen = 0;
