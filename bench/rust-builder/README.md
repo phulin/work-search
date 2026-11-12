@@ -74,4 +74,4 @@ test "$builder_build_status" -eq 0 && test "$builder_input_status" -eq 0
 The source must be streamed again when validating resume. Avoid `--max-docs` with
 an unbounded FIFO producer unless producer shutdown is handled explicitly.
 
-[Design](DESIGN.md) · [Measured results](REPORT.md)
+[Design](DESIGN.md) · [Measured results](REPORT.md) · [Ingestion/codec investigation](codecs/REPORT.md)

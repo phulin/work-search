@@ -1,0 +1,28 @@
+{
+  "fixtureSha256": {
+    "zstd-fast1-0.bin": "ea2e0bc4ed232a8116f0c0ff4fbafce711626c53e709dc888b1bcc47c4f670f3",
+    "none-1.bin": "804925a6d4cf5d195d60a97fdd3294424c448fa6a36638bd1165d1cfefb41e7b",
+    "none-0.bin": "ae6695356ca2628de4644f088961539007389326e86e187f23d50773c1a9d0e6",
+    "zstd-fast1-1.bin": "165d85d338dade8de86fa6235771b81ca5421aca8296095413c46f5ac6fa7e31",
+    "zstd-fast3-1.bin": "7a176756df62296c6beaedcbc74abe3036cf61bf9c2bf19afe7d82437fe11994",
+    "deflate-0.bin": "f4512bf660784f101ded5307e55f7b3652df6ed2cac313e6a0eb33c1e7fc5052",
+    "brotli-0-0.bin": "342ee98c782d03a854ab5ebeacb753173ccb6a63eb875b445a5d8c6084b9657f",
+    "brotli-0-1.bin": "eb5bee1c09061401ddacbff750b6f9f1ebfefbd82f18c072a9f9d2655e4f6a44",
+    "deflate-1.bin": "02e83c23ba26e60b4c0b67d52069364de81a7b2a0a8a1b506091462d794e4961",
+    "zstd-fast3-0.bin": "3620e328bb395807326bcd102e463c286b3f2bea8e6bcdd576017e20acf3b547",
+    "zstd-1-0.bin": "587502c200888cc741e43bed602cdf94c0308ad64c3671814765265dc136603f",
+    "zstd-1-1.bin": "e9d960ab8ed30117b3cbe31a2427016e7bf430fab51a8948b051f02aa291807a",
+    "lz4-1.bin": "727caf8c82f7ca8c8e6e853b83e039442518abe1105b57d2d32cf561a4ebd48e",
+    "lz4-0.bin": "d4fb20c31edace8bf1ed563f265e17e27a2720ca0b993e594e3a5ebd0d1833b4",
+    "gzip-1.bin": "7dffe647c70c0886be500db9c4f2435f6b64aa3739e0d6053f3972e3ffe151a6",
+    "gzip-0.bin": "11771e73e1fc8629bcffbbebfa7f49f9e17978b92c32091290db3fe17f9ffc24"
+  },
+  "selection": "Each fixed 16 MiB source run samples every 64th serialized text record, offset by run ordinal modulo 64. Sampling is independent of queries.",
+  "passages": 12376,
+  "displays": 1554,
+  "sourceCorpusSha256": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+  "lz4WasmSha256": "c4ebd0b62f5f3b69fa146c14c8f891ce0e781b26eab2c937dbff429df0d40f9d",
+  "lz4SourceSha256": "40896431e54a8244b22471f66186c27d8cfedcbd6950e0ed45e1b192599f4293",
+  "clang": "Apple clang 21.0.0 (clang-2100.4.1.1); wasm32 -O3 -msimd128 -fno-builtin",
+  "wasmLinker": "rust toolchain stable 1.93 bundled wasm-ld; 18 MiB fixed memory"
+}

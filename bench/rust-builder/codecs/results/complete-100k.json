@@ -1,0 +1,772 @@
+{
+  "kind": "Diagnostic complete builds; experimental non-gzip format must not be deployed as CWS1; sequential alternating order; uncontrolled filesystem caches and shared host load; timings include instrumentation when CODEC_PROFILE is set",
+  "gitCommit": "6689da8acf1d52b61f632f895a73b08b52045c3c",
+  "source": {
+    "kind": "Generated codec/timing experiment; non-gzip roots marked CWS1-CODEC-EXPERIMENT; never deploy as CWS1",
+    "sourceSha256": {
+      "crates/index-builder/src/main.rs": "788f00b5409ea0011cff9cecbbac630d66c029c458024d5b78f68edac68e244d",
+      "crates/index-builder/src/publish.rs": "3e302314f068a781ca882c52d9a378a35096d791208a4f64ab22a82c995282e8",
+      "crates/index-builder/src/ingest.rs": "cb25fabaf4ddb1babd7524b038db10edf7026126a100af21a3bfefaf4043f17e",
+      "crates/index-builder/src/tokenize.rs": "b9261d65ea712c0981e8b39ce9d3f4e54e028b68cdb5f1976a8a52d32c8d1fea"
+    },
+    "generatorSha256": "995f86a485a171e36c3af2cdf9f7599787fe9b11a25b7e112c393b10bd7b5e7f",
+    "codecSha256": "8a09321e64980d61213309ead69b114c34c2ace29b555875a6b2f9d68b6213cf"
+  },
+  "binarySha256": "b1df66356a43c3b1b0f7a04c1e1e8e808ba9323fdd27ad686f2d6a3536ec9baf",
+  "libraries": {
+    "zstd": "69d8dee81bccdee425d167300d11431f3c5ecc34a3011400e536aa89f7756189",
+    "lz4": "db6063b0815362b2152012e549797ca86e7bbd00c080f3e6dd642334f838bb01",
+    "brotlienc": "6f07b64b1247ef2963b69813326a2ad363391e07b90e2dca6cf244f17176f884",
+    "brotlidec": "23f7347022952e956a8fd9a045e32069c0d9adda23100af9d061502008976330"
+  },
+  "threads": 8,
+  "batchMiB": 16,
+  "profile": true,
+  "fixtureSampleEvery": null,
+  "node": "v26.7.0",
+  "rows": [
+    {
+      "codec": "gzip",
+      "round": 0,
+      "wallMs": 17458.766125,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "gzip",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1",
+        "generation": "c15c994fdac215e44e9b8df049826d1a65a2a5f3b890af8ec6aa34ffa7941c09",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 6813713369,
+        "buildMs": 17440,
+        "stagesMs": {
+          "ingest": 9374,
+          "vocabularyAndIds": 1956,
+          "forwardEncoding": 575,
+          "relocateAndPublish": 71,
+          "mergeAndEmit": 5462
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 27846486161,
+          "intern": 7435658572,
+          "json_parse": 1127762579,
+          "json_serialization": 4252779566,
+          "lowercase": 3091951166,
+          "normalization": 2104186776,
+          "offset_mapping": 3762741419,
+          "position_group_pack": 4513319095,
+          "run_sort_write_hash": 4383077628,
+          "text_pack_hash_crc_write": 2950575358,
+          "vocab_sort_row_scatter": 2532318875,
+          "word_scan": 4114979964
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 46765614,
+          "passage": 1797965221
+        }
+      },
+      "summedWorkerMs": 72019,
+      "peakIndividualRssBytes": 2299494400,
+      "timeOutput": [
+        "       17.45 real        61.31 user         4.81 sys",
+        "          2299494400  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-0-gzip"
+    },
+    {
+      "codec": "zstd-1",
+      "round": 0,
+      "wallMs": 17282.867666,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "zstd-1",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1-CODEC-EXPERIMENT",
+        "generation": "06c69aaebfb863006f919b531c32a152ccdcba8b9bb5a3434a612efb8c06558b",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 6870265679,
+        "buildMs": 17244,
+        "stagesMs": {
+          "ingest": 8588,
+          "vocabularyAndIds": 1922,
+          "forwardEncoding": 1025,
+          "relocateAndPublish": 69,
+          "mergeAndEmit": 5637
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 16116498343,
+          "intern": 7179820902,
+          "json_parse": 1182850837,
+          "json_serialization": 4127907051,
+          "lowercase": 2977022884,
+          "normalization": 2137849313,
+          "offset_mapping": 3549095573,
+          "position_group_pack": 4423617614,
+          "run_sort_write_hash": 7419864205,
+          "text_pack_hash_crc_write": 5874542244,
+          "vocab_sort_row_scatter": 2538349499,
+          "word_scan": 3985885094
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 47999395,
+          "passage": 1852949947
+        }
+      },
+      "summedWorkerMs": 65522,
+      "peakIndividualRssBytes": 2331181056,
+      "timeOutput": [
+        "       17.26 real        52.28 user         4.66 sys",
+        "          2331181056  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-0-zstd-1"
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 0,
+      "wallMs": 18333.795749999997,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "zstd-fast3",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1-CODEC-EXPERIMENT",
+        "generation": "254c80cb8c3edb60412f57a98e56bb6d013add130f66189f8f6ef44b32c2bf2b",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 8174340251,
+        "buildMs": 18319,
+        "stagesMs": {
+          "ingest": 8479,
+          "vocabularyAndIds": 1843,
+          "forwardEncoding": 803,
+          "relocateAndPublish": 79,
+          "mergeAndEmit": 7112
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 5835259199,
+          "intern": 6890748683,
+          "json_parse": 1124584243,
+          "json_serialization": 3884668048,
+          "lowercase": 2881168733,
+          "normalization": 2040565064,
+          "offset_mapping": 3472953625,
+          "position_group_pack": 4125011728,
+          "run_sort_write_hash": 9885664086,
+          "text_pack_hash_crc_write": 13429037356,
+          "vocab_sort_row_scatter": 2614280204,
+          "word_scan": 3861290022
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 65000948,
+          "passage": 3123786409
+        }
+      },
+      "summedWorkerMs": 65458,
+      "peakIndividualRssBytes": 2040922112,
+      "timeOutput": [
+        "       18.33 real        45.02 user         5.06 sys",
+        "          2040922112  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-0-zstd-fast3"
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 1,
+      "wallMs": 17381.997541999997,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "zstd-fast3",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1-CODEC-EXPERIMENT",
+        "generation": "254c80cb8c3edb60412f57a98e56bb6d013add130f66189f8f6ef44b32c2bf2b",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 8174340251,
+        "buildMs": 17364,
+        "stagesMs": {
+          "ingest": 8932,
+          "vocabularyAndIds": 2230,
+          "forwardEncoding": 505,
+          "relocateAndPublish": 69,
+          "mergeAndEmit": 5626
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 8087189235,
+          "intern": 10283582652,
+          "json_parse": 1524367727,
+          "json_serialization": 5389026709,
+          "lowercase": 4202936285,
+          "normalization": 2755062218,
+          "offset_mapping": 4645443121,
+          "position_group_pack": 5747178434,
+          "run_sort_write_hash": 6806499540,
+          "text_pack_hash_crc_write": 6231392105,
+          "vocab_sort_row_scatter": 3563520663,
+          "word_scan": 5362158748
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 65000948,
+          "passage": 3123786409
+        }
+      },
+      "summedWorkerMs": 68120,
+      "peakIndividualRssBytes": 2294153216,
+      "timeOutput": [
+        "       17.37 real        47.52 user         5.34 sys",
+        "          2294153216  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-1-zstd-fast3"
+    },
+    {
+      "codec": "zstd-1",
+      "round": 1,
+      "wallMs": 14982.731415999995,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "zstd-1",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1-CODEC-EXPERIMENT",
+        "generation": "06c69aaebfb863006f919b531c32a152ccdcba8b9bb5a3434a612efb8c06558b",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 6870265679,
+        "buildMs": 14970,
+        "stagesMs": {
+          "ingest": 7940,
+          "vocabularyAndIds": 1663,
+          "forwardEncoding": 412,
+          "relocateAndPublish": 74,
+          "mergeAndEmit": 4877
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 14429721442,
+          "intern": 6425281772,
+          "json_parse": 945516256,
+          "json_serialization": 3722173332,
+          "lowercase": 2752732998,
+          "normalization": 1915429227,
+          "offset_mapping": 3296870716,
+          "position_group_pack": 3917834381,
+          "run_sort_write_hash": 7356684835,
+          "text_pack_hash_crc_write": 5664461150,
+          "vocab_sort_row_scatter": 2448436753,
+          "word_scan": 3654164137
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 47999395,
+          "passage": 1852949947
+        }
+      },
+      "summedWorkerMs": 60872,
+      "peakIndividualRssBytes": 2369306624,
+      "timeOutput": [
+        "       14.97 real        53.03 user         4.22 sys",
+        "          2369306624  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-1-zstd-1"
+    },
+    {
+      "codec": "gzip",
+      "round": 1,
+      "wallMs": 15940.594916999995,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "gzip",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1",
+        "generation": "c15c994fdac215e44e9b8df049826d1a65a2a5f3b890af8ec6aa34ffa7941c09",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 6813713369,
+        "buildMs": 15930,
+        "stagesMs": {
+          "ingest": 7956,
+          "vocabularyAndIds": 1756,
+          "forwardEncoding": 458,
+          "relocateAndPublish": 147,
+          "mergeAndEmit": 5610
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 23887133368,
+          "intern": 5962142887,
+          "json_parse": 927469616,
+          "json_serialization": 3584939017,
+          "lowercase": 2630711308,
+          "normalization": 1884651131,
+          "offset_mapping": 3179820041,
+          "position_group_pack": 3647046585,
+          "run_sort_write_hash": 4834368124,
+          "text_pack_hash_crc_write": 2063859609,
+          "vocab_sort_row_scatter": 2029909585,
+          "word_scan": 3533714714
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 46765614,
+          "passage": 1797965221
+        }
+      },
+      "summedWorkerMs": 60851,
+      "peakIndividualRssBytes": 2462367744,
+      "timeOutput": [
+        "       15.93 real        62.37 user         3.91 sys",
+        "          2462367744  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-1-gzip"
+    },
+    {
+      "codec": "gzip",
+      "round": 2,
+      "wallMs": 15533.00841699999,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "gzip",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1",
+        "generation": "c15c994fdac215e44e9b8df049826d1a65a2a5f3b890af8ec6aa34ffa7941c09",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 6813713369,
+        "buildMs": 15520,
+        "stagesMs": {
+          "ingest": 9722,
+          "vocabularyAndIds": 1681,
+          "forwardEncoding": 447,
+          "relocateAndPublish": 65,
+          "mergeAndEmit": 3603
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 25930829744,
+          "intern": 6830830892,
+          "json_parse": 1065734575,
+          "json_serialization": 3899429668,
+          "lowercase": 2842546363,
+          "normalization": 2035549519,
+          "offset_mapping": 3472010429,
+          "position_group_pack": 4120619194,
+          "run_sort_write_hash": 6703828173,
+          "text_pack_hash_crc_write": 5995890000,
+          "vocab_sort_row_scatter": 2688402917,
+          "word_scan": 3715964499
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 46765614,
+          "passage": 1797965221
+        }
+      },
+      "summedWorkerMs": 74767,
+      "peakIndividualRssBytes": 2415919104,
+      "timeOutput": [
+        "       15.52 real        61.85 user         4.30 sys",
+        "          2415919104  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-2-gzip"
+    },
+    {
+      "codec": "zstd-1",
+      "round": 2,
+      "wallMs": 12650.137292000014,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "zstd-1",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1-CODEC-EXPERIMENT",
+        "generation": "06c69aaebfb863006f919b531c32a152ccdcba8b9bb5a3434a612efb8c06558b",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 6870265679,
+        "buildMs": 12637,
+        "stagesMs": {
+          "ingest": 6731,
+          "vocabularyAndIds": 1736,
+          "forwardEncoding": 444,
+          "relocateAndPublish": 65,
+          "mergeAndEmit": 3659
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 14267041940,
+          "intern": 6178776277,
+          "json_parse": 1002909086,
+          "json_serialization": 3669800074,
+          "lowercase": 2732348354,
+          "normalization": 1889593920,
+          "offset_mapping": 3252099410,
+          "position_group_pack": 3808372096,
+          "run_sort_write_hash": 4768913084,
+          "text_pack_hash_crc_write": 1765001569,
+          "vocab_sort_row_scatter": 2467868167,
+          "word_scan": 3591105340
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 47999395,
+          "passage": 1852949947
+        }
+      },
+      "summedWorkerMs": 51499,
+      "peakIndividualRssBytes": 2284929024,
+      "timeOutput": [
+        "       12.64 real        53.50 user         4.03 sys",
+        "          2284929024  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-2-zstd-1"
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 2,
+      "wallMs": 12422.655874999997,
+      "manifest": {
+        "builder": "rust-cws1-v2-codec-experiment",
+        "codec": "zstd-fast3",
+        "codecVersions": {
+          "zstd": 10507,
+          "lz4": 11000
+        },
+        "format": "CWS1-CODEC-EXPERIMENT",
+        "generation": "254c80cb8c3edb60412f57a98e56bb6d013add130f66189f8f6ef44b32c2bf2b",
+        "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06",
+        "corpusHashContract": "SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record",
+        "count": 100000,
+        "terms": 632909,
+        "bodyTokens": 187425411,
+        "titleTokens": 556941,
+        "bytes": 8174340251,
+        "buildMs": 12411,
+        "stagesMs": {
+          "ingest": 6083,
+          "vocabularyAndIds": 1709,
+          "forwardEncoding": 436,
+          "relocateAndPublish": 67,
+          "mergeAndEmit": 4113
+        },
+        "threads": 8,
+        "batchBytes": 16777216,
+        "runs": 71,
+        "scorer": "Rust float64, approximate FP equality",
+        "scoringImplementation": "rust-f64-ln-v1",
+        "unicode": "17.0",
+        "config": {
+          "format": "rust-cws1-v2",
+          "input": [
+            "/Users/phulin/Documents/Projects/work-search/bench/generated/flp-100000/corpus.jsonl"
+          ],
+          "batch_bytes": 16777216,
+          "max_documents": 100000,
+          "scorer": "rust-f64-ln-v1",
+          "unicode": "17.0"
+        },
+        "objects": 208
+      },
+      "profile": {
+        "nanoseconds": {
+          "compression": 5407860224,
+          "intern": 6799752320,
+          "json_parse": 1173801066,
+          "json_serialization": 3686509267,
+          "lowercase": 2694670691,
+          "normalization": 1918224920,
+          "offset_mapping": 3253830619,
+          "position_group_pack": 4206767507,
+          "run_sort_write_hash": 5134488040,
+          "text_pack_hash_crc_write": 3158292713,
+          "vocab_sort_row_scatter": 2902497083,
+          "word_scan": 3742061422
+        },
+        "records": {
+          "display": 100000,
+          "passage": 791343
+        },
+        "raw_bytes": {
+          "display": 73467590,
+          "passage": 3474487847
+        },
+        "encoded_bytes": {
+          "display": 65000948,
+          "passage": 3123786409
+        }
+      },
+      "summedWorkerMs": 46395,
+      "peakIndividualRssBytes": 1780645888,
+      "timeOutput": [
+        "       12.42 real        46.78 user         5.25 sys",
+        "          1780645888  maximum resident set size"
+      ],
+      "out": "/Users/phulin/.codex/worktrees/rust-index-builder/work-search/work/codec-final-100k/100000-2-zstd-fast3"
+    }
+  ],
+  "measurementNotes": [
+    "Sequential three-codec screen with alternating variant order, with uncontrolled host load and filesystem caches.",
+    "The round-0 zstd-1 build overlapped a roughly six-second local workerd decoder diagnostic. Do not interpret the wall-time ratio as an isolated causal effect or a production forecast.",
+    "CPU user+system is more stable across these repetitions; subsequent competing main-thread build prevented a clean five-round confirmation."
+  ]
+}

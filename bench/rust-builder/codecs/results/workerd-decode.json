@@ -1,0 +1,1817 @@
+{
+  "kind": "Local workerd decode plus TextDecoder/JSON.parse batches; client wall time includes local dispatch; NOT live Worker latency/CPU; each response verifies full decoded bytes by SHA256 on first iteration",
+  "compatibilityDate": "2026-11-10",
+  "runtimeVersion": "workerd 2026-11-10",
+  "lz4WasmSha256": "c4ebd0b62f5f3b69fa146c14c8f891ce0e781b26eab2c937dbff429df0d40f9d",
+  "lz4WasmMemoryBytes": 18874368,
+  "harnessSha256": "1a8224880fd7fbd35d2b862a0a70cbac66cc20f1017173ad822ddfc455ab8536",
+  "runtimeBinarySha256": "f08ed8b7be3588cc7393b274e7278bee3125a1015ed3e214293e5e75088dd5b1",
+  "miniflareVersion": "4.20260730.0",
+  "scriptSha256": "bd0a8cc1179c7db3cc2c9ea1ef54c4dde26cc1d637f0b3c8e7caa5b4e163015c",
+  "boundaryChecks": [
+    {
+      "codec": "zstd-1",
+      "size": 40959,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-1\",\"records\":1,\"iterations\":1,\"chars\":40948,\"sha256\":\"9712de906fe0a4ccef7f5d871be42927da194e91aea80de6b5ef7858012cf86c\"}"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 40959,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-bounded\",\"records\":1,\"iterations\":1,\"chars\":40948,\"sha256\":\"9712de906fe0a4ccef7f5d871be42927da194e91aea80de6b5ef7858012cf86c\"}"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 40959,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":40948,\"sha256\":\"9712de906fe0a4ccef7f5d871be42927da194e91aea80de6b5ef7858012cf86c\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "size": 40960,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 40960,
+      "status": 500,
+      "body": "RangeError: Memory limit exceeded\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 40960,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":40949,\"sha256\":\"ba4c0f0fa339fdc68f72010e139b5e7cf9963de890b1d17f59e15b93cf5f96a5\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "size": 40961,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-1\",\"records\":1,\"iterations\":1,\"chars\":40950,\"sha256\":\"d855b040afc7a4695778d693278b88fa8119db0e8752deb31a2ef7f2cd15ac47\"}"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 40961,
+      "status": 500,
+      "body": "RangeError: Memory limit exceeded\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 40961,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":40950,\"sha256\":\"d855b040afc7a4695778d693278b88fa8119db0e8752deb31a2ef7f2cd15ac47\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "size": 81919,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-1\",\"records\":1,\"iterations\":1,\"chars\":81908,\"sha256\":\"c4278da87891c620a7f54ded545ad6701587c6b053db2d0a201032a8a7ede88a\"}"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 81919,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-bounded\",\"records\":1,\"iterations\":1,\"chars\":81908,\"sha256\":\"c4278da87891c620a7f54ded545ad6701587c6b053db2d0a201032a8a7ede88a\"}"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 81919,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":81908,\"sha256\":\"c4278da87891c620a7f54ded545ad6701587c6b053db2d0a201032a8a7ede88a\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "size": 81920,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 81920,
+      "status": 500,
+      "body": "RangeError: Memory limit exceeded\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 81920,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":81909,\"sha256\":\"9075e056fc4f42f94cd4f575cd4e7ddaa42545177a50b697b976189791c5d80d\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "size": 81921,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-1\",\"records\":1,\"iterations\":1,\"chars\":81910,\"sha256\":\"4aafd2fe21aec67fd4f89ca9f1460bbc32992a23c7fe1afba44fe464acab043d\"}"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 81921,
+      "status": 500,
+      "body": "RangeError: Memory limit exceeded\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 81921,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":81910,\"sha256\":\"4aafd2fe21aec67fd4f89ca9f1460bbc32992a23c7fe1afba44fe464acab043d\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "size": 163839,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-1\",\"records\":1,\"iterations\":1,\"chars\":163828,\"sha256\":\"6aae169313127448f63a954410837f970e324c68700eb1936d17b921e8d1ea09\"}"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 163839,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-bounded\",\"records\":1,\"iterations\":1,\"chars\":163828,\"sha256\":\"6aae169313127448f63a954410837f970e324c68700eb1936d17b921e8d1ea09\"}"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 163839,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":163828,\"sha256\":\"6aae169313127448f63a954410837f970e324c68700eb1936d17b921e8d1ea09\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "size": 163840,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 163840,
+      "status": 500,
+      "body": "RangeError: Memory limit exceeded\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 163840,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":163829,\"sha256\":\"bb05dbb4e0ddb2cc7d310041db17d1edc980b247ebb0396a111d6c2dff922954\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "size": 163841,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-1\",\"records\":1,\"iterations\":1,\"chars\":163830,\"sha256\":\"cf8e428e464b750d9e87bb6d6e976b75918ec47ac448c03c1173e79def614898\"}"
+    },
+    {
+      "codec": "zstd-bounded",
+      "size": 163841,
+      "status": 500,
+      "body": "RangeError: Memory limit exceeded\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "size": 163841,
+      "status": 200,
+      "body": "{\"codec\":\"zstd-info\",\"records\":1,\"iterations\":1,\"chars\":163830,\"sha256\":\"cf8e428e464b750d9e87bb6d6e976b75918ec47ac448c03c1173e79def614898\"}"
+    },
+    {
+      "codec": "zstd-1",
+      "cut": 1,
+      "expectedRejection": true,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-1",
+      "cut": 2,
+      "expectedRejection": true,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-1",
+      "cut": 4,
+      "expectedRejection": true,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-1",
+      "cut": 8,
+      "expectedRejection": true,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "cut": 1,
+      "expectedRejection": true,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "cut": 2,
+      "expectedRejection": true,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "cut": 4,
+      "expectedRejection": true,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    },
+    {
+      "codec": "zstd-info",
+      "cut": 8,
+      "expectedRejection": true,
+      "status": 500,
+      "body": "Error: unexpected end of file\n    at async Object.fetch (file:///Users/phulin/Documents/Projects/work-search/node_modules/miniflare/dist/src/workers/core/entry.worker.js:4765:22)"
+    }
+  ],
+  "zstdValidation": [
+    {
+      "kind": 0,
+      "records": 12376,
+      "byteExact": true
+    },
+    {
+      "kind": 1,
+      "records": 1554,
+      "byteExact": true
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": 0,
+      "records": 12376,
+      "byteExact": true
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": 1,
+      "records": 1554,
+      "byteExact": true
+    }
+  ],
+  "rows": [
+    {
+      "codec": "gzip-stream",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 85.1690410000001,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 40.43045799999982,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 86.39499999999998,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 38.60820899999999,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 26.736374999999953,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 35.26229199999989,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 21.040374999999585,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 21.791167000000314,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 147.04675000000043,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 45.26204199999938,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 14.484292000000096,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "passage",
+      "round": 0,
+      "clientWallMs": 23.43920799999978,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 57.469458999999915,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 11.811958000000232,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 55.44312499999978,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 11.660917000000154,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 8.308708000000479,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 30.832792000000154,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 5.7864169999993464,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 5.719625000000633,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 16.58116699999937,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 14.32549999999992,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 3.141291999999339,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "display",
+      "round": 0,
+      "clientWallMs": 4.319082999999409,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 23.546291999999994,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 15.811000000000604,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 46.946915999999874,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 148.16037500000039,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 20.809833000000253,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 20.400292000000263,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 34.82054200000039,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 27.680083999999624,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 38.88820899999973,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 80.05833299999995,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 42.75983400000041,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "passage",
+      "round": 1,
+      "clientWallMs": 80.64099999999962,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 4.581125000000611,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 3.2017500000001746,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 17.73504199999934,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 15.416833999999653,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 5.471958000000086,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 6.062624999999571,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 13.474083000000064,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 10.505583000000115,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 11.501917000000503,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 56.86083300000064,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 11.819875000000138,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "display",
+      "round": 1,
+      "clientWallMs": 50.41504199999963,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 89.5293329999995,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 44.58937499999956,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 91.63929199999984,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 42.19187500000044,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 26.66754200000014,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 33.32404100000076,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 20.999166999999943,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 19.06054200000017,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 147.47354200000063,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 44.81104200000027,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 14.553124999999454,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "passage",
+      "round": 2,
+      "clientWallMs": 23.356457999999293,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 54.40870799999993,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 10.981041999999434,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 48.547583999999915,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 11.781833000000006,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 8.434916000000158,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 25.27233299999989,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 6.44116699999995,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 5.401332999999795,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 15.366041999999652,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 14.061541000000034,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 3.8033750000004147,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "display",
+      "round": 2,
+      "clientWallMs": 4.061499999999796,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 24.49420900000041,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 14.662249999999403,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 45.762040999999954,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 147.81904200000008,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 18.956374999999753,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 19.929916999999477,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 32.194375000000036,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 27.601166999999805,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 39.92475000000013,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 80.1465419999995,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 42.57670899999994,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "passage",
+      "round": 3,
+      "clientWallMs": 82.40899999999965,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 4.6626249999999345,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 3.2758330000006026,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 14.52520800000002,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 18.820959000000585,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 5.352917000000161,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 5.41137499999968,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 23.77720799999952,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 8.871791999999914,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 12.10833300000013,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 49.64575000000059,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 11.30883300000005,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "display",
+      "round": 3,
+      "clientWallMs": 48.51191699999981,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 86.2904580000004,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 44.516749999999774,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 89.08341699999983,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 42.24316699999963,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 28.060207999999875,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 32.37312500000007,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 20.269333000000188,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 19.82445899999948,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 146.74812500000007,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 46.02979200000027,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 14.36187500000051,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "passage",
+      "round": 4,
+      "clientWallMs": 23.319250000000466,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 3478944,
+        "sha256": "cd42da03a29983cddd86f1be30fe1c82d081d1f2e9b2861697249498ca88bce2"
+      }
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 53.38008399999944,
+      "result": {
+        "codec": "gzip-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "gzip",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 11.842125000000124,
+      "result": {
+        "codec": "gzip",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 51.31391699999949,
+      "result": {
+        "codec": "deflate-stream",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "deflate",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 11.737291000000369,
+      "result": {
+        "codec": "deflate",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 8.255417000000307,
+      "result": {
+        "codec": "zstd-1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 22.79462500000045,
+      "result": {
+        "codec": "zstd-info",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 6.462999999999738,
+      "result": {
+        "codec": "zstd-fast1",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 5.211166000000048,
+      "result": {
+        "codec": "zstd-fast3",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 15.686290999999983,
+      "result": {
+        "codec": "lz4",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 15.060375000000022,
+      "result": {
+        "codec": "brotli-0",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "none",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 7.248583000000508,
+      "result": {
+        "codec": "none",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "display",
+      "round": 4,
+      "clientWallMs": 4.448957999999948,
+      "result": {
+        "codec": "lz4-wasm",
+        "records": 128,
+        "iterations": 16,
+        "chars": 683152,
+        "sha256": "f4198eb30a3ba5d0815f57c9d40cb5a1de0de523bd367c8178062f20f656d6ac"
+      }
+    }
+  ]
+}

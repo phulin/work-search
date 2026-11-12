@@ -1,0 +1,458 @@
+{
+  "kind": "Independent diagnostic sessions; no live Worker latency claims",
+  "profile": {
+    "summedWorkerMs": 75891,
+    "workerElapsedPhasePercent": {
+      "compression": 37.438781224387604,
+      "intern": 9.919917082394488,
+      "json_parse": 1.5840147856794613,
+      "json_serialization": 5.680571299627097,
+      "lowercase": 4.169720445112069,
+      "normalization": 2.9352375472717447,
+      "offset_mapping": 4.805332952524015,
+      "position_group_pack": 6.096024387608543,
+      "run_sort_write_hash": 9.225696888959165,
+      "text_pack_hash_crc_write": 3.5276162100907884,
+      "vocab_sort_row_scatter": 3.330997638718689,
+      "word_scan": 5.7039427850469755
+    },
+    "records": {
+      "display": 100000,
+      "passage": 791343
+    },
+    "rawBytes": {
+      "display": 73467590,
+      "passage": 3474487847
+    },
+    "encodedBytes": {
+      "display": 46765614,
+      "passage": 1797965221
+    }
+  },
+  "micro": [
+    {
+      "codec": "gzip",
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 28138647,
+      "medianEncodeAndCopyMs": 254.971416,
+      "medianNativeDecodeAndVerifyMs": 111.562375
+    },
+    {
+      "codec": "deflate",
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 27915879,
+      "medianEncodeAndCopyMs": 254.22575,
+      "medianNativeDecodeAndVerifyMs": 110.810458
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 28995353,
+      "medianEncodeAndCopyMs": 140.424125,
+      "medianNativeDecodeAndVerifyMs": 72.416792
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 46331202,
+      "medianEncodeAndCopyMs": 81.229125,
+      "medianNativeDecodeAndVerifyMs": 28.79325
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 48882106,
+      "medianEncodeAndCopyMs": 54.262125,
+      "medianNativeDecodeAndVerifyMs": 19.584958
+    },
+    {
+      "codec": "lz4",
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 44837708,
+      "medianEncodeAndCopyMs": 92.477834,
+      "medianNativeDecodeAndVerifyMs": 17.803042
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 30730054,
+      "medianEncodeAndCopyMs": 201.248834,
+      "medianNativeDecodeAndVerifyMs": 173.922166
+    },
+    {
+      "codec": "none",
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 54371722,
+      "medianEncodeAndCopyMs": 3.498125,
+      "medianNativeDecodeAndVerifyMs": 2.741042
+    },
+    {
+      "codec": "gzip",
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 728983,
+      "medianEncodeAndCopyMs": 12.379458,
+      "medianNativeDecodeAndVerifyMs": 4.655958
+    },
+    {
+      "codec": "deflate",
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 701011,
+      "medianEncodeAndCopyMs": 12.66725,
+      "medianNativeDecodeAndVerifyMs": 4.588917
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 748128,
+      "medianEncodeAndCopyMs": 6.57175,
+      "medianNativeDecodeAndVerifyMs": 2.734875
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 964202,
+      "medianEncodeAndCopyMs": 2.49275,
+      "medianNativeDecodeAndVerifyMs": 0.5805
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 1013117,
+      "medianEncodeAndCopyMs": 2.019375,
+      "medianNativeDecodeAndVerifyMs": 0.481208
+    },
+    {
+      "codec": "lz4",
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 957816,
+      "medianEncodeAndCopyMs": 1.5135,
+      "medianNativeDecodeAndVerifyMs": 0.327667
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 842089,
+      "medianEncodeAndCopyMs": 8.40575,
+      "medianNativeDecodeAndVerifyMs": 6.375
+    },
+    {
+      "codec": "none",
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 1141032,
+      "medianEncodeAndCopyMs": 0.150875,
+      "medianNativeDecodeAndVerifyMs": 0.078292
+    }
+  ],
+  "completeBuilds": [
+    {
+      "codec": "gzip",
+      "samples": 3,
+      "wallSeconds": {
+        "median": 15.940594916999995,
+        "min": 15.53300841699999,
+        "max": 17.458766124999997
+      },
+      "medianCpuSeconds": 66.15,
+      "medianIngestSeconds": 9.374,
+      "outputBytes": 6813713369
+    },
+    {
+      "codec": "zstd-1",
+      "samples": 3,
+      "wallSeconds": {
+        "median": 14.982731415999995,
+        "min": 12.650137292000014,
+        "max": 17.282867665999998
+      },
+      "medianCpuSeconds": 57.25,
+      "medianIngestSeconds": 7.94,
+      "outputBytes": 6870265679
+    },
+    {
+      "codec": "zstd-fast3",
+      "samples": 3,
+      "wallSeconds": {
+        "median": 17.381997541999997,
+        "min": 12.422655874999997,
+        "max": 18.333795749999997
+      },
+      "medianCpuSeconds": 52.03,
+      "medianIngestSeconds": 8.479,
+      "outputBytes": 8174340251
+    }
+  ],
+  "localWorkerd": [
+    {
+      "codec": "gzip-stream",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 85.1690410000001,
+      "minClientWallMs": 80.64099999999962,
+      "maxClientWallMs": 89.5293329999995
+    },
+    {
+      "codec": "gzip",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 42.75983400000041,
+      "minClientWallMs": 40.43045799999982,
+      "maxClientWallMs": 44.58937499999956
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 86.39499999999998,
+      "minClientWallMs": 80.05833299999995,
+      "maxClientWallMs": 91.63929199999984
+    },
+    {
+      "codec": "deflate",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 39.92475000000013,
+      "minClientWallMs": 38.60820899999999,
+      "maxClientWallMs": 42.24316699999963
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 27.601166999999805,
+      "minClientWallMs": 26.66754200000014,
+      "maxClientWallMs": 28.060207999999875
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 33.32404100000076,
+      "minClientWallMs": 32.194375000000036,
+      "maxClientWallMs": 35.26229199999989
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 20.400292000000263,
+      "minClientWallMs": 19.929916999999477,
+      "maxClientWallMs": 21.040374999999585
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 19.82445899999948,
+      "minClientWallMs": 18.956374999999753,
+      "maxClientWallMs": 21.791167000000314
+    },
+    {
+      "codec": "lz4",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 147.47354200000063,
+      "minClientWallMs": 146.74812500000007,
+      "maxClientWallMs": 148.16037500000039
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 45.762040999999954,
+      "minClientWallMs": 44.81104200000027,
+      "maxClientWallMs": 46.946915999999874
+    },
+    {
+      "codec": "none",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 14.553124999999454,
+      "minClientWallMs": 14.36187500000051,
+      "maxClientWallMs": 15.811000000000604
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "passage",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 23.43920799999978,
+      "minClientWallMs": 23.319250000000466,
+      "maxClientWallMs": 24.49420900000041
+    },
+    {
+      "codec": "gzip-stream",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 53.38008399999944,
+      "minClientWallMs": 48.51191699999981,
+      "maxClientWallMs": 57.469458999999915
+    },
+    {
+      "codec": "gzip",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 11.811958000000232,
+      "minClientWallMs": 10.981041999999434,
+      "maxClientWallMs": 11.842125000000124
+    },
+    {
+      "codec": "deflate-stream",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 51.31391699999949,
+      "minClientWallMs": 48.547583999999915,
+      "maxClientWallMs": 56.86083300000064
+    },
+    {
+      "codec": "deflate",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 11.737291000000369,
+      "minClientWallMs": 11.501917000000503,
+      "maxClientWallMs": 12.10833300000013
+    },
+    {
+      "codec": "zstd-1",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 8.434916000000158,
+      "minClientWallMs": 8.255417000000307,
+      "maxClientWallMs": 10.505583000000115
+    },
+    {
+      "codec": "zstd-info",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 23.77720799999952,
+      "minClientWallMs": 13.474083000000064,
+      "maxClientWallMs": 30.832792000000154
+    },
+    {
+      "codec": "zstd-fast1",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 6.062624999999571,
+      "minClientWallMs": 5.41137499999968,
+      "maxClientWallMs": 6.462999999999738
+    },
+    {
+      "codec": "zstd-fast3",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 5.401332999999795,
+      "minClientWallMs": 5.211166000000048,
+      "maxClientWallMs": 5.719625000000633
+    },
+    {
+      "codec": "lz4",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 15.686290999999983,
+      "minClientWallMs": 15.366041999999652,
+      "maxClientWallMs": 18.820959000000585
+    },
+    {
+      "codec": "brotli-0",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 14.52520800000002,
+      "minClientWallMs": 14.061541000000034,
+      "maxClientWallMs": 17.73504199999934
+    },
+    {
+      "codec": "none",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 3.2758330000006026,
+      "minClientWallMs": 3.141291999999339,
+      "maxClientWallMs": 7.248583000000508
+    },
+    {
+      "codec": "lz4-wasm",
+      "kind": "display",
+      "samples": 5,
+      "recordsPerRequest": 128,
+      "iterations": 16,
+      "medianClientWallMs": 4.448957999999948,
+      "minClientWallMs": 4.061499999999796,
+      "maxClientWallMs": 4.6626249999999345
+    }
+  ]
+}

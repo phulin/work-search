@@ -1,0 +1,678 @@
+{
+  "kind": "Corpus-wide stride sample of actual serialized passage/display JSON; three alternating-order encoding+output-copy and native decoding+byte-verification passes; not Worker serving latency",
+  "sampleEvery": 64,
+  "rows": [
+    {
+      "codec": "gzip",
+      "round": 0,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 28138647,
+      "nativeEncodeAndCopyNs": 264483125,
+      "nativeDecodeAndVerifyNs": 112476542,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "gzip",
+      "round": 0,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 728983,
+      "nativeEncodeAndCopyNs": 12560167,
+      "nativeDecodeAndVerifyNs": 4655958,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "deflate",
+      "round": 0,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 27915879,
+      "nativeEncodeAndCopyNs": 254225750,
+      "nativeDecodeAndVerifyNs": 110810458,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "deflate",
+      "round": 0,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 701011,
+      "nativeEncodeAndCopyNs": 12715667,
+      "nativeDecodeAndVerifyNs": 4553833,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "round": 0,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 28995353,
+      "nativeEncodeAndCopyNs": 140424125,
+      "nativeDecodeAndVerifyNs": 72416792,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "round": 0,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 748128,
+      "nativeEncodeAndCopyNs": 6593166,
+      "nativeDecodeAndVerifyNs": 2731792,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "round": 0,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 46331202,
+      "nativeEncodeAndCopyNs": 81723917,
+      "nativeDecodeAndVerifyNs": 31751875,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "round": 0,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 964202,
+      "nativeEncodeAndCopyNs": 2500667,
+      "nativeDecodeAndVerifyNs": 576583,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 0,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 48882106,
+      "nativeEncodeAndCopyNs": 56223250,
+      "nativeDecodeAndVerifyNs": 21169625,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 0,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 1013117,
+      "nativeEncodeAndCopyNs": 2059333,
+      "nativeDecodeAndVerifyNs": 472792,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "lz4",
+      "round": 0,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 44837708,
+      "nativeEncodeAndCopyNs": 94879834,
+      "nativeDecodeAndVerifyNs": 17831791,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "lz4",
+      "round": 0,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 957816,
+      "nativeEncodeAndCopyNs": 1513500,
+      "nativeDecodeAndVerifyNs": 327667,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "round": 0,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 30730054,
+      "nativeEncodeAndCopyNs": 204231834,
+      "nativeDecodeAndVerifyNs": 182421875,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "round": 0,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 842089,
+      "nativeEncodeAndCopyNs": 8563083,
+      "nativeDecodeAndVerifyNs": 6484084,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "none",
+      "round": 0,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 54371722,
+      "nativeEncodeAndCopyNs": 7504875,
+      "nativeDecodeAndVerifyNs": 2755834,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "none",
+      "round": 0,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 1141032,
+      "nativeEncodeAndCopyNs": 208708,
+      "nativeDecodeAndVerifyNs": 96916,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "none",
+      "round": 1,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 54371722,
+      "nativeEncodeAndCopyNs": 3277250,
+      "nativeDecodeAndVerifyNs": 2741042,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "none",
+      "round": 1,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 1141032,
+      "nativeEncodeAndCopyNs": 124750,
+      "nativeDecodeAndVerifyNs": 77917,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "round": 1,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 30730054,
+      "nativeEncodeAndCopyNs": 201248834,
+      "nativeDecodeAndVerifyNs": 173922166,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "round": 1,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 842089,
+      "nativeEncodeAndCopyNs": 8405750,
+      "nativeDecodeAndVerifyNs": 6375000,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "lz4",
+      "round": 1,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 44837708,
+      "nativeEncodeAndCopyNs": 92477834,
+      "nativeDecodeAndVerifyNs": 17803042,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "lz4",
+      "round": 1,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 957816,
+      "nativeEncodeAndCopyNs": 1563917,
+      "nativeDecodeAndVerifyNs": 334250,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 1,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 48882106,
+      "nativeEncodeAndCopyNs": 54262125,
+      "nativeDecodeAndVerifyNs": 19011875,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 1,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 1013117,
+      "nativeEncodeAndCopyNs": 2019375,
+      "nativeDecodeAndVerifyNs": 484250,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "round": 1,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 46331202,
+      "nativeEncodeAndCopyNs": 81229125,
+      "nativeDecodeAndVerifyNs": 28793250,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "round": 1,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 964202,
+      "nativeEncodeAndCopyNs": 2492750,
+      "nativeDecodeAndVerifyNs": 602416,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "round": 1,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 28995353,
+      "nativeEncodeAndCopyNs": 145757166,
+      "nativeDecodeAndVerifyNs": 73355042,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "round": 1,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 748128,
+      "nativeEncodeAndCopyNs": 6571750,
+      "nativeDecodeAndVerifyNs": 2748958,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "deflate",
+      "round": 1,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 27915879,
+      "nativeEncodeAndCopyNs": 259859208,
+      "nativeDecodeAndVerifyNs": 109961583,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "deflate",
+      "round": 1,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 701011,
+      "nativeEncodeAndCopyNs": 12667250,
+      "nativeDecodeAndVerifyNs": 4616917,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "gzip",
+      "round": 1,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 28138647,
+      "nativeEncodeAndCopyNs": 254971416,
+      "nativeDecodeAndVerifyNs": 110880125,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "gzip",
+      "round": 1,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 728983,
+      "nativeEncodeAndCopyNs": 12204750,
+      "nativeDecodeAndVerifyNs": 4583459,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "gzip",
+      "round": 2,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 28138647,
+      "nativeEncodeAndCopyNs": 251976583,
+      "nativeDecodeAndVerifyNs": 111562375,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "gzip",
+      "round": 2,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 728983,
+      "nativeEncodeAndCopyNs": 12379458,
+      "nativeDecodeAndVerifyNs": 4673042,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "deflate",
+      "round": 2,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 27915879,
+      "nativeEncodeAndCopyNs": 253423834,
+      "nativeDecodeAndVerifyNs": 110946458,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "deflate",
+      "round": 2,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 701011,
+      "nativeEncodeAndCopyNs": 12446209,
+      "nativeDecodeAndVerifyNs": 4588917,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "round": 2,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 28995353,
+      "nativeEncodeAndCopyNs": 139493750,
+      "nativeDecodeAndVerifyNs": 72355542,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-1",
+      "round": 2,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 748128,
+      "nativeEncodeAndCopyNs": 6477250,
+      "nativeDecodeAndVerifyNs": 2734875,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "round": 2,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 46331202,
+      "nativeEncodeAndCopyNs": 77486250,
+      "nativeDecodeAndVerifyNs": 27984916,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast1",
+      "round": 2,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 964202,
+      "nativeEncodeAndCopyNs": 2407167,
+      "nativeDecodeAndVerifyNs": 580500,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 2,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 48882106,
+      "nativeEncodeAndCopyNs": 53707083,
+      "nativeDecodeAndVerifyNs": 19584958,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "zstd-fast3",
+      "round": 2,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 1013117,
+      "nativeEncodeAndCopyNs": 2004625,
+      "nativeDecodeAndVerifyNs": 481208,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "lz4",
+      "round": 2,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 44837708,
+      "nativeEncodeAndCopyNs": 89245833,
+      "nativeDecodeAndVerifyNs": 17459792,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "lz4",
+      "round": 2,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 957816,
+      "nativeEncodeAndCopyNs": 1510791,
+      "nativeDecodeAndVerifyNs": 319666,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "round": 2,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 30730054,
+      "nativeEncodeAndCopyNs": 194623542,
+      "nativeDecodeAndVerifyNs": 171493375,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "brotli-0",
+      "round": 2,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 842089,
+      "nativeEncodeAndCopyNs": 8343125,
+      "nativeDecodeAndVerifyNs": 6315833,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "none",
+      "round": 2,
+      "kind": "passage",
+      "records": 12376,
+      "rawBytes": 54371722,
+      "encodedBytes": 54371722,
+      "nativeEncodeAndCopyNs": 3498125,
+      "nativeDecodeAndVerifyNs": 2658208,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    },
+    {
+      "codec": "none",
+      "round": 2,
+      "kind": "display",
+      "records": 1554,
+      "rawBytes": 1141032,
+      "encodedBytes": 1141032,
+      "nativeEncodeAndCopyNs": 150875,
+      "nativeDecodeAndVerifyNs": 78292,
+      "versions": {
+        "zstd": 10507,
+        "lz4": 11000
+      }
+    }
+  ]
+}

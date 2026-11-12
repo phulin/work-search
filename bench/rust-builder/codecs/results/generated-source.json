@@ -1,0 +1,11 @@
+{
+  "kind": "Generated codec/timing experiment; non-gzip roots marked CWS1-CODEC-EXPERIMENT; never deploy as CWS1",
+  "sourceSha256": {
+    "crates/index-builder/src/main.rs": "788f00b5409ea0011cff9cecbbac630d66c029c458024d5b78f68edac68e244d",
+    "crates/index-builder/src/publish.rs": "3e302314f068a781ca882c52d9a378a35096d791208a4f64ab22a82c995282e8",
+    "crates/index-builder/src/ingest.rs": "cb25fabaf4ddb1babd7524b038db10edf7026126a100af21a3bfefaf4043f17e",
+    "crates/index-builder/src/tokenize.rs": "b9261d65ea712c0981e8b39ce9d3f4e54e028b68cdb5f1976a8a52d32c8d1fea"
+  },
+  "generatorSha256": "995f86a485a171e36c3af2cdf9f7599787fe9b11a25b7e112c393b10bd7b5e7f",
+  "codecSha256": "8a09321e64980d61213309ead69b114c34c2ace29b555875a6b2f9d68b6213cf"
+}
