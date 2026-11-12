@@ -1,0 +1,161 @@
+use serde::{Serialize, de::DeserializeOwned};
+use sha2::{Digest, Sha256};
+use std::{
+    fs::{self, File},
+    io::{BufReader, BufWriter, Read, Write},
+    path::Path,
+};
+pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+pub fn hex(a: &[u8]) -> String {
+    a.iter().map(|b| format!("{b:02x}")).collect()
+}
+pub fn reader(p: &Path) -> Result<BufReader<File>> {
+    Ok(BufReader::with_capacity(256 * 1024, File::open(p)?))
+}
+pub fn writer(p: &Path) -> Result<BufWriter<File>> {
+    Ok(BufWriter::with_capacity(1024 * 1024, File::create(p)?))
+}
+pub fn u32le<W: Write>(w: &mut W, n: u32) -> Result<()> {
+    w.write_all(&n.to_le_bytes())?;
+    Ok(())
+}
+pub fn read_u32<R: Read>(r: &mut R) -> Result<u32> {
+    let mut b = [0; 4];
+    r.read_exact(&mut b)?;
+    Ok(u32::from_le_bytes(b))
+}
+pub fn optional_u32<R: Read>(r: &mut R) -> Result<Option<u32>> {
+    let mut b = [0; 4];
+    if r.read(&mut b[..1])? == 0 {
+        return Ok(None);
+    }
+    r.read_exact(&mut b[1..])?;
+    Ok(Some(u32::from_le_bytes(b)))
+}
+pub fn at_u32(b: &[u8], p: usize) -> u32 {
+    u32::from_le_bytes(b[p..p + 4].try_into().unwrap())
+}
+pub fn at_f64(b: &[u8], p: usize) -> f64 {
+    f64::from_le_bytes(b[p..p + 8].try_into().unwrap())
+}
+pub fn read_bytes<R: Read>(r: &mut R, n: usize) -> Result<Vec<u8>> {
+    if n > 64 * 1048576 {
+        return Err("record exceeds 64 MiB limit".into());
+    }
+    let mut b = vec![0; n];
+    r.read_exact(&mut b)?;
+    Ok(b)
+}
+pub fn write_string<W: Write>(w: &mut W, s: &str) -> Result<()> {
+    u32le(w, s.len().try_into()?)?;
+    w.write_all(s.as_bytes())?;
+    Ok(())
+}
+pub fn read_string<R: Read>(r: &mut R) -> Result<String> {
+    let n = read_u32(r)?;
+    Ok(String::from_utf8(read_bytes(r, n as usize)?)?)
+}
+pub fn read_json<T: DeserializeOwned>(p: &Path) -> Result<T> {
+    Ok(serde_json::from_reader(reader(p)?)?)
+}
+pub fn atomic_json<T: Serialize>(p: &Path, v: &T) -> Result<()> {
+    let tmp = p.with_extension("json.tmp");
+    let mut w = writer(&tmp)?;
+    serde_json::to_writer(&mut w, v)?;
+    w.write_all(b"\n")?;
+    w.flush()?;
+    drop(w);
+    fs::rename(tmp, p)?;
+    Ok(())
+}
+pub fn checksum(p: &Path) -> Result<String> {
+    let mut r = reader(p)?;
+    let mut h = Sha256::new();
+    let mut b = vec![0; 1048576];
+    loop {
+        let n = r.read(&mut b)?;
+        if n == 0 {
+            break;
+        }
+        h.update(&b[..n]);
+    }
+    Ok(hex(&h.finalize()))
+}
+pub fn verify_files(dir: &Path, files: &[(String, String)]) -> Result<()> {
+    for (name, sha) in files {
+        if checksum(&dir.join(name))? != *sha {
+            return Err(
+                format!("checkpoint checksum mismatch: {}", dir.join(name).display()).into(),
+            );
+        }
+    }
+    Ok(())
+}
+pub fn checked_files(dir: &Path, names: Vec<String>) -> Result<Vec<(String, String)>> {
+    names
+        .into_iter()
+        .map(|n| Ok((n.clone(), checksum(&dir.join(n))?)))
+        .collect()
+}
+pub fn js_cmp(a: &str, b: &str) -> std::cmp::Ordering {
+    if a.is_ascii() && b.is_ascii() {
+        a.cmp(b)
+    } else {
+        a.encode_utf16().cmp(b.encode_utf16())
+    }
+}
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct JsKey(pub String);
+impl Ord for JsKey {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        js_cmp(&self.0, &other.0)
+    }
+}
+impl PartialOrd for JsKey {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+// Bound a record before allocation, including a source with no LF at all.
+pub fn bounded_line<R: std::io::BufRead>(r: &mut R, out: &mut Vec<u8>, max: usize) -> Result<bool> {
+    out.clear();
+    loop {
+        let b = r.fill_buf()?;
+        if b.is_empty() {
+            return Ok(!out.is_empty());
+        }
+        let take = b
+            .iter()
+            .position(|&n| n == b'\n')
+            .map_or(b.len(), |i| i + 1);
+        if out.len() + take > max {
+            return Err("document input exceeds 64 MiB limit".into());
+        }
+        let end = b[take - 1] == b'\n';
+        out.extend_from_slice(&b[..take]);
+        r.consume(take);
+        if end {
+            out.pop();
+            if out.last() == Some(&b'\r') {
+                out.pop();
+            }
+            return Ok(true);
+        }
+    }
+}
+
+/// Leave descriptors for the output, source, logs, and checkpoint files.
+pub fn posting_fan_in() -> usize {
+    #[cfg(unix)]
+    {
+        let mut limit = std::mem::MaybeUninit::<libc::rlimit>::uninit();
+        // SAFETY: getrlimit initializes this properly aligned struct on success.
+        if unsafe { libc::getrlimit(libc::RLIMIT_NOFILE, limit.as_mut_ptr()) } == 0 {
+            // SAFETY: successful getrlimit initialized both fields.
+            return (unsafe { limit.assume_init() }.rlim_cur.saturating_sub(64) as usize)
+                .clamp(2, 512);
+        }
+    }
+    48
+}

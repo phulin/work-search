@@ -1,0 +1,164 @@
+{
+  "kind": "Offline complete-build statistics; independent sessions; ranges describe observations, not confidence intervals; no serving latency conclusions",
+  "sessions": [
+    {
+      "path": "bench/rust-builder/results/final-100k.json",
+      "sha256": "9ca5f4168f6d6f32bb9760b4b97d72fac70fe70b767e0dfbc9f20ed46ddc47d5",
+      "groups": [
+        {
+          "count": 100000,
+          "variant": "rust",
+          "samples": 3,
+          "wallMs": {
+            "median": 43344.59037500003,
+            "min": 42308.511,
+            "max": 53452.205458
+          },
+          "medianIndividualRssBytes": 699990016,
+          "medianSampledTreeRssBytes": 685867008,
+          "outputBytes": 6813453638,
+          "generation": "9e863c9de344f0276a375aab109f16318055418358b8fbc89d28e2cc212859b3",
+          "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06"
+        },
+        {
+          "count": 100000,
+          "variant": "rust-v1",
+          "samples": 3,
+          "wallMs": {
+            "median": 97641.49816599998,
+            "min": 89389.184959,
+            "max": 109090.81216699997
+          },
+          "medianIndividualRssBytes": 572424192,
+          "medianSampledTreeRssBytes": 561528832,
+          "outputBytes": 6813225784,
+          "generation": "0bec72af934ce5b5864407e5044114fef3d9809ecf60c3f0dd3922da7835bf95",
+          "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06"
+        }
+      ]
+    },
+    {
+      "path": "bench/rust-builder/results/final-small.json",
+      "sha256": "fded0fc50f34c230328f5213ecc4a2367ddb56fed604da88474fc59755e55b15",
+      "groups": [
+        {
+          "count": 1000,
+          "variant": "rust-v1",
+          "samples": 3,
+          "wallMs": {
+            "median": 1015.257458,
+            "min": 929.536458,
+            "max": 1110.0927499999998
+          },
+          "medianIndividualRssBytes": 92520448,
+          "medianSampledTreeRssBytes": 274104320,
+          "outputBytes": 78058959,
+          "generation": "ed3d15d3ad640ef998a0f506a9127d0d3fbaee2a61522cefd779cc552c48aa70",
+          "corpusHash": "0d1f31cf2125a4c0a73c993c74eb98b2083fcc716f107c4d132e485739d65a29"
+        },
+        {
+          "count": 1000,
+          "variant": "rust",
+          "samples": 3,
+          "wallMs": {
+            "median": 332.53820799999994,
+            "min": 318.15133400000013,
+            "max": 339.9132910000001
+          },
+          "medianIndividualRssBytes": 106758144,
+          "medianSampledTreeRssBytes": 107577344,
+          "outputBytes": 78059333,
+          "generation": "814f215ea444fad140911784cbc4ca761cc35ca72b2672008e180d97ed3721b2",
+          "corpusHash": "0d1f31cf2125a4c0a73c993c74eb98b2083fcc716f107c4d132e485739d65a29"
+        },
+        {
+          "count": 10000,
+          "variant": "rust-v1",
+          "samples": 3,
+          "wallMs": {
+            "median": 7349.856249999997,
+            "min": 7169.477166999997,
+            "max": 8262.517916
+          },
+          "medianIndividualRssBytes": 375570432,
+          "medianSampledTreeRssBytes": 576815104,
+          "outputBytes": 691826271,
+          "generation": "5b5a32920aeb7bc98089a19cd60ed728de0405aef2e06753c92d5d79e19352ae",
+          "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7"
+        },
+        {
+          "count": 10000,
+          "variant": "rust",
+          "samples": 3,
+          "wallMs": {
+            "median": 2767.3604170000035,
+            "min": 2538.8525419999987,
+            "max": 3356.4402090000003
+          },
+          "medianIndividualRssBytes": 446480384,
+          "medianSampledTreeRssBytes": 447266816,
+          "outputBytes": 691825547,
+          "generation": "0fd7685b2bf7eabda34e9496865520105bdb9cd5b77b1b9daebac1f7da8c5c76",
+          "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7"
+        }
+      ]
+    },
+    {
+      "path": "bench/rust-builder/results/final-publication-check-100k.json",
+      "sha256": "e47396cbd0a5cc9297d5fcccd014064281ce4b04d2cded1b2338e9dfd92bfa2e",
+      "groups": [
+        {
+          "count": 100000,
+          "variant": "rust",
+          "samples": 1,
+          "wallMs": {
+            "median": 44488.345792,
+            "min": 44488.345792,
+            "max": 44488.345792
+          },
+          "medianIndividualRssBytes": 760823808,
+          "medianSampledTreeRssBytes": 750927872,
+          "outputBytes": 6813453638,
+          "generation": "9e863c9de344f0276a375aab109f16318055418358b8fbc89d28e2cc212859b3",
+          "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06"
+        }
+      ]
+    },
+    {
+      "path": "bench/rust-builder/results/typescript-vs-first-rust-10k.json",
+      "sha256": "0bfd499538706984b8a05005ad5697d8741dcd8232fa4ecbce2b78027677554b",
+      "groups": [
+        {
+          "count": 10000,
+          "variant": "typescript",
+          "samples": 3,
+          "wallMs": {
+            "median": 84312.144416,
+            "min": 82841.11374999999,
+            "max": 98426.10212499998
+          },
+          "medianIndividualRssBytes": 521125888,
+          "medianSampledTreeRssBytes": null,
+          "outputBytes": 688899826,
+          "generation": "01b66b0b7180ed40bf02182d56ed980267493314ca28b2859135484a462b9f8a",
+          "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7"
+        },
+        {
+          "count": 10000,
+          "variant": "rust",
+          "samples": 3,
+          "wallMs": {
+            "median": 7449.334499999997,
+            "min": 6478.7439999999915,
+            "max": 7739.647042000011
+          },
+          "medianIndividualRssBytes": 390496256,
+          "medianSampledTreeRssBytes": null,
+          "outputBytes": 691826271,
+          "generation": "5b5a32920aeb7bc98089a19cd60ed728de0405aef2e06753c92d5d79e19352ae",
+          "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7"
+        }
+      ]
+    }
+  ]
+}
