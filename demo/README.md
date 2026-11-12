@@ -23,7 +23,9 @@ The first nonempty text representation is used: plain text, citation HTML, other
 HTML variants, Harvard XML, then scan XML. HTML/XML is converted to text. Empty
 text records are counted separately. Original compressed downloads are retained.
 Titles/dates/status come from the matching case-metadata snapshot; missing case
-metadata does not cause opinion text to be dropped. The snapshots are not a fully
+metadata does not cause opinion text to be dropped. Display metadata additionally
+joins clusters to dockets and courts and collects reporter citations from the same
+snapshot's `dockets`, `courts`, and `citations` bulk files. The snapshots are not a fully
 transactionally consistent database export.
 
 ## Search and reading
@@ -56,6 +58,30 @@ matching term where available. Excerpt generation scans at most 8 MiB of an
 opinion before falling back to its beginning; the full reader remains available.
 The early index partitions receive a separate full-text backfill. Missing text
 is marked as still importing, with a link to the original CourtListener opinion.
+
+Results show the court's full name, a readable decision date, reporter citations,
+docket number and publication status where supplied. The reader also shows judges,
+the full caption and the snapshot's citation count. Approximate dates are labeled.
+Source gaps are identified explicitly rather than showing internal IDs as captions.
+
+An independent display-metadata generation repairs previously blank captions using
+`case_name`, then `case_name_full`, then `case_name_short`, with a docket-caption
+fallback. The initial importer only fell back on a null marker and missed empty
+strings; the fresh-snapshot importer now uses the same corrected fallback.
+Full-name fallback recovers 162,925 of the old missing captions. Existing immutable
+index generations and input checksums remain valid. This repairs result display;
+terms absent from previously indexed title fields require a future index rebuild
+to become searchable in that field.
+
+The display lookup uses a sparse 16-byte catalog per cluster ID (4,194,304 IDs per
+64-MiB catalog object) and independently gzip-compressed JSON blocks packed into
+64-MiB R2 objects. A block holds at most 256 records or approximately 256 KiB of
+uncompressed text; the decoder enforces a 1-MiB expansion limit. Targeted range reads validate generation, identity
+and CRC. Its independent generation is published only after every object is
+uploaded and checked. A bounded, conservatively charged 4-MiB / 512-record cache
+reduces repeat lookups; these bytes do not occupy the bundled index budget.
+Metadata and excerpt retrieval run concurrently after ranking. Serving still uses
+only Workers and R2; the join database remains local build tooling.
 
 ## Operations
 
@@ -93,13 +119,30 @@ node --import tsx scripts/full-flp-pool.ts
 node --import tsx scripts/watch-full-flp.ts
 ```
 
+For the court/caption lookup, download `dockets-2026-09-30.csv.bz2`,
+`courts-2026-09-30.csv.bz2`, and `citations-2026-09-30.csv.bz2` from the same
+official bulk-data location using `scripts/download-flp.py`, then run:
+
+```sh
+work/flp-venv/bin/python scripts/build-case-metadata.py
+node --import tsx scripts/redeploy-demo.ts
+node --import tsx scripts/publish-case-metadata.ts
+```
+
+Join stages checkpoint committed row counts and resume on restart. Packing can be
+rerun deterministically. The standard-library bzip2 reader works without the optional
+parallel decoder for small fixtures. The original import database is preserved so
+concurrent index builds and full-text backfills retain their exact source hashes.
+
 The demo deployment helper currently names the task's dedicated Workers and R2
 bucket and uses the configured Cloudflare account. Review those names before
 using it in another account. Never publish the local secrets or raw job logs.
+Deployments retry transient Cloudflare API failures, including the observed
+initial-create propagation error `10007`, before consuming a supervisor restart.
 
 ## Validation during import
 
-The automated suite passes 135 tests, including global-ranking equivalence,
+The automated suite passes 140 tests, including global-ranking equivalence,
 cursor tampering/expiration, 400 hits across 20 pages without duplicates, and
 Unicode opinion-text/metadata/excerpt round trips. Local Worker integration tests
 remain part of the suite. On the deployed demo, seven successive pages returned
@@ -107,3 +150,19 @@ remain part of the suite. On the deployed demo, seven successive pages returned
 Browser checks verified Next/Previous pages, highlighted excerpts, click-through
 full text and match navigation. These checks used a partial corpus; full-snapshot
 completion and deployed latency benchmarks remain separate work.
+Metadata tests build official-shaped CSV fixtures end to end, recover both full
+and docket captions, join courts/citations, reject corrupt or mismatched records,
+and check display formatting and emitted browser code.
+The complete lookup joins 10,174,551 clusters against 72,998,758 source docket
+rows and 18,130,235 reporter-citation rows. It occupies 1,041,378,252 bytes across
+16 immutable objects, each at most 64 MiB (82.9% smaller than the initial
+6,081,096,228-byte record layout). Only 14 source cases lack a recoverable
+caption and four lack a docket/court join. The packed statistics' `recoveredCaption`
+counts the two additional docket-caption recoveries; the 162,925 full-name
+recoveries occur earlier when normalizing cluster names.
+Live checks after activation verified recovered captions on both search and
+reader endpoints, court names on all 32 results across two pages, no duplicate
+opinions between pages, and the expected court/docket/reporter citations for
+`Christenberry v. Allen`. The browser reader displayed a previously blank caption
+with the Southern District of Alabama, filing date and docket, alongside its full
+opinion and highlighted search terms. Full corpus import remains ongoing.

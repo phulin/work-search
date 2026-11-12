@@ -1,4 +1,9 @@
 import html,html.parser
+def caption(row):
+ for field in ('case_name','case_name_full','case_name_short'):
+  value=(row.get(field) or '').strip()
+  if value and value not in ('\\N','N','null','None'):return value
+ return ''
 class Text(html.parser.HTMLParser):
  def __init__(self):super().__init__(convert_charrefs=True);self.parts=[];self.skip=0
  def handle_starttag(self,tag,attrs):

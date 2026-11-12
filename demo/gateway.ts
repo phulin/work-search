@@ -3,6 +3,7 @@ import { parallel } from "../src/storage/types.js";
 import { parse, queryTerms, QuerySyntaxError } from "../src/query/parser.js";
 import { encodeCursor, decodeCursor } from "./cursor.js";
 import { excerpt, opinionText, opinionInfo } from "../src/content/read.js";
+import { caseMetadata } from "../src/content/case-metadata.js";
 interface Child {
   binding: string;
   min: number;
@@ -102,6 +103,7 @@ export default {
         return new Response(page, {
           headers: {
             "content-type": "text/html; charset=utf-8",
+            "cache-control": "no-cache",
             "content-security-policy":
               "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'",
           },
@@ -130,15 +132,17 @@ export default {
         });
       }
       if (env.ROLE === "root" && url.pathname === "/api/opinion/info") {
-        const info = await opinionInfo(
-          env.INDEX,
-          url.searchParams.get("generation") ?? "",
-          Number(url.searchParams.get("doc")),
+        const info = await caseMetadata(env.INDEX).enrich(
+          await opinionInfo(
+            env.INDEX,
+            url.searchParams.get("generation") ?? "",
+            Number(url.searchParams.get("doc")),
+          ),
         );
         const q = url.searchParams.get("q") ?? "";
         return Response.json(
           { ...info, terms: q.length <= 2048 ? queryTerms(parse(q)) : [] },
-          { headers: { "cache-control": "public,max-age=3600" } },
+          { headers: { "cache-control": "public,max-age=30,must-revalidate" } },
         );
       }
       if (env.ROLE === "root" && url.pathname === "/api/search") {
@@ -212,15 +216,21 @@ export default {
                 generations,
                 after: cursor?.after,
               }),
-              hits = found.results.slice(0, limit),
-              details = await documents({ hits, generations }),
-              by = new Map(
-                details.results.map((r: any) => [`${r.shard}:${r.doc}`, r]),
-              );
-            const snippets = await parallel(hits, 4, (h: any) =>
-              excerpt(env.INDEX, generations[h.shard], h.doc, terms).catch(
-                () => null,
+              hits = found.results.slice(0, limit);
+            const [enriched, snippets] = await Promise.all([
+              documents({ hits, generations }).then((details) =>
+                parallel(details.results as any[], 4, (r) =>
+                  caseMetadata(env.INDEX).enrich(r),
+                ),
               ),
+              parallel(hits, 4, (h: any) =>
+                excerpt(env.INDEX, generations[h.shard], h.doc, terms).catch(
+                  () => null,
+                ),
+              ),
+            ]);
+            const by = new Map(
+              enriched.map((r: any) => [`${r.shard}:${r.doc}`, r]),
             );
             const paginationReady = cursor || s!.apiVersion >= 2,
               hasMore = found.results.length > limit,
@@ -272,6 +282,41 @@ export default {
         }
       }
       if (!authorized) return new Response("Not found", { status: 404 });
+      if (
+        env.ROLE === "root" &&
+        url.pathname === "/__case-metadata" &&
+        request.method === "PUT"
+      ) {
+        const manifest = (await request.json()) as any;
+        if (
+          ![1, 2].includes(manifest.version) ||
+          manifest.recordBytes !== 16 ||
+          !/^[a-f0-9]{64}$/.test(manifest.generation) ||
+          !Number.isSafeInteger(manifest.maxId) ||
+          !Array.isArray(manifest.objects) ||
+          !manifest.objects.some((o: any) => o.name === "casemap-0.bin")
+        )
+          return new Response("Invalid metadata manifest", { status: 400 });
+        await parallel(manifest.objects as any[], 4, async (o) => {
+          if (!/^(cases|casemap)-\d+\.bin$/.test(o.name))
+            throw Error("Invalid metadata object");
+          const stored = await env.INDEX.head(
+            manifest.generation + "/" + o.name,
+          );
+          if (
+            !stored ||
+            stored.size !== o.size ||
+            stored.customMetadata?.generation !== manifest.generation ||
+            stored.customMetadata?.sha256 !== o.sha256
+          )
+            throw Error("Metadata upload incomplete");
+        });
+        await env.INDEX.put(
+          "demo-case-metadata.json",
+          JSON.stringify(manifest),
+        );
+        return new Response("Published");
+      }
       if (env.ROLE === "root" && url.pathname.startsWith("/__index/")) {
         const gen = url.pathname.slice(9);
         if (!/^[a-f0-9]{64}$/.test(gen))

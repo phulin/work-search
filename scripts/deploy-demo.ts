@@ -12,14 +12,23 @@ try {
   secrets = { INTERNAL_TOKEN: randomBytes(32).toString("hex") };
   await writeFile(secretFile, JSON.stringify(secrets), { mode: 0o600 });
 }
-const wrangler = (args: string[]) => {
-  const r = spawnSync(
-    process.execPath,
-    ["node_modules/wrangler/bin/wrangler.js", ...args],
-    { encoding: "utf8" },
-  );
-  if (r.status) throw Error(r.stdout + r.stderr);
-  return r.stdout;
+const wrangler = async (args: string[]) => {
+  for (let attempt = 0; ; attempt++) {
+    const r = spawnSync(
+      process.execPath,
+      ["node_modules/wrangler/bin/wrangler.js", ...args],
+      { encoding: "utf8" },
+    );
+    if (r.status === 0) return r.stdout;
+    const message = (r.stdout ?? "") + (r.stderr ?? "");
+    // Newly created Workers can briefly be absent from the subsequent API read.
+    if (attempt >= 4 || !/code: 10007|\b50[234]\b|fetch failed/i.test(message))
+      throw Error(message);
+    console.log("Retrying transient deployment failure", args[0], attempt + 1);
+    await new Promise((r) =>
+      setTimeout(r, Math.min(16000, 2000 * 2 ** attempt)),
+    );
+  }
 };
 export async function deploy(
   name: string,
@@ -47,14 +56,14 @@ export async function deploy(
       2,
     ),
   );
-  const output = wrangler(["deploy", "--config", config]);
+  const output = await wrangler(["deploy", "--config", config]);
   const hash = createHash("sha256")
     .update(secrets.INTERNAL_TOKEN)
     .digest("hex");
   const marker = config + ".secret-sha";
   const old = await readFile(marker, "utf8").catch(() => "");
   if (old !== hash) {
-    wrangler(["secret", "bulk", resolve(secretFile), "--config", config]);
+    await wrangler(["secret", "bulk", resolve(secretFile), "--config", config]);
     await writeFile(marker, hash);
   }
   const match = output.match(/https:\/\/[^\s]+\.workers\.dev/);

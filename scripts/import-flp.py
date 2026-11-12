@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Official full snapshot -> metadata SQLite + bounded durable JSONL batches. No sampling."""
 import argparse,bz2,csv,hashlib,html,html.parser,json,pathlib,sqlite3,sys,time,shutil,io,os
+from flp_text import caption
 csv.field_size_limit(sys.maxsize)
 p=argparse.ArgumentParser();p.add_argument('--root',default='work/full-flp');p.add_argument('--metadata',action='store_true');p.add_argument('--batch-docs',type=int,default=50000);p.add_argument('--decoder-threads',type=int,default=4);p.add_argument('--batch-mib',type=int,default=512);a=p.parse_args();root=pathlib.Path(a.root);root.mkdir(parents=True,exist_ok=True);queue=root/'queue';queue.mkdir(exist_ok=True);batches=root/'batches';batches.mkdir(exist_ok=True)
 def atomic(path,data):
@@ -35,7 +36,7 @@ if a.metadata:
  checkpoint=root/'metadata-progress.json';previous=json.loads(checkpoint.read_text()).get('rows',0) if checkpoint.exists() else 0;count=0
  for count,row in enumerate(rows('opinion-clusters'),1):
   if count<=previous:continue
-  title=row['case_name'] if row['case_name']!='\\N' else row['case_name_full'];db.execute('INSERT OR REPLACE INTO cases VALUES (?,?,?,?)',(int(row['id']),title,row['date_filed'],row['precedential_status']))
+  title=caption(row);db.execute('INSERT OR REPLACE INTO cases VALUES (?,?,?,?)',(int(row['id']),title,row['date_filed'],row['precedential_status']))
   if count%10000==0:db.commit();atomic(checkpoint,{'rows':count,'complete':False});print('metadata',count,flush=True)
  db.commit();atomic(checkpoint,{'rows':count,'complete':True});print('metadata complete',count,flush=True);sys.exit(0)
 if not json.loads((root/'metadata-progress.json').read_text())['complete']:raise RuntimeError('Metadata not complete')

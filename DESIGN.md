@@ -193,3 +193,14 @@ ever-growing heap or mutable server-side session. Full opinion bodies live in
 separate gzip records with a fixed-width ranged catalog, outside bundle budgets.
 Excerpts scan a bounded prefix; the reader streams the entire opinion. This is
 a search-and-reading MVP, without court/date filters or citation analysis.
+
+Case display metadata has its own immutable R2 generation, separate from search
+postings and opinion text. An offline cluster→docket→court join and reporter
+citation lookup recover blank captions and add legal case details to old and new
+index partitions alike. A sparse 16-byte cluster catalog points to CRC-protected
+gzip-compressed JSON blocks in 64-MiB packs, with a bounded record cache. Blocks
+hold at most 256 cases / roughly 256 KiB before compression; the decoder enforces
+a 1-MiB expansion limit. The publication pointer
+changes only after all objects are present. No title terms, statistics or ranking
+change underneath pinned pagination cursors; absent historical title terms require
+a later index rebuild. Missing source fields remain explicit gaps.
