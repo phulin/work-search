@@ -247,3 +247,34 @@ paged layout keeps its fixed-read default.
 
 The [hybrid benchmark report](bench/HYBRID-INDEX.md) measures each change, using
 fixed per-read delays and a separate shared-bandwidth sensitivity run.
+
+### Hot descriptors, embedded streams and inline dictionary postings
+
+```sh
+node --import tsx src/cli/main.ts page --source indexes/current --out indexes/optimized \
+  --local-tables --hot-descriptors 10000 --embed-postings --inline-tiny \
+  --workload queries.txt --budget-mib 8
+npm run dev -- --out indexes/optimized
+npm run deploy -- --out indexes/optimized
+```
+
+The same flags work with `build --layout paged`. Hot descriptors are ranked by
+training-query frequency, then corpus document frequency. Remaining bundle space
+is assigned by the existing query-completion stream selector. Unknown terms still
+use the complete R2 dictionary. Cold dictionary pages can carry frequency and
+position streams totaling at most 128 bytes for lists of at most 256 documents.
+The total root, tables, hot descriptors and streams must fit the configured budget.
+
+The optimized layout uses a range planner with configurable latency/bandwidth
+assumptions. Library options are `r2LatencyMs` and `r2BandwidthMiB`; local search
+also accepts `--r2-latency-ms` and `--r2-bandwidth-mib`. Defaults are 20 ms and
+50 MiB/s. These are planning assumptions, not injected serving latency.
+
+Competitive positional fetching is experimental and disabled by default because
+it regressed this workload. Set library `competitivePositions: true` or local
+search `--competitive-positions` to score coarse candidates first and verify
+positions in ranked batches. The engine continues until a verified top K is
+proven, falling back to the remaining candidates after two insufficient batches.
+Exact totals retain exhaustive verification. Cache admission was not changed.
+
+See [the sequential optimization report](bench/PAGED-OPTIMIZATIONS.md).

@@ -48,11 +48,24 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
   const hybrid = await pageIndex(join(root, "full"), join(root, "hybrid"), {
     localTables: true,
   });
+  const optimized = await pageIndex(
+    join(root, "full"),
+    join(root, "optimized"),
+    {
+      localTables: true,
+      hotDescriptors: 8,
+      embedPostings: true,
+      inlineTiny: true,
+      optimizationStep: 6,
+      workload: ["unique common"],
+    },
+  );
   for (const [name, manifest] of [
     ["full", full],
     ["remote", m],
     ["paged", paged],
     ["hybrid", hybrid],
+    ["optimized", optimized],
   ] as const) {
     const mf = new Miniflare({
       modules: [
@@ -82,7 +95,8 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
       expect(res.status).toBe(200);
       const json = (await res.json()) as any;
       expect(json.results[0].id).toBe("remote");
-      if (name !== "paged" && name !== "hybrid")
+      if (name === "optimized") expect(json.diagnostics.fullyLocal).toBe(true);
+      else if (name !== "paged" && name !== "hybrid")
         expect(json.diagnostics.indexRequests).toBe(name === "full" ? 0 : 1);
       else
         expect(json.diagnostics.dictionaryDocumentRequests).toBeGreaterThan(0);
@@ -111,7 +125,12 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
         expect(response.status).toBe(200);
         const body = (await response.json()) as any;
         expect(body.total, q).toBe(total);
-        if (total && name !== "paged" && name !== "hybrid")
+        if (
+          total &&
+          name !== "paged" &&
+          name !== "hybrid" &&
+          name !== "optimized"
+        )
           expect(body.diagnostics.indexRequests).toBe(name === "full" ? 0 : 5);
       }
       expect(

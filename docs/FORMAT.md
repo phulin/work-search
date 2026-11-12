@@ -191,3 +191,20 @@ configured builder budget (default 8 MiB, maximum 48 MiB), including both local
 tables. A v2 root requires both tables, and v1 readers remain supported. Metadata
 pointer records are fetched only when metadata is requested. The new generation
 hash distinguishes v2 from v1, preserving immutable object and cache identities.
+
+## Optimized paged root v3
+
+Magic `0x33504752` selects a 36-byte header. The first 28 bytes follow v2;
+u32 hot-index length and CRC32 are appended. The hot binary index follows the
+routing JSON, exact norms and compact IDs. It uses the existing v8 dictionary
+and posting codecs, with empty document records and optional embedded streams.
+Its generation must match the routing root. The routing field `optimizationStep`
+selects planning defaults; competitive positional execution remains an explicit
+query option. v1 and v2 roots remain supported.
+
+Cold R2 dictionary pages can also contain embedded streams. `LOCAL` offsets in a
+hot descriptor refer to the bundled hot index, while offsets in a cold descriptor
+refer to the fetched dictionary page that owns that descriptor. Each entire cold
+page is verified by its root CRC; frequency/position codecs retain their existing
+integrity checks. No separate remote dictionary request is needed after a term's
+page is loaded. Full bundle budgeting includes every binary section.

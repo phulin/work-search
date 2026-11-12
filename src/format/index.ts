@@ -20,7 +20,15 @@ export interface Entry {
   positionCrc: number;
 }
 export class BinaryIndex {
+  localPosting(e: Entry, positions: boolean, relative: number, length: number) {
+    const offset =
+      this.local + (positions ? e.positionOffset : e.offset) + relative;
+    if (offset < this.local || offset + length > this.bytes.length)
+      throw Error("Invalid local range");
+    return this.bytes.subarray(offset, offset + length);
+  }
   readonly paged: boolean = false;
+  optimizationStep = 0;
   pagedReadPolicy: "fixed" | "adaptive" = "fixed";
   hasLength(_doc: number) {
     return true;

@@ -7,6 +7,9 @@ import {
   LOCAL,
   type Entry,
 } from "../format/index.js";
+import { FileStorage } from "../storage/filesystem.js";
+import { selectStreams } from "./selection.js";
+import { parse, queryTerms } from "../query/parser.js";
 import { encodeIds } from "../format/ids.js";
 import { encodeDocuments } from "../format/documents.js";
 import { crc32 } from "../format/codec.js";
@@ -15,9 +18,24 @@ import { encodeRoot, type Root, type Page } from "../format/paged.js";
 export async function pageIndex(
   source: string,
   out: string,
-  options: { localTables?: boolean; budget?: number } = {},
+  options: {
+    optimizationStep?: number;
+    localTables?: boolean;
+    budget?: number;
+    hotDescriptors?: number;
+    embedPostings?: boolean;
+    inlineTiny?: boolean;
+    workload?: string[];
+  } = {},
 ) {
   const budget = options.budget ?? 8 * 1048576;
+  if (
+    !Number.isSafeInteger(options.hotDescriptors ?? 0) ||
+    (options.hotDescriptors ?? 0) < 0
+  )
+    throw Error("Invalid hot descriptor count");
+  if (options.embedPostings && !options.hotDescriptors)
+    throw Error("Embedded streams require hot descriptors");
   if (!Number.isSafeInteger(budget) || budget < 0 || budget > 48 * 1048576)
     throw Error("Invalid paged bundle budget");
   await mkdir(out, { recursive: true });
@@ -35,8 +53,20 @@ export async function pageIndex(
     throw Error("Source manifest mismatch");
   if (options.localTables && index.count * 8 > budget)
     throw Error("Exact local norms exceed bundle budget");
+  const optimized = !!(options.hotDescriptors || options.inlineTiny);
+  if (optimized && !options.localTables)
+    throw Error("Optimized roots require local tables");
   const generation = hash(
     index.generation +
+      (optimized
+        ? JSON.stringify({
+            hot: options.hotDescriptors ?? 0,
+            postings: !!options.embedPostings,
+            inline: !!options.inlineTiny,
+            workload: options.workload ?? [],
+            budget,
+          })
+        : "") +
       (options.localTables
         ? ":paged-v2:256:4096:local-tables"
         : ":paged-v1:256:4096"),
@@ -105,7 +135,8 @@ export async function pageIndex(
     objects.push({ key, kind, size: b.length, sha256: hash(b) });
   }
   const root: Root = {
-    version: options.localTables ? 2 : 1,
+    optimizationStep: options.optimizationStep ?? 0,
+    version: optimized ? 3 : options.localTables ? 2 : 1,
     generation,
     count: index.count,
     terms: index.termCount,
@@ -117,6 +148,19 @@ export async function pageIndex(
     dictionarySize: 256,
     documentSize: 4096,
   };
+  const payloadCache = new Map<string, Uint8Array>();
+  const payload = async (e: Entry, positions: boolean) => {
+    const key = `${generation}/${positions ? "positions" : "frequencies"}-${positions ? e.positionObject : e.object}.bin`;
+    let b = payloadCache.get(key);
+    if (!b) {
+      b = await readFile(join(out, "objects", key));
+      payloadCache.set(key, b);
+      if (payloadCache.size > 3)
+        payloadCache.delete(payloadCache.keys().next().value!);
+    }
+    const o = positions ? e.positionOffset : e.offset;
+    return b.subarray(o, o + (positions ? e.positionLength : e.length));
+  };
   for (const kind of ["dictionary", "norms", "documents"] as const) {
     const key = `${generation}/${kind}-0.bin`,
       file = await open(join(out, "objects", key), "w");
@@ -126,17 +170,35 @@ export async function pageIndex(
         step = kind === "dictionary" ? 256 : 4096;
       for (let first = 0; first < count; first += step) {
         let bytes: Uint8Array;
-        if (kind === "dictionary")
+        if (kind === "dictionary") {
+          const pageEntries = entries
+              .slice(first, first + step)
+              .map((e) => ({ ...e })),
+            embedded: Uint8Array[] = [];
+          let local = 0;
+          if (options.inlineTiny)
+            for (const e of pageEntries)
+              if (e.df <= 256 && e.length + e.positionLength <= 128) {
+                const f = await payload(e, false),
+                  p = await payload(e, true);
+                e.object = LOCAL;
+                e.offset = local;
+                local += f.length;
+                e.positionObject = LOCAL;
+                e.positionOffset = local;
+                local += p.length;
+                embedded.push(f, p);
+              }
           bytes = buildBinary(
             generation,
-            entries.slice(first, first + step),
+            pageEntries,
             encodeDocuments([]),
             0,
-            [],
+            embedded,
             index.avgBody,
             index.avgTitle,
           );
-        else if (kind === "documents")
+        } else if (kind === "documents")
           bytes = encodeDocuments(
             Array.from({ length: Math.min(step, count - first) }, (_, j) =>
               index.document(first + j),
@@ -181,12 +243,82 @@ export async function pageIndex(
   const ids = options.localTables
     ? encodeIds(index.count, (i) => index.document(i).id)
     : new Uint8Array(0);
-  const bundle = encodeRoot(root, localNorms, ids);
+  let hot = new Uint8Array(0),
+    embeddedHotBytes = 0;
+  if (options.hotDescriptors) {
+    const weights = new Map<string, number>();
+    for (const q of options.workload ?? [])
+      for (const t of queryTerms(parse(q)))
+        weights.set(t, (weights.get(t) ?? 0) + 1);
+    const selected = [...entries]
+      .sort(
+        (a, b) =>
+          (weights.get(b.term) ?? 0) - (weights.get(a.term) ?? 0) ||
+          b.df - a.df ||
+          (a.term < b.term ? -1 : 1),
+      )
+      .slice(0, options.hotDescriptors)
+      .sort((a, b) => (a.term < b.term ? -1 : 1))
+      .map((e) => ({ ...e }));
+    const fixed =
+      encodeRoot(root, localNorms, ids).length +
+      buildBinary(
+        generation,
+        selected,
+        encodeDocuments([]),
+        0,
+        [],
+        index.avgBody,
+        index.avgTitle,
+      ).length;
+    const streams = options.embedPostings
+      ? selectStreams(
+          selected,
+          Math.max(0, budget - fixed - 1024),
+          options.workload ?? [],
+        )
+      : { frequencies: new Set<string>(), positions: new Set<string>() };
+    const chunks: Uint8Array[] = [];
+    let offset = 0;
+    for (const e of selected) {
+      const f = streams.frequencies.has(e.term)
+          ? await payload(e, false)
+          : undefined,
+        p = streams.positions.has(e.term) ? await payload(e, true) : undefined;
+      if (f) {
+        e.object = LOCAL;
+        e.offset = offset;
+        offset += f.length;
+        chunks.push(f);
+      }
+      if (p) {
+        e.positionObject = LOCAL;
+        e.positionOffset = offset;
+        offset += p.length;
+        chunks.push(p);
+      }
+    }
+    embeddedHotBytes = offset;
+    hot = buildBinary(
+      generation,
+      selected,
+      encodeDocuments([]),
+      0,
+      chunks,
+      index.avgBody,
+      index.avgTitle,
+    );
+  }
+  const bundle = encodeRoot(root, localNorms, ids, hot);
+
   if (bundle.length > budget)
     throw Error("Paged bundle exceeds configured budget");
   await writeFile(join(out, "bundle.bin"), bundle);
   const manifest = {
     format: root.version,
+    hotDescriptors: options.hotDescriptors ?? 0,
+    embeddedHotBytes,
+    inlineTiny: !!options.inlineTiny,
     localNormBytes: localNorms.length,
     localIdBytes: ids.length,
     layout: "paged",

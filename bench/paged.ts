@@ -106,8 +106,20 @@ if (!process.argv.includes("--task")) {
         const cpu = process.cpuUsage(),
           start = performance.now();
         const got = await search(index, delayed, q, {
+          competitivePositions:
+            process.env.PAGED_COMPETITIVE !== "false" &&
+            design.startsWith("opt") &&
+            Number(design.slice(3).split("-")[0]) >= 3,
+          r2LatencyMs: latency,
+          r2BandwidthMiB: bandwidth || 50,
+          pagedOptimizationStep: design.startsWith("opt")
+            ? Number(design.slice(3).split("-")[0])
+            : 0,
           runtime,
-          pagedReadPolicy: design === "hybrid-adaptive" ? "adaptive" : "fixed",
+          pagedReadPolicy:
+            design === "hybrid-adaptive" || design.startsWith("opt")
+              ? "adaptive"
+              : "fixed",
         });
         const ms = performance.now() - start,
           used = process.cpuUsage(cpu);

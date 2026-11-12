@@ -1,4 +1,4 @@
-import { rangeGroups } from "./ranges.js";
+import { rangeGroups, networkGroups, type ReadPlan } from "./ranges.js";
 import { decodePositionsInto } from "../format/decode-block.js";
 import { decodeBlockInto } from "../format/decode-block.js";
 import {
@@ -15,12 +15,12 @@ import {
 import type { Entry } from "../format/index.js";
 import type { Node } from "./parser.js";
 import { parallel } from "../storage/types.js";
-export type Read = (
+export type Read = ((
   e: Entry,
   positions: boolean,
   offset: number,
   length: number,
-) => Promise<Uint8Array>;
+) => Promise<Uint8Array>) & { plan?: ReadPlan };
 export function requiredTerms(n: Node): Set<string> {
   if (n.kind === "term") return new Set([n.term]);
   if (n.kind === "phrase") return new Set(n.terms);
@@ -168,7 +168,14 @@ export async function loadPosting(
       runs = [selected];
   }
   if (adaptiveRanges)
-    runs = rangeGroups(
+    runs = (
+      read.plan
+        ? (
+            indices: number[],
+            extent: (i: number) => { start: number; end: number },
+          ) => networkGroups(indices, extent, read.plan!, positions ? 2 : 1)
+        : rangeGroups
+    )(
       selected,
       (i) => ({
         start: blocks[i].offset + (positions ? blocks[i].positionOffset : 0),
@@ -288,7 +295,14 @@ export async function attachCandidatePositions(
   const blocks = list.blocks!,
     rows = list.blockRows!;
   const selected = selectBlocks(blocks, candidates),
-    runs = rangeGroups(selected, (i) => ({
+    runs = (
+      read.plan
+        ? (
+            indices: number[],
+            extent: (i: number) => { start: number; end: number },
+          ) => networkGroups(indices, extent, read.plan!)
+        : rangeGroups
+    )(selected, (i) => ({
       start: blocks[i].positionOffset,
       end: blocks[i].positionOffset + blocks[i].positionLength,
     }));

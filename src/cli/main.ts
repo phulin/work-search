@@ -49,6 +49,24 @@ async function manifest() {
   }
   return m;
 }
+async function pagedOptions() {
+  return {
+    localTables: args.includes("--local-tables"),
+    budget: Number(arg("budget-mib", "8")) * 1048576,
+    hotDescriptors: Number(arg("hot-descriptors", "0")),
+    embedPostings: args.includes("--embed-postings"),
+    inlineTiny: args.includes("--inline-tiny"),
+    optimizationStep:
+      args.includes("--hot-descriptors") || args.includes("--inline-tiny")
+        ? 6
+        : 0,
+    workload: args.includes("--workload")
+      ? (await readFile(arg("workload", ""), "utf8"))
+          .split(/\r?\n/)
+          .filter(Boolean)
+      : [],
+  };
+}
 try {
   if (command === "generate") {
     await mkdir("data", { recursive: true });
@@ -60,10 +78,11 @@ try {
   } else if (command === "page") {
     console.log(
       JSON.stringify(
-        await pageIndex(arg("source", "indexes/current"), out, {
-          localTables: args.includes("--local-tables"),
-          budget: Number(arg("budget-mib", "8")) * 1048576,
-        }),
+        await pageIndex(
+          arg("source", "indexes/current"),
+          out,
+          await pagedOptions(),
+        ),
         null,
         2,
       ),
@@ -89,10 +108,7 @@ try {
       chunkDocs: Number(arg("chunk-docs", "5000")),
     });
     const result = paged
-      ? await pageIndex(builtOut, out, {
-          localTables: args.includes("--local-tables"),
-          budget: Number(arg("budget-mib", "8")) * 1048576,
-        })
+      ? await pageIndex(builtOut, out, await pagedOptions())
       : built;
     await copyFile(join(out, "bundle.bin"), "data/bundle.bin");
     console.log(JSON.stringify(result, null, 2));
@@ -105,6 +121,9 @@ try {
           new FileStorage(join(out, "objects")),
           arg("query", ""),
           {
+            competitivePositions: args.includes("--competitive-positions"),
+            r2LatencyMs: Number(arg("r2-latency-ms", "20")),
+            r2BandwidthMiB: Number(arg("r2-bandwidth-mib", "50")),
             mode: arg("mode", "and") as "and" | "or",
             limit: Number(arg("limit", "20")),
             metadata: args.includes("--metadata"),

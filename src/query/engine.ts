@@ -9,6 +9,7 @@ import { lowerBound } from "./sets.js";
 import { SearchRuntime, postingSize, postingKey } from "./runtime.js";
 import { scoreBounds, SCORE_BLOCK } from "./pruning.js";
 import {
+  type Read,
   loadPosting,
   requiredTerms,
   attachCandidatePositions,
@@ -83,6 +84,10 @@ class TopK {
   }
 }
 export interface SearchOptions {
+  r2LatencyMs?: number;
+  r2BandwidthMiB?: number;
+  competitivePositions?: boolean;
+  pagedOptimizationStep?: number;
   pagedReadPolicy?: "fixed" | "adaptive";
   mode?: "and" | "or";
   limit?: number;
@@ -205,36 +210,40 @@ async function executeSearch(
     !options.metadata &&
     blockEligible(ast) &&
     entries.some((e) => e.df > 256);
-  const workingBytes = streaming
-    ? entries.reduce(
-        (sum, e) =>
-          sum +
-          (e.object === LOCAL
-            ? 65536
-            : index.paged
-              ? Math.min(
-                  e.length,
-                  index.pagedReadPolicy === "adaptive" ? 1048576 : 65536,
-                )
-              : e.length) +
-          Math.ceil(e.df / 256) * 180 +
-          4096,
-        0,
-      ) +
-      q.length * 1024 +
-      (wantWand ? 8 * (1 << entries.length) : 0)
-    : entries.reduce(
-        (s, e) =>
-          s +
-          (e.object === LOCAL ? 0 : e.length) +
-          e.df * (exactTotal ? 20 : 16) +
-          (positionTerms.has(e.term)
-            ? (e.positionObject === LOCAL ? 0 : e.positionLength) +
-              e.df * 4 +
-              (index.format >= 7 ? Math.ceil(e.df / 256) * 4 : 0)
-            : 0),
-        0,
-      ) + (needsUniverse(ast) ? index.count * 8 : 0);
+  const workingBytes =
+    (streaming
+      ? entries.reduce(
+          (sum, e) =>
+            sum +
+            (e.object === LOCAL
+              ? 65536
+              : index.paged
+                ? Math.min(
+                    e.length,
+                    index.pagedReadPolicy === "adaptive" ? 1048576 : 65536,
+                  )
+                : e.length) +
+            Math.ceil(e.df / 256) * 180 +
+            4096,
+          0,
+        ) +
+        q.length * 1024 +
+        (wantWand ? 8 * (1 << entries.length) : 0)
+      : entries.reduce(
+          (s, e) =>
+            s +
+            (e.object === LOCAL ? 0 : e.length) +
+            e.df * (exactTotal ? 20 : 16) +
+            (positionTerms.has(e.term)
+              ? (e.positionObject === LOCAL ? 0 : e.positionLength) +
+                e.df * 4 +
+                (index.format >= 7 ? Math.ceil(e.df / 256) * 4 : 0)
+              : 0),
+          0,
+        ) + (needsUniverse(ast) ? index.count * 8 : 0)) +
+    (options.competitivePositions && needsPositions && !exactTotal
+      ? index.count * 32
+      : 0);
   if (
     workingBytes >
     Math.min(56 * 1024 * 1024, 104 * 1024 * 1024 - index.bytes.length)
@@ -252,7 +261,7 @@ async function executeSearch(
     104 * 1024 * 1024 - index.bytes.length - workingBytes,
   );
   runtime?.setLimit(memoryHeadroom);
-  const read = async (
+  const read: Read = async (
     e: (typeof entries)[number],
     positions: boolean,
     relative: number,
@@ -261,10 +270,7 @@ async function executeSearch(
     const object = positions ? e.positionObject : e.object,
       offset = (positions ? e.positionOffset : e.offset) + relative;
     if (object === LOCAL) {
-      const start = index.local + offset;
-      if (start + length > index.bytes.length)
-        throw new Error("Invalid local range");
-      return index.bytes.subarray(start, start + length);
+      return index.localPosting(e, positions, relative, length);
     }
     const rangeKey = JSON.stringify([
       index.generation,
@@ -312,6 +318,12 @@ async function executeSearch(
       else active--;
     }
   };
+  if ((options.pagedOptimizationStep ?? index.optimizationStep) >= 6)
+    read.plan = {
+      latencyMs: options.r2LatencyMs ?? 20,
+      bandwidthMiB: options.r2BandwidthMiB ?? 50,
+      lanes: Math.max(1, Math.floor(4 / entries.length)),
+    };
   if (streaming) {
     const heap = new TopK(limit);
     const execution = performance.now();
@@ -395,7 +407,9 @@ async function executeSearch(
     skipBlocks && plan && maxDf > Math.max(256, plan.estimate * 8);
   const selective =
     skipBlocks && anchor && maxDf > Math.max(256, anchor.df * 8);
-  const defer = adaptive && needsPositions && !!planned;
+  const competitive =
+    options.competitivePositions === true && needsPositions && !exactTotal;
+  const defer = adaptive && needsPositions && (!!planned || competitive);
   diagnostics.deferredPositions = defer;
   const prepared = new Map<string, Awaited<ReturnType<typeof loadPosting>>>();
   let plannedCandidates: Uint32Array | undefined;
@@ -418,7 +432,7 @@ async function executeSearch(
       true,
     );
   } else if (selective) {
-    const list = await load(anchor, positionTerms.has(anchor.term));
+    const list = await load(anchor, !defer && positionTerms.has(anchor.term));
     prepared.set(anchor.term, list);
     plannedCandidates = list.docs;
   }
@@ -429,7 +443,7 @@ async function executeSearch(
       prepared.get(e.term) ??
       load(e, !defer && positionTerms.has(e.term), plannedCandidates),
   );
-  if (defer) {
+  if (defer && !competitive) {
     const coarse = candidateDocuments(
       ast,
       new Map(entries.map((e, i) => [e.term, lists[i]])),
@@ -519,6 +533,7 @@ async function executeSearch(
     0,
   );
   const useBounds =
+    !competitive &&
     !exactTotal &&
     (stage < 3 ||
       (candidates.length >= 1024 && boundRows <= candidates.length * 8));
@@ -537,9 +552,10 @@ async function executeSearch(
     : undefined;
   diagnostics.boundsMs = performance.now() - boundsStart;
   const match =
-    needsPositions && !exactTotal
+    needsPositions && !exactTotal && !competitive
       ? positionalMatcher(ast, byTerm, options.field ?? "all")
       : undefined;
+  const ranked: { doc: number; score: number }[] = [];
   let bucket = -1,
     upper = 0;
   for (
@@ -612,7 +628,42 @@ async function executeSearch(
         continue;
       if (!match(doc)) continue;
     }
-    heap.add(doc, score);
+    if (competitive) ranked.push({ doc, score });
+    else heap.add(doc, score);
+  }
+  if (competitive) {
+    ranked.sort((a, b) => b.score - a.score || a.doc - b.doc);
+    for (let first = 0, round = 0; first < ranked.length; round++) {
+      const threshold = heap.heap.length === limit ? heap.heap[0] : undefined,
+        next = ranked[first];
+      if (
+        threshold &&
+        (next.score < threshold.score ||
+          (next.score === threshold.score && next.doc >= threshold.doc))
+      )
+        break;
+      const batch = ranked.slice(
+          first,
+          first + (round === 0 ? 64 : round === 1 ? 256 : ranked.length),
+        ),
+        docs = Uint32Array.from(batch.map((h) => h.doc).sort((a, b) => a - b));
+      const attached = await parallel(
+        entries.map((e, i) => ({ e, i })),
+        4,
+        async ({ e, i }) =>
+          positionTerms.has(e.term)
+            ? attachCandidatePositions(e, lists[i], read, docs)
+            : lists[i],
+      );
+      const verify = positionalMatcher(
+        ast,
+        new Map(entries.map((e, i) => [e.term, attached[i]])),
+        options.field ?? "all",
+      );
+      for (const hit of batch)
+        if (verify(hit.doc)) heap.add(hit.doc, hit.score);
+      first += batch.length;
+    }
   }
   await index.resolveDocuments(
     heap.heap.map((h) => h.doc),

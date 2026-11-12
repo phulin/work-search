@@ -162,3 +162,19 @@ estimation charges the maximum read window. Fixed reads remain available for
 ablations and v1 compatibility. The benchmark's optional bandwidth model reserves
 transfer time on one FIFO link shared by a query's concurrent reads; it is a
 sensitivity model, not measured R2 behavior.
+
+Paged v3 stores a small hot binary index after local lengths and IDs. Hot entries
+can point to either bundled or remote streams, and cold dictionary pages can
+carry tiny streams inline. Local reads resolve against the originating binary
+index, rather than assuming every local offset belongs to the top-level bundle.
+Training terms receive priority; corpus DF fills the hot descriptor allocation.
+All serving structures remain binary except the small routing JSON.
+
+Competitive positional verification scores a conservative candidate superset,
+sorts by exact score/document-ID tie-breaker, and verifies batches of 64, 256,
+then all remaining candidates if needed. It stops only when later scores cannot
+beat the verified heap. Measured regressions keep this path opt-in. Ranked
+candidate memory is charged to the query guard. The network range planner tests
+one through four contiguous groups using largest-gap partitions, estimating
+latency waves at the query's available read concurrency plus transferred bytes.
+The user explicitly skipped cache-policy optimization; existing LRU behavior stays.

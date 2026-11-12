@@ -1,11 +1,12 @@
 import { IdTable } from "./ids.js";
-import { BinaryIndex, buildBinary, type Entry } from "./index.js";
+import { BinaryIndex, buildBinary, type Entry, LOCAL } from "./index.js";
 import { DocumentTable, encodeDocuments } from "./documents.js";
 import { crc32, encoder, decoder } from "./codec.js";
 import { parallel, type Storage } from "../storage/types.js";
 import { SearchRuntime } from "../query/runtime.js";
 export const PAGED_MAGIC = 0x31504752,
-  HYBRID_MAGIC = 0x32504752;
+  HYBRID_MAGIC = 0x32504752,
+  HOT_MAGIC = 0x33504752;
 export interface Page {
   first: string;
   offset: number;
@@ -13,7 +14,8 @@ export interface Page {
   crc: number;
 }
 export interface Root {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
+  optimizationStep?: number;
   generation: string;
   count: number;
   terms: number;
@@ -29,13 +31,20 @@ export function encodeRoot(
   root: Root,
   norms = new Uint8Array(0),
   ids = new Uint8Array(0),
+  hot = new Uint8Array(0),
 ) {
   const json = encoder.encode(JSON.stringify(root)),
-    hybrid = root.version === 2,
-    header = hybrid ? 28 : 12;
-  const out = new Uint8Array(header + json.length + norms.length + ids.length),
+    hybrid = root.version >= 2,
+    header = root.version === 3 ? 36 : hybrid ? 28 : 12;
+  const out = new Uint8Array(
+      header + json.length + norms.length + ids.length + hot.length,
+    ),
     v = new DataView(out.buffer);
-  v.setUint32(0, hybrid ? HYBRID_MAGIC : PAGED_MAGIC, true);
+  v.setUint32(
+    0,
+    root.version === 3 ? HOT_MAGIC : hybrid ? HYBRID_MAGIC : PAGED_MAGIC,
+    true,
+  );
   v.setUint32(4, json.length, true);
   v.setUint32(8, crc32(json), true);
   if (hybrid) {
@@ -45,27 +54,40 @@ export function encodeRoot(
     v.setUint32(24, crc32(ids), true);
   } else if (norms.length || ids.length)
     throw Error("Local tables require paged v2");
+  if (root.version === 3) {
+    v.setUint32(28, hot.length, true);
+    v.setUint32(32, crc32(hot), true);
+  }
   out.set(json, header);
   out.set(norms, header + json.length);
   out.set(ids, header + json.length + norms.length);
+  out.set(hot, header + json.length + norms.length + ids.length);
   return out;
 }
 function sections(bytes: Uint8Array) {
   if (bytes.length < 12) throw Error("Invalid paged root");
   const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
     magic = v.getUint32(0, true),
-    hybrid = magic === HYBRID_MAGIC,
-    header = hybrid ? 28 : 12;
+    hybrid = magic === HYBRID_MAGIC || magic === HOT_MAGIC,
+    header = magic === HOT_MAGIC ? 36 : hybrid ? 28 : 12;
   if ((magic !== PAGED_MAGIC && !hybrid) || bytes.length < header)
     throw Error("Invalid paged root");
   const n = v.getUint32(4, true),
     normLength = hybrid ? v.getUint32(12, true) : 0,
-    idLength = hybrid ? v.getUint32(20, true) : 0;
-  if (n > 8 * 1048576 || header + n + normLength + idLength !== bytes.length)
+    idLength = hybrid ? v.getUint32(20, true) : 0,
+    hotLength = magic === HOT_MAGIC ? v.getUint32(28, true) : 0;
+  if (
+    n > 8 * 1048576 ||
+    header + n + normLength + idLength + hotLength !== bytes.length
+  )
     throw Error("Invalid paged root length");
   const json = bytes.subarray(header, header + n),
     norms = bytes.subarray(header + n, header + n + normLength),
-    ids = bytes.subarray(header + n + normLength);
+    ids = bytes.subarray(
+      header + n + normLength,
+      header + n + normLength + idLength,
+    ),
+    hot = bytes.subarray(header + n + normLength + idLength);
   if (
     crc32(json) !== v.getUint32(8, true) ||
     (hybrid &&
@@ -73,17 +95,21 @@ function sections(bytes: Uint8Array) {
         crc32(ids) !== v.getUint32(24, true)))
   )
     throw Error("Paged root checksum mismatch");
+  if (hotLength && crc32(hot) !== v.getUint32(32, true))
+    throw Error("Hot index checksum mismatch");
   const root: Root = JSON.parse(decoder.decode(json));
-  if (root.version !== (hybrid ? 2 : 1))
+  if (root.version !== (magic === HOT_MAGIC ? 3 : hybrid ? 2 : 1))
     throw Error("Paged root version mismatch");
-  if (root.version === 2 && (normLength !== root.count * 8 || !idLength))
+  if (root.version >= 2 && (normLength !== root.count * 8 || !idLength))
     throw Error("Invalid local tables");
-  return { root, norms, ids };
+  return { root, norms, ids, hot };
 }
 export function decodeRoot(bytes: Uint8Array): Root {
-  const { root: r } = sections(bytes);
+  return validateRoot(sections(bytes).root);
+}
+function validateRoot(r: Root): Root {
   if (
-    ![1, 2].includes(r.version) ||
+    ![1, 2, 3].includes(r.version) ||
     !/^[a-f0-9]{64}$/.test(r.generation) ||
     !Number.isSafeInteger(r.count) ||
     r.count < 0 ||
@@ -119,7 +145,7 @@ export function openIndex(bytes: Uint8Array) {
           bytes.byteLength,
         ).getUint32(0, true)
       : 0;
-  return magic === PAGED_MAGIC || magic === HYBRID_MAGIC
+  return magic === PAGED_MAGIC || magic === HYBRID_MAGIC || magic === HOT_MAGIC
     ? new PagedIndex(bytes)
     : new BinaryIndex(bytes);
 }
@@ -134,6 +160,8 @@ export class PagedIndex extends BinaryIndex {
   override readonly bytes: Uint8Array;
   readonly root: Root;
   readonly rootBytes: Uint8Array;
+  readonly hotIndex?: BinaryIndex;
+  private sources = new Map<string, BinaryIndex>();
   readonly localNorms?: DataView;
   readonly localIds?: IdTable;
   private entries = new Map<string, Entry>();
@@ -144,7 +172,8 @@ export class PagedIndex extends BinaryIndex {
   pageRequests = 0;
   pageBytes = 0;
   constructor(bytes: Uint8Array, shared?: PagedIndex) {
-    const r = shared?.root ?? decodeRoot(bytes);
+    const parsed = shared ? undefined : sections(bytes);
+    const r = shared?.root ?? validateRoot(parsed!.root);
     super(
       buildBinary(
         r.generation,
@@ -158,10 +187,16 @@ export class PagedIndex extends BinaryIndex {
     );
     if (bytes.length > 48 * 1048576) throw Error("Paged bundle exceeds 48 MiB");
     if (shared) {
+      this.hotIndex = shared.hotIndex;
       this.localNorms = shared.localNorms;
       this.localIds = shared.localIds;
-    } else if (r.version === 2) {
-      const { norms, ids } = sections(bytes);
+    } else if (r.version >= 2) {
+      const { norms, ids, hot } = parsed!;
+      if (hot.length) {
+        this.hotIndex = new BinaryIndex(hot);
+        if (this.hotIndex.generation !== r.generation)
+          throw Error("Hot generation mismatch");
+      }
       this.localNorms = new DataView(
         norms.buffer,
         norms.byteOffset,
@@ -171,7 +206,8 @@ export class PagedIndex extends BinaryIndex {
     }
     this.bytes = bytes;
     this.root = r;
-    this.pagedReadPolicy = r.version === 2 ? "adaptive" : "fixed";
+    this.optimizationStep = r.optimizationStep ?? 0;
+    this.pagedReadPolicy = r.version >= 2 ? "adaptive" : "fixed";
     this.rootBytes = bytes;
     this.count = r.count;
     this.termCount = r.terms;
@@ -209,6 +245,11 @@ export class PagedIndex extends BinaryIndex {
     this.storage = storage;
     const pages = new Set<number>();
     for (const t of terms) {
+      const hot = this.hotIndex?.lookup(t);
+      if (hot) {
+        this.entries.set(t, hot);
+        continue;
+      }
       let l = 0,
         r = this.root.dictionary.length;
       while (l < r) {
@@ -224,9 +265,24 @@ export class PagedIndex extends BinaryIndex {
         throw Error("Dictionary generation mismatch");
       for (const t of terms) {
         const e = index.lookup(t);
-        if (e) this.entries.set(t, e);
+        if (e && !this.entries.has(t)) {
+          this.entries.set(t, e);
+          this.sources.set(t, index);
+        }
       }
     });
+  }
+  override localPosting(
+    e: Entry,
+    positions: boolean,
+    relative: number,
+    length: number,
+  ) {
+    const source = this.hotIndex?.lookup(e.term)
+      ? this.hotIndex
+      : this.sources.get(e.term);
+    if (!source) throw Error("Missing inline source");
+    return source.localPosting(e, positions, relative, length);
   }
   override lookup(t: string) {
     return this.entries.get(t);
