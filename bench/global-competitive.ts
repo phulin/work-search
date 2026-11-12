@@ -78,6 +78,7 @@ for (const [qi, q] of queries.entries()) {
       cpu = process.cpuUsage(),
       result = await index.search(reader, q.q, {
         competitivePositions,
+        adaptivePositions: false,
         decodedReads: process.env.GLOBAL_DECODED_READS !== "0",
       }),
       used = process.cpuUsage(cpu),

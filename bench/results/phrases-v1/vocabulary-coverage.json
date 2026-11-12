@@ -1,0 +1,13 @@
+{
+  "documents": 100000,
+  "vocabulary": 4096,
+  "minVocabularyDf": 2039,
+  "observedPairs": 3303318,
+  "eligibleSelectivePairs": 3303318,
+  "pairDocuments": 87530816,
+  "rawVarintBytes": 128275987,
+  "estimatedSelectiveBytes": 589134583,
+  "adjacencies": 187782352,
+  "eligibleAdjacencies": 145855201,
+  "adjacencyOccurrenceCoverage": 0.7767247531333509
+}

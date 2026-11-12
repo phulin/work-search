@@ -22,7 +22,9 @@
     "global:dev": "tsx src/global/cli.ts dev",
     "global:search": "tsx src/global/cli.ts search",
     "global:deploy": "tsx scripts/publish-global.ts",
-    "global:deploy-demo": "tsx scripts/deploy-global.ts"
+    "global:deploy-demo": "tsx scripts/deploy-global.ts",
+    "global:build-pairs": "tsx scripts/build-pair-index.ts",
+    "bench:global-phrases": "tsx bench/global-phrases.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261110.1",

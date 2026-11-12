@@ -1,0 +1,19 @@
+{
+  "vocabulary": 4096,
+  "pairs": 3070995,
+  "budgetBytes": 268435456,
+  "minDf": 100,
+  "inlineMaxDf": 16,
+  "generation": "5f6dbb0357578758801c2a4c75f87d9ae30eabcaa03da7adb4d3471dfd8a2a1b",
+  "baseGeneration": "dd3b7cedcea7ce22d6228be930507c55b636d001c0c13e5cfba74833150e01f0",
+  "documents": 100000,
+  "rootBytes": 151816,
+  "totalBytes": 125980936,
+  "postingBytes": 74274683,
+  "entryEncoding": "binary-v2",
+  "inlinePairs": 2907920,
+  "inlineDocuments": 8471788,
+  "dictionaryRawBytes": 131072,
+  "ms": 487607.127958,
+  "peakStatisticsBytes": 201326592
+}

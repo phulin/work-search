@@ -363,3 +363,43 @@ See [the measured comparison and optimization rounds](bench/GLOBAL-INDEX.md),
 [tradeoffs](DESIGN.md#global-retrieval-engine). The 100k experimental API is
 [available here](https://work-search-global-demo.phulin.workers.dev/search?q=summary+judgment).
 The full-corpus Casework demo and its ongoing import use the existing engine.
+
+### Adaptive phrases and corpus-selected pair index
+
+Global positional search now probes score order before switching sparse broad
+queries to bounded document-order verification. The default fused probe preserves
+the original dense-query read path. Set `ADAPTIVE_POSITIONS=0` on
+the Worker (or `adaptivePositions: false` in the library) for the prior executor.
+Both paths preserve exact results, score ties and pagination.
+
+An optional adjacent-word-pair sidecar provides conservative phrase candidates.
+It uses corpus frequencies, never benchmark queries, and retains full positional
+verification and the original unigram BM25. Build it against the exact source
+and global generation, using a fresh output directory:
+
+```sh
+npm run global:build-pairs -- corpus.jsonl work/my-global-index/source \
+  work/my-global-index work/my-pairs 256 4096 --inline-rare
+npm run global:search -- --out work/my-global-index --pairs work/my-pairs --intersect-pairs \
+  --query '"summary judgment"'
+npm run global:dev -- --out work/my-global-index --pairs work/my-pairs --intersect-pairs
+GLOBAL_PAIRS=work/my-pairs GLOBAL_ADAPTIVE_PROBE=fused GLOBAL_PAIR_INTERSECT=1 \
+  GLOBAL_BUCKET=work-search-global GLOBAL_WORKER=my-search \
+  npm run global:deploy -- work/my-global-index
+```
+
+The last two build arguments are the sidecar's **R2 storage budget in MiB** and
+maximum vocabulary size. Both words must be in that corpus-selected vocabulary.
+`--inline-rare` reserves all observed pairs with DF ≤16 and stores their lists in
+remote dictionary values. `--max-root-bytes N` optionally bounds the sidecar root.
+`GLOBAL_PAIR_INTERSECT=1` intersects affordable adjacent-pair lists;
+`GLOBAL_ADAPTIVE_PROBE=competitive` restores the first experimental probe;
+`fused` is the new default.
+The sidecar adds a small binary root to the Worker; combined roots must fit the
+existing bundle budget. Pair objects have their own immutable generation pinned
+to the base generation. Retain both sets of objects for rollback and garbage
+collection. Unindexed or excessively common pairs safely fall back to ordinary
+search. Pair discovery can add latency, so this remains an optional experiment.
+
+See [pair construction and coverage](bench/PAIR-INDEX.md) and
+[the end-to-end phrase experiments](bench/PHRASE-EXPERIMENTS.md).

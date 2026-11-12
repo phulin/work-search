@@ -1,0 +1,10 @@
+{"phrase":"of the","unigramIntersection":83836,"pairCandidates":null,"afterIntersection":83836,"reduction":0,"requests":1,"bytes":65536,"rounds":1,"ms":16.355166999999994}
+{"phrase":"court of appeals","unigramIntersection":40193,"pairCandidates":null,"afterIntersection":40193,"reduction":0,"requests":2,"bytes":131072,"rounds":1,"ms":1.554208000000017}
+{"phrase":"advice of counsel","unigramIntersection":2079,"pairCandidates":9257,"afterIntersection":981,"reduction":0.5281385281385281,"requests":3,"bytes":196608,"rounds":2,"ms":3.624500000000012}
+{"phrase":"absent a showing","unigramIntersection":3873,"pairCandidates":null,"afterIntersection":3873,"reduction":0,"requests":1,"bytes":65536,"rounds":1,"ms":0.6962919999999713}
+{"phrase":"appellant contends","unigramIntersection":11749,"pairCandidates":2377,"afterIntersection":2377,"reduction":0.7976849093539876,"requests":2,"bytes":131072,"rounds":2,"ms":2.7669579999999883}
+{"phrase":"clear and convincing evidence","unigramIntersection":2447,"pairCandidates":5398,"afterIntersection":1880,"reduction":0.231712300776461,"requests":3,"bytes":196608,"rounds":2,"ms":2.963874999999973}
+{"phrase":"summary judgment","unigramIntersection":12488,"pairCandidates":null,"afterIntersection":12488,"reduction":0,"requests":1,"bytes":65536,"rounds":1,"ms":0.7566659999999956}
+{"phrase":"in the absence of","unigramIntersection":15315,"pairCandidates":null,"afterIntersection":15315,"reduction":0,"requests":3,"bytes":196608,"rounds":1,"ms":1.400624999999991}
+{"phrase":"burden of proof","unigramIntersection":8434,"pairCandidates":null,"afterIntersection":8434,"reduction":0,"requests":2,"bytes":131072,"rounds":1,"ms":1.011083000000042}
+{"phrase":"as a matter of law","unigramIntersection":29970,"pairCandidates":16443,"afterIntersection":15220,"reduction":0.49215882549215884,"requests":5,"bytes":327680,"rounds":2,"ms":4.268042000000037}

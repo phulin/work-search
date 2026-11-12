@@ -1,22 +1,33 @@
 import { GlobalIndex } from "./search.js";
-import { PageReader, workerPageCache, HttpPageStorage } from "./storage.js";
+import {
+  PageReader,
+  workerPageCache,
+  HttpPageStorage,
+  ReadBudget,
+} from "./storage.js";
 import { R2Storage } from "../storage/r2.js";
 import { SearchRuntime } from "../query/runtime.js";
 import { QuerySyntaxError } from "../query/parser.js";
 import { QueryResourceError } from "../query/evaluate.js";
+import { decodePairRoot, PairFilter } from "./pairs.js";
+import { searchWithPairs } from "./pair-search.js";
 interface Env {
   INDEX: R2Bucket;
   PAGE_CACHE?: string;
   PAGE_CACHE_POLICY?: "fixed384" | "adaptive960";
   COMPETITIVE_POSITIONS?: string;
+  ADAPTIVE_POSITIONS?: string;
+  ADAPTIVE_PROBE?: "competitive" | "fused";
+  PAIR_INTERSECT?: string;
   PAGE_READ_KIB?: string;
   PAGE_BASE_URL?: string;
   DIAGNOSTICS?: string;
   INTERNAL_TOKEN?: string;
 }
-export function createGlobalWorker(bytes: Uint8Array) {
+export function createGlobalWorker(bytes: Uint8Array, pairBytes?: Uint8Array) {
   const index = new GlobalIndex(bytes),
-    memory = new SearchRuntime(8 * 1048576);
+    memory = new SearchRuntime(8 * 1048576),
+    pairs = pairBytes ? decodePairRoot(pairBytes, index.root) : undefined;
   return {
     async fetch(request: Request, env: Env, ctx: ExecutionContext) {
       const url = new URL(request.url);
@@ -28,7 +39,8 @@ export function createGlobalWorker(bytes: Uint8Array) {
           pageBytes: index.root.pageBytes,
           readPageBytes:
             Number(env.PAGE_READ_KIB ?? index.root.pageBytes / 1024) * 1024,
-          bundleBytes: bytes.length,
+          bundleBytes: bytes.length + (pairBytes?.length ?? 0),
+          pairGeneration: pairs?.root.generation,
           cache: env.PAGE_BASE_URL
             ? "cdn"
             : env.PAGE_CACHE === "1"
@@ -122,6 +134,7 @@ export function createGlobalWorker(bytes: Uint8Array) {
                   defer,
                 )
               : undefined;
+        const budget = new ReadBudget();
         const source = env.PAGE_BASE_URL
             ? new HttpPageStorage(pageRoot, env.PAGE_BASE_URL)
             : new R2Storage(env.INDEX, index.root.generation),
@@ -133,16 +146,44 @@ export function createGlobalWorker(bytes: Uint8Array) {
             defer,
             true,
             env.PAGE_CACHE_POLICY,
+            budget,
           );
-        const result = await index.search(reader, input.q, {
-          limit,
-          field,
-          titleBoost,
-          metadata: input.metadata !== false && input.metadata !== "false",
-          snippets: input.snippets !== false && input.snippets !== "false",
-          after: input.after,
-          competitivePositions: env.COMPETITIVE_POSITIONS === "1",
-        });
+        const pairReader = pairs
+          ? new PageReader(
+              pairs.root,
+              new R2Storage(env.INDEX, pairs.root.generation),
+              memory,
+              cache,
+              defer,
+              true,
+              env.PAGE_CACHE_POLICY,
+              budget,
+            )
+          : undefined;
+        const result = await searchWithPairs(
+          index,
+          reader,
+          pairs && pairReader
+            ? new PairFilter(
+                pairs,
+                pairReader,
+                32768,
+                env.PAIR_INTERSECT === "1",
+              )
+            : undefined,
+          input.q,
+          {
+            limit,
+            field,
+            titleBoost,
+            metadata: input.metadata !== false && input.metadata !== "false",
+            snippets: input.snippets !== false && input.snippets !== "false",
+            after: input.after,
+            competitivePositions: env.COMPETITIVE_POSITIONS === "1",
+            adaptivePositions: env.ADAPTIVE_POSITIONS !== "0",
+            adaptiveProbe: env.ADAPTIVE_PROBE,
+          },
+        );
         const diagnostics =
           env.DIAGNOSTICS === "1" ||
           (!!env.INTERNAL_TOKEN &&

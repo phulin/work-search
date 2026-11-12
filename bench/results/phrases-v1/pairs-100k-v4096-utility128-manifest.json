@@ -1,0 +1,14 @@
+{
+  "vocabulary": 4096,
+  "pairs": 199011,
+  "budgetBytes": 134217728,
+  "minDf": 100,
+  "generation": "e977e72177d12e7a98590534385efd7ebf21ca58096ec0c4b82ca952d6c7c7aa",
+  "baseGeneration": "dd3b7cedcea7ce22d6228be930507c55b636d001c0c13e5cfba74833150e01f0",
+  "documents": 100000,
+  "rootBytes": 63911,
+  "totalBytes": 86964647,
+  "postingBytes": 79241837,
+  "ms": 447902.533541,
+  "peakStatisticsBytes": 201326592
+}

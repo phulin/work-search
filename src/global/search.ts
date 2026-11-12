@@ -79,6 +79,12 @@ export interface GlobalSearchOptions {
   decodedCache?: boolean;
   prefetch?: boolean;
   competitivePositions?: boolean;
+  /** Document-ordered, bounded positional verification for broad queries. */
+  adaptivePositions?: boolean;
+  /** Fused probe retains original position scanning for dense matches. */
+  adaptiveProbe?: "competitive" | "fused";
+  /** Complete conservative superset of matching docs, e.g. a phrase-pair index. */
+  candidateFilter?: ReadonlySet<number>;
   heapAdmission?: boolean;
   decodedReads?: boolean;
   verificationBatchDocs?: number;
@@ -279,15 +285,23 @@ export class GlobalIndex {
       skipped = 0,
       seedHits = 0,
       spanFallbacks = 0;
-    const competitive =
+    const broadPositions =
       positions &&
-      options.competitivePositions === true &&
       Math.min(
         ...[...requiredTerms(ast)]
           .map((t) => plans.get(t)?.df ?? 0)
           .filter((n) => n > 0),
       ) > 1024;
-    const fetchPositions = positions && !competitive;
+    const adaptiveRequested =
+      broadPositions && options.adaptivePositions !== false;
+    let adaptive = false,
+      adaptiveProbed = false;
+    const adaptiveProbe = options.adaptiveProbe ?? "fused";
+    let competitive =
+      broadPositions &&
+      (adaptiveRequested || options.competitivePositions === true) &&
+      !(adaptiveRequested && adaptiveProbe === "fused");
+    let fetchPositions = positions && !competitive;
     let verifiedDocuments = 0,
       positionBlocksRead = 0;
     const inline = new Map<string, Row[]>();
@@ -333,7 +347,12 @@ export class GlobalIndex {
               ),
             ].sort((a, b) => a - b);
       for (const doc of docs) {
-        if (seen.has(doc) || !match(doc)) continue;
+        if (
+          (options.candidateFilter && !options.candidateFilter.has(doc)) ||
+          seen.has(doc) ||
+          !match(doc)
+        )
+          continue;
         let value = 0;
         for (const term of positive) {
           const r = maps.get(term)?.get(doc);
@@ -481,7 +500,11 @@ export class GlobalIndex {
           ];
       const ranked: { doc: number; score: number }[] = [];
       for (const doc of docs) {
-        if (!coarse(doc)) continue;
+        if (
+          (options.candidateFilter && !options.candidateFilter.has(doc)) ||
+          !coarse(doc)
+        )
+          continue;
         let value = 0;
         for (const term of positive) {
           const r = maps.get(term)?.get(doc);
@@ -498,7 +521,11 @@ export class GlobalIndex {
           continue;
         ranked.push({ doc, score: value });
       }
-      ranked.sort((a, b) => b.score - a.score || a.doc - b.doc);
+      ranked.sort(
+        adaptive
+          ? (a, b) => a.doc - b.doc
+          : (a, b) => b.score - a.score || a.doc - b.doc,
+      );
       const blockFor = (term: string, doc: number) => {
         const blocks = plans.get(term)!.blocks;
         let lo = 0,
@@ -521,8 +548,11 @@ export class GlobalIndex {
           (candidate.score < threshold.score ||
             (candidate.score === threshold.score &&
               candidate.doc > threshold.doc))
-        )
-          break;
+        ) {
+          if (!adaptive) break;
+          cursor++;
+          continue;
+        }
         const selected: number[] = [],
           needed = new Map<
             string,
@@ -532,7 +562,8 @@ export class GlobalIndex {
         const pages = new Set<string>();
         while (
           cursor < ranked.length &&
-          selected.length < (options.verificationBatchDocs ?? 32)
+          selected.length <
+            (options.verificationBatchDocs ?? (adaptive ? 4096 : 32))
         ) {
           const candidate = ranked[cursor],
             refs: { term: string; ref: Address }[] = [];
@@ -747,7 +778,16 @@ export class GlobalIndex {
             w.blocks.get(term)!.push(b);
           }
     }
-    const queue = [...windows.values()].filter((w) => possible(ast, w.present));
+    const candidateCells =
+      options.candidateFilter &&
+      new Set(
+        [...options.candidateFilter].map((doc) => Math.floor(doc / windowDocs)),
+      );
+    const queue = [...windows.values()].filter(
+      (w) =>
+        (!candidateCells || candidateCells.has(w.tile)) &&
+        possible(ast, w.present),
+    );
     for (const w of queue) {
       for (const term of positive) {
         const bs = w.blocks.get(term) ?? [];
@@ -764,7 +804,11 @@ export class GlobalIndex {
     }
     // Equal bounds must be ordered by minimum doc ID: the stopping proof below
     // relies on all remaining equal-bound windows having no earlier IDs.
-    queue.sort((a, b) => b.bound - a.bound || a.tile - b.tile);
+    queue.sort(
+      adaptive
+        ? (a, b) => a.tile - b.tile
+        : (a, b) => b.bound - a.bound || a.tile - b.tile,
+    );
     const decodedCache = new (
       await import("../query/runtime.js")
     ).SearchRuntime(options.decodedCache === false ? 0 : 4 * 1048576);
@@ -780,8 +824,13 @@ export class GlobalIndex {
           (queue[cursor].bound === threshold.score &&
             queue[cursor].tile * windowDocs > threshold.doc))
       ) {
-        skipped += queue.length - cursor;
-        break;
+        if (!adaptive) {
+          skipped += queue.length - cursor;
+          break;
+        }
+        skipped++;
+        cursor++;
+        continue;
       }
       const batch: typeof queue = [];
       let rawBytes = 0;
@@ -789,7 +838,7 @@ export class GlobalIndex {
       const rawSet = new Set<string>();
       while (
         cursor < queue.length &&
-        batch.length < (options.batchTiles ?? 32)
+        batch.length < (options.batchTiles ?? (adaptive ? 256 : 32))
       ) {
         const w = queue[cursor];
         let cost = 0;
@@ -954,6 +1003,25 @@ export class GlobalIndex {
             : undefined,
         );
       }
+      // A small score-ordered probe finds dense phrases quickly. If it does not
+      // fill top-K, traverse the remaining cells in document order to
+      // keep adjacent positional blocks in the same bounded verification batch.
+      if (adaptiveRequested && !adaptiveProbed) {
+        adaptiveProbed = true;
+        if (!heap.threshold) {
+          adaptive = true;
+          if (!competitive) {
+            // Fused cache entries own positions; drop them before retaining
+            // frequency-only rows under the same block keys.
+            decodedCache.clear();
+            competitive = true;
+            fetchPositions = false;
+          }
+          const remaining = queue.splice(cursor);
+          remaining.sort((a, b) => a.tile - b.tile);
+          queue.push(...remaining);
+        }
+      }
       if (
         options.prefetch &&
         !prefetch &&
@@ -1075,6 +1143,9 @@ export class GlobalIndex {
         seedProof,
         spanFallbacks,
         competitivePositions: competitive,
+        adaptivePositions: adaptiveRequested,
+        adaptiveProbe,
+        positionalOrder: adaptive ? "document" : "score",
         verifiedDocuments,
         positionBlocksRead,
         prefetchedDocs: prefetchedDocs.size,

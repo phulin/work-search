@@ -4,7 +4,10 @@ import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { buildGlobal } from "./build.js";
 import { GlobalIndex } from "./search.js";
-import { PageReader } from "./storage.js";
+import { PageReader, ReadBudget } from "./storage.js";
+import { SearchRuntime } from "../query/runtime.js";
+import { decodePairRoot, PairFilter } from "./pairs.js";
+import { searchWithPairs } from "./pair-search.js";
 import { FileStorage } from "../storage/filesystem.js";
 const command = process.argv[2],
   { values: v } = parseArgs({
@@ -17,10 +20,25 @@ const command = process.argv[2],
       "page-kib": { type: "string", default: "128" },
       budget: { type: "string", default: "8" },
       query: { type: "string" },
+      pairs: { type: "string" },
+      "intersect-pairs": { type: "boolean", default: false },
       "ids-only": { type: "boolean", default: false },
       base: { type: "boolean", default: false },
     },
   });
+async function localIndex() {
+  const binaryPath = resolve(
+      v.out + `/${v.base ? "bundle" : "bundle-heads"}-${v.budget}.bin`,
+    ),
+    bytes = await readFile(binaryPath),
+    index = new GlobalIndex(bytes),
+    pairPath = v.pairs ? resolve(v.pairs + "/pairs.bin") : undefined,
+    pairBytes = pairPath ? await readFile(pairPath) : undefined,
+    pairs = pairBytes ? decodePairRoot(pairBytes, index.root) : undefined;
+  if (bytes.length + (pairBytes?.length ?? 0) > Number(v.budget) * 1048576)
+    throw Error("Combined bundle exceeds budget");
+  return { binaryPath, index, pairPath, pairs };
+}
 if (command === "build") {
   if (!v.input) throw Error("--input is required");
   const result = await buildGlobal({
@@ -32,22 +50,49 @@ if (command === "build") {
   });
   console.log(JSON.stringify(result, null, 2));
 } else if (command === "search") {
-  const index = new GlobalIndex(
-      await readFile(
-        v.out + `/${v.base ? "bundle" : "bundle-heads"}-${v.budget}.bin`,
-      ),
-    ),
+  const { index, pairs } = await localIndex(),
     disk = new FileStorage(v.out + "/packs"),
-    reader = new PageReader(index.root, {
-      read: (key, offset, length) =>
-        disk.read(key.split("/").at(-1)!, offset, length),
-    });
+    memory = new SearchRuntime(8 * 1048576),
+    budget = new ReadBudget(),
+    reader = new PageReader(
+      index.root,
+      {
+        read: (key, offset, length) =>
+          disk.read(key.split("/").at(-1)!, offset, length),
+      },
+      memory,
+      undefined,
+      undefined,
+      true,
+      undefined,
+      budget,
+    ),
+    pairReader = pairs
+      ? new PageReader(
+          pairs.root,
+          new FileStorage(v.pairs + "/packs"),
+          memory,
+          undefined,
+          undefined,
+          true,
+          undefined,
+          budget,
+        )
+      : undefined;
   console.log(
     JSON.stringify(
-      await index.search(reader, v.query ?? "", {
-        metadata: !v["ids-only"],
-        snippets: !v["ids-only"],
-      }),
+      await searchWithPairs(
+        index,
+        reader,
+        pairs && pairReader
+          ? new PairFilter(pairs, pairReader, 32768, v["intersect-pairs"])
+          : undefined,
+        v.query ?? "",
+        {
+          metadata: !v["ids-only"],
+          snippets: !v["ids-only"],
+        },
+      ),
       null,
       2,
     ),
@@ -55,10 +100,7 @@ if (command === "build") {
 } else if (command === "dev") {
   const { Miniflare } = await import("miniflare"),
     { createHash } = await import("node:crypto");
-  const binaryPath = resolve(
-      v.out + `/${v.base ? "bundle" : "bundle-heads"}-${v.budget}.bin`,
-    ),
-    index = new GlobalIndex(await readFile(binaryPath)),
+  const { binaryPath, index, pairPath, pairs } = await localIndex(),
     persist = resolve(".wrangler/state"),
     dir = resolve("work/global-dev");
   await mkdir(dir, { recursive: true });
@@ -70,26 +112,37 @@ if (command === "build") {
   });
   try {
     const bucket = await mf.getR2Bucket("INDEX");
-    for (const object of index.root.objects) {
-      const bytes = await readFile(v.out + "/packs/" + object.name);
-      if (
-        bytes.length !== object.size ||
-        createHash("sha256").update(bytes).digest("hex") !== object.sha256
-      )
-        throw Error("Local pack checksum mismatch");
-      await bucket.put(index.root.generation + "/" + object.name, bytes, {
-        customMetadata: {
-          generation: index.root.generation,
-          sha256: object.sha256,
-        },
-      });
-    }
+    for (const { root, packs } of [
+      { root: index.root, packs: v.out + "/packs" },
+      ...(pairs
+        ? [
+            {
+              root: pairs.root,
+              packs: v.pairs + "/packs/" + pairs.root.generation,
+            },
+          ]
+        : []),
+    ])
+      for (const object of root.objects) {
+        const bytes = await readFile(packs + "/" + object.name);
+        if (
+          bytes.length !== object.size ||
+          createHash("sha256").update(bytes).digest("hex") !== object.sha256
+        )
+          throw Error("Local pack checksum mismatch");
+        await bucket.put(root.generation + "/" + object.name, bytes, {
+          customMetadata: {
+            generation: root.generation,
+            sha256: object.sha256,
+          },
+        });
+      }
   } finally {
     await mf.dispose();
   }
   await writeFile(
     dir + "/entry.ts",
-    `import binary from ${JSON.stringify(binaryPath)};import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};export default createGlobalWorker(new Uint8Array(binary));`,
+    `import binary from ${JSON.stringify(binaryPath)};${pairPath ? `import pairs from ${JSON.stringify(pairPath)};` : ""}import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};export default createGlobalWorker(new Uint8Array(binary)${pairPath ? ",new Uint8Array(pairs)" : ""});`,
   );
   const config = dir + "/wrangler.json";
   await writeFile(
@@ -100,7 +153,12 @@ if (command === "build") {
       compatibility_date: "2026-11-01",
       rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
       r2_buckets: [{ binding: "INDEX", bucket_name: "work-search-global" }],
-      vars: { PAGE_CACHE: "1", PAGE_READ_KIB: "256", DIAGNOSTICS: "1" },
+      vars: {
+        PAGE_CACHE: "1",
+        PAGE_READ_KIB: "256",
+        DIAGNOSTICS: "1",
+        PAIR_INTERSECT: v["intersect-pairs"] ? "1" : "0",
+      },
     }),
   );
   const child = spawn(

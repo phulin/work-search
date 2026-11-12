@@ -137,32 +137,86 @@ it("matches the existing engine for Boolean, phrase, proximity, fields, seeds, t
               metadata: false,
               snippets: false,
             };
-            const expected = await global.search(reader, q, options);
-            const got = await global.search(reader, q, {
+            const expected = await global.search(reader, q, {
               ...options,
-              competitivePositions: true,
+              adaptivePositions: false,
             });
-            expect(got.diagnostics.competitivePositions, q).toBe(true);
-            expect(got.results, q + field + titleBoost).toEqual(
-              expected.results,
-            );
-            if (got.results.length) {
-              const last = got.results.at(-1)!;
-              const after = { score: last.score, doc: last.doc };
-              const next = await global.search(reader, q, {
+            for (const execution of [
+              { adaptivePositions: false },
+              { adaptivePositions: true, adaptiveProbe: "competitive" },
+              { adaptivePositions: true, adaptiveProbe: "fused" },
+            ] as const) {
+              const got = await global.search(reader, q, {
                 ...options,
-                after,
-              });
-              const gotNext = await global.search(reader, q, {
-                ...options,
-                after,
                 competitivePositions: true,
+                ...execution,
               });
-              expect(gotNext.results, q + " after").toEqual(next.results);
+              if (got.diagnostics.adaptiveProbe !== "fused")
+                expect(got.diagnostics.competitivePositions, q).toBe(true);
+              expect(got.results, q + field + titleBoost).toEqual(
+                expected.results,
+              );
+              if (got.results.length) {
+                const last = got.results.at(-1)!;
+                const after = { score: last.score, doc: last.doc };
+                const next = await global.search(reader, q, {
+                  ...options,
+                  after,
+                  adaptivePositions: false,
+                });
+                const gotNext = await global.search(reader, q, {
+                  ...options,
+                  after,
+                  competitivePositions: true,
+                  ...execution,
+                });
+                expect(gotNext.results, q + " after").toEqual(next.results);
+              }
             }
           }
         }
       }
+      const filteredQuery = '"summary judgment"';
+      const allMatches = new Set(
+        docs.flatMap((d, i) =>
+          d.body.includes("summary judgment") ? [i] : [],
+        ),
+      );
+      const unfiltered = await global.search(reader, filteredQuery);
+      const filtered = await global.search(reader, filteredQuery, {
+        candidateFilter: allMatches,
+      });
+      expect(filtered.results).toEqual(unfiltered.results);
+      expect(unfiltered.diagnostics.positionalOrder).toBe("score");
+      const fusedDense = await global.search(reader, filteredQuery, {
+        adaptiveProbe: "fused",
+      });
+      const fusedDenseBaseline = await global.search(reader, filteredQuery, {
+        adaptivePositions: false,
+      });
+      expect(fusedDense.results).toEqual(fusedDenseBaseline.results);
+      expect(fusedDense.diagnostics.competitivePositions).toBe(false);
+      expect(fusedDense.diagnostics.positionalOrder).toBe("score");
+      expect(fusedDense.diagnostics.requests).toBe(
+        fusedDenseBaseline.diagnostics.requests,
+      );
+      expect(fusedDense.diagnostics.indexRounds).toBe(
+        fusedDenseBaseline.diagnostics.indexRounds,
+      );
+      const fusedSparse = await global.search(reader, '"court summary"', {
+        adaptiveProbe: "fused",
+        batchTiles: 1,
+      });
+      expect(fusedSparse.results).toEqual([]);
+      expect(fusedSparse.diagnostics.competitivePositions).toBe(true);
+      expect(fusedSparse.diagnostics.positionalOrder).toBe("document");
+      const sparse = await global.search(reader, '"court summary"');
+      expect(sparse.results).toEqual([]);
+      expect(sparse.diagnostics.positionalOrder).toBe("document");
+      const emptyFiltered = await global.search(reader, filteredQuery, {
+        candidateFilter: new Set(),
+      });
+      expect(emptyFiltered.results).toEqual([]);
       const first = await global.search(reader, "court", {
         metadata: false,
         snippets: false,

@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 import { parallel } from "../src/storage/types.js";
+import { decodePairRoot } from "../src/global/pairs.js";
 import { decodeRoot } from "../src/global/format.js";
 const out = process.argv[2] ?? "work/global-100k",
   budget = process.env.GLOBAL_BUDGET ?? "8",
@@ -13,18 +14,31 @@ const out = process.argv[2] ?? "work/global-100k",
       `/${process.env.GLOBAL_HEADS === "1" ? "bundle-heads" : "bundle"}-${budget}.bin`,
   ),
   { root } = decodeRoot(bundle);
+const pairDir = process.env.GLOBAL_PAIRS;
+const pairBytes = pairDir ? await readFile(pairDir + "/pairs.bin") : undefined;
+const pairs = pairBytes ? decodePairRoot(pairBytes, root) : undefined;
+if (bundle.length + (pairBytes?.length ?? 0) > Number(budget) * 1048576)
+  throw Error("Combined bundle exceeds budget");
 const { url } = JSON.parse(
     await readFile("work/full-flp/deployment.json", "utf8"),
   ),
   { INTERNAL_TOKEN: token } = JSON.parse(
     await readFile("work/full-flp/secrets.json", "utf8"),
   );
-if (!process.argv.includes("--deploy-only"))
+for (const [uploadRoot, uploadDir] of [
+  ...(!process.argv.includes("--deploy-only") ? [[root, out] as const] : []),
+  ...(pairs && pairDir ? [[pairs.root, pairDir] as const] : []),
+])
   await parallel(
-    root.objects.slice(Number(process.env.GLOBAL_FROM_OBJECT ?? 0)),
+    uploadRoot.objects.slice(Number(process.env.GLOBAL_FROM_OBJECT ?? 0)),
     6,
     async (o) => {
-      const bytes = await readFile(out + "/packs/" + o.name);
+      const objectPath =
+        uploadDir +
+        "/packs/" +
+        (uploadRoot === pairs?.root ? uploadRoot.generation + "/" : "") +
+        o.name;
+      const bytes = await readFile(objectPath);
       if (createHash("sha256").update(bytes).digest("hex") !== o.sha256)
         throw Error("Global object checksum mismatch");
       for (let attempt = 0; ; attempt++) {
@@ -32,7 +46,7 @@ if (!process.argv.includes("--deploy-only"))
           const r = await fetch(
             url +
               "/__upload/" +
-              encodeURIComponent(root.generation + "/" + o.name),
+              encodeURIComponent(uploadRoot.generation + "/" + o.name),
             {
               method: "PUT",
               headers: {
@@ -40,7 +54,7 @@ if (!process.argv.includes("--deploy-only"))
                 "content-length": String(o.size),
                 "x-sha256": o.sha256,
               },
-              body: createReadStream(out + "/packs/" + o.name),
+              body: createReadStream(objectPath),
               duplex: "half",
             } as any,
           );
@@ -64,7 +78,7 @@ await mkdir("work/global-deploy", { recursive: true });
 const entry = resolve(`work/global-deploy/${name}.ts`);
 await writeFile(
   entry,
-  `import bytes from ${JSON.stringify(resolve(out + `/${process.env.GLOBAL_HEADS === "1" ? "bundle-heads" : "bundle"}-${budget}.bin`))};import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};export default createGlobalWorker(new Uint8Array(bytes));`,
+  `import bytes from ${JSON.stringify(resolve(out + `/${process.env.GLOBAL_HEADS === "1" ? "bundle-heads" : "bundle"}-${budget}.bin`))};import {createGlobalWorker} from ${JSON.stringify(resolve(process.env.GLOBAL_RUNTIME ?? "src/global/worker-runtime.ts"))};${pairDir ? `import pairs from ${JSON.stringify(resolve(pairDir + "/pairs.bin"))};` : ""}export default createGlobalWorker(new Uint8Array(bytes)${pairDir ? ",new Uint8Array(pairs)" : ""});`,
 );
 const config = resolve(`work/global-deploy/${name}.json`),
   vars: Record<string, string> = {
@@ -72,6 +86,9 @@ const config = resolve(`work/global-deploy/${name}.json`),
     DIAGNOSTICS: "0",
     PAGE_CACHE_POLICY: process.env.GLOBAL_CACHE_POLICY ?? "adaptive960",
     COMPETITIVE_POSITIONS: process.env.GLOBAL_COMPETITIVE ?? "0",
+    ADAPTIVE_POSITIONS: process.env.GLOBAL_ADAPTIVE ?? "1",
+    ADAPTIVE_PROBE: process.env.GLOBAL_ADAPTIVE_PROBE ?? "fused",
+    PAIR_INTERSECT: process.env.GLOBAL_PAIR_INTERSECT ?? "0",
     PAGE_READ_KIB: process.env.GLOBAL_PAGE_KIB ?? String(root.pageBytes / 1024),
   };
 if (process.env.GLOBAL_PAGE_BASE_URL)

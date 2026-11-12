@@ -289,3 +289,32 @@ size as `(log2(pageBytes)-16)*2^40 + object*objectPages + page`; this prevents c
 collisions between 64-, 128- and 256-KiB grouping. Cache entries are complete 200
 responses, never 206 responses. Optional HTTP page objects use
 `{generation}/page-{pageId}.bin`. A custom domain/CDN is separate from R2 bindings.
+
+### Adjacent-pair sidecar (PIR1)
+
+Optional `pairs.bin` starts with little-endian u32 magic `0x31524950`, followed
+by CRC32 of the remaining UTF-8 root JSON. Root version 1 identifies the exact
+base generation and source SHA-256, selection parameters, and a separate GLB1
+page directory/object manifest. Large structures remain remote: the root holds
+sparse first/last pair keys and page addresses. Pair keys are normalized
+`left + NUL + right`; tokenizer output cannot contain NUL. Remote front-coded
+dictionary values carry pair DF and bounded posting-block addresses. A posting
+payload contains varint document count then delta-varint sorted internal IDs;
+ID zero is valid and subsequent deltas are positive. Each block has at most
+4096 IDs. Existing PagePacker gzip/CRC/address encoding applies unchanged.
+
+Both words must fall within the builder's corpus-frequency vocabulary. Pair
+occurrence is computed separately within title and body and unioned at document
+level. It never spans field boundaries. Pair postings only prune candidates;
+the unigram positions still establish exact phrase/proximity/field semantics.
+The auxiliary generation cannot be combined with a different base generation.
+
+PIR1 roots with `entryEncoding: "binary-v2"` use binary dictionary values:
+varint entry version (2), DF, and kind. Kind 1 is a complete delta-varint document
+list using the codec above; kind 0 is a block count followed by each block's
+first ID, last ID and five address integers. Unknown encodings/kinds are rejected.
+The optional rare-pair builder stores every observed pair with DF ≤16 in these
+remote dictionary values, avoiding a second read stage for those pairs. Larger
+pair descriptors also use the compact encoding. Dictionary raw payloads are
+bounded at 128 KiB; compressed payloads may span physical pages. This does not
+embed the complete pair dictionary in the Worker.

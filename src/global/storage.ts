@@ -21,12 +21,15 @@ export interface ReadRound {
   endMs: number;
   ms: number;
 }
+export class ReadBudget {
+  cacheLookups = 0;
+  cacheOperations = 0;
+  requests = 0;
+  traceStart = performance.now();
+}
 export class PageReader {
   readonly rounds: ReadRound[] = [];
-  private cacheLookups = 0;
-  private cacheOperations = 0;
-  private requests = 0;
-  private traceStart = performance.now();
+  private budget: ReadBudget;
   private active = 0;
   private waiting: (() => void)[] = [];
   private pending = new Map<string, Promise<Uint8Array>>();
@@ -48,7 +51,7 @@ export class PageReader {
       else this.active++;
       let body: Promise<Uint8Array>;
       try {
-        if (++this.requests > 8000)
+        if (++this.budget.requests > 8000)
           throw new QueryResourceError(
             "Global storage request budget exceeded",
           );
@@ -87,13 +90,13 @@ export class PageReader {
     private defer?: (task: Promise<unknown>) => void,
     private pipeline = true,
     private cachePolicy: "fixed384" | "adaptive960" = "adaptive960",
-  ) {}
+    private sharedBudget?: ReadBudget,
+  ) {
+    this.budget = sharedBudget ?? new ReadBudget();
+  }
   clearTrace() {
     this.rounds.length = 0;
-    this.requests = 0;
-    this.cacheLookups = 0;
-    this.cacheOperations = 0;
-    this.traceStart = performance.now();
+    if (!this.sharedBudget) this.budget = new ReadBudget();
   }
   async readMany(refs: Address[], stage: string) {
     const start = performance.now(),
@@ -106,7 +109,7 @@ export class PageReader {
         memoryHits: 0,
         sharedHits: 0,
         coalescedHits: 0,
-        startMs: start - this.traceStart,
+        startMs: start - this.budget.traceStart,
         endMs: 0,
         ms: 0,
       };
@@ -148,11 +151,11 @@ export class PageReader {
           const shared =
             this.shared &&
             (this.cachePolicy === "fixed384"
-              ? this.cacheLookups++ < 384
-              : this.cacheOperations < 960)
+              ? this.budget.cacheLookups++ < 384
+              : this.budget.cacheOperations < 960)
               ? this.shared
               : undefined;
-          if (shared) this.cacheOperations++;
+          if (shared) this.budget.cacheOperations++;
           bytes = await shared?.get(key);
           if (bytes) round.sharedHits++;
           else {
@@ -167,9 +170,10 @@ export class PageReader {
             );
             if (
               shared &&
-              (this.cachePolicy === "fixed384" || this.cacheOperations < 960)
+              (this.cachePolicy === "fixed384" ||
+                this.budget.cacheOperations < 960)
             ) {
-              this.cacheOperations++;
+              this.budget.cacheOperations++;
               const p = shared.put(key, bytes);
               if (this.defer) this.defer(p);
               else await p;
@@ -244,7 +248,7 @@ export class PageReader {
       },
     );
     round.ms = performance.now() - start;
-    round.endMs = performance.now() - this.traceStart;
+    round.endMs = performance.now() - this.budget.traceStart;
     this.rounds.push(round);
     return result;
   }

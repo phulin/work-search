@@ -323,10 +323,9 @@ position arrays. Query-local raw posting batches default to 4 MiB,
 with bounded decoded/raw-position caches and a bundle-dependent plan limit.
 Cache API admission counts operations dynamically: at most 960 get/put calls per
 query, reserving platform headroom. The old fixed-384-lookup policy remains an
-experiment control. No result cache hides query work. Speculative result prefetch
-and competitive positional verification remain disabled after measured regressions.
-The latter scores frequency-only candidates and verifies competitive candidates
-exactly; correctness is preserved, but its extra storage rounds are expensive.
+experiment control. No result cache hides query work. Speculative result prefetch and the original always-score-ordered competitive
+verification remain disabled after measured regressions. The adaptive replacement
+below combines frequency-first scoring with a bounded document-order fallback.
 
 Offline conversion streams documents and source blocks, spills term plans into
 SQLite, and constructs immutable 64-MiB packs. SHA-256 pins the source stream and
@@ -347,3 +346,33 @@ retention across colos remain unvalidated. Broad phrase searches still scan too
 many position blocks; smaller directly addressed positional groups are the next
 high-value format change. The 200–400 ms warmed-unfamiliar-query goal is not met
 consistently; repeated-query results are reported separately.
+
+### Adaptive verification and adjacent-pair sidecar
+
+Broad positional queries first probe up to 32 score-ordered cells using fused
+frequency/position reads. If this fills top-K, the original score-order path
+continues; otherwise remaining cells traverse
+in document order with bounded larger batches. This reduces rereads for sparse
+phrases without globally breaking on an uncompetitive document-order cell.
+Every candidate still needs exact positional verification. Dense and proximity
+queries may trade more reads for less CPU; the selector remains experimental.
+
+The optional PIR1 sidecar selects adjacent pairs from corpus statistics. A pair
+is a necessary document-level condition for a phrase, not a phrase score or proof
+of alignment. AND/NEAR intersect safe supersets, OR needs both branches bounded,
+EXCEPT uses only the left, and NOT never provides pruning. The base engine keeps
+original unigram BM25 and all positional checks. Memory caps admit at most 32
+phrase clauses and 32768 aggregate pair-document entries, falling back safely.
+Independent dictionary lookups and pair postings are batched across the AST.
+An optional compact build reserves all observed within-vocabulary pairs with
+DF ≤16 and stores their complete doclists in remote dictionary values. This
+avoids a second pair-read stage for rare anchors. Multi-pair mode intersects
+affordable lists, retaining the same conservative superset semantics.
+Both readers share the 8 MiB page cache and one request/cache-operation budget;
+diagnostics include all auxiliary reads. No response cache is introduced.
+
+The extra pair root counts against the unchanged binary bundle budget; larger
+pair coverage spends R2 storage instead. Both words must be in the vocabulary,
+so rare words and unselected adjacencies still fall back. Corpus-only utility is
+an imperfect predictor of future queries, and remote dictionary discovery adds
+stages. The experiment report separates coverage gains from these costs.

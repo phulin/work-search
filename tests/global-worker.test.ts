@@ -6,7 +6,11 @@ import { spawnSync } from "node:child_process";
 import { Miniflare } from "miniflare";
 import { buildGlobal } from "../src/global/build.js";
 import { GlobalIndex } from "../src/global/search.js";
-import { PageReader } from "../src/global/storage.js";
+import { PageReader, ReadBudget } from "../src/global/storage.js";
+import { buildPairs } from "../src/global/pair-build.js";
+import { decodePairRoot } from "../src/global/pairs.js";
+import { FileStorage } from "../src/storage/filesystem.js";
+import type { Address, Root } from "../src/global/format.js";
 import { SearchRuntime } from "../src/query/runtime.js";
 it("serves the global Worker in workerd with real R2, Cache API and diagnostics", async () => {
   const dir = await mkdtemp(join(tmpdir(), "global-worker-"));
@@ -18,7 +22,10 @@ it("serves the global Worker in workerd with real R2, Cache API and diagnostics"
         JSON.stringify({
           id: "d" + i,
           title: "Court",
-          body: "clear and convincing evidence case " + i,
+          body:
+            (i % 3
+              ? "clear and convincing evidence case "
+              : "clear gap and convincing evidence case ") + i,
           metadata: { court: "Test court" },
         }),
       ).join("\n"),
@@ -28,9 +35,23 @@ it("serves the global Worker in workerd with real R2, Cache API and diagnostics"
       out: dir + "/index",
       budgets: [1048576],
     });
+    await buildPairs({
+      input: dir + "/input",
+      source: dir + "/index/source",
+      base: dir + "/index",
+      out: dir + "/pairs",
+      minDf: 1,
+      vocabulary: 32,
+      budgetBytes: 1048576,
+      inlineRarePairs: true,
+    });
+    const baseBytes = await readFile(dir + "/index/bundle-1.bin"),
+      pairBytes = await readFile(dir + "/pairs/pairs.bin"),
+      index = new GlobalIndex(baseBytes),
+      pairManifest = decodePairRoot(pairBytes, index.root);
     await writeFile(
       dir + "/entry.ts",
-      `import bytes from './index/bundle-1.bin';import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};export default createGlobalWorker(new Uint8Array(bytes));`,
+      `import bytes from './index/bundle-1.bin';import pairBytes from './pairs/pairs.bin';import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};export default createGlobalWorker(new Uint8Array(bytes), new Uint8Array(pairBytes));`,
     );
     const config = {
       name: "global-test",
@@ -55,21 +76,27 @@ it("serves the global Worker in workerd with real R2, Cache API and diagnostics"
     expect(dry.status, dry.stdout + dry.stderr).toBe(0);
     const script = dir + "/dist/entry.js",
       text = await readFile(script, "utf8"),
-      name = text.match(/["']\.\/([^"']+\.bin)["']/)![1];
+      names = [...text.matchAll(/["']\.\/([^"']+\.bin)["']/g)].map(
+        (match) => match[1],
+      );
     mf = new Miniflare({
       modules: [
         { type: "ESModule", path: script },
-        {
-          type: "Data",
-          path: dir + "/dist/" + name,
-          contents: await readFile(dir + "/index/bundle-1.bin"),
-        },
+        ...(await Promise.all(
+          names.map(async (name) => ({
+            type: "Data" as const,
+            path: dir + "/dist/" + name,
+            contents: await readFile(dir + "/dist/" + name),
+          })),
+        )),
       ],
       modulesRoot: dir,
       scriptPath: script,
       r2Buckets: ["INDEX"],
       bindings: {
         PAGE_CACHE: "1",
+        PAIR_INTERSECT: "1",
+        ADAPTIVE_PROBE: "fused",
         DIAGNOSTICS: "1",
         INTERNAL_TOKEN: "test",
         PAGE_READ_KIB: "256",
@@ -82,14 +109,52 @@ it("serves the global Worker in workerd with real R2, Cache API and diagnostics"
         await readFile(dir + "/index/packs/" + o.name),
         { customMetadata: { generation: manifest.generation } },
       );
+    for (const object of pairManifest.root.objects)
+      await bucket.put(
+        pairManifest.root.generation + "/" + object.name,
+        await readFile(
+          dir +
+            "/pairs/packs/" +
+            pairManifest.root.generation +
+            "/" +
+            object.name,
+        ),
+        { customMetadata: { generation: pairManifest.root.generation } },
+      );
+    const health: any = await (
+      await mf.dispatchFetch("https://search/health")
+    ).json();
+    expect(health.bundleBytes).toBe(baseBytes.length + pairBytes.length);
+    expect(health.pairGeneration).toBe(pairManifest.root.generation);
+    expect(health.generation).toBe(index.root.generation);
     const r = await mf.dispatchFetch("https://search/search", {
       method: "POST",
       headers: { authorization: "Bearer test" },
       body: JSON.stringify({ q: '"clear and convincing evidence"', limit: 20 }),
     });
-    expect(r.status).toBe(200);
     const first: any = await r.json();
+    expect(r.status, JSON.stringify(first)).toBe(200);
     expect(first.results).toHaveLength(20);
+    const pairRounds = first.diagnostics.rounds.filter((r: any) =>
+      r.stage.startsWith("pair-"),
+    );
+    expect(pairRounds.map((r: any) => r.stage)).toContain("pair-dictionary");
+    expect(pairRounds.map((r: any) => r.stage)).toContain("pair-candidates");
+    expect(
+      pairRounds.reduce((n: number, r: any) => n + r.requests, 0),
+    ).toBeGreaterThan(0);
+    expect(first.diagnostics.pairCandidates).toBe(33);
+    expect(first.diagnostics.requests).toBe(
+      first.diagnostics.rounds.reduce((n: number, r: any) => n + r.requests, 0),
+    );
+    expect(first.diagnostics.bytes).toBe(
+      first.diagnostics.rounds.reduce((n: number, r: any) => n + r.bytes, 0),
+    );
+    expect(first.diagnostics.indexRounds).toBe(
+      first.diagnostics.rounds.filter(
+        (r: any) => r.stage !== "results-and-passages" && r.requests > 0,
+      ).length,
+    );
     expect(first.results[0].excerpt).toContain("clear and convincing evidence");
     expect(first.diagnostics.rounds.at(-1).stage).toBe("results-and-passages");
     const second: any = await (
@@ -106,6 +171,39 @@ it("serves the global Worker in workerd with real R2, Cache API and diagnostics"
         0,
       ),
     ).toBeGreaterThan(0);
+    const disk = new FileStorage(dir + "/index/packs");
+    for (const q of [
+      '"case 1"',
+      '"clear and convincing evidence"',
+      '"clear and" OR "gap and"',
+      '"clear and" OR gap',
+      'NOT "clear and"',
+      '"convincing evidence" AND NOT "clear gap"',
+    ]) {
+      const expected = await index.search(
+        new PageReader(index.root, {
+          read: (key, offset, length) =>
+            disk.read(key.split("/").at(-1)!, offset, length),
+        }),
+        q,
+      );
+      const response = await mf.dispatchFetch("https://search/search", {
+        method: "POST",
+        headers: { authorization: "Bearer test" },
+        body: JSON.stringify({ q, resetMemory: true }),
+      });
+      expect(response.status, q).toBe(200);
+      const actual: any = await response.json();
+      expect(actual.results, q).toEqual(expected.results);
+      if (q === '"case 1"') {
+        expect(actual.diagnostics.pairCandidates).toBe(1);
+        expect(
+          actual.diagnostics.rounds.some(
+            (r: any) => r.stage === "pair-candidates",
+          ),
+        ).toBe(false);
+      }
+    }
     expect(
       (await mf.dispatchFetch("https://search/search?q=hi&field=bad")).status,
     ).toBe(400);
@@ -337,4 +435,85 @@ it("uploads immutable generation objects and rejects conflicting writes", async 
   const existing = await call("HEAD");
   expect(existing.headers.get("x-sha256")).toBe(sha);
   expect(existing.headers.get("x-generation")).toBe(generation);
+});
+
+it("shares origin and Cache API budgets across readers without resetting them on clearTrace", async () => {
+  const { gzipSync } = await import("node:zlib"),
+    { crc32 } = await import("../src/format/codec.js");
+  const compressed = gzipSync(Buffer.from("x")),
+    page = new Uint8Array(65536);
+  page.set(compressed);
+  const root: Root = {
+    version: 1,
+    generation: "a".repeat(64),
+    count: 0,
+    avgBody: 0,
+    avgTitle: 0,
+    pageBytes: 65536,
+    objectPages: 1024,
+    dictionary: [],
+    objects: [{ name: "plan-0.bin", size: 65536, sha256: "" }],
+    hotBytes: 0,
+  };
+  const ref: Address = [0, 0, compressed.length, crc32(compressed), 1];
+  const budget = new ReadBudget(),
+    traceStart = budget.traceStart;
+  budget.requests = 7998;
+  budget.cacheOperations = 958;
+  let gets = 0,
+    puts = 0,
+    origins = 0;
+  const source = {
+      read: async () => {
+        origins++;
+        return page;
+      },
+    },
+    cache = {
+      get: async () => {
+        gets++;
+        return undefined;
+      },
+      put: async () => {
+        puts++;
+      },
+    };
+  const first = new PageReader(
+      root,
+      source,
+      new SearchRuntime(0),
+      cache,
+      undefined,
+      true,
+      "adaptive960",
+      budget,
+    ),
+    second = new PageReader(
+      { ...root, generation: "b".repeat(64) },
+      source,
+      new SearchRuntime(0),
+      cache,
+      undefined,
+      true,
+      "adaptive960",
+      budget,
+    );
+  await first.readMany([ref], "first-reader");
+  expect(first.rounds).toHaveLength(1);
+  expect(budget.requests).toBe(7999);
+  expect(budget.cacheOperations).toBe(960);
+  first.clearTrace();
+  expect(first.rounds).toEqual([]);
+  expect(budget.requests).toBe(7999);
+  expect(budget.cacheOperations).toBe(960);
+  expect(budget.traceStart).toBe(traceStart);
+  await second.readMany([ref], "second-reader");
+  expect(budget.requests).toBe(8000);
+  second.clearTrace();
+  await expect(second.readMany([ref], "exhausted")).rejects.toThrow(
+    "Global storage request budget exceeded",
+  );
+  expect(gets).toBe(1);
+  expect(puts).toBe(1);
+  expect(origins).toBe(2);
 });
