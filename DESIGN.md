@@ -178,3 +178,18 @@ candidate memory is charged to the query guard. The network range planner tests
 one through four contiguous groups using largest-gap partitions, estimating
 latency waves at the query's available read concurrency plus transferred bytes.
 The user explicitly skipped cache-policy optimization; existing LRU behavior stays.
+
+The full-snapshot demo partitions offline input into bounded indexes, then uses
+Workers service bindings for a hierarchical fanout. Every partition scores with
+the same global document frequencies and field-length statistics. Partition-local
+WAND/score bounds are disabled on that path: their original local statistics are
+not valid global upper bounds. This trades query speed and R2 operations for
+correct ranking while the full import proceeds within local disk/RAM limits.
+
+Signed search-after cursors pin the query, statistics and generation vector for
+one hour. Equal scores are ordered by partition then internal document ID.
+Pagination re-executes against those immutable partitions without retaining an
+ever-growing heap or mutable server-side session. Full opinion bodies live in
+separate gzip records with a fixed-width ranged catalog, outside bundle budgets.
+Excerpts scan a bounded prefix; the reader streams the entire opinion. This is
+a search-and-reading MVP, without court/date filters or citation analysis.

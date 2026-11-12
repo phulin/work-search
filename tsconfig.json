@@ -10,5 +10,5 @@
     "types": ["node", "@cloudflare/workers-types"],
     "lib": ["ES2022", "WebWorker"]
   },
-  "include": ["src", "tests", "bench"]
+  "include": ["src", "tests", "bench", "demo", "scripts"]
 }

@@ -278,3 +278,12 @@ proven, falling back to the remaining candidates after two insufficient batches.
 Exact totals retain exhaustive verification. Cache admission was not changed.
 
 See [the sequential optimization report](bench/PAGED-OPTIMIZATIONS.md).
+
+## Full Free Law Project demo
+
+The deployed [Casework demo](https://work-search-demo.phulin.workers.dev/) supports
+an opinion reader, highlighted result excerpts and signed pagination beyond the
+first 100 matches. [Live coverage](https://work-search-demo.phulin.workers.dev/health)
+shows whether the full official import is complete. See [demo operations and data
+provenance](demo/README.md). The full import and early-partition text backfill run
+locally; serving runs entirely on Workers and R2.

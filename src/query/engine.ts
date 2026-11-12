@@ -84,6 +84,14 @@ class TopK {
   }
 }
 export interface SearchOptions {
+  after?: { score: number; doc: number };
+  globalStats?: {
+    count: number;
+    avgBody: number;
+    avgTitle: number;
+    df: Record<string, number>;
+  };
+  internalDoc?: boolean;
   r2LatencyMs?: number;
   r2BandwidthMiB?: number;
   competitivePositions?: boolean;
@@ -202,6 +210,8 @@ async function executeSearch(
       !(cachedRows > totalRows / 2 && totalRows * 12 <= 8 * 1048576) &&
       (pureConjunction(ast) || (index.count > 50000 && totalRows > 100000)));
   const streaming =
+    !options.globalStats &&
+    !options.after &&
     useBlocks &&
     stage >= 4 &&
     skipBlocks &&
@@ -363,7 +373,11 @@ async function executeSearch(
     );
     const results = heap.heap
       .sort((a, b) => b.score - a.score || a.doc - b.doc)
-      .map((h) => ({ id: index.document(h.doc).id, score: h.score }));
+      .map((h) => ({
+        id: index.document(h.doc).id,
+        score: h.score,
+        ...(options.internalDoc ? { doc: h.doc } : {}),
+      }));
     return {
       results: results as Omit<Hit, "doc">[],
       ...(exactTotal ? { total: 0 } : {}),
@@ -514,7 +528,13 @@ async function executeSearch(
             term: e.term,
             list: lists[j],
             cursor: 0,
-            idf: Math.log(1 + (index.count - e.df + 0.5) / (e.df + 0.5)),
+            idf: Math.log(
+              1 +
+                ((options.globalStats?.count ?? index.count) -
+                  (options.globalStats?.df[e.term] ?? e.df) +
+                  0.5) /
+                  ((options.globalStats?.df[e.term] ?? e.df) + 0.5),
+            ),
           },
         ]
       : [],
@@ -523,8 +543,8 @@ async function executeSearch(
     lengths = { body: 0, title: 0 },
     bodyEnabled = options.field !== "title",
     titleEnabled = options.field !== "body",
-    avgBody = index.avgBody || 1,
-    avgTitle = index.avgTitle || 1;
+    avgBody = (options.globalStats?.avgBody ?? index.avgBody) || 1,
+    avgTitle = (options.globalStats?.avgTitle ?? index.avgTitle) || 1;
   const boundsStart = performance.now();
   // Building bounds scans every posting; direct scoring wins on small or
   // very selective candidate sets. Cached bounds remain cheap for larger sets.
@@ -533,6 +553,7 @@ async function executeSearch(
     0,
   );
   const useBounds =
+    !options.globalStats &&
     !competitive &&
     !exactTotal &&
     (stage < 3 ||
@@ -618,6 +639,12 @@ async function executeSearch(
       if (titleEnabled && title)
         score += boost * ((term.idf * (title * 2.2)) / (title + titleNorm));
     }
+    if (
+      options.after &&
+      (score > options.after.score ||
+        (score === options.after.score && doc <= options.after.doc))
+    )
+      continue;
     if (stage >= 2 && match) {
       const threshold = heap.heap.length === limit ? heap.heap[0] : undefined;
       if (
@@ -693,7 +720,9 @@ async function executeSearch(
   diagnostics.fullyLocal =
     diagnostics.indexRequests + diagnostics.metadataRequests === 0;
   return {
-    results: hits.map(({ doc, ...h }) => h),
+    results: hits.map(({ doc, ...h }) =>
+      options.internalDoc ? { ...h, doc } : h,
+    ),
     ...(!exactTotal ? {} : { total: candidates.length }),
     diagnostics,
   };
