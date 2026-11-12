@@ -57,7 +57,7 @@ if (viewer)
       sha256: o.sha256,
       file: out + "/viewer/" + o.name,
     });
-await parallel(uploads, 3, async (o: any) => {
+const upload = async (o: any) => {
   const file = o.file ?? out + "/objects/" + o.key;
   const digest = createHash("sha256");
   for await (const b of createReadStream(file)) digest.update(b);
@@ -85,7 +85,27 @@ await parallel(uploads, 3, async (o: any) => {
       throw Error(`Upload failed ${response.status}: ${await response.text()}`);
     await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
   }
-});
+};
+await parallel(uploads, 3, upload);
+const cards = await readFile(out + "/cards/manifest.json", "utf8").then(
+  JSON.parse,
+  () => null,
+);
+if (cards) {
+  await parallel(cards.objects as any[], 3, (o) =>
+    upload({
+      ...o,
+      key: cards.cardGeneration + "/" + o.name,
+      file: out + "/cards/" + o.name,
+    }),
+  );
+  await upload({
+    ...cards.root,
+    key: cards.indexGeneration + "/cardroot-0.bin",
+    file: out + "/cards/cardroot-0.bin",
+  });
+}
+
 const lock = root + "/publish.lock";
 for (;;) {
   try {
@@ -134,6 +154,7 @@ try {
     documents: manifest.documents,
     preview,
     viewerAvailable: !!viewer,
+    cardsAvailable: !!cards,
     inputSha256,
   };
   const group = Math.floor(id / 32),

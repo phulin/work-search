@@ -41,8 +41,9 @@ export async function opinionText(
   bucket: R2Bucket,
   generation: string,
   doc: number,
+  pointer?: number[],
 ) {
-  const p = await contentPointer(bucket, generation, doc),
+  const p = pointer ?? (await contentPointer(bucket, generation, doc)),
     o = await bucket.get(`${generation}/content-${p[0]}.bin`, {
       range: { offset: p[1], length: p[2] },
     });
@@ -55,8 +56,11 @@ export async function excerpt(
   generation: string,
   doc: number,
   terms: string[],
+  pointer?: number[],
 ) {
-  const reader = (await opinionText(bucket, generation, doc)).getReader(),
+  const reader = (
+      await opinionText(bucket, generation, doc, pointer)
+    ).getReader(),
     decoder = new TextDecoder(),
     wanted = new Set(terms);
   let tail = "",

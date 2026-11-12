@@ -215,3 +215,12 @@ the unobservable backend cache state. Timed local runs fail on missing mirrored
 ranges; hydration happens separately. Measured deployed results and local models
 remain separate, with ranking equivalence and prediction-error checks. No query
 frequency weights or cache policy are inferred from the scenario suite.
+
+Result cards are immutable R2 sidecars: an 80-byte generation-bound header and
+16-byte descriptors route 128-document gzip blocks containing display fields and
+opinion-body pointers. Their small directories and requested records share one
+4-MiB gateway LRU. A per-hit pipeline overlaps card and body retrieval across six
+lanes; cached cards need only the body read. Record packs upload before the root
+directory. Missing roots fall back to the older path while existing generations
+are backfilled. No index bundle or ranking data changes; case data in a card is
+pinned to its build generation. Updates require a new index/card generation.

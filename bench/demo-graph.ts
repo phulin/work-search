@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, open } from "node:fs/promises";
 import { createShard } from "../demo/shard-runtime.js";
 import gateway from "../demo/gateway.js";
 import { SearchRuntime } from "../src/query/runtime.js";
@@ -19,6 +19,25 @@ export interface LocalTrace extends Trace {
 }
 
 export async function createDemoGraph(hydrate = false) {
+  const level = Number(process.env.DEMO_OPT_STAGE ?? 0);
+  const artifacts = await readFile(root + "/cards.json", "utf8").then(
+    JSON.parse,
+    () => ({}),
+  );
+  const artifactBytes = async (key: string, options?: any) => {
+    const a = artifacts[key];
+    if (!options?.range) return readFile(a.path);
+    const f = await open(a.path, "r"),
+      bytes = new Uint8Array(options.range.length);
+    try {
+      const r = await f.read(bytes, 0, bytes.length, options.range.offset);
+      if (r.bytesRead !== bytes.length)
+        throw Error("Truncated benchmark artifact");
+      return bytes;
+    } finally {
+      await f.close();
+    }
+  };
   const calibration = JSON.parse(
     await readFile(root + "/latency.json", "utf8"),
   );
@@ -28,9 +47,11 @@ export async function createDemoGraph(hydrate = false) {
     profiles: any[] = [];
   const bucket = {
     get: async (key: string, options?: any) => {
+      if (key.endsWith("/cardroot-0.bin") && !artifacts[key]) return null;
       const t = traces(),
-        bytes =
-          key === "demo-case-metadata.json"
+        bytes = artifacts[key]
+          ? await artifactBytes(key, options)
+          : key === "demo-case-metadata.json"
             ? manifest
             : await range(
                 key,
@@ -132,6 +153,7 @@ export async function createDemoGraph(hydrate = false) {
       INDEX: tracedBucket(bucket),
       INTERNAL_TOKEN: token,
       ROLE: "root",
+      PERF_LEVEL: String(level),
       CHILDREN: "[]",
     },
     children: any[] = [];

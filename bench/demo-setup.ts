@@ -51,6 +51,7 @@ const url = await deploy(
   "bench/demo-probe.ts",
   {
     ROLE: "root",
+    PERF_LEVEL: process.env.DEMO_OPT_STAGE ?? "0",
     CHILDREN: JSON.stringify(
       groups.map((g, i) => ({
         binding: `CHILD_${i}`,

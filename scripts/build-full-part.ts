@@ -5,6 +5,7 @@ import { build } from "../src/builder/build.js";
 import { pageIndex } from "../src/builder/page-index.js";
 import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
+import { buildInputCards } from "./build-input-cards.js";
 const part = Number(process.argv[2]),
   root = "work/full-flp",
   name = String(part).padStart(5, "0"),
@@ -30,6 +31,7 @@ if (
     chunkDocs: 100,
   });
 }
+
 const workload = JSON.parse(
   await readFile("bench/results/flp100k-queries.json", "utf8"),
 ).train.map((q: any) => q.q);
@@ -64,4 +66,24 @@ if (
     index.count,
     (i) => index.document(i).id,
   );
+}
+
+if (
+  !(await stat(out + "/cards/manifest.json").then(
+    () => true,
+    () => false,
+  ))
+) {
+  const cases = await readFile(
+    root + "/case-metadata/manifest.json",
+    "utf8",
+  ).then(JSON.parse, () => null);
+  if (cases)
+    await buildInputCards(
+      input,
+      out + "/cards",
+      await readFile(out + "/bundle.bin"),
+      await readFile(out + "/viewer/contentmap-0.bin"),
+      cases.generation,
+    );
 }

@@ -91,6 +91,23 @@ for (const mode of modes)
           )
         )
           throw Error("Local/live ranking mismatch: " + q.q);
+        if (Number(process.env.DEMO_OPT_STAGE ?? 0) >= 1) {
+          const reference = live.rows.find(
+            (r: any) => r.q === q.q && r.pass === 0 && !r.page,
+          ).body.results;
+          for (let i = 0; i < body.results.length; i++) {
+            const fields = (h: any) =>
+              JSON.stringify([
+                h.title,
+                h.metadata?.court,
+                h.metadata?.date_filed,
+                h.metadata?.docket_number,
+                h.metadata?.citations,
+              ]);
+            if (fields(body.results[i]) !== fields(reference[i]))
+              throw Error("Result-card metadata mismatch: " + q.q);
+          }
+        }
         rows.push({
           ...q,
           mode,

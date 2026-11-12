@@ -4,6 +4,7 @@ import { parse, queryTerms, QuerySyntaxError } from "../src/query/parser.js";
 import { encodeCursor, decodeCursor } from "./cursor.js";
 import { excerpt, opinionText, opinionInfo } from "../src/content/read.js";
 import { caseMetadata } from "../src/content/case-metadata.js";
+import { resultCards } from "../src/content/cards.js";
 interface Child {
   binding: string;
   min: number;
@@ -217,18 +218,54 @@ export default {
                 after: cursor?.after,
               }),
               hits = found.results.slice(0, limit);
-            const [enriched, snippets] = await Promise.all([
-              documents({ hits, generations }).then((details) =>
+            const fast =
+              Number(env.PERF_LEVEL ?? 0) >= 1
+                ? await parallel(hits as any[], 6, async (h) => {
+                    const card = await resultCards(env.INDEX).get(
+                      generations[h.shard],
+                      h.doc,
+                      h.id,
+                    );
+                    return card
+                      ? {
+                          info: { ...card, shard: h.shard },
+                          snippet: await excerpt(
+                            env.INDEX,
+                            generations[h.shard],
+                            h.doc,
+                            terms,
+                            card.body,
+                          ).catch(() => null),
+                        }
+                      : null;
+                  })
+                : hits.map(() => null);
+            const missing = hits.filter((_: any, i: number) => !fast[i]);
+            const [legacy, oldSnippets] = await Promise.all([
+              documents({ hits: missing, generations }).then((details) =>
                 parallel(details.results as any[], 4, (r) =>
                   caseMetadata(env.INDEX).enrich(r),
                 ),
               ),
-              parallel(hits, 4, (h: any) =>
+              parallel(missing, 4, (h: any) =>
                 excerpt(env.INDEX, generations[h.shard], h.doc, terms).catch(
                   () => null,
                 ),
               ),
             ]);
+            const enriched = [
+                ...legacy,
+                ...fast.filter(Boolean).map((r: any) => r.info),
+              ],
+              old = new Map(
+                missing.map((h: any, i: number) => [
+                  `${h.shard}:${h.doc}`,
+                  oldSnippets[i],
+                ]),
+              );
+            const snippets = hits.map((h: any, i: number) =>
+              fast[i] ? fast[i]!.snippet : old.get(`${h.shard}:${h.doc}`),
+            );
             const by = new Map(
               enriched.map((r: any) => [`${r.shard}:${r.doc}`, r]),
             );
