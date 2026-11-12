@@ -24,7 +24,11 @@
     "global:deploy": "tsx scripts/publish-global.ts",
     "global:deploy-demo": "tsx scripts/deploy-global.ts",
     "global:build-pairs": "tsx scripts/build-pair-index.ts",
-    "bench:global-phrases": "tsx bench/global-phrases.ts"
+    "bench:global-phrases": "tsx bench/global-phrases.ts",
+    "global:build-pair-costs": "tsx scripts/build-pair-costs.ts",
+    "global:refine-bounds": "tsx scripts/refine-global-bounds.ts",
+    "bench:global-retrieval": "tsx bench/global-retrieval-matrix.ts",
+    "bench:global-native-retrieval": "tsx bench/global-native-retrieval.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261110.1",

@@ -403,3 +403,38 @@ search. Pair discovery can add latency, so this remains an optional experiment.
 
 See [pair construction and coverage](bench/PAIR-INDEX.md) and
 [the end-to-end phrase experiments](bench/PHRASE-EXPERIMENTS.md).
+
+### Retrieval optimization experiments
+
+The next round adds exact rare-position token windows, corpus-derived pair cost
+planning, free-page positional cofetching, optional seed completion, and finer
+score bounds. See [measurements, regressions, and the selected profile](bench/RETRIEVAL-ROUND2.md).
+All features preserve the original ranking and connector semantics. Live latency regressed overall, so these experiments remain opt-in; the commands below reproduce experiments rather than a recommended production migration.
+
+```sh
+# Build the local cost synopsis for an existing pair generation.
+npx tsx scripts/build-pair-costs.ts work/my-pairs work/my-global-index/bundle-heads-8.bin
+# Reuse postings and append a new immutable 16-document bound layout.
+# Reserve enough bytes for pairs.bin + costs.bin (438411 in the measured build).
+npx tsx scripts/refine-global-bounds.ts work/my-global-index work/my-fine-index 16 438411
+npm run global:search -- --out work/my-fine-index --pairs work/my-pairs \
+  --intersect-pairs --pair-costs --token-windows --cofetch-positions --adaptive-retrieval \
+  --query '"summary judgment"'
+GLOBAL_PAIRS=work/my-pairs GLOBAL_PAIR_COSTS=1 GLOBAL_TOKEN_WINDOWS=1 \
+  GLOBAL_COFETCH_POSITIONS=1 GLOBAL_ADAPTIVE_RETRIEVAL=1 GLOBAL_PAIR_INTERSECT=1 GLOBAL_BUCKET=my-search-bucket \
+  GLOBAL_WORKER=my-search npm run global:deploy -- work/my-fine-index
+```
+
+Fresh `global:build` also accepts `--score-cell-docs 16 --reserve-bytes 438411`.
+Local search/dev accept `--pair-costs`, `--token-windows`,
+`--cofetch-positions`, `--adaptive-retrieval`, and experimental `--complete-seeds`. Worker deployment
+uses the corresponding `GLOBAL_PAIR_COSTS`, `GLOBAL_TOKEN_WINDOWS`,
+`GLOBAL_COFETCH_POSITIONS`, `GLOBAL_ADAPTIVE_RETRIEVAL`, and `GLOBAL_COMPLETE_SEEDS` environment variables.
+These experimental switches default off; the measured fine-layout deployment
+enables adaptive retrieval, windows, cost planning and cofetching, and leaves seed completion off.
+
+`global:deploy` publishes through a separate authenticated immutable uploader,
+including content-addressed plan objects, before updating search. It checks the
+combined base/pair/synopsis byte budget. Keep every root manifest needed for
+rollback: alternate plan layouts share the corpus generation but reference
+different immutable objects. The full-corpus demo/import remains independent.

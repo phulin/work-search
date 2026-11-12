@@ -376,3 +376,50 @@ pair coverage spends R2 storage instead. Both words must be in the vocabulary,
 so rare words and unselected adjacencies still fall back. Corpus-only utility is
 an imperfect predictor of future queries, and remote dictionary discovery adds
 stages. The experiment report separates coverage gains from these costs.
+
+### Candidate windows, cost planning, and finer bounds
+
+`global/windows.ts` can preload one mandatory rare positional anchor and verify
+its bounded neighborhoods in existing token frames. Every occurrence must be
+covered; title matches, artificial frame edges, negative positional clauses,
+unbounded spans, and large occurrence sets use full positions. Recovered rows
+remain sorted by document ID, and the original matcher and BM25 decide truth
+and rank. Retained excerpts reuse verified frames. This is optional: on this
+layout, fetching text can cost more than fetching positions.
+
+Position frames often share physical pages with frequency frames. Optional
+cofetching requests their payloads within spare expanded-byte capacity when all
+their pages are already selected. It adds decoding work but no physical pages.
+The candidate verifier then uses those exact positions instead of fetching text.
+The page, decoded-row, verification, and request budgets remain bounded.
+
+The optional PCS3 synopsis contains a fixed-size four-way fingerprint cost table
+and a front-coded vocabulary/DF table, pinned to both generations. Heavy pairs
+preferentially survive collisions; missing entries are unknown. These estimates
+only disable accelerators, never remove documents. Known pair costs above 75%
+of the rarest unigram DF are skipped; discovered expensive lists are also gated.
+Unknown useful pairs and intersections remain eligible. A stricter 25% gate and
+a plain maximum sketch lost valuable multi-pair filters in pilots and were
+rejected. The complete 100k synopsis is 286,595 bytes.
+
+Seed completion fetches missing frequencies for a bounded union of positive
+term seeds, including negative query terms before scoring. It never interprets
+an absent seed as an absent posting. Existing display heads are preserved.
+Pilots added reads without reducing visited cells, so it remains opt-in.
+
+Score windows can cover 8, 16, 32, or 64 documents. Their bounds remain exact
+float64 maxima of `b + 2*t`; mixed layouts conservatively coarsen to the largest
+queried cell. Other fields/boosts retain the original block bounds. Sixteen-doc
+plans tighten the stopping proof without changing postings or the data budget.
+Fresh immutable plan objects include a content hash in their names and cache
+keys; the original source-generation commitment is preserved across successive
+layouts. Garbage collection must retain the union of objects referenced by all
+active roots, including alternate layouts of the same corpus generation.
+
+Live traces showed that unconditional fine bounds/cofetching still regressed
+several proximity queries. Optional adaptive retrieval keeps token windows for
+a short conservative candidate set or an anchor with DF ≤1024, cofetches only
+for the short set, and coarsens proximity bounds to 64 documents when the
+rarest required term occurs in at most one eighth of the corpus. Broad Boolean
+and broad proximity retain fine bounds. These are corpus-cost heuristics, not
+query membership, cached answers, or changes to connector semantics.

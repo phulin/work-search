@@ -1,3 +1,4 @@
+import { PairCostTable } from "./pair-costs.js";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { resolve } from "node:path";
@@ -21,6 +22,13 @@ const command = process.argv[2],
       budget: { type: "string", default: "8" },
       query: { type: "string" },
       pairs: { type: "string" },
+      "pair-costs": { type: "boolean", default: false },
+      "token-windows": { type: "boolean", default: false },
+      "cofetch-positions": { type: "boolean", default: false },
+      "adaptive-retrieval": { type: "boolean", default: false },
+      "complete-seeds": { type: "boolean", default: false },
+      "score-cell-docs": { type: "string", default: "64" },
+      "reserve-bytes": { type: "string", default: "0" },
       "intersect-pairs": { type: "boolean", default: false },
       "ids-only": { type: "boolean", default: false },
       base: { type: "boolean", default: false },
@@ -35,9 +43,25 @@ async function localIndex() {
     pairPath = v.pairs ? resolve(v.pairs + "/pairs.bin") : undefined,
     pairBytes = pairPath ? await readFile(pairPath) : undefined,
     pairs = pairBytes ? decodePairRoot(pairBytes, index.root) : undefined;
-  if (bytes.length + (pairBytes?.length ?? 0) > Number(v.budget) * 1048576)
+  if (v["pair-costs"] && !pairs) throw Error("--pair-costs requires --pairs");
+  const costPath = v["pair-costs"]
+    ? resolve(v.pairs + "/costs.bin")
+    : undefined;
+  const costBytes = costPath ? await readFile(costPath) : undefined;
+  const pairCosts =
+    costBytes && pairs
+      ? new PairCostTable(
+          costBytes,
+          index.root.generation,
+          pairs.root.generation,
+        )
+      : undefined;
+  if (
+    bytes.length + (pairBytes?.length ?? 0) + (costBytes?.length ?? 0) >
+    Number(v.budget) * 1048576
+  )
     throw Error("Combined bundle exceeds budget");
-  return { binaryPath, index, pairPath, pairs };
+  return { binaryPath, index, pairPath, pairs, costPath, pairCosts };
 }
 if (command === "build") {
   if (!v.input) throw Error("--input is required");
@@ -46,11 +70,13 @@ if (command === "build") {
     source: v.source,
     out: v.out!,
     pageBytes: Number(v["page-kib"]) * 1024,
+    scoreWindowDocs: Number(v["score-cell-docs"]),
+    bundleReserveBytes: Number(v["reserve-bytes"]),
     budgets: v.budgets!.split(",").map((n) => Number(n) * 1048576),
   });
   console.log(JSON.stringify(result, null, 2));
 } else if (command === "search") {
-  const { index, pairs } = await localIndex(),
+  const { index, pairs, pairCosts } = await localIndex(),
     disk = new FileStorage(v.out + "/packs"),
     memory = new SearchRuntime(8 * 1048576),
     budget = new ReadBudget(),
@@ -89,6 +115,11 @@ if (command === "build") {
           : undefined,
         v.query ?? "",
         {
+          pairCosts,
+          tokenWindows: v["token-windows"],
+          cofetchPositions: v["cofetch-positions"],
+          completeSeeds: v["complete-seeds"],
+          adaptiveRetrieval: v["adaptive-retrieval"],
           metadata: !v["ids-only"],
           snippets: !v["ids-only"],
         },
@@ -100,7 +131,7 @@ if (command === "build") {
 } else if (command === "dev") {
   const { Miniflare } = await import("miniflare"),
     { createHash } = await import("node:crypto");
-  const { binaryPath, index, pairPath, pairs } = await localIndex(),
+  const { binaryPath, index, pairPath, pairs, costPath } = await localIndex(),
     persist = resolve(".wrangler/state"),
     dir = resolve("work/global-dev");
   await mkdir(dir, { recursive: true });
@@ -142,7 +173,7 @@ if (command === "build") {
   }
   await writeFile(
     dir + "/entry.ts",
-    `import binary from ${JSON.stringify(binaryPath)};${pairPath ? `import pairs from ${JSON.stringify(pairPath)};` : ""}import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};export default createGlobalWorker(new Uint8Array(binary)${pairPath ? ",new Uint8Array(pairs)" : ""});`,
+    `import binary from ${JSON.stringify(binaryPath)};${pairPath ? `import pairs from ${JSON.stringify(pairPath)};` : ""}${costPath ? `import costs from ${JSON.stringify(costPath)};` : ""}import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};export default createGlobalWorker(new Uint8Array(binary)${pairPath ? ",new Uint8Array(pairs)" : ""}${costPath ? ",new Uint8Array(costs)" : ""});`,
   );
   const config = dir + "/wrangler.json";
   await writeFile(
@@ -157,6 +188,10 @@ if (command === "build") {
         PAGE_CACHE: "1",
         PAGE_READ_KIB: "256",
         DIAGNOSTICS: "1",
+        TOKEN_WINDOWS: v["token-windows"] ? "1" : "0",
+        COFETCH_POSITIONS: v["cofetch-positions"] ? "1" : "0",
+        ADAPTIVE_RETRIEVAL: v["adaptive-retrieval"] ? "1" : "0",
+        COMPLETE_SEEDS: v["complete-seeds"] ? "1" : "0",
         PAIR_INTERSECT: v["intersect-pairs"] ? "1" : "0",
       },
     }),

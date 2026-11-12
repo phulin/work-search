@@ -29,14 +29,17 @@ const token = JSON.parse(
 db.close();
 async function call(name: string, path: string, body?: any) {
   const start = performance.now(),
-    r = await fetch(`https://${name}.phulin.workers.dev${path}`, {
-      method: body ? "POST" : "GET",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
+    r = await fetch(
+      `https://${name}.phulin.workers.dev${path}${body?.q ? "?q=" + encodeURIComponent(body.q) : ""}`,
+      {
+        method: body ? "POST" : "GET",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: body ? JSON.stringify(body) : undefined,
       },
-      body: body ? JSON.stringify(body) : undefined,
-    }),
+    ),
     text = await r.text();
   if (!r.ok) throw Error(name + " " + r.status + " " + text);
   return {
@@ -110,7 +113,7 @@ for (let pass = 0; pass < 2; pass++)
         JSON.stringify({
           kind:
             process.env.GLOBAL_NATIVE_DESCRIPTION ??
-            "Two fresh Worker/cache namespaces, identical corpus-frequency ID-only prime, interleaved cold-memory legal/stress queries then repeated queries, no response cache",
+            "Fresh Worker/cache namespaces, identical corpus-frequency ID-only prime, interleaved cold-memory legal/stress queries then repeated queries, no response cache",
           variants,
           rows,
           warmup,

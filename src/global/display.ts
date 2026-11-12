@@ -15,7 +15,7 @@ import {
   type Root,
 } from "./format.js";
 // Corpus-frequency selected term heads, not cached query responses or phrases.
-export async function addDisplaySeeds(out: string) {
+export async function addDisplaySeeds(out: string, reservedBytes = 0) {
   const manifest = JSON.parse(await readFile(out + "/manifest.json", "utf8"));
   if (manifest.displaySeedTerms === 64) return manifest;
   const root: Root = JSON.parse(await readFile(out + "/root.json", "utf8")),
@@ -80,7 +80,7 @@ export async function addDisplaySeeds(out: string) {
   };
   const roots: any[] = [];
   for (const old of manifest.roots) {
-    const reserve = JSON.stringify(root).length + 4096,
+    const reserve = JSON.stringify(root).length + 4096 + reservedBytes,
       selected = new Map<string, Uint8Array>();
     let charge = 8;
     const take = (e: any) => {
@@ -108,7 +108,8 @@ export async function addDisplaySeeds(out: string) {
         [...selected].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
       ),
       bundle = encodeRoot({ ...root, hotBytes: hot.length }, hot);
-    if (bundle.length > old.budget) throw Error("Display bundle budget");
+    if (bundle.length + reservedBytes > old.budget)
+      throw Error("Display bundle budget");
     await writeFile(out + `/bundle-heads-${old.budget / 1048576}.bin`, bundle);
     roots.push({
       ...old,

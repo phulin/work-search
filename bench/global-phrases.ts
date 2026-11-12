@@ -148,6 +148,7 @@ for (const [qi, q] of queries.entries()) {
           : undefined,
         q.q,
         {
+          tokenWindows: process.env.GLOBAL_TOKEN_WINDOWS === "1",
           competitivePositions,
           adaptivePositions,
           adaptiveProbe:

@@ -143,6 +143,17 @@ it("matches the existing engine for Boolean, phrase, proximity, fields, seeds, t
             });
             for (const execution of [
               { adaptivePositions: false },
+              {
+                adaptivePositions: true,
+                adaptiveProbe: "competitive",
+                tokenWindows: true,
+                cofetchPositions: true,
+              },
+              {
+                adaptivePositions: true,
+                adaptiveProbe: "competitive",
+                tokenWindows: true,
+              },
               { adaptivePositions: true, adaptiveProbe: "competitive" },
               { adaptivePositions: true, adaptiveProbe: "fused" },
             ] as const) {
@@ -153,9 +164,10 @@ it("matches the existing engine for Boolean, phrase, proximity, fields, seeds, t
               });
               if (got.diagnostics.adaptiveProbe !== "fused")
                 expect(got.diagnostics.competitivePositions, q).toBe(true);
-              expect(got.results, q + field + titleBoost).toEqual(
-                expected.results,
-              );
+              expect(
+                got.results,
+                q + field + titleBoost + JSON.stringify(execution),
+              ).toEqual(expected.results);
               if (got.results.length) {
                 const last = got.results.at(-1)!;
                 const after = { score: last.score, doc: last.doc };

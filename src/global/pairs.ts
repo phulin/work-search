@@ -1,3 +1,4 @@
+import type { PairCostModel } from "./pair-costs.js";
 import {
   crc32,
   encoder,
@@ -146,10 +147,24 @@ export class PairFilter {
   /** Batch all independent phrase lookups, then all chosen postings, within fixed memory limits. */
   private async many(
     phrases: string[][],
+    costs?: PairCostModel,
   ): Promise<(Set<number> | undefined)[]> {
-    const phraseKeys = phrases.map((terms) => [
-        ...new Set(terms.slice(1).map((term, i) => pairKey(terms[i], term))),
-      ]),
+    const phraseKeys = phrases.map((terms) => {
+        const keys = [
+          ...new Set(terms.slice(1).map((term, i) => pairKey(terms[i], term))),
+        ];
+        if (!costs) return keys;
+        const df = Math.min(...terms.map((t) => costs.df(t) ?? Infinity));
+        if (df <= 1024) return [];
+        // Skip only individually known expensive pairs; unknowns remain eligible.
+        return keys.filter((key) => {
+          const upper = costs.upper(key);
+          return (
+            upper === undefined ||
+            upper <= Math.min(this.maxCandidateDocs, (df * 3) / 4)
+          );
+        });
+      }),
       pages = new Map<string, { address: Address; keys: Set<string> }>();
     for (const keys of phraseKeys)
       for (const key of keys) {
@@ -182,10 +197,25 @@ export class PairFilter {
         }
       }
     }
-    const chosen = phraseKeys.map((keys) => {
+    const chosen = phraseKeys.map((keys, phraseIndex) => {
         const ranked = keys
           .map((key) => entries.get(key))
-          .filter((entry): entry is PairEntry => !!entry)
+          .filter(
+            (entry): entry is PairEntry =>
+              !!entry &&
+              (!costs ||
+                entry.df <=
+                  Math.min(
+                    this.maxCandidateDocs,
+                    (Math.min(
+                      ...phrases[phraseIndex].map(
+                        (t) => costs.df(t) ?? Infinity,
+                      ),
+                    ) *
+                      3) /
+                      4,
+                  )),
+          )
           .sort((a, b) => a.df - b.df);
         if (!this.intersectPairs) return ranked.slice(0, 1);
         // A tiny dictionary-resident anchor already bounds verification; avoid a remote posting stage.
@@ -245,7 +275,10 @@ export class PairFilter {
     return (await this.many([terms]))[0];
   }
   /** A complete superset for the whole AST; undefined means no safe pruning. */
-  async queryCandidates(node: Node): Promise<Set<number> | undefined> {
+  async queryCandidates(
+    node: Node,
+    costs?: PairCostModel,
+  ): Promise<Set<number> | undefined> {
     const leaves: Extract<Node, { kind: "phrase" }>[] = [];
     const collect = (n: Node): void => {
       if (n.kind === "phrase") leaves.push(n);
@@ -255,10 +288,21 @@ export class PairFilter {
         collect(n.right);
       }
     };
+    const filterable = (n: Node): boolean =>
+      n.kind === "phrase" ||
+      n.kind === "empty" ||
+      (n.kind === "except" && filterable(n.left)) ||
+      ((n.kind === "and" || n.kind === "near") &&
+        (filterable(n.left) || filterable(n.right))) ||
+      (n.kind === "or" && filterable(n.left) && filterable(n.right));
+    if (costs && !filterable(node)) return undefined;
     collect(node);
     // Keep transient dictionaries and AST filter state bounded independently of query length.
     if (leaves.length > 32) return undefined;
-    const sets = await this.many(leaves.map((leaf) => leaf.terms)),
+    const sets = await this.many(
+        leaves.map((leaf) => leaf.terms),
+        costs,
+      ),
       filters = new Map(leaves.map((leaf, i) => [leaf, sets[i]]));
     const combine = (n: Node): Set<number> | undefined => {
       if (n.kind === "empty") return new Set();

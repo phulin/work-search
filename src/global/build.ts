@@ -47,6 +47,8 @@ export interface GlobalBuildOptions {
   rareDf?: number;
   seedCount?: number;
   micro?: boolean;
+  scoreWindowDocs?: number;
+  bundleReserveBytes?: number;
   displaySeeds?: boolean;
 }
 // NFKC display text retains case. Map lowercase expansions back to display offsets.
@@ -515,8 +517,10 @@ export async function buildGlobal(options: GlobalBuildOptions) {
     db.close();
     await rm(out + "/chunks.tmp");
     if (options.micro === false) return result;
-    const micro = await addMicroPlans(out);
-    return options.displaySeeds === false ? micro : await addDisplaySeeds(out);
+    const micro = await addMicroPlans(out, options.scoreWindowDocs);
+    return options.displaySeeds === false
+      ? micro
+      : await addDisplaySeeds(out, options.bundleReserveBytes);
   } finally {
     await packer.abort();
   }

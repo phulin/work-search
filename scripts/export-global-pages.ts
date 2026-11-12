@@ -1,6 +1,6 @@
 import { readFile, writeFile, mkdir, open } from "node:fs/promises";
 import { decodeRoot } from "../src/global/format.js";
-import { pageId } from "../src/global/storage.js";
+import { pageName } from "../src/global/storage.js";
 const out = process.argv[2] ?? "work/global-index",
   destination = process.argv[3] ?? out + "/cdn-pages",
   budget = process.env.GLOBAL_BUDGET ?? "8",
@@ -22,7 +22,7 @@ for (const [object, info] of root.objects.entries()) {
       if (r.bytesRead !== b.length) throw Error("Truncated export pack");
       await writeFile(
         destination +
-          `/${root.generation}/page-${pageId(root, object, offset / pageBytes)}.bin`,
+          `/${root.generation}/${pageName(root, object, offset / pageBytes)}`,
         b,
       );
       pages++;

@@ -1,3 +1,4 @@
+import { PairCostTable } from "../src/global/pair-costs.js";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import { createHash, randomBytes } from "node:crypto";
@@ -20,7 +21,17 @@ const out = process.argv[2] ?? "work/global-index",
 const pairDir = process.env.GLOBAL_PAIRS;
 const pairBytes = pairDir ? await readFile(pairDir + "/pairs.bin") : undefined;
 const pairs = pairBytes ? decodePairRoot(pairBytes, root) : undefined;
-if (bytes.length + (pairBytes?.length ?? 0) > Number(budget) * 1048576)
+const costPath =
+  process.env.GLOBAL_PAIR_COSTS === "1" && pairDir
+    ? pairDir + "/costs.bin"
+    : undefined;
+const costBytes = costPath ? await readFile(costPath) : undefined;
+if (costBytes && pairs)
+  new PairCostTable(costBytes, root.generation, pairs.root.generation);
+if (
+  bytes.length + (pairBytes?.length ?? 0) + (costBytes?.length ?? 0) >
+  Number(budget) * 1048576
+)
   throw Error("Combined bundle exceeds budget");
 if (!/^[a-z0-9-]{1,48}$/.test(name))
   throw Error("Use a Worker name of 1–48 lowercase letters, digits or hyphens");
@@ -81,60 +92,67 @@ for (const [uploadRoot, packDir] of [
     ? [[pairs.root, pairDir + "/packs/" + pairs.root.generation] as const]
     : []),
 ] as const)
-  await parallel(uploadRoot.objects, 6, async (object) => {
-    const file = packDir + "/" + object.name,
-      hash = createHash("sha256");
-    let size = 0;
-    for await (const b of createReadStream(file)) {
-      hash.update(b);
-      size += b.length;
-    }
-    if (size !== object.size || hash.digest("hex") !== object.sha256)
-      throw Error(
-        "Global object does not match bundle manifest: " + object.name,
-      );
-    for (let attempt = 0; ; attempt++) {
-      try {
-        const address = url + "/" + uploadRoot.generation + "/" + object.name;
-        const existing = await fetch(address, {
-          method: "HEAD",
-          headers: { authorization: `Bearer ${token}` },
-        });
-        if (existing.ok) {
-          if (
-            Number(existing.headers.get("content-length")) !== object.size ||
-            existing.headers.get("x-sha256") !== object.sha256 ||
-            existing.headers.get("x-generation") !== uploadRoot.generation
-          )
-            throw Error("Immutable remote object mismatch: " + object.name);
-          break;
-        }
-        if (existing.status !== 404)
-          throw Error("Global object check failed " + existing.status);
-        const r = await fetch(address, {
-          method: "PUT",
-          headers: {
-            authorization: `Bearer ${token}`,
-            "content-length": String(size),
-            "x-sha256": object.sha256,
-          },
-          body: createReadStream(file),
-          duplex: "half",
-        } as any);
-        const text = await r.text();
-        if (!r.ok) throw Error("Global upload " + r.status + ": " + text);
-        break;
-      } catch (e) {
-        if (attempt >= 4) throw e;
-        await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+  await parallel(
+    uploadRoot.objects.slice(
+      uploadRoot === root ? Number(process.env.GLOBAL_FROM_OBJECT ?? 0) : 0,
+    ),
+    6,
+    async (object) => {
+      const file = packDir + "/" + object.name,
+        hash = createHash("sha256");
+      let size = 0;
+      for await (const b of createReadStream(file)) {
+        hash.update(b);
+        size += b.length;
       }
-    }
-    console.log("Ready", object.name);
-  });
+      if (size !== object.size || hash.digest("hex") !== object.sha256)
+        throw Error(
+          "Global object does not match bundle manifest: " + object.name,
+        );
+      for (let attempt = 0; ; attempt++) {
+        try {
+          const address = url + "/" + uploadRoot.generation + "/" + object.name;
+          const existing = await fetch(address, {
+            method: "HEAD",
+            headers: { authorization: `Bearer ${token}` },
+          });
+          if (existing.ok) {
+            if (
+              Number(existing.headers.get("content-length")) !== object.size ||
+              existing.headers.get("x-sha256") !== object.sha256 ||
+              existing.headers.get("x-generation") !== uploadRoot.generation
+            )
+              throw Error("Immutable remote object mismatch: " + object.name);
+            break;
+          }
+          if (existing.status !== 404)
+            throw Error("Global object check failed " + existing.status);
+          const r = await fetch(address, {
+            method: "PUT",
+            headers: {
+              authorization: `Bearer ${token}`,
+              "content-length": String(size),
+              "x-sha256": object.sha256,
+            },
+            body: createReadStream(file),
+            duplex: "half",
+          } as any);
+          const text = await r.text();
+          if (!r.ok) throw Error("Global upload " + r.status + ": " + text);
+          break;
+        } catch (e) {
+          if (attempt >= 4) throw e;
+          await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+        }
+      }
+      console.log("Ready", object.name);
+    },
+  );
+if (process.argv.includes("--upload-only")) process.exit(0);
 const entry = dir + "/entry.ts";
 await writeFile(
   entry,
-  `import binary from ${JSON.stringify(binaryPath)};import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};${pairDir ? `import pairs from ${JSON.stringify(resolve(pairDir + "/pairs.bin"))};` : ""}export default createGlobalWorker(new Uint8Array(binary)${pairDir ? ",new Uint8Array(pairs)" : ""});`,
+  `import binary from ${JSON.stringify(binaryPath)};import {createGlobalWorker} from ${JSON.stringify(resolve("src/global/worker-runtime.ts"))};${pairDir ? `import pairs from ${JSON.stringify(resolve(pairDir + "/pairs.bin"))};` : ""}${costPath ? `import costs from ${JSON.stringify(resolve(costPath))};` : ""}export default createGlobalWorker(new Uint8Array(binary)${pairDir ? ",new Uint8Array(pairs)" : ""}${costPath ? ",new Uint8Array(costs)" : ""});`,
 );
 const config = dir + "/search.json";
 await writeFile(
@@ -147,6 +165,10 @@ await writeFile(
       rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
       vars: {
         PAGE_CACHE: "1",
+        TOKEN_WINDOWS: process.env.GLOBAL_TOKEN_WINDOWS ?? "0",
+        COFETCH_POSITIONS: process.env.GLOBAL_COFETCH_POSITIONS ?? "0",
+        COMPLETE_SEEDS: process.env.GLOBAL_COMPLETE_SEEDS ?? "0",
+        ADAPTIVE_RETRIEVAL: process.env.GLOBAL_ADAPTIVE_RETRIEVAL ?? "0",
         ADAPTIVE_PROBE: process.env.GLOBAL_ADAPTIVE_PROBE ?? "fused",
         PAIR_INTERSECT: process.env.GLOBAL_PAIR_INTERSECT ?? "0",
         PAGE_READ_KIB: process.env.GLOBAL_PAGE_KIB ?? "256",

@@ -12,7 +12,11 @@ export default {
     )
       return new Response("Not found", { status: 404 });
     const key = decodeURIComponent(url.pathname.slice(1));
-    if (!/^[a-f0-9]{64}\/(?:plan|page)-\d+\.bin$/.test(key))
+    if (
+      !/^[a-f0-9]{64}\/(?:plan-\d+(?:-[a-f0-9]{16})?|page-\d+(?:-[a-f0-9]{64})?)\.bin$/.test(
+        key,
+      )
+    )
       return new Response("Invalid immutable key", { status: 400 });
     if (request.method === "HEAD") {
       const old = await env.INDEX.head(key);

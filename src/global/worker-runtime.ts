@@ -1,3 +1,5 @@
+import { decodeTerm } from "./format.js";
+import { PairCostTable } from "./pair-costs.js";
 import { GlobalIndex } from "./search.js";
 import {
   PageReader,
@@ -19,15 +21,31 @@ interface Env {
   ADAPTIVE_POSITIONS?: string;
   ADAPTIVE_PROBE?: "competitive" | "fused";
   PAIR_INTERSECT?: string;
+  TOKEN_WINDOWS?: string;
+  COFETCH_POSITIONS?: string;
+  COMPLETE_SEEDS?: string;
+  ADAPTIVE_RETRIEVAL?: string;
   PAGE_READ_KIB?: string;
   PAGE_BASE_URL?: string;
   DIAGNOSTICS?: string;
   INTERNAL_TOKEN?: string;
 }
-export function createGlobalWorker(bytes: Uint8Array, pairBytes?: Uint8Array) {
+export function createGlobalWorker(
+  bytes: Uint8Array,
+  pairBytes?: Uint8Array,
+  costBytes?: Uint8Array,
+) {
   const index = new GlobalIndex(bytes),
     memory = new SearchRuntime(8 * 1048576),
-    pairs = pairBytes ? decodePairRoot(pairBytes, index.root) : undefined;
+    pairs = pairBytes ? decodePairRoot(pairBytes, index.root) : undefined,
+    pairCosts =
+      costBytes && pairs
+        ? new PairCostTable(
+            costBytes,
+            index.root.generation,
+            pairs.root.generation,
+          )
+        : undefined;
   return {
     async fetch(request: Request, env: Env, ctx: ExecutionContext) {
       const url = new URL(request.url);
@@ -39,7 +57,16 @@ export function createGlobalWorker(bytes: Uint8Array, pairBytes?: Uint8Array) {
           pageBytes: index.root.pageBytes,
           readPageBytes:
             Number(env.PAGE_READ_KIB ?? index.root.pageBytes / 1024) * 1024,
-          bundleBytes: bytes.length + (pairBytes?.length ?? 0),
+          bundleBytes:
+            bytes.length + (pairBytes?.length ?? 0) + (costBytes?.length ?? 0),
+          pairCosts: !!pairCosts,
+          tokenWindows: env.TOKEN_WINDOWS === "1",
+          cofetchPositions: env.COFETCH_POSITIONS === "1",
+          completeSeeds: env.COMPLETE_SEEDS === "1",
+          adaptiveRetrieval: env.ADAPTIVE_RETRIEVAL === "1",
+          scoreWindowDocs: index.hot.lookup("")
+            ? (decodeTerm(index.hot.lookup("")!).windowDocs ?? 64)
+            : undefined,
           pairGeneration: pairs?.root.generation,
           cache: env.PAGE_BASE_URL
             ? "cdn"
@@ -182,6 +209,11 @@ export function createGlobalWorker(bytes: Uint8Array, pairBytes?: Uint8Array) {
             competitivePositions: env.COMPETITIVE_POSITIONS === "1",
             adaptivePositions: env.ADAPTIVE_POSITIONS !== "0",
             adaptiveProbe: env.ADAPTIVE_PROBE,
+            tokenWindows: env.TOKEN_WINDOWS === "1",
+            pairCosts,
+            adaptiveRetrieval: env.ADAPTIVE_RETRIEVAL === "1",
+            completeSeeds: env.COMPLETE_SEEDS === "1",
+            cofetchPositions: env.COFETCH_POSITIONS === "1",
           },
         );
         const diagnostics =

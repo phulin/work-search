@@ -5,6 +5,8 @@ import { parallel, type Storage } from "../storage/types.js";
 import { MAX_RAW, type Address, type Root } from "./format.js";
 export const pageId = (root: Root, object: number, page: number) =>
   (Math.log2(root.pageBytes) - 16) * 2 ** 40 + object * root.objectPages + page;
+export const pageName = (root: Root, object: number, page: number) =>
+  `page-${pageId(root, object, page)}${root.objects[object].name === `plan-${object}.bin` ? "" : "-" + root.objects[object].sha256}.bin`;
 export interface SharedPages {
   get(key: string): Promise<Uint8Array | undefined>;
   put(key: string, value: Uint8Array): Promise<void>;
@@ -121,7 +123,7 @@ export class PageReader {
           "Global expanded batch exceeds memory budget",
         );
       if (
-        !Number.isInteger(object) ||
+        object < 0 ||
         object < 0 ||
         object >= this.root.objects.length ||
         length < 1 ||
@@ -144,7 +146,7 @@ export class PageReader {
       [...pages],
       this.pipeline ? Math.max(1, pages.size) : 6,
       async ([id, { object, page }]) => {
-        const key = `${this.root.generation}/page-${pageId(this.root, object, page)}.bin`;
+        const key = `${this.root.generation}/${pageName(this.root, object, page)}`;
         let bytes = this.memory.get<Uint8Array>(key);
         if (bytes) round.memoryHits++;
         else {
@@ -160,7 +162,7 @@ export class PageReader {
           if (bytes) round.sharedHits++;
           else {
             bytes = await this.origin(
-              `${this.root.generation}/plan-${object}.bin`,
+              `${this.root.generation}/${this.root.objects[object].name}`,
               page * this.root.pageBytes,
               Math.min(
                 this.root.pageBytes,
@@ -287,7 +289,9 @@ export class HttpPageStorage implements Storage {
   async open(key: string, offset: number, length: number) {
     if (!key.startsWith(this.root.generation + "/"))
       throw Error("HTTP generation mismatch");
-    const object = Number(/plan-(\d+)\.bin$/.exec(key)?.[1]);
+    const object = this.root.objects.findIndex(
+      (o) => o.name === key.split("/").at(-1),
+    );
     if (
       offset % this.root.pageBytes ||
       length !==
@@ -298,9 +302,9 @@ export class HttpPageStorage implements Storage {
       !Number.isInteger(object)
     )
       throw Error("HTTP page geometry");
-    const page = pageId(this.root, object, offset / this.root.pageBytes),
+    const page = pageName(this.root, object, offset / this.root.pageBytes),
       r = await fetch(
-        `${this.base.replace(/\/$/, "")}/${this.root.generation}/page-${page}.bin`,
+        `${this.base.replace(/\/$/, "")}/${this.root.generation}/${page}`,
         { cf: { cacheEverything: true, cacheTtl: 31536000 } },
       );
     if (!r.ok) throw Error("CDN index page unavailable " + r.status);

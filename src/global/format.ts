@@ -45,6 +45,7 @@ export interface Term {
   omitted: number;
   omittedDoc: number;
   windows?: [number, number][];
+  windowDocs?: number;
 }
 export interface Root {
   version: 1;
@@ -236,6 +237,11 @@ export function encodeTerm(t: Term) {
       w.f(bound);
     }
   }
+  if (t.windowDocs !== undefined) {
+    if (!t.windows || ![8, 16, 32, 64].includes(t.windowDocs))
+      throw Error("Invalid score window geometry");
+    w.u(t.windowDocs);
+  }
   return w.done();
 }
 export function decodeTerm(b: Uint8Array) {
@@ -270,6 +276,11 @@ export function decodeTerm(b: Uint8Array) {
   if (r.p.i < r.b.length) {
     t.windows = [];
     for (let i = 0, n = r.u(); i < n; i++) t.windows.push([r.u(), r.f()]);
+  }
+  if (r.p.i < r.b.length) {
+    t.windowDocs = r.u();
+    if (![8, 16, 32, 64].includes(t.windowDocs))
+      throw Error("Invalid score window geometry");
   }
   r.end();
   return t;
@@ -338,6 +349,19 @@ export class Dictionary {
     const r = this.rows(block);
     if (r.u()) throw Error("Invalid restart prefix");
     return r.text();
+  }
+  *entries(): Generator<[string, Uint8Array]> {
+    for (let block = 0; block < this.restarts; block++) {
+      const r = this.rows(block);
+      let previous = "";
+      for (let i = 0; i < Math.min(16, this.count - block * 16); i++) {
+        const prefix = r.u();
+        if (prefix > previous.length) throw Error("Invalid dictionary prefix");
+        const key = previous.slice(0, prefix) + r.text();
+        yield [key, r.bytes()];
+        previous = key;
+      }
+    }
   }
   lookup(term: string) {
     if (!this.restarts) return;

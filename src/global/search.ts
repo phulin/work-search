@@ -1,3 +1,5 @@
+import { completeSeeds } from "./seeds.js";
+import type { PairCostTable } from "./pair-costs.js";
 import { parse, queryTerms, type Node } from "../query/parser.js";
 import { requiredTerms } from "../query/load.js";
 import { positionalMatcher, QueryResourceError } from "../query/evaluate.js";
@@ -20,6 +22,12 @@ import {
   type Address,
   type Block,
 } from "./format.js";
+import {
+  planWindows,
+  PositionVerifier,
+  frameExcerpt,
+  type TokenFrame,
+} from "./windows.js";
 const refKey = (a: Address) => a.join(":");
 const before = (a: Hit, b: Hit) =>
   a.score > b.score || (a.score === b.score && a.doc < b.doc);
@@ -31,6 +39,7 @@ interface Hit {
   span?: { start: number; end: number };
   passage: Address;
   tailPassage?: Address;
+  excerpt?: string;
 }
 class TopK {
   values: Hit[] = [];
@@ -88,6 +97,11 @@ export interface GlobalSearchOptions {
   heapAdmission?: boolean;
   decodedReads?: boolean;
   verificationBatchDocs?: number;
+  tokenWindows?: boolean;
+  pairCosts?: PairCostTable;
+  cofetchPositions?: boolean;
+  completeSeeds?: boolean;
+  adaptiveRetrieval?: boolean;
 }
 function hasPositions(n: Node): boolean {
   return (
@@ -95,6 +109,13 @@ function hasPositions(n: Node): boolean {
     n.kind === "near" ||
     ("left" in n && (hasPositions(n.left) || hasPositions(n.right))) ||
     ("child" in n && hasPositions(n.child))
+  );
+}
+function hasNear(n: Node): boolean {
+  return (
+    n.kind === "near" ||
+    ("left" in n && (hasNear(n.left) || hasNear(n.right))) ||
+    ("child" in n && hasNear(n.child))
   );
 }
 function canMatchWithoutTerms(n: Node): boolean {
@@ -285,6 +306,18 @@ export class GlobalIndex {
       skipped = 0,
       seedHits = 0,
       spanFallbacks = 0;
+    const proposedWindow = options.tokenWindows
+      ? planWindows(ast, plans, field)
+      : undefined;
+    const sparseCandidates =
+      !!options.candidateFilter && options.candidateFilter.size <= 128;
+    const windowPlan =
+      proposedWindow &&
+      (!options.adaptiveRetrieval ||
+        sparseCandidates ||
+        plans.get(proposedWindow.anchor)!.df <= 1024)
+        ? proposedWindow
+        : undefined;
     const broadPositions =
       positions &&
       Math.min(
@@ -298,10 +331,17 @@ export class GlobalIndex {
       adaptiveProbed = false;
     const adaptiveProbe = options.adaptiveProbe ?? "fused";
     let competitive =
-      broadPositions &&
-      (adaptiveRequested || options.competitivePositions === true) &&
-      !(adaptiveRequested && adaptiveProbe === "fused");
+      !!windowPlan ||
+      (broadPositions &&
+        (adaptiveRequested || options.competitivePositions === true) &&
+        !(adaptiveRequested && adaptiveProbe === "fused"));
     let fetchPositions = positions && !competitive;
+    const loadsPositions = (term: string) =>
+      fetchPositions || term === windowPlan?.anchor;
+    let cofetchedPositionBlocks = 0,
+      cofetchedPositionRawBytes = 0;
+    let windowDocuments = 0,
+      windowFallbacks = 0;
     let verifiedDocuments = 0,
       positionBlocksRead = 0;
     const inline = new Map<string, Row[]>();
@@ -315,8 +355,17 @@ export class GlobalIndex {
         inline.set(term, rows);
       }
     }
+    const decodedCache = new (
+      await import("../query/runtime.js")
+    ).SearchRuntime(options.decodedCache === false ? 0 : 4 * 1048576);
+    let seedDocuments = 0,
+      seedBlocks = 0;
     let seeding = true;
-    const score = (byTerm: Map<string, Row[]>, candidates?: Set<number>) => {
+    const score = (
+      byTerm: Map<string, Row[]>,
+      candidates?: Set<number>,
+      frames?: Map<number, TokenFrame[]>,
+    ) => {
       const maps = new Map(
           [...byTerm].map(([t, rs]) => [t, new Map(rs.map((r) => [r.doc, r]))]),
         ),
@@ -390,7 +439,12 @@ export class GlobalIndex {
         let span: { start: number; end: number } | undefined;
         if (positions && (!heap.threshold || value >= heap.threshold.score)) {
           try {
-            span = match.firstBodySpan(doc);
+            span =
+              frames?.has(doc) && windowPlan
+                ? positionalMatcher(windowPlan.node, lists, field, (t, d, f) =>
+                    f === 0 ? maps.get(t)?.get(d)?.bp : maps.get(t)?.get(d)?.tp,
+                  ).firstBodySpan(doc)
+                : match.firstBodySpan(doc);
           } catch (e) {
             if (!(e instanceof QueryResourceError)) throw e;
             spanFallbacks++;
@@ -434,6 +488,26 @@ export class GlobalIndex {
           span,
           passage,
           tailPassage,
+          excerpt:
+            frames
+              ?.get(doc)
+              ?.find(
+                (p) =>
+                  span &&
+                  span.start >= p.first &&
+                  span.end < p.first + p.starts.length,
+              ) && span
+              ? frameExcerpt(
+                  frames
+                    .get(doc)!
+                    .find(
+                      (p) =>
+                        span!.start >= p.first &&
+                        span!.end < p.first + p.starts.length,
+                    )!,
+                  span,
+                )
+              : undefined,
         });
       }
     };
@@ -456,6 +530,21 @@ export class GlobalIndex {
       score(seeds, common);
       seedHits = heap.values.length;
     }
+    if (options.completeSeeds && !positions && !universe && names.length > 1) {
+      const completed = await completeSeeds(
+        plans,
+        seeds,
+        positive,
+        reader,
+        decodedCache,
+        { field, boost, maxRaw: maxBatch, seen, after: options.after },
+      );
+      seedDocuments = completed.docs.size;
+      seedBlocks = completed.blocks;
+      score(completed.rows, completed.docs);
+      seedHits = heap.values.length;
+    }
+    const seedThreshold = heap.threshold?.score;
     seeding = false;
     let seedProof = false;
     if (
@@ -526,6 +615,43 @@ export class GlobalIndex {
           ? (a, b) => a.doc - b.doc
           : (a, b) => b.score - a.score || a.doc - b.doc,
       );
+      if (windowPlan) {
+        let cursor = 0;
+        const verifier = new PositionVerifier(
+          reader,
+          plans,
+          positionCache,
+          windowPlan,
+          field,
+        );
+        while (cursor < ranked.length) {
+          const threshold = heap.threshold,
+            candidate = ranked[cursor];
+          if (
+            threshold &&
+            (candidate.score < threshold.score ||
+              (candidate.score === threshold.score &&
+                candidate.doc > threshold.doc))
+          ) {
+            if (!adaptive) break;
+            cursor++;
+            continue;
+          }
+          const batch = await verifier.batch(
+            byTerm,
+            ranked.slice(cursor).map((c) => c.doc),
+            options.verificationBatchDocs ?? (adaptive ? 4096 : 32),
+            maxBatch,
+          );
+          cursor += batch.docs.length;
+          verifiedDocuments += batch.docs.length;
+          positionBlocksRead += batch.positionBlocks;
+          windowDocuments += batch.windowDocs;
+          windowFallbacks += batch.windowFallbacks;
+          score(batch.rows, new Set(batch.docs), batch.windows);
+        }
+        return;
+      }
       const blockFor = (term: string, doc: number) => {
         const blocks = plans.get(term)!.blocks;
         let lo = 0,
@@ -657,7 +783,7 @@ export class GlobalIndex {
           .get(lead)!
           .blocks.reduce(
             (n, b) =>
-              n + b.frequency[4] + (fetchPositions ? b.positions[4] : 0),
+              n + b.frequency[4] + (loadsPositions(lead) ? b.positions[4] : 0),
             0,
           )
       : 0;
@@ -671,13 +797,13 @@ export class GlobalIndex {
       if (!leadRows) {
         const t = plans.get(lead)!,
           refs = t.blocks.flatMap((b) =>
-            fetchPositions ? [b.frequency, b.positions] : [b.frequency],
+            loadsPositions(lead) ? [b.frequency, b.positions] : [b.frequency],
           ),
           bytes = await reader.readMany(refs, "rare-lead");
         leadRows = [];
         for (let i = 0; i < t.blocks.length; i++) {
-          const rs = decodeRows(bytes[i * (fetchPositions ? 2 : 1)]);
-          if (fetchPositions) {
+          const rs = decodeRows(bytes[i * (loadsPositions(lead) ? 2 : 1)]);
+          if (loadsPositions(lead)) {
             const ps = decodeRows(bytes[i * 2 + 1]);
             rs.forEach((r, j) => Object.assign(r, ps[j]));
           }
@@ -691,7 +817,24 @@ export class GlobalIndex {
       field === "all" &&
       boost === 2 &&
       [...plans.values()].every((t) => !t.df || !!t.windows);
-    const windowDocs = micro ? 64 : TILE_DOCS;
+    const selectedWindowDocs = micro
+      ? Math.max(
+          8,
+          ...[...plans.values()]
+            .filter((t) => t.df)
+            .map((t) => t.windowDocs ?? 64),
+        )
+      : TILE_DOCS;
+    // Low-prevalence proximity already has a selective anchor. Coarsen to avoid
+    // multiplying planning/probe overhead; broad proximity retains fine bounds.
+    const windowDocs =
+      options.adaptiveRetrieval &&
+      micro &&
+      hasNear(ast) &&
+      Math.min(...[...requiredTerms(ast)].map((t) => plans.get(t)?.df ?? 0)) <=
+        this.root.count / 8
+        ? Math.max(64, selectedWindowDocs)
+        : selectedWindowDocs;
     const windows = new Map<
       number,
       {
@@ -731,7 +874,10 @@ export class GlobalIndex {
       };
       for (const [term, t] of plans) {
         let at = 0;
-        for (const [cell, upper] of t.windows ?? []) {
+        for (const [originalCell, upper] of t.windows ?? []) {
+          const cell = Math.floor(
+            (originalCell * (t.windowDocs ?? 64)) / windowDocs,
+          );
           const first = cell * windowDocs,
             last = first + windowDocs - 1;
           if (!relevantCell(first, last)) continue;
@@ -756,7 +902,7 @@ export class GlobalIndex {
           }
           w.present.add(term);
           w.blocks.set(term, bs);
-          w.upper!.set(term, upper);
+          w.upper!.set(term, Math.max(upper, w.upper!.get(term) ?? 0));
         }
       }
     } else {
@@ -809,9 +955,7 @@ export class GlobalIndex {
         ? (a, b) => a.tile - b.tile
         : (a, b) => b.bound - a.bound || a.tile - b.tile,
     );
-    const decodedCache = new (
-      await import("../query/runtime.js")
-    ).SearchRuntime(options.decodedCache === false ? 0 : 4 * 1048576);
+
     let prefetch: Promise<unknown> | undefined;
     let prefetchedDocs = new Set<number>();
     let prefetchFailures = 0;
@@ -838,7 +982,13 @@ export class GlobalIndex {
       const rawSet = new Set<string>();
       while (
         cursor < queue.length &&
-        batch.length < (options.batchTiles ?? (adaptive ? 256 : 32))
+        batch.length <
+          (options.batchTiles ??
+            (adaptive
+              ? 256 * (micro ? 64 / windowDocs : 1)
+              : heap.threshold
+                ? 32 * (micro ? 64 / windowDocs : 1)
+                : 32))
       ) {
         const w = queue[cursor];
         let cost = 0;
@@ -850,7 +1000,7 @@ export class GlobalIndex {
               options.decodedReads === false ||
               !decodedCache.peek(refKey(b.frequency)),
           ))
-            for (const ref of fetchPositions
+            for (const ref of loadsPositions(term)
               ? [b.frequency, b.positions]
               : [b.frequency]) {
               const key = refKey(ref);
@@ -868,7 +1018,7 @@ export class GlobalIndex {
               options.decodedReads === false ||
               !decodedCache.peek(refKey(b.frequency)),
           ))
-            for (const ref of fetchPositions
+            for (const ref of loadsPositions(term)
               ? [b.frequency, b.positions]
               : [b.frequency]) {
               for (
@@ -911,7 +1061,7 @@ export class GlobalIndex {
           for (const b of bs.filter(
             (b) => !batchDecoded.has(refKey(b.frequency)),
           ))
-            for (const ref of fetchPositions
+            for (const ref of loadsPositions(term)
               ? [b.frequency, b.positions]
               : [b.frequency]) {
               const key = refKey(ref);
@@ -921,6 +1071,47 @@ export class GlobalIndex {
               }
             }
         }
+      // Preserve position frames already covered by this batch's physical reads.
+      // This consumes spare expanded-byte budget, never another R2 page.
+      if (
+        positions &&
+        options.cofetchPositions &&
+        (!options.adaptiveRetrieval || sparseCandidates)
+      ) {
+        const pages = new Set<string>();
+        const pagesOf = (r: Address) =>
+          Array.from(
+            {
+              length:
+                Math.floor((r[1] + r[2] - 1) / reader.root.pageBytes) -
+                Math.floor(r[1] / reader.root.pageBytes) +
+                1,
+            },
+            (_, i) =>
+              r[0] + ":" + (Math.floor(r[1] / reader.root.pageBytes) + i),
+          );
+        for (const ref of refs) for (const p of pagesOf(ref)) pages.add(p);
+        let expanded = refs.reduce((n, r) => n + r[4], 0);
+        for (const w of batch)
+          for (const [term, bs] of w.blocks) {
+            if (inline.has(term) || (term === lead && leadRows)) continue;
+            for (const b of bs) {
+              const id = refKey(b.positions);
+              if (
+                !slots.has(id) &&
+                !batchDecoded.has(refKey(b.frequency)) &&
+                expanded + b.positions[4] <= maxBatch &&
+                pagesOf(b.positions).every((p) => pages.has(p))
+              ) {
+                slots.set(id, refs.length);
+                refs.push(b.positions);
+                cofetchedPositionBlocks++;
+                cofetchedPositionRawBytes += b.positions[4];
+                expanded += b.positions[4];
+              }
+            }
+          }
+      }
       const payloads = await reader.readMany(refs, "index-blocks");
       const frequencyBatch = new Map<string, Row[]>();
       for (const w of batch) {
@@ -943,7 +1134,7 @@ export class GlobalIndex {
               batchDecoded.get(blockKey) ?? decodedCache.get<Row[]>(blockKey);
             if (!rs) {
               rs = decodeRows(payloads[slots.get(refKey(b.frequency))!]);
-              if (fetchPositions) {
+              if (slots.has(refKey(b.positions))) {
                 const ps = decodeRows(
                   payloads[slots.get(refKey(b.positions))!],
                 );
@@ -961,7 +1152,7 @@ export class GlobalIndex {
                 blockKey,
                 rs,
                 b.frequency[4] * 6 +
-                  (fetchPositions ? b.positions[4] * 8 : 0) +
+                  (rs[0]?.bp ? b.positions[4] * 8 : 0) +
                   rs.length * 256,
               );
             }
@@ -1034,7 +1225,7 @@ export class GlobalIndex {
         for (const h of hints)
           for (const ref of [
             ...(metadata && !h.row.recordData ? [h.row.record] : []),
-            ...(snippets && !(h.row.excerpt && !positions)
+            ...(snippets && !h.excerpt && !(h.row.excerpt && !positions)
               ? [h.passage, ...(h.tailPassage ? [h.tailPassage] : [])]
               : []),
           ]) {
@@ -1056,7 +1247,7 @@ export class GlobalIndex {
     for (const h of hits) {
       for (const p of [
         ...(metadata && !h.row.recordData ? [h.row.record] : []),
-        ...(snippets && !(h.row.excerpt && !positions)
+        ...(snippets && !h.excerpt && !(h.row.excerpt && !positions)
           ? [h.passage, ...(h.tailPassage ? [h.tailPassage] : [])]
           : []),
       ]) {
@@ -1080,7 +1271,8 @@ export class GlobalIndex {
           result.title = r.title;
           result.metadata = r.metadata;
         }
-        if (snippets && h.row.excerpt && !positions)
+        if (snippets && h.excerpt) result.excerpt = h.excerpt;
+        else if (snippets && h.row.excerpt && !positions)
           result.excerpt = h.row.excerpt;
         else if (snippets) {
           const p = JSON.parse(
@@ -1140,12 +1332,21 @@ export class GlobalIndex {
         skipped,
         scored,
         seedHits,
+        seedDocuments,
+        seedBlocks,
+        seedThreshold,
+        cofetchedPositionBlocks,
+        cofetchedPositionRawBytes,
         seedProof,
         spanFallbacks,
         competitivePositions: competitive,
         adaptivePositions: adaptiveRequested,
         adaptiveProbe,
         positionalOrder: adaptive ? "document" : "score",
+        adaptiveRetrieval: !!options.adaptiveRetrieval,
+        tokenWindowAnchor: windowPlan?.anchor,
+        windowDocuments,
+        windowFallbacks,
         verifiedDocuments,
         positionBlocksRead,
         prefetchedDocs: prefetchedDocs.size,

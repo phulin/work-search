@@ -1,3 +1,4 @@
+import { addMicroPlans } from "../src/global/micro.js";
 import { it, expect } from "vitest";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -30,11 +31,12 @@ it("serves the global Worker in workerd with real R2, Cache API and diagnostics"
         }),
       ).join("\n"),
     );
-    const manifest = await buildGlobal({
+    let manifest = await buildGlobal({
       input: dir + "/input",
       out: dir + "/index",
       budgets: [1048576],
     });
+    manifest = await addMicroPlans(dir + "/index", 16);
     await buildPairs({
       input: dir + "/input",
       source: dir + "/index/source",
@@ -98,6 +100,10 @@ it("serves the global Worker in workerd with real R2, Cache API and diagnostics"
         PAIR_INTERSECT: "1",
         ADAPTIVE_PROBE: "fused",
         DIAGNOSTICS: "1",
+        TOKEN_WINDOWS: "1",
+        COFETCH_POSITIONS: "1",
+        COMPLETE_SEEDS: "1",
+        ADAPTIVE_RETRIEVAL: "1",
         INTERNAL_TOKEN: "test",
         PAGE_READ_KIB: "256",
       },
@@ -414,9 +420,9 @@ it("uploads immutable generation objects and rejects conflicting writes", async 
       },
     },
   };
-  const call = (method: string, hash = sha, auth = "secret") =>
+  const call = (method: string, hash = sha, auth = "secret", objectKey = key) =>
     uploader.fetch(
-      new Request("https://upload/" + key, {
+      new Request("https://upload/" + objectKey, {
         method,
         headers: {
           authorization: "Bearer " + auth,
@@ -432,6 +438,22 @@ it("uploads immutable generation objects and rejects conflicting writes", async 
   expect((await call("PUT")).status).toBe(200);
   expect((await call("PUT")).status).toBe(200);
   expect((await call("PUT", "c".repeat(64))).status).toBe(409);
+  for (const name of [
+    "plan-104-" + "c".repeat(16) + ".bin",
+    "page-1024-" + "d".repeat(64) + ".bin",
+  ]) {
+    expect(
+      (await call("PUT", sha, "secret", generation + "/" + name)).status,
+    ).toBe(200);
+    expect(
+      (await call("PUT", "c".repeat(64), "secret", generation + "/" + name))
+        .status,
+    ).toBe(409);
+  }
+  expect(
+    (await call("PUT", sha, "secret", generation + "/plan-104-evil.bin"))
+      .status,
+  ).toBe(400);
   const existing = await call("HEAD");
   expect(existing.headers.get("x-sha256")).toBe(sha);
   expect(existing.headers.get("x-generation")).toBe(generation);

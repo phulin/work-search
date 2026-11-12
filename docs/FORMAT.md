@@ -318,3 +318,31 @@ remote dictionary values, avoiding a second read stage for those pairs. Larger
 pair descriptors also use the compact encoding. Dictionary raw payloads are
 bounded at 128 KiB; compressed payloads may span physical pages. This does not
 embed the complete pair dictionary in the Worker.
+
+### Fine score windows and PCS3 cost synopsis
+
+GLB1 term records may append one varint after their existing window table:
+`windowDocs` in `{8,16,32,64}`. Omission means 64. Cell numbers address that
+many consecutive internal document IDs. Bounds are unquantized float64 maxima
+of `body BM25 + 2 * title BM25`. Readers reject other geometries. A query using
+several geometries coarsens fine cells by taking maxima within each larger cell.
+All fields and boosts outside this bound definition use the existing block
+bounds. Existing posting codecs and document identifiers are unchanged.
+
+Refinement appends dictionary objects while reusing the original posting
+objects. New names are `plan-N-<first 16 SHA256 hex characters>.bin`; the root
+retains the full SHA256. Standard object names keep existing cache keys; new
+names include the full object SHA256 in page-cache/CDN page names. This prevents
+two alternate layouts at the same object index from sharing metadata pages.
+`manifest.baseObjects` always identifies the original generation commitment;
+`layoutBaseObjects` identifies the prefix reused by the newest layout.
+
+PCS3 is a separate bundled asset. Bytes 0–3 contain little-endian `0x33534350`;
+bytes 4–7 contain CRC32 of the remaining bytes. Bytes 8–71 and 72–135 contain
+ASCII base and pair generation hashes. Bytes 136–139 contain dictionary length;
+140–143 are reserved. Next are 4 × 7,680 slots, each a little-endian CRC32
+fingerprint and Uint32 pair DF. Four deterministic mixed-hash slots retain the
+highest DF, breaking equal-DF ties by fingerprint. A matching fingerprint yields
+an upper cost estimate; a missing fingerprint yields unknown. The trailing
+standard front-coded dictionary stores vocabulary terms with Uint32 unigram DF.
+This synopsis is never used as posting membership or a proof of phrase truth.

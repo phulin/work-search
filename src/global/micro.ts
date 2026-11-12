@@ -1,5 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
-import { open, readFile, writeFile } from "node:fs/promises";
+import { open, readFile, writeFile, rename } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { crc32 } from "../format/codec.js";
 import { gunzipSync } from "node:zlib";
@@ -16,10 +16,12 @@ import {
 export const MICRO_DOCS = 64;
 // Appends a new immutable layout to the same logical corpus generation. Existing
 // packs/roots remain valid; the exact selected root is checked by bundle SHA.
-export async function addMicroPlans(out: string) {
+export async function addMicroPlans(out: string, docs = MICRO_DOCS) {
+  if (![8, 16, 32, 64].includes(docs))
+    throw Error("Invalid score window geometry");
   const manifest = JSON.parse(await readFile(out + "/manifest.json", "utf8")),
     root: Root = JSON.parse(await readFile(out + "/root.json", "utf8"));
-  if (manifest.microDocs === MICRO_DOCS) return manifest;
+  if (manifest.microDocs === docs) return manifest;
   const started = performance.now(),
     baseObjects = root.objects.length,
     packer = new PagePacker(out + "/packs", root.pageBytes, baseObjects);
@@ -50,16 +52,17 @@ export async function addMicroPlans(out: string) {
       windows = new Map<number, number>();
     if (term.inline?.length) {
       for (const r of decodeRows(term.inline)) {
-        const tile = Math.floor(r.doc / MICRO_DOCS);
+        const tile = Math.floor(r.doc / docs);
         windows.set(tile, Math.max(windows.get(tile) ?? 0, r.b + 2 * r.t));
       }
     } else
       for (const block of term.blocks) {
         for (const r of decodeRows(await payload(block.frequency))) {
-          const tile = Math.floor(r.doc / MICRO_DOCS);
+          const tile = Math.floor(r.doc / docs);
           windows.set(tile, Math.max(windows.get(tile) ?? 0, r.b + 2 * r.t));
         }
       }
+    term.windowDocs = docs === 64 ? undefined : docs;
     term.windows = [...windows].sort(([a], [b]) => a - b);
     const b = encodeTerm(term);
     insert.run(
@@ -98,7 +101,17 @@ export async function addMicroPlans(out: string) {
   }
   await flush();
   root.dictionary = dictionary;
-  root.objects = [...root.objects, ...(await packer.finish())];
+  const additions = await packer.finish();
+  if (docs !== 64)
+    for (const object of additions) {
+      const name = object.name.replace(
+        ".bin",
+        "-" + object.sha256.slice(0, 16) + ".bin",
+      );
+      await rename(out + "/packs/" + object.name, out + "/packs/" + name);
+      object.name = name;
+    }
+  root.objects = [...root.objects, ...additions];
   const reserve = JSON.stringify(root).length + 4096,
     roots: any[] = [];
   for (const old of manifest.roots) {
@@ -140,9 +153,11 @@ export async function addMicroPlans(out: string) {
     ...manifest,
     objects: root.objects,
     roots,
-    microDocs: MICRO_DOCS,
+    microDocs: docs,
+    displaySeedTerms: undefined,
     microMs: performance.now() - started,
-    baseObjects,
+    baseObjects: manifest.baseObjects ?? baseObjects,
+    layoutBaseObjects: baseObjects,
   };
   await writeFile(out + "/root.json", JSON.stringify(root));
   await writeFile(out + "/manifest.json", JSON.stringify(result, null, 2));

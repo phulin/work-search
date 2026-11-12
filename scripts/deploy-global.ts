@@ -17,7 +17,15 @@ const out = process.argv[2] ?? "work/global-100k",
 const pairDir = process.env.GLOBAL_PAIRS;
 const pairBytes = pairDir ? await readFile(pairDir + "/pairs.bin") : undefined;
 const pairs = pairBytes ? decodePairRoot(pairBytes, root) : undefined;
-if (bundle.length + (pairBytes?.length ?? 0) > Number(budget) * 1048576)
+const costPath =
+  process.env.GLOBAL_PAIR_COSTS === "1" && pairDir
+    ? pairDir + "/costs.bin"
+    : undefined;
+const costBytes = costPath ? await readFile(costPath) : undefined;
+if (
+  bundle.length + (pairBytes?.length ?? 0) + (costBytes?.length ?? 0) >
+  Number(budget) * 1048576
+)
   throw Error("Combined bundle exceeds budget");
 const { url } = JSON.parse(
     await readFile("work/full-flp/deployment.json", "utf8"),
@@ -27,10 +35,14 @@ const { url } = JSON.parse(
   );
 for (const [uploadRoot, uploadDir] of [
   ...(!process.argv.includes("--deploy-only") ? [[root, out] as const] : []),
-  ...(pairs && pairDir ? [[pairs.root, pairDir] as const] : []),
+  ...(pairs && pairDir && process.env.GLOBAL_SKIP_PAIR_UPLOAD !== "1"
+    ? [[pairs.root, pairDir] as const]
+    : []),
 ])
   await parallel(
-    uploadRoot.objects.slice(Number(process.env.GLOBAL_FROM_OBJECT ?? 0)),
+    uploadRoot.objects.slice(
+      uploadRoot === root ? Number(process.env.GLOBAL_FROM_OBJECT ?? 0) : 0,
+    ),
     6,
     async (o) => {
       const objectPath =
@@ -78,7 +90,7 @@ await mkdir("work/global-deploy", { recursive: true });
 const entry = resolve(`work/global-deploy/${name}.ts`);
 await writeFile(
   entry,
-  `import bytes from ${JSON.stringify(resolve(out + `/${process.env.GLOBAL_HEADS === "1" ? "bundle-heads" : "bundle"}-${budget}.bin`))};import {createGlobalWorker} from ${JSON.stringify(resolve(process.env.GLOBAL_RUNTIME ?? "src/global/worker-runtime.ts"))};${pairDir ? `import pairs from ${JSON.stringify(resolve(pairDir + "/pairs.bin"))};` : ""}export default createGlobalWorker(new Uint8Array(bytes)${pairDir ? ",new Uint8Array(pairs)" : ""});`,
+  `import bytes from ${JSON.stringify(resolve(out + `/${process.env.GLOBAL_HEADS === "1" ? "bundle-heads" : "bundle"}-${budget}.bin`))};import {createGlobalWorker} from ${JSON.stringify(resolve(process.env.GLOBAL_RUNTIME ?? "src/global/worker-runtime.ts"))};${pairDir ? `import pairs from ${JSON.stringify(resolve(pairDir + "/pairs.bin"))};` : ""}${costPath ? `import costs from ${JSON.stringify(resolve(costPath))};` : ""}export default createGlobalWorker(new Uint8Array(bytes)${pairDir ? ",new Uint8Array(pairs)" : ""}${costPath ? ",new Uint8Array(costs)" : ""});`,
 );
 const config = resolve(`work/global-deploy/${name}.json`),
   vars: Record<string, string> = {
@@ -88,6 +100,10 @@ const config = resolve(`work/global-deploy/${name}.json`),
     COMPETITIVE_POSITIONS: process.env.GLOBAL_COMPETITIVE ?? "0",
     ADAPTIVE_POSITIONS: process.env.GLOBAL_ADAPTIVE ?? "1",
     ADAPTIVE_PROBE: process.env.GLOBAL_ADAPTIVE_PROBE ?? "fused",
+    COFETCH_POSITIONS: process.env.GLOBAL_COFETCH_POSITIONS ?? "0",
+    COMPLETE_SEEDS: process.env.GLOBAL_COMPLETE_SEEDS ?? "0",
+    ADAPTIVE_RETRIEVAL: process.env.GLOBAL_ADAPTIVE_RETRIEVAL ?? "0",
+    TOKEN_WINDOWS: process.env.GLOBAL_TOKEN_WINDOWS ?? "0",
     PAIR_INTERSECT: process.env.GLOBAL_PAIR_INTERSECT ?? "0",
     PAGE_READ_KIB: process.env.GLOBAL_PAGE_KIB ?? String(root.pageBytes / 1024),
   };
