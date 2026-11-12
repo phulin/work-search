@@ -1,5 +1,5 @@
 import { readFile, writeFile } from "node:fs/promises";
-import gateway from "../demo/gateway.js";
+import gateway from "../demo/gateway-runtime.js";
 import { createDemoGraph, type LocalTrace } from "./demo-graph.js";
 import { root } from "./demo-client.js";
 import { context, tracedBucket } from "./demo-trace.js";
@@ -77,7 +77,10 @@ for (const mode of hydrate
         trace: { events: trace.events, diagnostics: trace.diagnostics },
       });
       await writeFile(
-        root + (hydrate ? "/pages-hydrate.json" : "/pages.json"),
+        root +
+          (hydrate
+            ? `/${process.env.DEMO_PAGES_HYDRATE_OUTPUT ?? "pages-hydrate"}.json`
+            : `/${process.env.DEMO_PAGES_OUTPUT ?? "pages"}.json`),
         JSON.stringify({ rows }, null, 2),
       );
       console.log(

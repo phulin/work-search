@@ -7,6 +7,7 @@ import { pageIndex } from "../src/builder/page-index.js";
 import { openIndex, decodeRoot, encodeRoot } from "../src/format/paged.js";
 import { search } from "../src/query/engine.js";
 import { FileStorage } from "../src/storage/filesystem.js";
+import { BinaryIndex, LOCAL } from "../src/format/index.js";
 import { SearchRuntime } from "../src/query/runtime.js";
 it("paged R2 dictionary, norms and results preserve exact terms/connectors, fields and totals with isolated concurrent queries", async () => {
   const dir = await mkdtemp(join(tmpdir(), "paged-"));
@@ -63,6 +64,48 @@ it("paged R2 dictionary, norms and results preserve exact terms/connectors, fiel
         const got = await search(paged, b, q, { executor, limit: 7 });
         expect(got.results, q + executor).toEqual(want.results);
       }
+    // Descriptor hints must preserve inline-page access and bypass missing-term reads.
+    const terms = ["court", "token4199"];
+    const hints: Record<string, import("../src/format/index.js").Entry | null> =
+      { missingword: null };
+    for (const page of (paged as import("../src/format/paged.js").PagedIndex)
+      .root.dictionary) {
+      const bytes = await b.read(
+        paged.key(0, "dictionary"),
+        page.offset,
+        page.length,
+      );
+      const dict = new BinaryIndex(bytes);
+      for (const t of terms) {
+        const e = dict.lookup(t);
+        if (e) hints[t] = e;
+      }
+    }
+    for (const q of [
+      "court",
+      "token4199",
+      "court OR token4199",
+      "court NOT missingword",
+      '"court evidence"',
+    ]) {
+      const want = await search(paged, b, q);
+      const got = await search(paged, b, q, { termHints: hints });
+      expect(got.results, q).toEqual(want.results);
+    }
+    let missingReads = 0;
+    const missing = await search(
+      paged,
+      {
+        read: async () => {
+          missingReads++;
+          throw Error("Unexpected missing-term read");
+        },
+      },
+      "missingword",
+      { termHints: { missingword: null } },
+    );
+    expect(missing.results).toEqual([]);
+    expect(missingReads).toBe(0);
     runtime.clear();
     const cold = await search(paged, b, "court"),
       warm = await search(paged, b, "court", { runtime });

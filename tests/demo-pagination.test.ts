@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import gateway from "../demo/gateway.js";
+import gateway from "../demo/gateway-runtime.js";
 
 it("keeps a continuation at the demo's maximum page size and pins the next page", async () => {
   const generation = "a".repeat(64),

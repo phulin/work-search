@@ -1,5 +1,5 @@
 import { readFile, writeFile, appendFile } from "node:fs/promises";
-import gateway from "../demo/gateway.js";
+import gateway from "../demo/gateway-runtime.js";
 import { context, tracedBucket } from "./demo-trace.js";
 import { EmpiricalModel, Slots } from "./demo-model.js";
 import { root } from "./demo-client.js";

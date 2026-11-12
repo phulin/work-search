@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, copyFile } from "node:fs/promises";
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { randomBytes, createHash } from "node:crypto";
 import { resolve } from "node:path";
 const root = "work/full-flp";
@@ -14,11 +14,23 @@ try {
 }
 const wrangler = async (args: string[]) => {
   for (let attempt = 0; ; attempt++) {
-    const r = spawnSync(
-      process.execPath,
-      ["node_modules/wrangler/bin/wrangler.js", ...args],
-      { encoding: "utf8" },
-    );
+    const r = await new Promise<{
+      status: number | null;
+      stdout: string;
+      stderr: string;
+    }>((resolve, reject) => {
+      const child = spawn(
+        process.execPath,
+        ["node_modules/wrangler/bin/wrangler.js", ...args],
+        { stdio: ["ignore", "pipe", "pipe"] },
+      );
+      let stdout = "",
+        stderr = "";
+      child.stdout.on("data", (b) => (stdout += b));
+      child.stderr.on("data", (b) => (stderr += b));
+      child.on("error", reject);
+      child.on("close", (status) => resolve({ status, stdout, stderr }));
+    });
     if (r.status === 0) return r.stdout;
     const message = (r.stdout ?? "") + (r.stderr ?? "");
     // Newly created Workers can briefly be absent from the subsequent API read.

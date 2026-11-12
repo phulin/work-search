@@ -12,7 +12,8 @@
       "cpuMs": 476.905,
       "rss": 793690112,
       "r2Requests": 115,
-      "r2Bytes": 1381805
+      "r2Bytes": 1381805,
+      "r2RequestedBytes": 1381805
     },
     {
       "q": "personal jurisdiction",
@@ -24,7 +25,8 @@
       "cpuMs": 213.991,
       "rss": 817627136,
       "r2Requests": 120,
-      "r2Bytes": 1438053
+      "r2Bytes": 1438053,
+      "r2RequestedBytes": 1438053
     },
     {
       "q": "breach fiduciary duty",
@@ -36,7 +38,8 @@
       "cpuMs": 484.23,
       "rss": 840450048,
       "r2Requests": 226,
-      "r2Bytes": 1692885
+      "r2Bytes": 1692885,
+      "r2RequestedBytes": 1692885
     },
     {
       "q": "arbitrary capricious agency",
@@ -48,7 +51,8 @@
       "cpuMs": 299.137,
       "rss": 838402048,
       "r2Requests": 260,
-      "r2Bytes": 1524002
+      "r2Bytes": 1524002,
+      "r2RequestedBytes": 1524002
     },
     {
       "q": "\"clear and convincing evidence\"",
@@ -60,7 +64,8 @@
       "cpuMs": 2203.044,
       "rss": 958562304,
       "r2Requests": 474,
-      "r2Bytes": 134764414
+      "r2Bytes": 134764414,
+      "r2RequestedBytes": 134764414
     },
     {
       "q": "\"res ipsa loquitur\"",
@@ -72,7 +77,8 @@
       "cpuMs": 331.414,
       "rss": 962314240,
       "r2Requests": 522,
-      "r2Bytes": 3498549
+      "r2Bytes": 3498549,
+      "r2RequestedBytes": 3498549
     },
     {
       "q": "(standing OR mootness) AND jurisdiction",
@@ -84,7 +90,8 @@
       "cpuMs": 228.289,
       "rss": 963379200,
       "r2Requests": 55,
-      "r2Bytes": 708611
+      "r2Bytes": 708611,
+      "r2RequestedBytes": 708611
     },
     {
       "q": "(copyright OR trademark) AND injunction",
@@ -96,7 +103,8 @@
       "cpuMs": 216.8,
       "rss": 956121088,
       "r2Requests": 229,
-      "r2Bytes": 1441708
+      "r2Bytes": 1441708,
+      "r2RequestedBytes": 1441708
     },
     {
       "q": "qualified AND immunity NOT prison",
@@ -108,7 +116,8 @@
       "cpuMs": 387.419,
       "rss": 988315648,
       "r2Requests": 121,
-      "r2Bytes": 986529
+      "r2Bytes": 986529,
+      "r2RequestedBytes": 986529
     },
     {
       "q": "qualified /s immunity",
@@ -120,7 +129,8 @@
       "cpuMs": 188.285,
       "rss": 991838208,
       "r2Requests": 55,
-      "r2Bytes": 619721
+      "r2Bytes": 619721,
+      "r2RequestedBytes": 619721
     },
     {
       "q": "contract /10 breach",
@@ -132,7 +142,8 @@
       "cpuMs": 238.382,
       "rss": 996704256,
       "r2Requests": 58,
-      "r2Bytes": 739792
+      "r2Bytes": 739792,
+      "r2RequestedBytes": 739792
     },
     {
       "q": "notice /p termination",
@@ -144,7 +155,8 @@
       "cpuMs": 436.085,
       "rss": 692961280,
       "r2Requests": 326,
-      "r2Bytes": 7947868
+      "r2Bytes": 7947868,
+      "r2RequestedBytes": 7947868
     },
     {
       "q": "Christenberry Allen",
@@ -156,7 +168,8 @@
       "cpuMs": 153.982,
       "rss": 692977664,
       "r2Requests": 258,
-      "r2Bytes": 1915114
+      "r2Bytes": 1915114,
+      "r2RequestedBytes": 1915114
     },
     {
       "q": "Twombly Iqbal",
@@ -168,7 +181,8 @@
       "cpuMs": 179.056,
       "rss": 663863296,
       "r2Requests": 217,
-      "r2Bytes": 1397233
+      "r2Bytes": 1397233,
+      "r2RequestedBytes": 1397233
     },
     {
       "q": "court",
@@ -180,7 +194,8 @@
       "cpuMs": 333.355,
       "rss": 669237248,
       "r2Requests": 59,
-      "r2Bytes": 663276
+      "r2Bytes": 663276,
+      "r2RequestedBytes": 663276
     },
     {
       "q": "unfindablebenchmarkzzzz",
@@ -192,7 +207,8 @@
       "cpuMs": 55.189,
       "rss": 596688896,
       "r2Requests": 67,
-      "r2Bytes": 1249066
+      "r2Bytes": 1249066,
+      "r2RequestedBytes": 1249066
     },
     {
       "q": "summary judgment",
@@ -204,7 +220,8 @@
       "cpuMs": 355.898,
       "rss": 594968576,
       "r2Requests": 113,
-      "r2Bytes": 1342991
+      "r2Bytes": 1342991,
+      "r2RequestedBytes": 1342991
     },
     {
       "q": "personal jurisdiction",
@@ -216,7 +233,8 @@
       "cpuMs": 214.342,
       "rss": 516194304,
       "r2Requests": 119,
-      "r2Bytes": 1432629
+      "r2Bytes": 1432629,
+      "r2RequestedBytes": 1432629
     },
     {
       "q": "breach fiduciary duty",
@@ -228,7 +246,8 @@
       "cpuMs": 240.097,
       "rss": 510476288,
       "r2Requests": 224,
-      "r2Bytes": 1681813
+      "r2Bytes": 1681813,
+      "r2RequestedBytes": 1681813
     },
     {
       "q": "arbitrary capricious agency",
@@ -240,7 +259,8 @@
       "cpuMs": 224.955,
       "rss": 513327104,
       "r2Requests": 251,
-      "r2Bytes": 1477282
+      "r2Bytes": 1477282,
+      "r2RequestedBytes": 1477282
     },
     {
       "q": "\"clear and convincing evidence\"",
@@ -252,7 +272,8 @@
       "cpuMs": 1823.975,
       "rss": 598261760,
       "r2Requests": 464,
-      "r2Bytes": 134709038
+      "r2Bytes": 134709038,
+      "r2RequestedBytes": 134709038
     },
     {
       "q": "\"res ipsa loquitur\"",
@@ -264,7 +285,8 @@
       "cpuMs": 269.34,
       "rss": 602423296,
       "r2Requests": 508,
-      "r2Bytes": 3420709
+      "r2Bytes": 3420709,
+      "r2RequestedBytes": 3420709
     },
     {
       "q": "(standing OR mootness) AND jurisdiction",
@@ -276,7 +298,8 @@
       "cpuMs": 177.77,
       "rss": 607305728,
       "r2Requests": 42,
-      "r2Bytes": 640643
+      "r2Bytes": 640643,
+      "r2RequestedBytes": 640643
     },
     {
       "q": "(copyright OR trademark) AND injunction",
@@ -288,7 +311,8 @@
       "cpuMs": 170.2,
       "rss": 610238464,
       "r2Requests": 215,
-      "r2Bytes": 1372876
+      "r2Bytes": 1372876,
+      "r2RequestedBytes": 1372876
     },
     {
       "q": "qualified AND immunity NOT prison",
@@ -300,7 +324,8 @@
       "cpuMs": 306.275,
       "rss": 641105920,
       "r2Requests": 107,
-      "r2Bytes": 913233
+      "r2Bytes": 913233,
+      "r2RequestedBytes": 913233
     },
     {
       "q": "qualified /s immunity",
@@ -312,7 +337,8 @@
       "cpuMs": 102.838,
       "rss": 639746048,
       "r2Requests": 24,
-      "r2Bytes": 246819
+      "r2Bytes": 246819,
+      "r2RequestedBytes": 246819
     },
     {
       "q": "contract /10 breach",
@@ -324,7 +350,8 @@
       "cpuMs": 164.34,
       "rss": 647200768,
       "r2Requests": 41,
-      "r2Bytes": 633395
+      "r2Bytes": 633395,
+      "r2RequestedBytes": 633395
     },
     {
       "q": "notice /p termination",
@@ -336,7 +363,8 @@
       "cpuMs": 361.578,
       "rss": 653852672,
       "r2Requests": 309,
-      "r2Bytes": 7856492
+      "r2Bytes": 7856492,
+      "r2RequestedBytes": 7856492
     },
     {
       "q": "Christenberry Allen",
@@ -348,7 +376,8 @@
       "cpuMs": 126.629,
       "rss": 655671296,
       "r2Requests": 243,
-      "r2Bytes": 1836714
+      "r2Bytes": 1836714,
+      "r2RequestedBytes": 1836714
     },
     {
       "q": "Twombly Iqbal",
@@ -360,7 +389,8 @@
       "cpuMs": 187.611,
       "rss": 628604928,
       "r2Requests": 189,
-      "r2Bytes": 1124226
+      "r2Bytes": 1124226,
+      "r2RequestedBytes": 1124226
     },
     {
       "q": "court",
@@ -372,7 +402,8 @@
       "cpuMs": 287.437,
       "rss": 652083200,
       "r2Requests": 43,
-      "r2Bytes": 575196
+      "r2Bytes": 575196,
+      "r2RequestedBytes": 575196
     },
     {
       "q": "unfindablebenchmarkzzzz",
@@ -384,7 +415,8 @@
       "cpuMs": 27.447,
       "rss": 653590528,
       "r2Requests": 67,
-      "r2Bytes": 1249066
+      "r2Bytes": 1249066,
+      "r2RequestedBytes": 1249066
     },
     {
       "q": "summary judgment",
@@ -396,7 +428,8 @@
       "cpuMs": 214.07,
       "rss": 654491648,
       "r2Requests": 56,
-      "r2Bytes": 576752
+      "r2Bytes": 576752,
+      "r2RequestedBytes": 576752
     },
     {
       "q": "personal jurisdiction",
@@ -408,7 +441,8 @@
       "cpuMs": 110.55,
       "rss": 656850944,
       "r2Requests": 62,
-      "r2Bytes": 659998
+      "r2Bytes": 659998,
+      "r2RequestedBytes": 659998
     },
     {
       "q": "breach fiduciary duty",
@@ -420,7 +454,8 @@
       "cpuMs": 110.678,
       "rss": 660717568,
       "r2Requests": 123,
-      "r2Bytes": 836667
+      "r2Bytes": 836667,
+      "r2RequestedBytes": 836667
     },
     {
       "q": "arbitrary capricious agency",
@@ -432,7 +467,8 @@
       "cpuMs": 117.027,
       "rss": 663699456,
       "r2Requests": 141,
-      "r2Bytes": 702797
+      "r2Bytes": 702797,
+      "r2RequestedBytes": 702797
     },
     {
       "q": "\"clear and convincing evidence\"",
@@ -444,7 +480,8 @@
       "cpuMs": 1370.25,
       "rss": 712704000,
       "r2Requests": 224,
-      "r2Bytes": 118841145
+      "r2Bytes": 118841145,
+      "r2RequestedBytes": 118841145
     },
     {
       "q": "\"res ipsa loquitur\"",
@@ -456,7 +493,8 @@
       "cpuMs": 146.752,
       "rss": 712753152,
       "r2Requests": 284,
-      "r2Bytes": 1818139
+      "r2Bytes": 1818139,
+      "r2RequestedBytes": 1818139
     },
     {
       "q": "(standing OR mootness) AND jurisdiction",
@@ -468,7 +506,8 @@
       "cpuMs": 148.914,
       "rss": 715407360,
       "r2Requests": 20,
-      "r2Bytes": 241374
+      "r2Bytes": 241374,
+      "r2RequestedBytes": 241374
     },
     {
       "q": "(copyright OR trademark) AND injunction",
@@ -480,7 +519,8 @@
       "cpuMs": 244.485,
       "rss": 711639040,
       "r2Requests": 114,
-      "r2Bytes": 639203
+      "r2Bytes": 639203,
+      "r2RequestedBytes": 639203
     },
     {
       "q": "qualified AND immunity NOT prison",
@@ -492,7 +532,8 @@
       "cpuMs": 369.932,
       "rss": 746209280,
       "r2Requests": 57,
-      "r2Bytes": 388754
+      "r2Bytes": 388754,
+      "r2RequestedBytes": 388754
     },
     {
       "q": "qualified /s immunity",
@@ -504,7 +545,8 @@
       "cpuMs": 92.284,
       "rss": 746340352,
       "r2Requests": 20,
-      "r2Bytes": 162472
+      "r2Bytes": 162472,
+      "r2RequestedBytes": 162472
     },
     {
       "q": "contract /10 breach",
@@ -516,7 +558,8 @@
       "cpuMs": 181.03,
       "rss": 747634688,
       "r2Requests": 20,
-      "r2Bytes": 236549
+      "r2Bytes": 236549,
+      "r2RequestedBytes": 242453
     },
     {
       "q": "notice /p termination",
@@ -528,7 +571,8 @@
       "cpuMs": 563.918,
       "rss": 748388352,
       "r2Requests": 162,
-      "r2Bytes": 4363522
+      "r2Bytes": 4363522,
+      "r2RequestedBytes": 4363522
     },
     {
       "q": "Christenberry Allen",
@@ -540,7 +584,8 @@
       "cpuMs": 170.554,
       "rss": 748421120,
       "r2Requests": 129,
-      "r2Bytes": 849899
+      "r2Bytes": 849899,
+      "r2RequestedBytes": 849899
     },
     {
       "q": "Twombly Iqbal",
@@ -552,7 +597,8 @@
       "cpuMs": 241.909,
       "rss": 748634112,
       "r2Requests": 97,
-      "r2Bytes": 379338
+      "r2Bytes": 379338,
+      "r2RequestedBytes": 379338
     },
     {
       "q": "court",
@@ -564,7 +610,8 @@
       "cpuMs": 269.696,
       "rss": 748634112,
       "r2Requests": 20,
-      "r2Bytes": 146141
+      "r2Bytes": 146141,
+      "r2RequestedBytes": 146141
     },
     {
       "q": "unfindablebenchmarkzzzz",
@@ -576,7 +623,8 @@
       "cpuMs": 77.03,
       "rss": 748634112,
       "r2Requests": 36,
-      "r2Bytes": 672099
+      "r2Bytes": 672099,
+      "r2RequestedBytes": 672099
     },
     {
       "q": "summary judgment",
@@ -588,7 +636,8 @@
       "cpuMs": 239.931,
       "rss": 748666880,
       "r2Requests": 54,
-      "r2Bytes": 556810
+      "r2Bytes": 556810,
+      "r2RequestedBytes": 556810
     },
     {
       "q": "personal jurisdiction",
@@ -600,7 +649,8 @@
       "cpuMs": 192.663,
       "rss": 748699648,
       "r2Requests": 56,
-      "r2Bytes": 576622
+      "r2Bytes": 576622,
+      "r2RequestedBytes": 576622
     },
     {
       "q": "breach fiduciary duty",
@@ -612,7 +662,8 @@
       "cpuMs": 203.215,
       "rss": 748699648,
       "r2Requests": 108,
-      "r2Bytes": 761391
+      "r2Bytes": 761391,
+      "r2RequestedBytes": 761391
     },
     {
       "q": "arbitrary capricious agency",
@@ -624,7 +675,8 @@
       "cpuMs": 295.026,
       "rss": 748830720,
       "r2Requests": 130,
-      "r2Bytes": 660351
+      "r2Bytes": 660351,
+      "r2RequestedBytes": 660351
     },
     {
       "q": "\"clear and convincing evidence\"",
@@ -636,7 +688,8 @@
       "cpuMs": 1918.416,
       "rss": 717357056,
       "r2Requests": 237,
-      "r2Bytes": 123580039
+      "r2Bytes": 123580039,
+      "r2RequestedBytes": 123580039
     },
     {
       "q": "\"res ipsa loquitur\"",
@@ -648,7 +701,8 @@
       "cpuMs": 323.438,
       "rss": 717717504,
       "r2Requests": 251,
-      "r2Bytes": 1637548
+      "r2Bytes": 1637548,
+      "r2RequestedBytes": 1637548
     },
     {
       "q": "(standing OR mootness) AND jurisdiction",
@@ -660,7 +714,8 @@
       "cpuMs": 141.258,
       "rss": 717717504,
       "r2Requests": 20,
-      "r2Bytes": 241374
+      "r2Bytes": 241374,
+      "r2RequestedBytes": 241374
     },
     {
       "q": "(copyright OR trademark) AND injunction",
@@ -672,7 +727,8 @@
       "cpuMs": 203.134,
       "rss": 717733888,
       "r2Requests": 102,
-      "r2Bytes": 581735
+      "r2Bytes": 581735,
+      "r2RequestedBytes": 581735
     },
     {
       "q": "qualified AND immunity NOT prison",
@@ -684,7 +740,8 @@
       "cpuMs": 376.669,
       "rss": 751157248,
       "r2Requests": 53,
-      "r2Bytes": 366541
+      "r2Bytes": 366541,
+      "r2RequestedBytes": 366541
     },
     {
       "q": "qualified /s immunity",
@@ -696,7 +753,8 @@
       "cpuMs": 51.264,
       "rss": 751157248,
       "r2Requests": 20,
-      "r2Bytes": 162472
+      "r2Bytes": 162472,
+      "r2RequestedBytes": 162472
     },
     {
       "q": "contract /10 breach",
@@ -708,7 +766,8 @@
       "cpuMs": 129.304,
       "rss": 753876992,
       "r2Requests": 20,
-      "r2Bytes": 242453
+      "r2Bytes": 242453,
+      "r2RequestedBytes": 242453
     },
     {
       "q": "notice /p termination",
@@ -720,7 +779,8 @@
       "cpuMs": 209.89,
       "rss": 753893376,
       "r2Requests": 152,
-      "r2Bytes": 4073132
+      "r2Bytes": 4073132,
+      "r2RequestedBytes": 4073132
     },
     {
       "q": "Christenberry Allen",
@@ -732,7 +792,8 @@
       "cpuMs": 81.618,
       "rss": 753926144,
       "r2Requests": 117,
-      "r2Bytes": 787582
+      "r2Bytes": 787582,
+      "r2RequestedBytes": 787582
     },
     {
       "q": "Twombly Iqbal",
@@ -744,7 +805,8 @@
       "cpuMs": 125.391,
       "rss": 753958912,
       "r2Requests": 89,
-      "r2Bytes": 336528
+      "r2Bytes": 336528,
+      "r2RequestedBytes": 336528
     },
     {
       "q": "court",
@@ -756,7 +818,8 @@
       "cpuMs": 220.793,
       "rss": 753991680,
       "r2Requests": 20,
-      "r2Bytes": 146141
+      "r2Bytes": 146141,
+      "r2RequestedBytes": 146141
     },
     {
       "q": "unfindablebenchmarkzzzz",
@@ -768,7 +831,8 @@
       "cpuMs": 33.353,
       "rss": 753991680,
       "r2Requests": 33,
-      "r2Bytes": 615510
+      "r2Bytes": 615510,
+      "r2RequestedBytes": 615510
     },
     {
       "q": "summary judgment",
@@ -780,7 +844,8 @@
       "cpuMs": 625.544,
       "rss": 749273088,
       "r2Requests": 114,
-      "r2Bytes": 1363598
+      "r2Bytes": 1363598,
+      "r2RequestedBytes": 1363598
     },
     {
       "q": "personal jurisdiction",
@@ -792,7 +857,8 @@
       "cpuMs": 251.161,
       "rss": 720027648,
       "r2Requests": 120,
-      "r2Bytes": 1438053
+      "r2Bytes": 1438053,
+      "r2RequestedBytes": 1438053
     },
     {
       "q": "breach fiduciary duty",
@@ -804,7 +870,8 @@
       "cpuMs": 496.54,
       "rss": 720027648,
       "r2Requests": 226,
-      "r2Bytes": 1692885
+      "r2Bytes": 1692885,
+      "r2RequestedBytes": 1692885
     },
     {
       "q": "arbitrary capricious agency",
@@ -816,7 +883,8 @@
       "cpuMs": 328.268,
       "rss": 587022336,
       "r2Requests": 260,
-      "r2Bytes": 1524002
+      "r2Bytes": 1524002,
+      "r2RequestedBytes": 1524002
     },
     {
       "q": "\"clear and convincing evidence\"",
@@ -828,7 +896,8 @@
       "cpuMs": 3023.683,
       "rss": 617889792,
       "r2Requests": 474,
-      "r2Bytes": 134764414
+      "r2Bytes": 134764414,
+      "r2RequestedBytes": 134764414
     },
     {
       "q": "\"res ipsa loquitur\"",
@@ -840,7 +909,8 @@
       "cpuMs": 761.751,
       "rss": 611368960,
       "r2Requests": 522,
-      "r2Bytes": 3498549
+      "r2Bytes": 3498549,
+      "r2RequestedBytes": 3498549
     },
     {
       "q": "(standing OR mootness) AND jurisdiction",
@@ -852,7 +922,8 @@
       "cpuMs": 166.192,
       "rss": 605962240,
       "r2Requests": 55,
-      "r2Bytes": 708611
+      "r2Bytes": 708611,
+      "r2RequestedBytes": 708611
     },
     {
       "q": "(copyright OR trademark) AND injunction",
@@ -864,7 +935,8 @@
       "cpuMs": 454.956,
       "rss": 609697792,
       "r2Requests": 229,
-      "r2Bytes": 1441708
+      "r2Bytes": 1441708,
+      "r2RequestedBytes": 1441708
     },
     {
       "q": "qualified AND immunity NOT prison",
@@ -876,7 +948,8 @@
       "cpuMs": 533.087,
       "rss": 640073728,
       "r2Requests": 121,
-      "r2Bytes": 986529
+      "r2Bytes": 986529,
+      "r2RequestedBytes": 986529
     },
     {
       "q": "qualified /s immunity",
@@ -888,7 +961,8 @@
       "cpuMs": 121.91,
       "rss": 642367488,
       "r2Requests": 55,
-      "r2Bytes": 619721
+      "r2Bytes": 619721,
+      "r2RequestedBytes": 619721
     },
     {
       "q": "contract /10 breach",
@@ -900,7 +974,8 @@
       "cpuMs": 353.973,
       "rss": 641679360,
       "r2Requests": 58,
-      "r2Bytes": 733888
+      "r2Bytes": 733888,
+      "r2RequestedBytes": 739792
     },
     {
       "q": "notice /p termination",
@@ -912,7 +987,8 @@
       "cpuMs": 781.377,
       "rss": 621953024,
       "r2Requests": 326,
-      "r2Bytes": 7947868
+      "r2Bytes": 7947868,
+      "r2RequestedBytes": 7947868
     },
     {
       "q": "Christenberry Allen",
@@ -924,7 +1000,8 @@
       "cpuMs": 397.382,
       "rss": 599867392,
       "r2Requests": 258,
-      "r2Bytes": 1915114
+      "r2Bytes": 1915114,
+      "r2RequestedBytes": 1915114
     },
     {
       "q": "Twombly Iqbal",
@@ -936,7 +1013,8 @@
       "cpuMs": 477.978,
       "rss": 597868544,
       "r2Requests": 217,
-      "r2Bytes": 1397233
+      "r2Bytes": 1397233,
+      "r2RequestedBytes": 1397233
     },
     {
       "q": "court",
@@ -948,7 +1026,8 @@
       "cpuMs": 417.415,
       "rss": 590594048,
       "r2Requests": 59,
-      "r2Bytes": 663276
+      "r2Bytes": 663276,
+      "r2RequestedBytes": 663276
     },
     {
       "q": "unfindablebenchmarkzzzz",
@@ -960,7 +1039,8 @@
       "cpuMs": 41.336,
       "rss": 583991296,
       "r2Requests": 67,
-      "r2Bytes": 1249066
+      "r2Bytes": 1249066,
+      "r2RequestedBytes": 1249066
     },
     {
       "q": "summary judgment",
@@ -972,7 +1052,8 @@
       "cpuMs": 555.182,
       "rss": 589135872,
       "r2Requests": 115,
-      "r2Bytes": 1381805
+      "r2Bytes": 1381805,
+      "r2RequestedBytes": 1381805
     },
     {
       "q": "personal jurisdiction",
@@ -984,7 +1065,8 @@
       "cpuMs": 446.504,
       "rss": 591527936,
       "r2Requests": 119,
-      "r2Bytes": 1432629
+      "r2Bytes": 1432629,
+      "r2RequestedBytes": 1432629
     },
     {
       "q": "breach fiduciary duty",
@@ -996,7 +1078,8 @@
       "cpuMs": 633.611,
       "rss": 593362944,
       "r2Requests": 224,
-      "r2Bytes": 1681813
+      "r2Bytes": 1681813,
+      "r2RequestedBytes": 1681813
     },
     {
       "q": "arbitrary capricious agency",
@@ -1008,7 +1091,8 @@
       "cpuMs": 503.177,
       "rss": 595853312,
       "r2Requests": 251,
-      "r2Bytes": 1477282
+      "r2Bytes": 1477282,
+      "r2RequestedBytes": 1477282
     },
     {
       "q": "\"clear and convincing evidence\"",
@@ -1020,7 +1104,8 @@
       "cpuMs": 3079.335,
       "rss": 651214848,
       "r2Requests": 464,
-      "r2Bytes": 134709038
+      "r2Bytes": 134709038,
+      "r2RequestedBytes": 134709038
     },
     {
       "q": "\"res ipsa loquitur\"",
@@ -1032,7 +1117,8 @@
       "cpuMs": 853.771,
       "rss": 654278656,
       "r2Requests": 508,
-      "r2Bytes": 3420709
+      "r2Bytes": 3420709,
+      "r2RequestedBytes": 3420709
     },
     {
       "q": "(standing OR mootness) AND jurisdiction",
@@ -1044,7 +1130,8 @@
       "cpuMs": 225.482,
       "rss": 656113664,
       "r2Requests": 42,
-      "r2Bytes": 640643
+      "r2Bytes": 640643,
+      "r2RequestedBytes": 640643
     },
     {
       "q": "(copyright OR trademark) AND injunction",
@@ -1056,7 +1143,8 @@
       "cpuMs": 359.324,
       "rss": 657948672,
       "r2Requests": 215,
-      "r2Bytes": 1372876
+      "r2Bytes": 1372876,
+      "r2RequestedBytes": 1372876
     },
     {
       "q": "qualified AND immunity NOT prison",
@@ -1068,7 +1156,8 @@
       "cpuMs": 474.518,
       "rss": 688881664,
       "r2Requests": 107,
-      "r2Bytes": 913233
+      "r2Bytes": 913233,
+      "r2RequestedBytes": 913233
     },
     {
       "q": "qualified /s immunity",
@@ -1080,7 +1169,8 @@
       "cpuMs": 72.832,
       "rss": 691798016,
       "r2Requests": 24,
-      "r2Bytes": 246819
+      "r2Bytes": 246819,
+      "r2RequestedBytes": 246819
     },
     {
       "q": "contract /10 breach",
@@ -1092,7 +1182,8 @@
       "cpuMs": 326.246,
       "rss": 697303040,
       "r2Requests": 41,
-      "r2Bytes": 627491
+      "r2Bytes": 627491,
+      "r2RequestedBytes": 633395
     },
     {
       "q": "notice /p termination",
@@ -1104,7 +1195,8 @@
       "cpuMs": 670.511,
       "rss": 603684864,
       "r2Requests": 309,
-      "r2Bytes": 7856492
+      "r2Bytes": 7856492,
+      "r2RequestedBytes": 7856492
     },
     {
       "q": "Christenberry Allen",
@@ -1116,7 +1208,8 @@
       "cpuMs": 379.589,
       "rss": 605028352,
       "r2Requests": 243,
-      "r2Bytes": 1836714
+      "r2Bytes": 1836714,
+      "r2RequestedBytes": 1836714
     },
     {
       "q": "Twombly Iqbal",
@@ -1128,7 +1221,8 @@
       "cpuMs": 440.455,
       "rss": 573571072,
       "r2Requests": 189,
-      "r2Bytes": 1124226
+      "r2Bytes": 1124226,
+      "r2RequestedBytes": 1124226
     },
     {
       "q": "court",
@@ -1140,7 +1234,8 @@
       "cpuMs": 360.815,
       "rss": 478461952,
       "r2Requests": 43,
-      "r2Bytes": 575196
+      "r2Bytes": 575196,
+      "r2RequestedBytes": 575196
     },
     {
       "q": "unfindablebenchmarkzzzz",
@@ -1152,7 +1247,8 @@
       "cpuMs": 42.069,
       "rss": 480296960,
       "r2Requests": 67,
-      "r2Bytes": 1249066
+      "r2Bytes": 1249066,
+      "r2RequestedBytes": 1249066
     },
     {
       "q": "summary judgment",
@@ -1164,7 +1260,8 @@
       "cpuMs": 283.246,
       "rss": 496664576,
       "r2Requests": 56,
-      "r2Bytes": 576752
+      "r2Bytes": 576752,
+      "r2RequestedBytes": 576752
     },
     {
       "q": "personal jurisdiction",
@@ -1176,7 +1273,8 @@
       "cpuMs": 155.722,
       "rss": 502382592,
       "r2Requests": 62,
-      "r2Bytes": 659998
+      "r2Bytes": 659998,
+      "r2RequestedBytes": 659998
     },
     {
       "q": "breach fiduciary duty",
@@ -1188,7 +1286,8 @@
       "cpuMs": 177.305,
       "rss": 479510528,
       "r2Requests": 124,
-      "r2Bytes": 838643
+      "r2Bytes": 838643,
+      "r2RequestedBytes": 838643
     },
     {
       "q": "arbitrary capricious agency",
@@ -1200,7 +1299,8 @@
       "cpuMs": 175.778,
       "rss": 482050048,
       "r2Requests": 141,
-      "r2Bytes": 710918
+      "r2Bytes": 710918,
+      "r2RequestedBytes": 710918
     },
     {
       "q": "\"clear and convincing evidence\"",
@@ -1212,7 +1312,8 @@
       "cpuMs": 1957.65,
       "rss": 572473344,
       "r2Requests": 227,
-      "r2Bytes": 117987179
+      "r2Bytes": 117987179,
+      "r2RequestedBytes": 117987179
     },
     {
       "q": "\"res ipsa loquitur\"",
@@ -1224,7 +1325,8 @@
       "cpuMs": 179.01,
       "rss": 502251520,
       "r2Requests": 282,
-      "r2Bytes": 1817524
+      "r2Bytes": 1817524,
+      "r2RequestedBytes": 1817524
     },
     {
       "q": "(standing OR mootness) AND jurisdiction",
@@ -1236,7 +1338,8 @@
       "cpuMs": 145.415,
       "rss": 514670592,
       "r2Requests": 20,
-      "r2Bytes": 241374
+      "r2Bytes": 241374,
+      "r2RequestedBytes": 241374
     },
     {
       "q": "(copyright OR trademark) AND injunction",
@@ -1248,7 +1351,8 @@
       "cpuMs": 81.922,
       "rss": 515112960,
       "r2Requests": 114,
-      "r2Bytes": 639203
+      "r2Bytes": 639203,
+      "r2RequestedBytes": 639203
     },
     {
       "q": "qualified AND immunity NOT prison",
@@ -1260,7 +1364,8 @@
       "cpuMs": 373.114,
       "rss": 554401792,
       "r2Requests": 57,
-      "r2Bytes": 388754
+      "r2Bytes": 388754,
+      "r2RequestedBytes": 388754
     },
     {
       "q": "qualified /s immunity",
@@ -1272,7 +1377,8 @@
       "cpuMs": 58.892,
       "rss": 524419072,
       "r2Requests": 20,
-      "r2Bytes": 162472
+      "r2Bytes": 162472,
+      "r2RequestedBytes": 162472
     },
     {
       "q": "contract /10 breach",
@@ -1284,7 +1390,8 @@
       "cpuMs": 140.18,
       "rss": 503660544,
       "r2Requests": 20,
-      "r2Bytes": 236549
+      "r2Bytes": 236549,
+      "r2RequestedBytes": 242453
     },
     {
       "q": "notice /p termination",
@@ -1296,7 +1403,8 @@
       "cpuMs": 250.167,
       "rss": 494092288,
       "r2Requests": 162,
-      "r2Bytes": 4372932
+      "r2Bytes": 4372932,
+      "r2RequestedBytes": 4372932
     },
     {
       "q": "Christenberry Allen",
@@ -1308,7 +1416,8 @@
       "cpuMs": 119.251,
       "rss": 492601344,
       "r2Requests": 129,
-      "r2Bytes": 849899
+      "r2Bytes": 849899,
+      "r2RequestedBytes": 849899
     },
     {
       "q": "Twombly Iqbal",
@@ -1320,7 +1429,8 @@
       "cpuMs": 68.418,
       "rss": 493158400,
       "r2Requests": 97,
-      "r2Bytes": 379338
+      "r2Bytes": 379338,
+      "r2RequestedBytes": 379338
     },
     {
       "q": "court",
@@ -1332,7 +1442,8 @@
       "cpuMs": 242.466,
       "rss": 514572288,
       "r2Requests": 20,
-      "r2Bytes": 146141
+      "r2Bytes": 146141,
+      "r2RequestedBytes": 146141
     },
     {
       "q": "unfindablebenchmarkzzzz",
@@ -1344,7 +1455,8 @@
       "cpuMs": 21.609,
       "rss": 514850816,
       "r2Requests": 36,
-      "r2Bytes": 672099
+      "r2Bytes": 672099,
+      "r2RequestedBytes": 672099
     },
     {
       "q": "summary judgment",
@@ -1356,7 +1468,8 @@
       "cpuMs": 184.23,
       "rss": 530644992,
       "r2Requests": 54,
-      "r2Bytes": 556810
+      "r2Bytes": 556810,
+      "r2RequestedBytes": 556810
     },
     {
       "q": "personal jurisdiction",
@@ -1368,7 +1481,8 @@
       "cpuMs": 139.869,
       "rss": 541016064,
       "r2Requests": 56,
-      "r2Bytes": 576622
+      "r2Bytes": 576622,
+      "r2RequestedBytes": 576622
     },
     {
       "q": "breach fiduciary duty",
@@ -1380,7 +1494,8 @@
       "cpuMs": 142.071,
       "rss": 545947648,
       "r2Requests": 108,
-      "r2Bytes": 761391
+      "r2Bytes": 761391,
+      "r2RequestedBytes": 761391
     },
     {
       "q": "arbitrary capricious agency",
@@ -1392,7 +1507,8 @@
       "cpuMs": 145.902,
       "rss": 481607680,
       "r2Requests": 130,
-      "r2Bytes": 660351
+      "r2Bytes": 660351,
+      "r2RequestedBytes": 660351
     },
     {
       "q": "\"clear and convincing evidence\"",
@@ -1404,7 +1520,8 @@
       "cpuMs": 2187.249,
       "rss": 525549568,
       "r2Requests": 241,
-      "r2Bytes": 123651166
+      "r2Bytes": 123651166,
+      "r2RequestedBytes": 123651166
     },
     {
       "q": "\"res ipsa loquitur\"",
@@ -1416,7 +1533,8 @@
       "cpuMs": 182.714,
       "rss": 407552000,
       "r2Requests": 251,
-      "r2Bytes": 1637548
+      "r2Bytes": 1637548,
+      "r2RequestedBytes": 1637548
     },
     {
       "q": "(standing OR mootness) AND jurisdiction",
@@ -1428,7 +1546,8 @@
       "cpuMs": 130.325,
       "rss": 431636480,
       "r2Requests": 20,
-      "r2Bytes": 241374
+      "r2Bytes": 241374,
+      "r2RequestedBytes": 241374
     },
     {
       "q": "(copyright OR trademark) AND injunction",
@@ -1440,7 +1559,8 @@
       "cpuMs": 60.618,
       "rss": 435208192,
       "r2Requests": 102,
-      "r2Bytes": 581735
+      "r2Bytes": 581735,
+      "r2RequestedBytes": 581735
     },
     {
       "q": "qualified AND immunity NOT prison",
@@ -1452,7 +1572,8 @@
       "cpuMs": 394.818,
       "rss": 471646208,
       "r2Requests": 53,
-      "r2Bytes": 366541
+      "r2Bytes": 366541,
+      "r2RequestedBytes": 366541
     },
     {
       "q": "qualified /s immunity",
@@ -1464,7 +1585,8 @@
       "cpuMs": 75.332,
       "rss": 480411648,
       "r2Requests": 20,
-      "r2Bytes": 162472
+      "r2Bytes": 162472,
+      "r2RequestedBytes": 162472
     },
     {
       "q": "contract /10 breach",
@@ -1476,7 +1598,8 @@
       "cpuMs": 186.83,
       "rss": 516554752,
       "r2Requests": 20,
-      "r2Bytes": 236549
+      "r2Bytes": 236549,
+      "r2RequestedBytes": 242453
     },
     {
       "q": "notice /p termination",
@@ -1488,7 +1611,8 @@
       "cpuMs": 261.021,
       "rss": 497795072,
       "r2Requests": 152,
-      "r2Bytes": 4073132
+      "r2Bytes": 4073132,
+      "r2RequestedBytes": 4073132
     },
     {
       "q": "Christenberry Allen",
@@ -1500,7 +1624,8 @@
       "cpuMs": 54.986,
       "rss": 500613120,
       "r2Requests": 117,
-      "r2Bytes": 787582
+      "r2Bytes": 787582,
+      "r2RequestedBytes": 787582
     },
     {
       "q": "Twombly Iqbal",
@@ -1512,7 +1637,8 @@
       "cpuMs": 75.392,
       "rss": 502792192,
       "r2Requests": 89,
-      "r2Bytes": 336528
+      "r2Bytes": 336528,
+      "r2RequestedBytes": 336528
     },
     {
       "q": "court",
@@ -1524,7 +1650,8 @@
       "cpuMs": 324.882,
       "rss": 514719744,
       "r2Requests": 20,
-      "r2Bytes": 146141
+      "r2Bytes": 146141,
+      "r2RequestedBytes": 146141
     },
     {
       "q": "unfindablebenchmarkzzzz",
@@ -1536,7 +1663,8 @@
       "cpuMs": 20.702,
       "rss": 512081920,
       "r2Requests": 33,
-      "r2Bytes": 615510
+      "r2Bytes": 615510,
+      "r2RequestedBytes": 615510
     }
   ]
 }

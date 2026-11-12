@@ -49,6 +49,7 @@ export function createShard(
             limit: body.limit,
             globalStats: body.globalStats,
             globalSkipping: Number(body.perfLevel ?? 0) >= 2,
+            termHints: body.termHints?.[env.SHARD_ID],
             internalDoc: true,
             after: body.after
               ? {

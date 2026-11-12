@@ -1,0 +1,125 @@
+{
+  "stage": 3,
+  "rows": [
+    {
+      "q": "summary judgment",
+      "page": 1,
+      "mode": "fixed20",
+      "phase": "page-sequence",
+      "ms": 611.99975,
+      "cpuMs": 449.772,
+      "rss": 792592384,
+      "r2Requests": 114
+    },
+    {
+      "q": "summary judgment",
+      "page": 2,
+      "mode": "fixed20",
+      "phase": "page-sequence",
+      "ms": 290.1992909999999,
+      "cpuMs": 127.407,
+      "rss": 801505280,
+      "r2Requests": 51
+    },
+    {
+      "q": "personal jurisdiction",
+      "page": 1,
+      "mode": "fixed20",
+      "phase": "page-sequence",
+      "ms": 483.6144999999997,
+      "cpuMs": 216.878,
+      "rss": 821837824,
+      "r2Requests": 117
+    },
+    {
+      "q": "personal jurisdiction",
+      "page": 2,
+      "mode": "fixed20",
+      "phase": "page-sequence",
+      "ms": 224.9103329999998,
+      "cpuMs": 184.447,
+      "rss": 838991872,
+      "r2Requests": 46
+    },
+    {
+      "q": "summary judgment",
+      "page": 1,
+      "mode": "empirical",
+      "phase": "page-sequence",
+      "ms": 3106.219583,
+      "cpuMs": 461.425,
+      "rss": 840171520,
+      "r2Requests": 114
+    },
+    {
+      "q": "summary judgment",
+      "page": 2,
+      "mode": "empirical",
+      "phase": "page-sequence",
+      "ms": 1687.0313750000005,
+      "cpuMs": 233.976,
+      "rss": 843415552,
+      "r2Requests": 51
+    },
+    {
+      "q": "personal jurisdiction",
+      "page": 1,
+      "mode": "empirical",
+      "phase": "page-sequence",
+      "ms": 3623.1582500000004,
+      "cpuMs": 594.565,
+      "rss": 817102848,
+      "r2Requests": 117
+    },
+    {
+      "q": "personal jurisdiction",
+      "page": 2,
+      "mode": "empirical",
+      "phase": "page-sequence",
+      "ms": 1503.7349170000016,
+      "cpuMs": 225.711,
+      "rss": 823787520,
+      "r2Requests": 46
+    },
+    {
+      "q": "summary judgment",
+      "page": 1,
+      "mode": "empirical-repeated",
+      "phase": "page-sequence",
+      "ms": 1599.1455419999984,
+      "cpuMs": 510.497,
+      "rss": 826130432,
+      "r2Requests": 115
+    },
+    {
+      "q": "summary judgment",
+      "page": 2,
+      "mode": "empirical-repeated",
+      "phase": "page-sequence",
+      "ms": 895.450915999998,
+      "cpuMs": 191.892,
+      "rss": 827785216,
+      "r2Requests": 51
+    },
+    {
+      "q": "personal jurisdiction",
+      "page": 1,
+      "mode": "empirical-repeated",
+      "phase": "page-sequence",
+      "ms": 1519.870665999999,
+      "cpuMs": 419.852,
+      "rss": 829603840,
+      "r2Requests": 117
+    },
+    {
+      "q": "personal jurisdiction",
+      "page": 2,
+      "mode": "empirical-repeated",
+      "phase": "page-sequence",
+      "ms": 731.0002910000003,
+      "cpuMs": 177.722,
+      "rss": 832913408,
+      "r2Requests": 46
+    }
+  ]
+}

@@ -1,4 +1,6 @@
-import gateway from "../demo/gateway.js";
+import gateway from "../demo/gateway-runtime.js";
+import binary from "../data/global-routes.bin";
+const routingBytes = new Uint8Array(binary);
 import { parallel } from "../src/storage/types.js";
 import {
   context,
@@ -14,6 +16,7 @@ export default {
       request.headers.get("authorization") !== `Bearer ${env.INTERNAL_TOKEN}`
     )
       return new Response("Not found", { status: 404 });
+    env = { ...env, GLOBAL_ROUTES: routingBytes };
     const url = new URL(request.url);
     if (url.pathname === "/read") {
       const key = url.searchParams.get("key") ?? "",

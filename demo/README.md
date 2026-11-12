@@ -169,3 +169,53 @@ opinions between pages, and the expected court/docket/reporter citations for
 `Christenberry v. Allen`. The browser reader displayed a previously blank caption
 with the Southern District of Alabama, filing date and docket, alongside its full
 opinion and highlighted search terms. Full corpus import remains ongoing.
+
+## Performance rollout and reproducible comparisons
+
+[Sequential measurements](../bench/DEMO-OPTIMIZATIONS.md) compare packed result
+cards, global-statistics block skipping and the corpus-wide term directory.
+`PERF_LEVEL` selects the cumulative path: 0 is baseline, 1 enables cards, 2 also
+uses global block bounds, and 3 adds directory routing when a directory is bundled.
+Index bundle budgets stay at 8 MiB per partition. The optional gateway directory
+root has its own 1-MiB cap inside the gateway's existing 8-MiB budget.
+
+For an existing frozen benchmark snapshot and mirrored data:
+
+```sh
+node --import tsx bench/build-demo-cards.ts
+node --import tsx bench/upload-demo-cards.ts
+node --import tsx bench/build-demo-routes.ts
+node --import tsx scripts/upload-demo-routes.ts
+node --import tsx scripts/upgrade-demo-shards.ts --all
+DEMO_OPT_STAGE=3 node --import tsx bench/demo-local.ts --hydrate
+DEMO_OPT_STAGE=3 DEMO_MODES=empirical-repeated,empirical DEMO_PHASES=reset,repeat \
+  DEMO_OUTPUT=opt-stage3 node --import tsx bench/demo-local.ts
+DEMO_OPT_STAGE=3 node --import tsx bench/demo-setup.ts
+DEMO_OPT_STAGE=3 node --import tsx bench/capture-demo-stage.ts
+node --import tsx scripts/redeploy-demo.ts
+```
+
+Uploads finish before the directory bundle pointer changes. Partition upgrades
+use isolated temporary entries and their archived index generations; they do not
+race on `data/bundle.bin`. Deployment completion markers pin both source hashes and index generations,
+permitting interrupted upgrades to resume while still deploying later code changes. Deployment API calls use bounded asynchronous child processes.
+
+The directory builder merges the entire frozen vocabulary with a disk-backed
+external merge and bounded per-partition sorting, not the scenario queries. Reusing
+its completed-partition checkpoints is safe for the same immutable snapshot.
+Its coverage can lag the live import: uncovered or changed generations always
+supply ordinary statistics and remain searchable. Retain old directory objects
+while any deployed Worker references that root. Card sidecars likewise remain
+immutable and must be retained for active generations and pinned cursors.
+
+To refresh coverage for all currently published partitions without replacing the
+frozen benchmark snapshot:
+
+```sh
+node --import tsx bench/build-demo-routes.ts --all
+node --import tsx scripts/upload-demo-routes.ts --out work/full-flp/term-routes
+node --import tsx scripts/redeploy-demo.ts
+```
+
+The tested directory covers the frozen 67 partitions. The public corpus continues
+to grow; new partitions use the ordinary path until a refresh includes them.

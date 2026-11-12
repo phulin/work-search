@@ -240,6 +240,7 @@ export class PagedIndex extends BinaryIndex {
     terms: string[],
     storage: Storage,
     runtime?: SearchRuntime,
+    hints?: Record<string, Entry | null>,
   ) {
     this.cache = runtime;
     this.storage = storage;
@@ -249,6 +250,21 @@ export class PagedIndex extends BinaryIndex {
       if (hot) {
         this.entries.set(t, hot);
         continue;
+      }
+      if (hints && Object.hasOwn(hints, t)) {
+        const hint = hints[t];
+        if (!hint) continue;
+        if (
+          hint.term !== t ||
+          !Number.isInteger(hint.df) ||
+          hint.df < 1 ||
+          hint.df > this.count
+        )
+          throw Error("Invalid term hint");
+        if (hint.object !== LOCAL && hint.positionObject !== LOCAL) {
+          this.entries.set(t, hint);
+          continue;
+        }
       }
       let l = 0,
         r = this.root.dictionary.length;

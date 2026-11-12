@@ -1,6 +1,6 @@
 import { readFile, writeFile, open } from "node:fs/promises";
 import { createShard } from "../demo/shard-runtime.js";
-import gateway from "../demo/gateway.js";
+import gateway from "../demo/gateway-runtime.js";
 import { SearchRuntime } from "../src/query/runtime.js";
 import { openIndex, type PagedIndex } from "../src/format/paged.js";
 import {
@@ -24,6 +24,11 @@ export async function createDemoGraph(hydrate = false) {
     JSON.parse,
     () => ({}),
   );
+  if (level >= 3)
+    Object.assign(
+      artifacts,
+      JSON.parse(await readFile(root + "/routes.json", "utf8")),
+    );
   const artifactBytes = async (key: string, options?: any) => {
     const a = artifacts[key];
     if (!options?.range) return readFile(a.path);
@@ -154,6 +159,8 @@ export async function createDemoGraph(hydrate = false) {
       INTERNAL_TOKEN: token,
       ROLE: "root",
       PERF_LEVEL: String(level),
+      GLOBAL_ROUTES:
+        level >= 3 ? await readFile(root + "/routes/root.bin") : undefined,
       CHILDREN: "[]",
     },
     children: any[] = [];

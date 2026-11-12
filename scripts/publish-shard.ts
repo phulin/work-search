@@ -191,6 +191,7 @@ try {
       "demo/gateway.ts",
       {
         ROLE: "root",
+        PERF_LEVEL: "3",
         CHILDREN: JSON.stringify(
           groups.map((g, i) => ({
             binding: `CHILD_${i}`,

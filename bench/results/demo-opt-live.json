@@ -1,0 +1,692 @@
+{
+  "kind": "Native Cloudflare sequential runs; cache/time/placement uncontrolled. R2 counts cover only gateway operations, not opaque leaf service bindings.",
+  "stages": [
+    {
+      "stage": 1,
+      "rows": [
+        {
+          "q": "summary judgment",
+          "pass": 0,
+          "ms": 2101,
+          "gatewayR2Reads": 48,
+          "colo": "BOS"
+        },
+        {
+          "q": "personal jurisdiction",
+          "pass": 0,
+          "ms": 1971,
+          "gatewayR2Reads": 52,
+          "colo": "BOS"
+        },
+        {
+          "q": "breach fiduciary duty",
+          "pass": 0,
+          "ms": 2851,
+          "gatewayR2Reads": 51,
+          "colo": "BOS"
+        },
+        {
+          "q": "arbitrary capricious agency",
+          "pass": 0,
+          "ms": 1858,
+          "gatewayR2Reads": 46,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"clear and convincing evidence\"",
+          "pass": 0,
+          "ms": 3384,
+          "gatewayR2Reads": 47,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"res ipsa loquitur\"",
+          "pass": 0,
+          "ms": 3527,
+          "gatewayR2Reads": 43,
+          "colo": "BOS"
+        },
+        {
+          "q": "(standing OR mootness) AND jurisdiction",
+          "pass": 0,
+          "ms": 965,
+          "gatewayR2Reads": 42,
+          "colo": "BOS"
+        },
+        {
+          "q": "(copyright OR trademark) AND injunction",
+          "pass": 0,
+          "ms": 2018,
+          "gatewayR2Reads": 43,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified AND immunity NOT prison",
+          "pass": 0,
+          "ms": 1376,
+          "gatewayR2Reads": 40,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified /s immunity",
+          "pass": 0,
+          "ms": 403,
+          "gatewayR2Reads": 24,
+          "colo": "BOS"
+        },
+        {
+          "q": "contract /10 breach",
+          "pass": 0,
+          "ms": 866,
+          "gatewayR2Reads": 41,
+          "colo": "BOS"
+        },
+        {
+          "q": "notice /p termination",
+          "pass": 0,
+          "ms": 1641,
+          "gatewayR2Reads": 41,
+          "colo": "BOS"
+        },
+        {
+          "q": "Christenberry Allen",
+          "pass": 0,
+          "ms": 2368,
+          "gatewayR2Reads": 40,
+          "colo": "BOS"
+        },
+        {
+          "q": "Twombly Iqbal",
+          "pass": 0,
+          "ms": 1517,
+          "gatewayR2Reads": 40,
+          "colo": "BOS"
+        },
+        {
+          "q": "court",
+          "pass": 0,
+          "ms": 1057,
+          "gatewayR2Reads": 43,
+          "colo": "BOS"
+        },
+        {
+          "q": "unfindablebenchmarkzzzz",
+          "pass": 0,
+          "ms": 551,
+          "gatewayR2Reads": 0,
+          "colo": "BOS"
+        },
+        {
+          "q": "summary judgment",
+          "pass": 1,
+          "ms": 732,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "personal jurisdiction",
+          "pass": 1,
+          "ms": 730,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "breach fiduciary duty",
+          "pass": 1,
+          "ms": 922,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "arbitrary capricious agency",
+          "pass": 1,
+          "ms": 773,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"clear and convincing evidence\"",
+          "pass": 1,
+          "ms": 1611,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"res ipsa loquitur\"",
+          "pass": 1,
+          "ms": 1823,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "(standing OR mootness) AND jurisdiction",
+          "pass": 1,
+          "ms": 277,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "(copyright OR trademark) AND injunction",
+          "pass": 1,
+          "ms": 862,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified AND immunity NOT prison",
+          "pass": 1,
+          "ms": 618,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified /s immunity",
+          "pass": 1,
+          "ms": 247,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "contract /10 breach",
+          "pass": 1,
+          "ms": 226,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "notice /p termination",
+          "pass": 1,
+          "ms": 771,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "Christenberry Allen",
+          "pass": 1,
+          "ms": 1220,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "Twombly Iqbal",
+          "pass": 1,
+          "ms": 728,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "court",
+          "pass": 1,
+          "ms": 271,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "unfindablebenchmarkzzzz",
+          "pass": 1,
+          "ms": 384,
+          "gatewayR2Reads": 0,
+          "colo": "BOS"
+        }
+      ]
+    },
+    {
+      "stage": 2,
+      "rows": [
+        {
+          "q": "summary judgment",
+          "pass": 0,
+          "ms": 3408,
+          "gatewayR2Reads": 48,
+          "colo": "BOS"
+        },
+        {
+          "q": "personal jurisdiction",
+          "pass": 0,
+          "ms": 1461,
+          "gatewayR2Reads": 52,
+          "colo": "BOS"
+        },
+        {
+          "q": "breach fiduciary duty",
+          "pass": 0,
+          "ms": 1484,
+          "gatewayR2Reads": 51,
+          "colo": "BOS"
+        },
+        {
+          "q": "arbitrary capricious agency",
+          "pass": 0,
+          "ms": 1416,
+          "gatewayR2Reads": 46,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"clear and convincing evidence\"",
+          "pass": 0,
+          "ms": 2583,
+          "gatewayR2Reads": 47,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"res ipsa loquitur\"",
+          "pass": 0,
+          "ms": 2464,
+          "gatewayR2Reads": 43,
+          "colo": "BOS"
+        },
+        {
+          "q": "(standing OR mootness) AND jurisdiction",
+          "pass": 0,
+          "ms": 687,
+          "gatewayR2Reads": 42,
+          "colo": "BOS"
+        },
+        {
+          "q": "(copyright OR trademark) AND injunction",
+          "pass": 0,
+          "ms": 1527,
+          "gatewayR2Reads": 43,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified AND immunity NOT prison",
+          "pass": 0,
+          "ms": 965,
+          "gatewayR2Reads": 40,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified /s immunity",
+          "pass": 0,
+          "ms": 338,
+          "gatewayR2Reads": 24,
+          "colo": "BOS"
+        },
+        {
+          "q": "contract /10 breach",
+          "pass": 0,
+          "ms": 810,
+          "gatewayR2Reads": 41,
+          "colo": "BOS"
+        },
+        {
+          "q": "notice /p termination",
+          "pass": 0,
+          "ms": 1206,
+          "gatewayR2Reads": 41,
+          "colo": "BOS"
+        },
+        {
+          "q": "Christenberry Allen",
+          "pass": 0,
+          "ms": 1272,
+          "gatewayR2Reads": 40,
+          "colo": "BOS"
+        },
+        {
+          "q": "Twombly Iqbal",
+          "pass": 0,
+          "ms": 1108,
+          "gatewayR2Reads": 40,
+          "colo": "BOS"
+        },
+        {
+          "q": "court",
+          "pass": 0,
+          "ms": 828,
+          "gatewayR2Reads": 43,
+          "colo": "BOS"
+        },
+        {
+          "q": "unfindablebenchmarkzzzz",
+          "pass": 0,
+          "ms": 451,
+          "gatewayR2Reads": 0,
+          "colo": "BOS"
+        },
+        {
+          "q": "summary judgment",
+          "pass": 1,
+          "ms": 603,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "personal jurisdiction",
+          "pass": 1,
+          "ms": 555,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "breach fiduciary duty",
+          "pass": 1,
+          "ms": 558,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "arbitrary capricious agency",
+          "pass": 1,
+          "ms": 617,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"clear and convincing evidence\"",
+          "pass": 1,
+          "ms": 1605,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"res ipsa loquitur\"",
+          "pass": 1,
+          "ms": 1553,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "(standing OR mootness) AND jurisdiction",
+          "pass": 1,
+          "ms": 254,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "(copyright OR trademark) AND injunction",
+          "pass": 1,
+          "ms": 639,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified AND immunity NOT prison",
+          "pass": 1,
+          "ms": 606,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified /s immunity",
+          "pass": 1,
+          "ms": 238,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "contract /10 breach",
+          "pass": 1,
+          "ms": 216,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "notice /p termination",
+          "pass": 1,
+          "ms": 636,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "Christenberry Allen",
+          "pass": 1,
+          "ms": 781,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "Twombly Iqbal",
+          "pass": 1,
+          "ms": 562,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "court",
+          "pass": 1,
+          "ms": 283,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "unfindablebenchmarkzzzz",
+          "pass": 1,
+          "ms": 360,
+          "gatewayR2Reads": 0,
+          "colo": "BOS"
+        }
+      ]
+    },
+    {
+      "stage": 3,
+      "rows": [
+        {
+          "q": "summary judgment",
+          "pass": 0,
+          "ms": 2779,
+          "gatewayR2Reads": 47,
+          "colo": "BOS"
+        },
+        {
+          "q": "personal jurisdiction",
+          "pass": 0,
+          "ms": 1332,
+          "gatewayR2Reads": 52,
+          "colo": "BOS"
+        },
+        {
+          "q": "breach fiduciary duty",
+          "pass": 0,
+          "ms": 1418,
+          "gatewayR2Reads": 51,
+          "colo": "BOS"
+        },
+        {
+          "q": "arbitrary capricious agency",
+          "pass": 0,
+          "ms": 1368,
+          "gatewayR2Reads": 46,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"clear and convincing evidence\"",
+          "pass": 0,
+          "ms": 2693,
+          "gatewayR2Reads": 47,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"res ipsa loquitur\"",
+          "pass": 0,
+          "ms": 2324,
+          "gatewayR2Reads": 46,
+          "colo": "BOS"
+        },
+        {
+          "q": "(standing OR mootness) AND jurisdiction",
+          "pass": 0,
+          "ms": 554,
+          "gatewayR2Reads": 42,
+          "colo": "BOS"
+        },
+        {
+          "q": "(copyright OR trademark) AND injunction",
+          "pass": 0,
+          "ms": 1711,
+          "gatewayR2Reads": 46,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified AND immunity NOT prison",
+          "pass": 0,
+          "ms": 958,
+          "gatewayR2Reads": 40,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified /s immunity",
+          "pass": 0,
+          "ms": 309,
+          "gatewayR2Reads": 24,
+          "colo": "BOS"
+        },
+        {
+          "q": "contract /10 breach",
+          "pass": 0,
+          "ms": 753,
+          "gatewayR2Reads": 41,
+          "colo": "BOS"
+        },
+        {
+          "q": "notice /p termination",
+          "pass": 0,
+          "ms": 1116,
+          "gatewayR2Reads": 41,
+          "colo": "BOS"
+        },
+        {
+          "q": "Christenberry Allen",
+          "pass": 0,
+          "ms": 1524,
+          "gatewayR2Reads": 42,
+          "colo": "BOS"
+        },
+        {
+          "q": "Twombly Iqbal",
+          "pass": 0,
+          "ms": 1150,
+          "gatewayR2Reads": 42,
+          "colo": "BOS"
+        },
+        {
+          "q": "court",
+          "pass": 0,
+          "ms": 625,
+          "gatewayR2Reads": 43,
+          "colo": "BOS"
+        },
+        {
+          "q": "unfindablebenchmarkzzzz",
+          "pass": 0,
+          "ms": 130,
+          "gatewayR2Reads": 1,
+          "colo": "BOS"
+        },
+        {
+          "q": "summary judgment",
+          "pass": 1,
+          "ms": 733,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "personal jurisdiction",
+          "pass": 1,
+          "ms": 656,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "breach fiduciary duty",
+          "pass": 1,
+          "ms": 671,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "arbitrary capricious agency",
+          "pass": 1,
+          "ms": 650,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"clear and convincing evidence\"",
+          "pass": 1,
+          "ms": 1695,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "\"res ipsa loquitur\"",
+          "pass": 1,
+          "ms": 1300,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "(standing OR mootness) AND jurisdiction",
+          "pass": 1,
+          "ms": 246,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "(copyright OR trademark) AND injunction",
+          "pass": 1,
+          "ms": 609,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified AND immunity NOT prison",
+          "pass": 1,
+          "ms": 603,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "qualified /s immunity",
+          "pass": 1,
+          "ms": 239,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "contract /10 breach",
+          "pass": 1,
+          "ms": 276,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "notice /p termination",
+          "pass": 1,
+          "ms": 685,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "Christenberry Allen",
+          "pass": 1,
+          "ms": 833,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "Twombly Iqbal",
+          "pass": 1,
+          "ms": 610,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "court",
+          "pass": 1,
+          "ms": 288,
+          "gatewayR2Reads": 20,
+          "colo": "BOS"
+        },
+        {
+          "q": "unfindablebenchmarkzzzz",
+          "pass": 1,
+          "ms": 18,
+          "gatewayR2Reads": 0,
+          "colo": "BOS"
+        }
+      ]
+    }
+  ]
+}

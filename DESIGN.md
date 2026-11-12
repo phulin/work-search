@@ -181,10 +181,11 @@ The user explicitly skipped cache-policy optimization; existing LRU behavior sta
 
 The full-snapshot demo partitions offline input into bounded indexes, then uses
 Workers service bindings for a hierarchical fanout. Every partition scores with
-the same global document frequencies and field-length statistics. Partition-local
-WAND/score bounds are disabled on that path: their original local statistics are
-not valid global upper bounds. This trades query speed and R2 operations for
-correct ranking while the full import proceeds within local disk/RAM limits.
+the same global document frequencies and field-length statistics. Unadjusted partition-local
+score bounds are not valid global upper bounds. The optional global-bound
+executor described below rescales them conservatively; phrase/proximity/negative
+trees retain the materialized path. The full import proceeds within local disk
+and RAM limits.
 
 Signed search-after cursors pin the query, statistics and generation vector for
 one hour. Equal scores are ordered by partition then internal document ID.
@@ -224,3 +225,30 @@ lanes; cached cards need only the body read. Record packs upload before the root
 directory. Missing roots fall back to the older path while existing generations
 are backfilled. No index bundle or ranking data changes; case data in a card is
 pinned to its build generation. Updates require a new index/card generation.
+
+Global BM25 block bounds now scale each persisted field maximum by the global /
+local IDF ratio and max(1, global average length / local average length). This is
+a conservative upper bound for every nonnegative document length and frequency,
+not a reuse of the unadjusted local maximum. Search-after filtering happens before
+heap admission. Small fully fetched lists retain complete decoded arrays to avoid
+fragmenting the existing cache; larger lists keep lazy block access.
+
+The optional global term directory is a corpus-derived R2 sidecar. Its bundled
+root (capped at 1 MiB, within the root Worker's existing 8-MiB budget) contains
+4096 hashed page descriptors, the exact covered generation vector, and up to
+8192 corpus-frequency-selected terms already hot in every positive partition.
+Gzip binary pages pack per-term, per-partition DFs and frequency/position stream
+descriptors into 64-MiB objects. No query workload selects these records. Sorted
+per-partition segments and a bounded external merge limit builder memory and
+resume after each partition. Two 2-MiB LRUs retain pages and requested term records. Entry hints pointing to
+inline data still load the originating dictionary page; fully remote hints skip
+that read. Per-child request filtering avoids broadcasting all descriptor hints.
+
+Topology statistics remain live. Only exact generation matches use sidecar DFs;
+new or replaced partitions supply their ordinary DFs and always remain eligible.
+Old routers that ignore subset filters trigger a full-statistics fallback. AST
+pruning is conservative for OR, phrases, proximity and negation. Search cursors
+retain the entire topology vector and global statistics even when execution can
+skip some partitions. Directory objects upload before the bundled pointer is
+atomically replaced. The directory can lag an ongoing import without omitting
+opinions; rebuild it periodically for performance, not correctness.

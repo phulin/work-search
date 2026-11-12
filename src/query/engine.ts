@@ -85,6 +85,7 @@ class TopK {
 }
 export interface SearchOptions {
   globalSkipping?: boolean;
+  termHints?: Record<string, import("../format/index.js").Entry | null>;
   after?: { score: number; doc: number };
   globalStats?: {
     count: number;
@@ -123,7 +124,12 @@ async function executeSearch(
   const exactTotal = options.exactTotal === true;
   const start = performance.now(),
     original = parse(q, options.mode ?? "and");
-  await index.prepareTerms(queryTerms(original), storage, options.runtime);
+  await index.prepareTerms(
+    queryTerms(original),
+    storage,
+    options.runtime,
+    options.termHints,
+  );
   const ast = simplify(original, (t) => !!index.lookup(t)),
     terms = queryTerms(ast),
     positiveTerms = new Set(queryTerms(ast, true)),

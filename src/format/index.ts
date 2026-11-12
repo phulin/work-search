@@ -41,6 +41,7 @@ export class BinaryIndex {
     _terms: string[],
     _storage: import("../storage/types.js").Storage,
     _runtime?: import("../query/runtime.js").SearchRuntime,
+    _hints?: Record<string, Entry | null>,
   ) {}
   async prepareLengths(
     _docs: Uint32Array,
