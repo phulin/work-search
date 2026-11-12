@@ -204,3 +204,14 @@ a 1-MiB expansion limit. The publication pointer
 changes only after all objects are present. No title terms, statistics or ranking
 change underneath pinned pagination cursors; absent historical title terms require
 a later index rebuild. Missing source fields remain explicit gaps.
+
+The demo performance harness freezes all published partition generations and
+reuses production gateway/shard handlers locally. Native R2 header/body samples
+are stratified by range size and locality, with serial samples supplying intrinsic
+delays and burst samples checking queueing. A six-slot header queue is shared
+across the local service-binding graph and releases at headers, while body streams
+continue independently. Reset/mixed/repeated application caches are distinct from
+the unobservable backend cache state. Timed local runs fail on missing mirrored
+ranges; hydration happens separately. Measured deployed results and local models
+remain separate, with ranking equivalence and prediction-error checks. No query
+frequency weights or cache policy are inferred from the scenario suite.

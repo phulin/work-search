@@ -1,6 +1,6 @@
 # Worker Bundle Search
 
-A standalone TypeScript full-text search engine. The Worker contains a binary term dictionary, document IDs and lengths, and selected compressed postings. Remaining postings use immutable R2 objects and byte-range reads. No remote dictionary, database, framework, or external search service.
+A standalone TypeScript full-text search engine. The bundled layout keeps the binary dictionary, document tables and selected postings in the Worker. The paged layout keeps a compact routing root and selected hot data locally, with cold dictionary pages and postings in immutable R2 objects accessed by byte range. Serving uses Workers and R2, with no external database, framework or search service.
 
 ## Run locally
 
@@ -69,7 +69,7 @@ npx wrangler r2 bucket create worker-search-index
 npm run deploy -- --out indexes/terms-v5 --bucket worker-search-index
 ```
 
-`deploy` verifies the bundle and every object SHA-256 against the manifest; signs R2 S3 HEAD/PUT requests; skips already-present objects only if generation, checksum metadata, and length match; uses conditional creation for missing objects; selects the exact binary; then runs Wrangler deployment. Upload must complete before the Worker changes. Runtime R2 access uses **only the binding**, never S3 or public HTTP. S3 credentials stay on the build machine. `--bucket` must match the bucket binding in `wrangler.json`. Credentials were unavailable during development: cloud upload/deployment has **not** been validated against an account.
+`deploy` verifies the bundle and every object SHA-256 against the manifest; signs R2 S3 HEAD/PUT requests; skips already-present objects only if generation, checksum metadata, and length match; uses conditional creation for missing objects; selects the exact binary; then runs Wrangler deployment. Upload must complete before the Worker changes. Runtime R2 access uses **only the binding**, never S3 or public HTTP. S3 credentials stay on the build machine. `--bucket` must match the bucket binding in `wrangler.json`. The standalone S3-credential upload path has not been validated against an account. The [deployed demo](demo/README.md) uses Wrangler OAuth and a private Worker/R2-binding upload path, which has been exercised on Cloudflare.
 
 ```sh
 npm run bundle  # actual Wrangler binary-module dry run and upload-size report
@@ -89,6 +89,19 @@ Cloudflare's [current limits](https://developers.cloudflare.com/workers/platform
 Queries retrieve up to four remote ranges concurrently. A conservative working-set estimate rejects oversized queries rather than allocating unbounded typed arrays. Concurrent requests share an isolate and can still exhaust memory; large, common-term queries may exceed the Free plan's 10 ms CPU limit. Paid Workers are appropriate for that workload. New v8 builds execute positive Boolean term queries through block cursors with persisted score bounds; other default queries use block-max score pruning after decoding; explicit total=true queries score every matching candidate to compute exact counts. Adaptive v5 planning skips irrelevant posting blocks, and a bounded warm-isolate cache can retain complete postings, block directories, decoded blocks and small remote ranges. Suitable pure OR queries can use pivot WAND; small/cached mixed trees retain materialized execution. Metadata filters, root expansion/wildcards, automatic word variants, and incremental updates are not implemented. Position/phrase queries add storage and CPU costs; see [bench/SPLIT-POSTINGS.md](bench/SPLIT-POSTINGS.md).
 
 ## Benchmarks and layout
+
+For the deployed multi-partition demo, use the [realistic end-to-end benchmark](bench/DEMO-REALISTIC.md).
+It pins 2.87 million official-snapshot opinions across 67 production partitions,
+includes case details, excerpts and pagination, and calibrates local simulation
+with native Worker/R2 measurements. Earlier single-index, ID-only and fixed-delay
+reports measure different paths.
+
+```sh
+npm run bench:demo -- --prepare # signed-in account: freeze, measure and mirror
+npm run bench:demo             # rerun offline against the prepared mirror
+```
+
+The workload covers legal query scenarios; it is not sampled user traffic.
 
 ```sh
 npm run bench  # 10k, 100k, 1m; 8/16/32/48 MiB; both strategies

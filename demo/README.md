@@ -3,6 +3,9 @@
 Live: https://work-search-demo.phulin.workers.dev/
 Coverage: https://work-search-demo.phulin.workers.dev/health
 
+Performance: [realistic full-request benchmark](../bench/DEMO-REALISTIC.md), using
+a frozen 67-partition deployment and measured Worker/R2 latency distributions.
+
 The full official Free Law Project snapshot import runs locally and publishes
 immutable index partitions and opinion text to a private R2 bucket. Workers serve
 the page, search API, highlighted excerpts, full-text reader and cursor pagination.
