@@ -4,6 +4,7 @@ use crate::{
     util::*,
 };
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::{io::Write, path::Path, time::Instant};
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Finalized {
@@ -44,8 +45,8 @@ pub fn finalize(run: &Run, out: &Path, resume: bool) -> Result<Finalized> {
     }
     let mut packer = Packer::new(&dir.join("packs"), run.objects.len() as u32)?;
     let mut src = reader(&dir.join("documents.stage"))?;
-    let mut loc = writer(&dir.join("documents.final"))?;
-    let mut directories = writer(&dir.join("directories.stage"))?;
+    let mut loc = digest_writer(&dir.join("documents.final"))?;
+    let mut directories = digest_writer(&dir.join("directories.stage"))?;
     let mut offset = 0u32;
     for expected in run.first..run.first + run.count {
         let doc = read_u32(&mut src)?;
@@ -99,16 +100,15 @@ pub fn finalize(run: &Run, out: &Path, resume: bool) -> Result<Finalized> {
     if optional_u32(&mut src)?.is_some() {
         return Err("extra staged documents".into());
     }
-    loc.flush()?;
-    directories.flush()?;
+    let loc_hash = finish_digest(loc)?;
+    let directories_hash = finish_digest(directories)?;
     let mut objects = run.objects.clone();
     objects.extend(packer.finish()?);
-    let names = vec![
-        "documents.final".into(),
-        "directories.stage".into(),
-        "mapping.bin".into(),
+    let mut files = vec![
+        ("documents.final".into(), loc_hash),
+        ("directories.stage".into(), directories_hash),
+        ("mapping.bin".into(), hex(&Sha256::digest(&mapping))),
     ];
-    let mut files = checked_files(&dir, names)?;
     files.extend(
         objects
             .iter()

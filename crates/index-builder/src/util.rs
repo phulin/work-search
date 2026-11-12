@@ -159,3 +159,54 @@ pub fn posting_fan_in() -> usize {
     }
     48
 }
+
+/// Hash accepted file writes below the large BufWriter, not each posting field.
+/// This makes checkpoint digests available without rereading temporary files.
+pub struct DigestFile {
+    file: File,
+    hash: Sha256,
+}
+impl Write for DigestFile {
+    fn write(&mut self, b: &[u8]) -> std::io::Result<usize> {
+        let n = self.file.write(b)?;
+        self.hash.update(&b[..n]);
+        Ok(n)
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.file.flush()
+    }
+}
+pub fn digest_writer(p: &Path) -> Result<BufWriter<DigestFile>> {
+    Ok(BufWriter::with_capacity(
+        1048576,
+        DigestFile {
+            file: File::create(p)?,
+            hash: Sha256::new(),
+        },
+    ))
+}
+pub fn finish_digest(mut w: BufWriter<DigestFile>) -> Result<String> {
+    w.flush()?;
+    Ok(hex(&w.get_ref().hash.clone().finalize()))
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn write_time_digest_matches_file_bytes() {
+        let dir = tempfile::tempdir().unwrap();
+        let p = dir.path().join("bytes");
+        let bytes: Vec<_> = (0..2_500_003u32)
+            .map(|n| (n.wrapping_mul(113).wrapping_add(n >> 7)) as u8)
+            .collect();
+        let mut w = digest_writer(&p).unwrap();
+        w.write_all(&bytes[..44]).unwrap();
+        w.write_all(&bytes[44..2_000_000]).unwrap();
+        for b in bytes[2_000_000..].chunks(73) {
+            w.write_all(b).unwrap();
+        }
+        let hash = finish_digest(w).unwrap();
+        assert_eq!(std::fs::read(&p).unwrap(), bytes);
+        assert_eq!(hash, checksum(&p).unwrap());
+    }
+}

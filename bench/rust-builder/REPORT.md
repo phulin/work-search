@@ -1,145 +1,184 @@
-# Native builder results — 2026-11-12
+# Native builder measurements — 2026-11-12
 
-The optimized builder meets the additional 2× goal on the pinned real 100k corpus:
-**97.64 s → 43.34 s**, a **2.25× ratio of medians**, with the same four-thread,
-4 MiB batch configuration. At 1k the complete build is now **0.333 s**.
-These are offline build times, not Worker search latency measurements.
+The final builder completes the pinned real 100k corpus in **21.48 s median**
+(19.23–26.25 s, N=3), using eight threads and 16 MiB batches. At the identical
+settings the frozen previous optimized builder takes **23.17 s** (21.55–23.55 s,
+N=3): **7.3% less wall time**, or a 1.08× ratio of medians. This last pass is an
+incremental improvement, not another demonstrated 2× code-only gain.
 
-## Complete-build comparison
+These are complete offline build times, not Worker search latency measurements.
+The build includes source parsing, tokenization, text/passages, positions, sorting,
+scoring, forward blocks, checksums and publication. Compilation and benchmark
+cleanup are excluded. No output component was omitted.
 
-Three sequential builds per variant and corpus size, alternating variant order by
-round. All runs include source parsing, tokenization, display/passage gzip,
-positions, external sorting, scoring, forward blocks, checksums and publication.
-Compilation and post-run cleanup are excluded. No output components were omitted.
+## Latest matched comparisons
 
-| Documents | First Rust median (range), s | Final Rust median (range), s | Median speedup |
-| --------: | ---------------------------: | ---------------------------: | -------------: |
-|     1,000 |          1.015 (0.930–1.110) |          0.333 (0.318–0.340) |          3.05× |
-|    10,000 |          7.350 (7.169–8.263) |          2.767 (2.539–3.356) |          2.66× |
-|   100,000 |      97.641 (89.389–109.091) |       43.345 (42.309–53.452) |          2.25× |
+Sequential builds, alternating variant order each round, on an Apple M3 shared
+macOS laptop. The control is commit `f1ef66fed67a2f829aa1bba8fccc34151e6da739`
+(`codex/rust-builder-v2-control`). Each row has three builds per variant.
 
-After the matched sessions, the final publication ordering was tightened: the
-completion checkpoint is committed before the atomic root rename. Encoding and
-scoring are unchanged. A complete build of that final binary took **44.49 s**
-(N=1), with the identical generation and another successful 32-query oracle check.
-Its individual-process peak RSS was 726 MiB. This confirmation is kept separate
-from the three-round statistics: [raw confirmation](results/final-publication-check-100k.json).
-The exact source used in the matched three-round sessions is preserved at
+| Documents | Threads / batch MiB | Previous optimized median (range), s | Final median (range), s |
+| --------: | ------------------: | -----------------------------------: | ----------------------: |
+|     1,000 |               4 / 4 |                  0.346 (0.338–0.356) |     0.300 (0.296–0.345) |
+|    10,000 |               4 / 4 |                  2.527 (2.385–2.910) |     2.538 (2.192–2.540) |
+|   100,000 |              8 / 16 |               23.167 (21.548–23.550) |  21.484 (19.226–26.248) |
+
+Raw data: [100k](results/latest-100k.json), [small](results/latest-small.json),
+[summary](results/summary.json). The 10k median is effectively unchanged (+0.4%),
+with reduced merge time offset by ingest variation. Three repetitions cannot
+establish narrow uncertainty or tail percentiles. Filesystem caches, writeback,
+and competing activity were uncontrolled. Another main-project build/upload was
+active on the same SSD; individual sessions varied substantially.
+
+At 100k the latest median individual-process peak RSS is 2,227 MiB, versus
+2,092 MiB for the matched control. Median user+system CPU is 75.95 s versus
+74.55 s: the pipeline improves overlap rather than demonstrating less total CPU.
+The process-tree RSS samples in the raw results are sums sampled every 100 ms,
+not exact simultaneous peaks. None of these measurements describe retained Worker
+memory or cumulative allocations.
+
+## What changed in the last pass
+
+Checkpoint creation now reuses immutable pack digests and hashes temporary files
+as they are written, below a 1 MiB buffer. It no longer rereads those files merely
+to produce their first checksum. Resume still rehashes and validates artifacts;
+corrupt pack and posting tests confirm that validation remains active.
+
+Posting merge/scoring/encoding now runs in one producer while the consumer builds
+bounds, hashes and writes output. Two bounded 32-block channels transfer and
+recycle column buffers. Output order, physical bytes and generation are unchanged
+at the same batch size; no extra posting spill or output patch pass is introduced.
+The final read buffers remain 256 KiB per merge cursor.
+
+Batch/thread tuning is a separate gain. The older four-thread / 4 MiB optimized
+configuration measured 43.34 s in its three-round session, and 44.49 s in its
+final-publication confirmation. The same code with eight threads / 16 MiB takes
+23.17 s in the latest session. Larger batches reduce 280 input runs to 71 and
+626 output objects to 208. **The roughly 44 → 21 s change combines settings,
+code and session conditions; it is not a matched 2× algorithm claim.** Keep 4 MiB
+as the default for small corpora; use explicit eight-thread / 16 MiB settings for
+this large-corpus workload when about 2–2.5 GiB of RSS is acceptable.
+
+## Profiling and rejected experiments
+
+A native `sample` capture of the frozen optimized control at four threads / 4 MiB
+found ingest active stacks dominated by libdeflate work, with tokenization,
+normalization and interning also visible. In the merge capture, about 57% of
+main-thread samples were in `read` and about 12% in accelerated SHA-256. These
+are sampled stacks including I/O waits, not precise CPU percentages.
+[Ingest capture](profiles/ingest.sample.txt), [merge capture](profiles/merge.sample.txt),
+[provenance](profiles/provenance.json). The profiled build is excluded from the
+finalist table. Profiling motivated avoiding file rereads and overlapping output.
+
+A larger read-buffer pool of up to 512 MiB did not provide a repeatable merge
+improvement. It was removed. A paired session combining this buffer experiment
+with pack-digest reuse measured 24.02 → 21.98 s, but merge medians were
+8.74 → 8.85 s; forward encoding was 1.77 → 0.68 s. That evidence supported
+retaining digest reuse rather than the larger buffers.
+[Raw comparison](results/buffer-and-pack-digest-100k.json),
+[initial buffer pilot](results/buffer-pilot-100k.json).
+
+With normal buffers restored, a two-round pipeline session under heavier I/O load
+measured control runs of 47.53 / 42.73 s and pipeline runs of 37.22 / 38.94 s.
+This is supporting evidence for overlapping work, not pooled into the quieter
+finalist statistics. [Raw session](results/pipeline-100k.json).
+
+Single-run batch pilots measured 33.58 s at four threads / 16 MiB, 30.54 s at
+eight threads / 16 MiB, and 49.17 s at four threads / 32 MiB. Conditions varied;
+these pilots selected finalists rather than proving causal ratios. The 32 MiB
+setting was rejected. [4/16](results/batch16-threads4-pilot-100k.json),
+[8/16](results/batch16-threads8-pilot-100k.json),
+[4/32](results/batch32-threads4-pilot-100k.json).
+
+Current final median stage times at 100k are ingest **12.46 s**, vocabulary/ID
+validation **2.08 s**, forward encoding **0.59 s**, publication **0.08 s**, and
+merge/emission **6.32 s**. Stage medians need not sum to the median total.
+Parsing/tokenization/text compression now occupy about 58% of elapsed time, and
+merge/output about 29%. Those are the remaining targets. Changing the text codec
+could help, but requires a matching serving decoder and a live serving comparison;
+it is not justified by offline compression time alone. SHA-256 is offline build /
+checkpoint / publication work; the replacement Worker reads page CRC32 and does
+not compute SHA-256 during search.
+
+## Earlier matched gains
+
+Before this last pass, the native builder replaced V8 scoring with float64 native
+BM25, fused scoring into the final merge, adopted immutable text/token packs by
+hardlink, used linear counting scatter and reusable packing/compression buffers,
+and enabled hardware SHA dispatch. A first-Rust control with V8 scoring is frozen
+at `8e66d77743b326662dbdc608593e3cca8860e29c`
+(`codex/rust-builder-v1-control`). With identical four-thread / 4 MiB settings:
+
+| Documents | First Rust median (range), s | Optimized median (range), s | Median speedup |
+| --------: | ---------------------------: | --------------------------: | -------------: |
+|     1,000 |          1.015 (0.930–1.110) |         0.333 (0.318–0.340) |          3.05× |
+|    10,000 |          7.350 (7.169–8.263) |         2.767 (2.539–3.356) |          2.66× |
+|   100,000 |      97.641 (89.389–109.091) |      43.345 (42.309–53.452) |          2.25× |
+
+[Small results](results/final-small.json), [100k](results/final-100k.json).
+The exact measured source is preserved at
 `58a850144967669a0fa843bf389ae9b8ecc96ce0`
-(`codex/rust-builder-measured-v2`); its source hash matches the recorded manifest.
+(`codex/rust-builder-measured-v2`). A subsequent root-publication ordering fix was
+confirmed separately at 44.49 s, N=1, identical generation:
+[confirmation](results/final-publication-check-100k.json).
 
-Raw data: [small corpora](results/final-small.json),
-[100k](results/final-100k.json), [summary](results/summary.json).
-With only three repetitions, the ranges show substantial observed variability;
-these are not confidence intervals or estimates of tail percentiles. This was a
-shared development laptop, with other activity and uncontrolled filesystem caches.
-The 100k result is measured directly; larger sizes must not be extrapolated from it.
+An earlier direct TS/first-Rust 10k session measured 84.31 s versus 7.45 s
+medians (three each), or 11.32×. [Raw session](results/typescript-vs-first-rust-10k.json).
+Do not multiply these independent sessions into a contemporary TS/final speedup.
+A historical TS 100k result is excluded because its source changed during launch.
 
-An earlier matched, interleaved TS/first-Rust 10k session measured TS median
-84.31 s (82.84–98.43), versus first Rust 7.45 s (6.48–7.74), or 11.32×.
-[Raw session](results/typescript-vs-first-rust-10k.json). The final Rust/TS ratio
-across those two sessions is approximately 30×, but that is **not a contemporary
-interleaved TS/final-Rust comparison**. The primary additional-speedup claim uses
-the direct Rust control comparisons above. A historical TS 100k build is excluded
-because source changes during its launch make it an unreliable matched control.
+## Correctness and adoption
 
-## What removed the time
-
-- Native float64 scoring removed the batched V8 subprocess and its intermediate
-  serialization. The BM25 formula and float64 storage remain; last-bit equality
-  with V8 was explicitly relaxed.
-- The final merge scores raw postings and emits packed columns directly. The
-  scored-postings rewrite/reread pass is gone. Cursor runs reduce heap operations.
-- Immutable text/token objects are adopted through hardlinks on the same volume.
-  Only directories containing references are relocated. Median 100k publication
-  fell from 10.60 s to 0.27 s in the final comparison.
-- Linear counting scatter replaced occurrence/posting comparison sorts. Small
-  position blocks append into reusable buffers; leaf encoding reuses column
-  buffers. Interning uses a fast local hash table. NFKC quick checks avoid
-  normalizing already-normalized input through a slower path.
-- Native libdeflate replaces repeated gzip setup. Posting columns use integer
-  packing, with no gzip in postings execution.
-- A three-second native sample of a tuning build found about 26% of main-thread
-  samples in software SHA-256. ARM hardware dispatch removed that avoidable cost.
-  That instrumented run and a run overlapping artifact deletion are excluded from
-  the finalist table. SHA-256 remains offline object/generation/checkpoint tooling;
-  the search Worker computes page CRC32, not SHA-256.
-
-Final 100k median stage times: ingest 17.50 s, vocabulary/ID validation 4.24 s,
-forward encoding 2.27 s, publication 0.27 s, merge/emission 20.00 s. Stage medians
-need not sum to the median total. The serial final merge, output I/O, and parsing /
-tokenization / passage compression remain the main optimization opportunities.
-Checkpoint creation still rereads some already-hashed pack files; reusing
-write-time digests is an unimplemented follow-up, not credited in these numbers.
-
-## Footprint and correctness
-
-Final 100k output: 6,813,453,638 bytes, versus 6,813,225,784 for the first Rust
-control (+0.0033%). It contains 632,909 terms, 187,425,411 body tokens and 556,941
-title tokens. Both builders pin the same corpus hash:
+Latest 100k output: 6,813,713,369 bytes, 632,909 terms, 187,425,411 body tokens,
+556,941 title tokens. Both latest variants have byte-identical content-derived
+generation `c15c994fdac215e44e9b8df049826d1a65a2a5f3b890af8ec6aa34ffa7941c09`.
+The input hash is
 `e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06`.
+The raw results pin binary, lockfile, source hashes, corpus and configuration.
+Hardware: Apple M3 / macOS ARM64; Node 26.7.0 / Unicode 17.0; Rust 1.93.0.
 
-Memory has a tradeoff. At 100k the median maximum individual-process RSS rose from
-546 MiB to 668 MiB. Median sampled process-tree peak rose from 536 to 654 MiB.
-At 10k the V8 child makes the process-tree comparison favor the final builder
-(550 → 427 MiB), despite a higher individual-process RSS (358 → 426 MiB).
-Process-tree RSS was sampled every 100 ms; it is not an exact peak. These metrics
-are neither retained Worker memory nor cumulative allocation measurements.
+`yarn test` passes **182 tests in 37 files**; five Rust unit tests, four native
+integration tests, all Unicode checks, typechecking, formatting and clippy pass.
+Tests compare every synthetic posting/frequency/position/score, forward streams,
+object hashes, metadata, fields, Boolean/positional AST ranking, ties, pagination,
+long and empty documents, duplicate IDs, corruption, resume, forced external merge,
+thread-count determinism and streamed FIFO input. All 1,112,064 valid Unicode
+scalars plus 1,000 random/context cases match tokenization and UTF-16 offsets.
+Float64 scores retain the formula, with explicitly accepted approximate FP equality.
+See [DESIGN.md](DESIGN.md) for Unicode input and extreme near-tie qualifications.
 
-Validation covers every synthetic posting, frequency, position, score within
-strict tolerance, forward token stream, object hash, result metadata, Boolean and
-positional AST ranking, fields, deterministic ties, pagination using each
-engine's own generation-specific cursor, Unicode offsets, long documents,
-zero-token documents, duplicate IDs, corruption, resume, and deterministic output
-across worker counts. A low-file-descriptor test forces the external posting spill
-path. All 1,112,064 valid Unicode scalars plus 1,000 random strings and contextual
-cases match the existing tokenizer/offset implementation.
+The final retained 100k index passes all 32 existing oracle queries: result IDs,
+scores within relative 1e-11, title/metadata and nonempty snippets.
+[Final verification](results/latest-oracle-100k.json). Local verification times
+are diagnostics, not serving benchmarks.
 
-`yarn test` passed all 181 tests in 37 files; Rust unit tests, native integration
-tests, typechecking, formatting and clippy also pass.
+**Recommendation:** merge this as the base CWS1 offline builder. Optional pair /
+head / lane construction remains the main project's separate work. No native 1M /
+largest-corpus build or live serving speedup is claimed. Those still require direct
+measurements. The old streaming uploader assumes an earlier source-derived
+generation, whereas native generation includes actual output content and layout;
+use a matching generation-aware publisher rather than mixing its root and packs.
 
-The retained final real 100k index passes all 32 existing query-oracle scenarios:
-result IDs, float64 scores within relative 1e-11, title/metadata and nonempty
-query-relevant snippets. [Machine verification](results/oracle-100k.json).
-The report does not claim bit-for-bit cross-runtime FP equality. Lone-surrogate
-JSON inputs and previews ending inside a surrogate pair have the limitations
-listed in [DESIGN.md](DESIGN.md).
+## Reproduction
 
-## Reproduction and adoption
-
-Hardware: Apple M3, macOS ARM64. Node 26.7.0 / Unicode 17.0, Rust 1.93.0.
-The machine-readable results pin release binary, Cargo lockfile and source hashes,
-format, corpus, batch bytes, thread count, output identity and timings. Final 100k
-generation: `9e863c9de344f0276a375aab109f16318055418358b8fbc89d28e2cc212859b3`.
-
-The first Rust control is frozen separately at commit
-`8e66d77743b326662dbdc608593e3cca8860e29c`
-(`codex/rust-builder-v1-control`). To recreate its benchmark artifact:
+Prepare the latest frozen control once, outside the production checkout:
 
 ```sh
-git worktree add /tmp/work-search-builder-control codex/rust-builder-v1-control
-(cd /tmp/work-search-builder-control && cargo build --release --locked)
-mkdir -p work/rust-builder-v1-control
-cp /tmp/work-search-builder-control/target/release/work-search-builder work/rust-builder-v1-control/
-cp /tmp/work-search-builder-control/Cargo.lock work/rust-builder-v1-control/
-cp -R /tmp/work-search-builder-control/crates/index-builder work/rust-builder-v1-control/index-builder
+git worktree add /tmp/work-search-builder-v2-control codex/rust-builder-v2-control
+(cd /tmp/work-search-builder-v2-control && cargo build --release --locked)
+mkdir -p work/rust-builder-v2-control
+cp /tmp/work-search-builder-v2-control/target/release/work-search-builder work/rust-builder-v2-control/
+cp /tmp/work-search-builder-v2-control/Cargo.lock work/rust-builder-v2-control/
+yarn builder:compile
+BUILDER_VARIANTS=rust-v2,rust BENCH_CLEAN=1 BENCH_KEEP_LAST_RUST=1 \
+  yarn bench:builder /path/flp-100000/corpus.jsonl work/repeat-100k 100000 3 8 16
+BUILDER_VARIANTS=rust-v2,rust BENCH_CLEAN=1 \
+  yarn bench:builder /path/flp-100000/corpus.jsonl work/repeat-small 1000,10000 3 4 4
 ```
 
-From the final branch, run `yarn builder:compile`, then:
-
-```sh
-BUILDER_VARIANTS=rust,rust-v1 BENCH_CLEAN=1 BENCH_KEEP_LAST_RUST=1 \
-  yarn bench:builder /path/flp-100000/corpus.jsonl work/repeat-100k 100000 3 4
-BUILDER_VARIANTS=rust-v1,rust BENCH_CLEAN=1 \
-  yarn bench:builder /path/flp-100000/corpus.jsonl work/repeat-small 1000,10000 3 4
-```
-
-See [README.md](README.md) for build, test and verification commands. Completed
-benchmark intermediates were reclaimed; raw results, logs, roots and manifests
-were preserved. One final 100k output remains in the isolated worktree for reuse.
-
-**Recommendation:** integrate this as the base CWS1 offline builder and route
-production construction through it. Optional pair construction still belongs to
-the main implementation. This is not a recommendation to adopt the entire query
-engine for full-corpus serving: no 1M/largest-corpus native build or live serving
-benchmark is claimed here. Those qualifications remain the main project's work.
+To reproduce first-Rust comparisons, prepare its frozen ref similarly, also copy
+`crates/index-builder` to `work/rust-builder-v1-control/index-builder` for its
+V8 scorer script, and select `BUILDER_VARIANTS=rust-v1,rust`.
+See [README.md](README.md) for construction, FIFO input and verification commands.
+Raw results/logs/roots/manifests are retained. Superseded large pack/staging trees
+were reclaimed; one final 100k output remains in the isolated worktree for reuse.

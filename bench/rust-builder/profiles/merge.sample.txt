@@ -1,0 +1,514 @@
+Analysis of sampling work-search-builder (pid 36219) every 1 millisecond
+Process:         work-search-builder [36219]
+Path:            /Users/USER/*/work-search-builder
+Load Address:    0x100e40000
+Identifier:      work-search-builder
+Version:         0
+Code Type:       ARM64
+Platform:        macOS
+Parent Process:  zsh [36211]
+Target Type:     live task
+
+Date/Time:       2026-11-12 17:24:10.676 -0500
+Launch Time:     2026-11-12 17:23:48.926 -0500
+OS Version:      macOS 27.2.1 (26B131)
+Report Version:  7
+Analysis Tool:   /usr/bin/sample
+
+Physical footprint:         748.0M
+Physical footprint (peak):  748.0M
+Idle exit:                  untracked
+----
+
+Call graph:
+    2938 Thread_2477399   DispatchQueue_1: com.apple.main-thread  (serial)
+      2938 start  (in dyld) + 6652  [0x1887c8d7c]
+        2938 main  (in work-search-builder) + 52  [0x100ed5adc]
+          2938 std::rt::lang_start_internal::h0662b076b027b010  (in work-search-builder) + 932  [0x100e5ee48]
+            2938 std::rt::lang_start::_$u7b$$u7b$closure$u7d$$u7d$::hedc9f8a978d0372a  (in work-search-builder) + 16  [0x100eb3f90]
+              2938 std::sys::backtrace::__rust_begin_short_backtrace::hdc7f89a22a9f06ca  (in work-search-builder) + 12  [0x100eb7088]
+                2938 work_search_builder::main::hfd258084f8a9b83c  (in work-search-builder) + 5816  [0x100e91e34]
+                  2938 work_search_builder::build::he96b094f1486be24  (in work-search-builder) + 3880  [0x100e97f60]
+                    1806 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 8664  [0x100eac02c]
+                    + 797 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 220  [0x100e9cf44]
+                    + ! 761 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 316  [0x100ecc5b8]
+                    + ! : 761 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + ! 24 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + ! : 22 _platform_memmove  (in libsystem_platform.dylib) + 460,428,...  [0x18d865f2c,0x18d865f0c,...]
+                    + ! : 2 DYLD-STUB$$memcpy  (in work-search-builder) + 4  [0x100eebe58]
+                    + ! 12 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 44,12  [0x100ecc4a8,0x100ecc488]
+                    + 701 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 1020  [0x100e9d264]
+                    + ! 600 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 316  [0x100ecc5b8]
+                    + ! : 600 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + ! 79 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + ! : 77 _platform_memmove  (in libsystem_platform.dylib) + 420,428,...  [0x18d865f04,0x18d865f0c,...]
+                    + ! : 2 DYLD-STUB$$memcpy  (in work-search-builder) + 4  [0x100eebe58]
+                    + ! 22 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 20,16,...  [0x100ecc490,0x100ecc48c,...]
+                    + 156 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 148  [0x100e9cefc]
+                    + ! 106 work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder) + 228  [0x100e941ac]
+                    + ! : 106 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + ! 29 work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder) + 168  [0x100e94170]
+                    + ! : 20 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + ! : | 19 _platform_memmove  (in libsystem_platform.dylib) + 452,12,...  [0x18d865f24,0x18d865d6c,...]
+                    + ! : | 1 DYLD-STUB$$memcpy  (in work-search-builder) + 4  [0x100eebe58]
+                    + ! : 9 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 536,504,...  [0x100ecc694,0x100ecc674,...]
+                    + ! 15 work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder) + 48,44,...  [0x100e940f8,0x100e940f4,...]
+                    + ! 6 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 552,556,...  [0x100ecc6a4,0x100ecc6a8,...]
+                    + 64 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 788,32,...  [0x100e9d17c,0x100e9ce88,...]
+                    + 62 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 1008  [0x100e9d258]
+                    + ! 45 alloc::vec::Vec$LT$T$C$A$GT$::resize::ha6ebca79fd100769  (in work-search-builder) + 32,104,...  [0x100ec9aac,0x100ec9af4,...]
+                    + ! 17 alloc::vec::Vec$LT$T$C$A$GT$::resize::ha6ebca79fd100769  (in work-search-builder) + 84  [0x100ec9ae0]
+                    + !   16 _platform_memset  (in libsystem_platform.dylib) + 196,176,...  [0x18d865b54,0x18d865b40,...]
+                    + !   1 DYLD-STUB$$bzero  (in work-search-builder) + 4  [0x100eebcf0]
+                    + 13 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 552,556  [0x100ecc6a4,0x100ecc6a8]
+                    + 6 work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder) + 396,388  [0x100e94254,0x100e9424c]
+                    + 5 alloc::vec::Vec$LT$T$C$A$GT$::resize::ha6ebca79fd100769  (in work-search-builder) + 116,112  [0x100ec9b00,0x100ec9afc]
+                    + 2 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 488  [0x100e9d050]
+                    +   2 log  (in libsystem_m.dylib) + 128,180  [0x2d62fc208,0x2d62fc23c]
+                    489 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 8652  [0x100eac020]
+                    + 216 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 320  [0x100ea87bc]
+                    + ! 212 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + ! : 143 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! : | 143 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 324,296,...  [0x100e56238,0x100e5621c,...]
+                    + ! : 61 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + ! : | 61 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + ! : |   61 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + ! : |     61 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + ! : 4 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+                    + ! : | 4 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x18d865e14]
+                    + ! : 2 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 604  [0x100ea0fa0]
+                    + ! : | 2 crc32fast::specialized::aarch64::State::update::hd57ebeefb227b6af  (in work-search-builder) + 1320,2052  [0x100e4a80c,0x100e4aae8]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 160  [0x100ea0de4]
+                    + ! : | 1 work_search_builder::util::writer::h73414481d40d9460  (in work-search-builder) + 172  [0x100e95134]
+                    + ! : |   1 std::sys::fs::unix::File::open_c::h5f49f53c346fe654  (in work-search-builder) + 260  [0x100e60384]
+                    + ! : |     1 open  (in libsystem_kernel.dylib) + 64  [0x188863960]
+                    + ! : |       1 __open  (in libsystem_kernel.dylib) + 8  [0x188858680]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 352  [0x100ea0ea4]
+                    + ! :   1 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 184  [0x100e561ac]
+                    + ! 3 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 280  [0x100ea0c90]
+                    + ! : 2 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 604  [0x100ea0fa0]
+                    + ! : | 2 crc32fast::specialized::aarch64::State::update::hd57ebeefb227b6af  (in work-search-builder) + 684,716  [0x100e4a590,0x100e4a5b0]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! :   1 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 184  [0x100e561ac]
+                    + ! 1 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 208  [0x100ea0c48]
+                    + !   1 work_search_builder::format::Packer::finish_object::h0fe633ed480ebfee  (in work-search-builder) + 220  [0x100ea07c8]
+                    + !     1 close  (in libsystem_kernel.dylib) + 8  [0x1888588e4]
+                    + 147 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 500  [0x100ea8870]
+                    + ! 145 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + ! : 97 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! : | 97 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 296,184,...  [0x100e5621c,0x100e561ac,...]
+                    + ! : 32 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + ! : | 32 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + ! : |   32 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + ! : |     32 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + ! : 10 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+                    + ! : | 10 _platform_memmove  (in libsystem_platform.dylib) + 180,192  [0x18d865e14,0x18d865e20]
+                    + ! : 4 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 604  [0x100ea0fa0]
+                    + ! : | 4 crc32fast::specialized::aarch64::State::update::hd57ebeefb227b6af  (in work-search-builder) + 1260,1116,...  [0x100e4a7d0,0x100e4a740,...]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 128  [0x100ea0dc4]
+                    + ! : | 1 std::path::Path::_join::ha8f408dfc5576c3e  (in work-search-builder) + 80  [0x100e6445c]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 352  [0x100ea0ea4]
+                    + ! :   1 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 464  [0x100e562c4]
+                    + ! 2 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 176,340  [0x100ea0c28,0x100ea0ccc]
+                    + 82 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1628  [0x100ea8cd8]
+                    + ! 80 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + ! : 52 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! : | 52 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 408,240,...  [0x100e5628c,0x100e561e4,...]
+                    + ! : 13 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + ! : | 13 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + ! : |   13 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + ! : |     13 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + ! : 6 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 604  [0x100ea0fa0]
+                    + ! : | 6 crc32fast::specialized::aarch64::State::update::hd57ebeefb227b6af  (in work-search-builder) + 632,676,...  [0x100e4a55c,0x100e4a588,...]
+                    + ! : 4 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+                    + ! : | 4 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x18d865e14]
+                    + ! : 2 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 160  [0x100ea0de4]
+                    + ! : | 2 work_search_builder::util::writer::h73414481d40d9460  (in work-search-builder) + 172  [0x100e95134]
+                    + ! : |   2 std::sys::fs::unix::File::open_c::h5f49f53c346fe654  (in work-search-builder) + 260  [0x100e60384]
+                    + ! : |     2 open  (in libsystem_kernel.dylib) + 64  [0x188863960]
+                    + ! : |       2 __open  (in libsystem_kernel.dylib) + 8  [0x188858680]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 324  [0x100ea0e88]
+                    + ! : | 1 _platform_memmove  (in libsystem_platform.dylib) + 428  [0x18d865f0c]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 352  [0x100ea0ea4]
+                    + ! : | 1 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 324  [0x100e56238]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 356  [0x100ea0ea8]
+                    + ! 2 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 208  [0x100ea0c48]
+                    + !   2 work_search_builder::format::Packer::finish_object::h0fe633ed480ebfee  (in work-search-builder) + 220  [0x100ea07c8]
+                    + !     2 close  (in libsystem_kernel.dylib) + 8  [0x1888588e4]
+                    + 23 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 376,420,...  [0x100ea87f4,0x100ea8820,...]
+                    + 10 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1148  [0x100ea8af8]
+                    + ! 10 work_search_builder::format::pack_append::h787245d17090e91e  (in work-search-builder) + 576,88,...  [0x100e9f5f0,0x100e9f408,...]
+                    + 4 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1176  [0x100ea8b14]
+                    + ! 4 work_search_builder::format::pack_append::h787245d17090e91e  (in work-search-builder) + 720,20,...  [0x100e9f680,0x100e9f3c4,...]
+                    + 4 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 2376  [0x100ea8fc4]
+                    + ! 2 work_search_builder::format::Tree::push::h4a43c948827d09a3  (in work-search-builder) + 400  [0x100ea013c]
+                    + ! : 2 work_search_builder::format::Tree::parent::hf7eefb79ee7b60b0  (in work-search-builder) + 680  [0x100ea04b4]
+                    + ! :   2 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + ! :     2 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! :       2 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 268,516  [0x100e56200,0x100e562f8]
+                    + ! 1 work_search_builder::format::Tree::push::h4a43c948827d09a3  (in work-search-builder) + 556  [0x100ea01d8]
+                    + ! : 1 alloc::raw_vec::RawVec$LT$T$C$A$GT$::grow_one::h062bb02cc1668b8c  (in work-search-builder) + 60  [0x100ee6d94]
+                    + ! :   1 alloc::raw_vec::RawVecInner$LT$A$GT$::finish_grow::h0bbd01a57e66b5d9  (in work-search-builder) + 248  [0x100ee7400]
+                    + ! :     1 _realloc  (in libsystem_malloc.dylib) + 456  [0x18a1c95c4]
+                    + ! :       1 _malloc_zone_realloc  (in libsystem_malloc.dylib) + 60  [0x18a1c8d40]
+                    + ! 1 work_search_builder::format::Tree::push::h4a43c948827d09a3  (in work-search-builder) + 544  [0x100ea01cc]
+                    + 2 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 296  [0x100ea87a4]
+                    + ! 2 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x18d865e14]
+                    + 1 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1204  [0x100ea8b30]
+                    +   1 work_search_builder::format::pack_append::h787245d17090e91e  (in work-search-builder) + 720  [0x100e9f680]
+                    305 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 7872  [0x100eabd14]
+                    + 121 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 220  [0x100e9cf44]
+                    + ! 114 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 316  [0x100ecc5b8]
+                    + ! : 114 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + ! 6 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + ! : 6 _platform_memmove  (in libsystem_platform.dylib) + 428,12,...  [0x18d865f0c,0x18d865d6c,...]
+                    + ! 1 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 484  [0x100ecc660]
+                    + 95 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 1020  [0x100e9d264]
+                    + ! 81 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 316  [0x100ecc5b8]
+                    + ! : 81 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + ! 11 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + ! : 10 _platform_memmove  (in libsystem_platform.dylib) + 420,428,...  [0x18d865f04,0x18d865f0c,...]
+                    + ! : 1 DYLD-STUB$$memcpy  (in work-search-builder) + 4  [0x100eebe58]
+                    + ! 3 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 44,48,...  [0x100ecc4a8,0x100ecc4ac,...]
+                    + 49 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 148  [0x100e9cefc]
+                    + ! 25 work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder) + 20,8,...  [0x100e940dc,0x100e940d0,...]
+                    + ! 16 work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder) + 168  [0x100e94170]
+                    + ! : 10 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + ! : | 8 _platform_memmove  (in libsystem_platform.dylib) + 452,460,...  [0x18d865f24,0x18d865f2c,...]
+                    + ! : | 2 DYLD-STUB$$memcpy  (in work-search-builder) + 0,4  [0x100eebe54,0x100eebe58]
+                    + ! : 6 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 44,20,...  [0x100ecc4a8,0x100ecc490,...]
+                    + ! 7 work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder) + 228  [0x100e941ac]
+                    + ! : 7 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + ! 1 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 556  [0x100ecc6a8]
+                    + 23 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 32,20,...  [0x100e9ce88,0x100e9ce7c,...]
+                    + 9 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 1008  [0x100e9d258]
+                    + ! 8 alloc::vec::Vec$LT$T$C$A$GT$::resize::ha6ebca79fd100769  (in work-search-builder) + 32  [0x100ec9aac]
+                    + ! 1 alloc::vec::Vec$LT$T$C$A$GT$::resize::ha6ebca79fd100769  (in work-search-builder) + 84  [0x100ec9ae0]
+                    + !   1 _platform_memset  (in libsystem_platform.dylib) + 176  [0x18d865b40]
+                    + 3 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 488  [0x100e9d050]
+                    + ! 2 log  (in libsystem_m.dylib) + 12,128  [0x2d62fc194,0x2d62fc208]
+                    + ! 1 DYLD-STUB$$log  (in work-search-builder) + 4  [0x100eebe34]
+                    + 2 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 552,556  [0x100ecc6a4,0x100ecc6a8]
+                    + 2 work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder) + 396  [0x100e94254]
+                    + 1 alloc::vec::Vec$LT$T$C$A$GT$::resize::ha6ebca79fd100769  (in work-search-builder) + 116  [0x100ec9b00]
+                    83 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 7468  [0x100eabb80]
+                    + 24 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1628  [0x100ea8cd8]
+                    + ! 21 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + ! : 8 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + ! : | 8 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + ! : |   8 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + ! : |     8 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + ! : 7 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! : | 7 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 268,296,...  [0x100e56200,0x100e5621c,...]
+                    + ! : 4 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 352  [0x100ea0ea4]
+                    + ! : | 4 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 268,436  [0x100e56200,0x100e562a8]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 324  [0x100ea0e88]
+                    + ! : | 1 _platform_memmove  (in libsystem_platform.dylib) + 428  [0x18d865f0c]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+                    + ! :   1 _platform_memmove  (in libsystem_platform.dylib) + 24  [0x18d865d78]
+                    + ! 2 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 280  [0x100ea0c90]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 288  [0x100ea0e64]
+                    + ! : | 1 _platform_memmove  (in libsystem_platform.dylib) + 460  [0x18d865f2c]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 48  [0x100ea0d74]
+                    + ! 1 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 208  [0x100ea0c48]
+                    + !   1 work_search_builder::format::Packer::finish_object::h0fe633ed480ebfee  (in work-search-builder) + 220  [0x100ea07c8]
+                    + !     1 close  (in libsystem_kernel.dylib) + 8  [0x1888588e4]
+                    + 22 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 320  [0x100ea87bc]
+                    + ! 19 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + ! : 7 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! : | 7 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 184,268,...  [0x100e561ac,0x100e56200,...]
+                    + ! : 5 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + ! : | 5 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + ! : |   5 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + ! : |     5 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + ! : 3 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+                    + ! : | 2 _platform_memmove  (in libsystem_platform.dylib) + 180,428  [0x18d865e14,0x18d865f0c]
+                    + ! : | 1 DYLD-STUB$$memcpy  (in work-search-builder) + 4  [0x100eebe58]
+                    + ! : 2 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 352  [0x100ea0ea4]
+                    + ! : | 2 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 492,520  [0x100e562e0,0x100e562fc]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 288  [0x100ea0e64]
+                    + ! : | 1 _platform_memmove  (in libsystem_platform.dylib) + 460  [0x18d865f2c]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 604  [0x100ea0fa0]
+                    + ! :   1 crc32fast::specialized::aarch64::State::update::hd57ebeefb227b6af  (in work-search-builder) + 308  [0x100e4a418]
+                    + ! 2 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 280  [0x100ea0c90]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! : | 1 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 320  [0x100e56234]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 536  [0x100ea0f5c]
+                    + ! 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 752  [0x100ea1034]
+                    + 16 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 500  [0x100ea8870]
+                    + ! 16 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + !   11 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + !   : 11 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 176,268,...  [0x100e561a4,0x100e56200,...]
+                    + !   2 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 352  [0x100ea0ea4]
+                    + !   : 2 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 268,324  [0x100e56200,0x100e56238]
+                    + !   2 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + !   : 2 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + !   :   2 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + !   :     2 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + !   1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+                    + !     1 _platform_memmove  (in libsystem_platform.dylib) + 0  [0x18d865d60]
+                    + 11 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 264,1096,...  [0x100ea8784,0x100ea8ac4,...]
+                    + 3 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 296  [0x100ea87a4]
+                    + ! 3 _platform_memmove  (in libsystem_platform.dylib) + 204,448,...  [0x18d865e2c,0x18d865f20,...]
+                    + 3 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 2376  [0x100ea8fc4]
+                    + ! 2 work_search_builder::format::Tree::push::h4a43c948827d09a3  (in work-search-builder) + 556  [0x100ea01d8]
+                    + ! : 2 alloc::raw_vec::RawVec$LT$T$C$A$GT$::grow_one::h062bb02cc1668b8c  (in work-search-builder) + 60  [0x100ee6d94]
+                    + ! :   1 alloc::raw_vec::RawVecInner$LT$A$GT$::finish_grow::h0bbd01a57e66b5d9  (in work-search-builder) + 280  [0x100ee7420]
+                    + ! :   | 1 _xzm_xzone_malloc_tiny  (in libsystem_malloc.dylib) + 524  [0x18a1bce78]
+                    + ! :   1 alloc::raw_vec::RawVecInner$LT$A$GT$::finish_grow::h0bbd01a57e66b5d9  (in work-search-builder) + 4  [0x100ee730c]
+                    + ! 1 work_search_builder::format::Tree::push::h4a43c948827d09a3  (in work-search-builder) + 124  [0x100ea0028]
+                    + !   1 alloc::raw_vec::RawVecInner$LT$A$GT$::reserve::do_reserve_and_handle::ha3aa6a5ba17c732d  (in work-search-builder) + 88  [0x100ee74a8]
+                    + !     1 alloc::raw_vec::RawVecInner$LT$A$GT$::finish_grow::h0bbd01a57e66b5d9  (in work-search-builder) + 280  [0x100ee7420]
+                    + !       1 _xzm_xzone_malloc_tiny  (in libsystem_malloc.dylib) + 16  [0x18a1bcc7c]
+                    + 2 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1148  [0x100ea8af8]
+                    + ! 2 work_search_builder::format::pack_append::h787245d17090e91e  (in work-search-builder) + 36,804  [0x100e9f3d4,0x100e9f6d4]
+                    + 1 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 320  [0x100ea0cb8]
+                    + 1 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1176  [0x100ea8b14]
+                    +   1 work_search_builder::format::pack_append::h787245d17090e91e  (in work-search-builder) + 720  [0x100e9f680]
+                    60 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 7864,8624,...  [0x100eabd0c,0x100eac004,...]
+                    45 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 7988  [0x100eabd88]
+                    + 45 alloc::collections::binary_heap::BinaryHeap$LT$T$C$A$GT$::pop::hb26b57675c7989a0  (in work-search-builder) + 308,192,...  [0x100ec858c,0x100ec8518,...]
+                    43 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 7536  [0x100eabbc4]
+                    + 5 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 448  [0x100ea97c8]
+                    + ! 5 work_search_builder::util::read_bytes::hb34f49cb355a1a46  (in work-search-builder) + 184  [0x100e92a70]
+                    + !   3 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 316  [0x100ecc5b8]
+                    + !   : 3 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + !   2 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + !     2 _platform_memmove  (in libsystem_platform.dylib) + 460  [0x18d865f2c]
+                    + 5 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 772  [0x100ea990c]
+                    + ! 4 work_search_builder::format::Tree::parent::hf7eefb79ee7b60b0  (in work-search-builder) + 680  [0x100ea04b4]
+                    + ! : 4 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + ! :   3 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! :   | 3 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 236,296,...  [0x100e561e0,0x100e5621c,...]
+                    + ! :   1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + ! :     1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + ! :       1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + ! :         1 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + ! 1 work_search_builder::format::Tree::parent::hf7eefb79ee7b60b0  (in work-search-builder) + 660  [0x100ea04a0]
+                    + !   1 work_search_builder::format::put_ref::ha6c97aede7469703  (in work-search-builder) + 116  [0x100ea1230]
+                    + 5 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 1160  [0x100ea9a90]
+                    + ! 4 _xzm_free_main  (in libsystem_malloc.dylib) + 28,164,...  [0x18a1c513c,0x18a1c51c4,...]
+                    + ! 1 _free  (in libsystem_malloc.dylib) + 44  [0x18a1c93a8]
+                    + 4 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 1400  [0x100ea9b80]
+                    + ! 1 work_search_builder::format::encode_branches::he145ad8eaf86bbac  (in work-search-builder) + 52  [0x100e9f878]
+                    + ! : 1 _xzm_xzone_malloc_tiny  (in libsystem_malloc.dylib) + 44  [0x18a1bcc98]
+                    + ! 1 work_search_builder::format::encode_branches::he145ad8eaf86bbac  (in work-search-builder) + 276  [0x100e9f958]
+                    + ! : 1 work_search_builder::format::put_ref::ha6c97aede7469703  (in work-search-builder) + 28  [0x100ea11d8]
+                    + ! 1 work_search_builder::format::encode_branches::he145ad8eaf86bbac  (in work-search-builder) + 288  [0x100e9f964]
+                    + ! : 1 work_search_builder::format::put_ref::ha6c97aede7469703  (in work-search-builder) + 28  [0x100ea11d8]
+                    + ! 1 work_search_builder::format::encode_branches::he145ad8eaf86bbac  (in work-search-builder) + 300  [0x100e9f970]
+                    + 4 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 1512  [0x100ea9bf0]
+                    + ! 2 _xzm_free_main  (in libsystem_malloc.dylib) + 736  [0x18a1c5400]
+                    + ! : 2 mach_absolute_time  (in libsystem_kernel.dylib) + 108,112  [0x1888580f8,0x1888580fc]
+                    + ! 1 _free  (in libsystem_malloc.dylib) + 0  [0x18a1c937c]
+                    + ! 1 _xzm_free_main  (in libsystem_malloc.dylib) + 444  [0x18a1c52dc]
+                    + 3 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 76  [0x100ea9654]
+                    + ! 2 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 316  [0x100ecc5b8]
+                    + ! : 2 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + ! 1 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + !   1 _platform_memmove  (in libsystem_platform.dylib) + 12  [0x18d865d6c]
+                    + 3 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 1008  [0x100ea99f8]
+                    + ! 3 _xzm_free_main  (in libsystem_malloc.dylib) + 332,984  [0x18a1c526c,0x18a1c54f8]
+                    + 2 _xzm_free_main  (in libsystem_malloc.dylib) + 1068,1072  [0x18a1c554c,0x18a1c5550]
+                    + 2 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 252  [0x100ea9704]
+                    + ! 1 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 316  [0x100ecc5b8]
+                    + ! : 1 read  (in libsystem_kernel.dylib) + 8  [0x188858910]
+                    + ! 1 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+                    + !   1 _platform_memmove  (in libsystem_platform.dylib) + 460  [0x18d865f2c]
+                    + 2 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 1228  [0x100ea9ad4]
+                    + ! 1 work_search_builder::util::u32le::h2fd12619f74aafaf  (in work-search-builder) + 68  [0x100e94a78]
+                    + ! 1 work_search_builder::util::write_string::hbd6764f12a5e4dec  (in work-search-builder) + 64  [0x100e94518]
+                    + !   1 work_search_builder::util::u32le::h2fd12619f74aafaf  (in work-search-builder) + 92  [0x100e94a90]
+                    + !     1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + !       1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + !         1 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + 2 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 1416  [0x100ea9b90]
+                    + ! 1 _$LT$std..io..buffered..bufwriter..BufWriter$LT$W$GT$$u20$as$u20$std..io..Write$GT$::write_all::h0e2dd7fa3e51cfff  (in work-search-builder) + 60  [0x100ecc728]
+                    + ! 1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + !   1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + !     1 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + 1 _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 556  [0x100ecc6a8]
+                    + 1 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 500  [0x100ea97fc]
+                    + ! 1 core::str::converts::from_utf8::h2a788292d4279601  (in work-search-builder) + 128  [0x100e48c04]
+                    + 1 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 1332  [0x100ea9b3c]
+                    + ! 1 work_search_builder::util::u32le::h2fd12619f74aafaf  (in work-search-builder) + 24  [0x100e94a4c]
+                    + 1 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 1352  [0x100ea9b50]
+                    + ! 1 work_search_builder::util::u32le::h2fd12619f74aafaf  (in work-search-builder) + 92  [0x100e94a90]
+                    + !   1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + !     1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + !       1 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + 1 work_search_builder::publish::emit::flush_term::hd0cf61ce7c98d792  (in work-search-builder) + 604  [0x100ea9864]
+                    + 1 work_search_builder::util::write_string::hbd6764f12a5e4dec  (in work-search-builder) + 140  [0x100e94564]
+                    34 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 7860  [0x100eabd08]
+                    + 11 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 320  [0x100ea87bc]
+                    + ! 10 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + ! : 7 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + ! : | 7 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 296,408,...  [0x100e5621c,0x100e5628c,...]
+                    + ! : 2 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + ! : | 2 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + ! : |   2 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + ! : |     2 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + ! : 1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+                    + ! :   1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x18d865e14]
+                    + ! 1 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 280  [0x100ea0c90]
+                    + !   1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + !     1 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 492  [0x100e562e0]
+                    + 11 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 500  [0x100ea8870]
+                    + ! 11 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + !   5 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + !   : 5 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 520,308,...  [0x100e562fc,0x100e56228,...]
+                    + !   5 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + !   : 5 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + !   :   5 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + !   :     5 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + !   1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+                    + !     1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x18d865e14]
+                    + 7 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1628  [0x100ea8cd8]
+                    + ! 7 work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+                    + !   6 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+                    + !   : 6 sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 408,296,...  [0x100e5628c,0x100e5621c,...]
+                    + !   1 work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+                    + !     1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+                    + !       1 std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+                    + !         1 write  (in libsystem_kernel.dylib) + 8  [0x18885b838]
+                    + 3 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 972,1248,...  [0x100ea8a48,0x100ea8b5c,...]
+                    + 1 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 296  [0x100ea87a4]
+                    + ! 1 _platform_memmove  (in libsystem_platform.dylib) + 180  [0x18d865e14]
+                    + 1 work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder) + 1148  [0x100ea8af8]
+                    +   1 work_search_builder::format::pack_append::h787245d17090e91e  (in work-search-builder) + 608  [0x100e9f610]
+                    26 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 7964  [0x100eabd70]
+                    + 26 alloc::collections::binary_heap::BinaryHeap$LT$T$C$A$GT$::push::ha4af52cc5c0a64fa  (in work-search-builder) + 100,160,...  [0x100ec883c,0x100ec8878,...]
+                    24 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 8564  [0x100eabfc8]
+                    + 23 _platform_memmove  (in libsystem_platform.dylib) + 428,460,...  [0x18d865f0c,0x18d865f2c,...]
+                    + 1 DYLD-STUB$$memcpy  (in work-search-builder) + 4  [0x100eebe58]
+                    17 work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder) + 7772  [0x100eabcb0]
+                    + 16 _platform_memmove  (in libsystem_platform.dylib) + 428,444,...  [0x18d865f0c,0x18d865f1c,...]
+                    + 1 DYLD-STUB$$memcpy  (in work-search-builder) + 4  [0x100eebe58]
+                    5 work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder) + 284  [0x100e9cf84]
+                    1 alloc::collections::binary_heap::BinaryHeap$LT$T$C$A$GT$::push::ha4af52cc5c0a64fa  (in work-search-builder) + 184  [0x100ec8890]
+
+Total number in stack (recursive counted multiple, when >=5):
+        26       _platform_memmove  (in libsystem_platform.dylib) + 0  [0x18d865d60]
+        20       sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder) + 0  [0x100e560f4]
+        14       work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 400  [0x100ea0ed4]
+        13       std::io::buffered::bufwriter::BufWriter$LT$W$GT$::flush_buf::h06523602308da696  (in work-search-builder) + 136  [0x100eb3cd8]
+        13       std::io::buffered::bufwriter::BufWriter$LT$W$GT$::write_all_cold::hea3333fb669529f9  (in work-search-builder) + 60  [0x100ee63d4]
+        13       write  (in libsystem_kernel.dylib) + 0  [0x18885b830]
+        11       _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 0  [0x100ecc47c]
+        11       work_search_builder::format::Packer::put::h92df2f87e7778714  (in work-search-builder) + 360  [0x100ea0ce0]
+        10       work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 792  [0x100ea105c]
+        9       _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 504  [0x100ecc674]
+        9       read  (in libsystem_kernel.dylib) + 0  [0x188858908]
+        8       DYLD-STUB$$memcpy  (in work-search-builder) + 0  [0x100eebe54]
+        8       work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 472  [0x100ea0f1c]
+        7       _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder) + 316  [0x100ecc5b8]
+        6       work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 352  [0x100ea0ea4]
+        6       work_search_builder::format::pack_append::h787245d17090e91e  (in work-search-builder) + 0  [0x100e9f3b0]
+        5       crc32fast::specialized::aarch64::State::update::hd57ebeefb227b6af  (in work-search-builder) + 0  [0x100e4a2e4]
+        5       work_search_builder::format::Packer::write::h4c7b41b682e7b46a  (in work-search-builder) + 604  [0x100ea0fa0]
+
+Sort by top of stack, same collapsed (when >= 5):
+        read  (in libsystem_kernel.dylib)        1675
+        sha2::sha256::compress256::h4da932eec8b38dbd  (in work-search-builder)        354
+        _platform_memmove  (in libsystem_platform.dylib)        219
+        write  (in libsystem_kernel.dylib)        133
+        work_search_builder::merge::RecordCursor::advance::ha1c0e4eb4120503b  (in work-search-builder)        92
+        _$LT$std..io..buffered..bufreader..BufReader$LT$R$GT$$u20$as$u20$std..io..Read$GT$::read_exact::h10c170f27b2133c0  (in work-search-builder)        76
+        work_search_builder::publish::emit::he8f5d297de0accde  (in work-search-builder)        60
+        alloc::vec::Vec$LT$T$C$A$GT$::resize::ha6ebca79fd100769  (in work-search-builder)        59
+        work_search_builder::util::optional_u32::h0e9e1e1850df19a2  (in work-search-builder)        48
+        alloc::collections::binary_heap::BinaryHeap$LT$T$C$A$GT$::pop::hb26b57675c7989a0  (in work-search-builder)        45
+        work_search_builder::publish::Leaf::flush::h523c4bc72a8cb88b  (in work-search-builder)        37
+        alloc::collections::binary_heap::BinaryHeap$LT$T$C$A$GT$::push::ha4af52cc5c0a64fa  (in work-search-builder)        27
+        work_search_builder::format::pack_append::h787245d17090e91e  (in work-search-builder)        19
+        _platform_memset  (in libsystem_platform.dylib)        17
+        crc32fast::specialized::aarch64::State::update::hd57ebeefb227b6af  (in work-search-builder)        15
+        DYLD-STUB$$memcpy  (in work-search-builder)        11
+        _xzm_free_main  (in libsystem_malloc.dylib)        10
+
+Binary Images:
+       0x100e40000 -        0x100f78a23 +work-search-builder (0) <A2B21A47-4147-3B35-A279-B372DE22D367> /Users/*/work-search-builder
+       0x188714000 -        0x188763657  libobjc.A.dylib (973.1) <1FF743DE-675D-30F9-82EC-A3B6801513D7> /usr/lib/libobjc.A.dylib
+       0x188764000 -        0x18876e23f  libsharedcache.dylib (0) <CC10ABDC-ED8D-3926-B9DE-AC253B79A2CD> /usr/lib/libsharedcache.dylib
+       0x18876f000 -        0x188796d23  libdyld.dylib (27104) <7ADDD814-2C61-3D07-B047-E6FDD97BA360> /usr/lib/system/libdyld.dylib
+       0x188797000 -        0x188856c83  dyld (1.0.0 - 27104) <D8104ED6-185E-3A2F-AD71-B91EDDBE2598> /usr/lib/dyld
+       0x188857000 -        0x188895a5b  libsystem_kernel.dylib (13432.41.4) <F2BCEB9A-0FEC-3C92-B6EA-8E37157050A8> /usr/lib/system/libsystem_kernel.dylib
+       0x188896000 -        0x1888a28ab  libsystem_pthread.dylib (553.40.2) <D5E656B3-84B5-368D-A6E7-CCC1A736FB75> /usr/lib/system/libsystem_pthread.dylib
+       0x1888a3000 -        0x1888b4b8b  libsystem_notify.dylib (368.40.2) <266B92EF-8350-347C-9086-B53BA04523CF> /usr/lib/system/libsystem_notify.dylib
+       0x1888b5000 -        0x188937cd3  libsystem_c.dylib (1786.40.6) <4BF47EBB-4CD0-3F4A-995A-717B8550CB12> /usr/lib/system/libsystem_c.dylib
+       0x18a189000 -        0x18a1df0ff  libsystem_malloc.dylib (886.41.1) <22C6E10E-C6CC-3475-BDE0-270D72950E6A> /usr/lib/system/libsystem_malloc.dylib
+       0x18a1e0000 -        0x18a1e9b13  libsystem_darwin.dylib (1786.40.6) <4EE808C0-2386-3971-804B-BB42288EE0C9> /usr/lib/system/libsystem_darwin.dylib
+       0x18ce74000 -        0x18cec9127  libxpc.dylib (3298.40.28) <F6D8FB8F-6BA0-3857-B356-21C448C954A1> /usr/lib/system/libxpc.dylib
+       0x18ceca000 -        0x18cf7f6b7  libcorecrypto.dylib (2109.40.22) <25AD16F2-2D5A-3301-A3FB-E77F118E4FE6> /usr/lib/system/libcorecrypto.dylib
+       0x18cf80000 -        0x18cfae9d3  libsystem_info.dylib (603.40.2) <840F592C-740F-3965-B23A-A11A234C6ABA> /usr/lib/system/libsystem_info.dylib
+       0x18cfaf000 -        0x18cfc8eff  libc++abi.dylib (2200.32) <E7646A85-5F12-349C-B17F-5DF0797F24A0> /usr/lib/libc++abi.dylib
+       0x18d676000 -        0x18d67c1e7  libsystem_coreservices.dylib (203.1.1) <2A95AE6D-9363-34F5-9890-BCC9810000D3> /usr/lib/system/libsystem_coreservices.dylib
+       0x18d7f6000 -        0x18d81605b  libsystem_trace.dylib (1966.40.15.0.2) <ED20A12C-9BCA-3037-B78A-4AFF3B6E7EC2> /usr/lib/system/libsystem_trace.dylib
+       0x18d817000 -        0x18d81a01f  libsystem_blocks.dylib (98.1) <69165407-EE1A-37A4-BC82-29A711B02FE6> /usr/lib/system/libsystem_blocks.dylib
+       0x18d81b000 -        0x18d8611df  libdispatch.dylib (1605.40.4) <6F5E8225-AD67-3644-AFEF-25A4A43BF604> /usr/lib/system/libdispatch.dylib
+       0x18d862000 -        0x18d86b4f3  libsystem_platform.dylib (402.40.3) <FDF30FD1-5E97-3348-BEE7-BA386574A75F> /usr/lib/system/libsystem_platform.dylib
+       0x18d86c000 -        0x18d86ed2b  libsystem_featureflags.dylib (111) <6B6117CF-AFA9-3118-89B8-847366A4B863> /usr/lib/system/libsystem_featureflags.dylib
+       0x18d86f000 -        0x18d904033  libc++.1.dylib (2200.32) <29FF7149-AB23-3DEC-8DA3-39E2CB145F89> /usr/lib/libc++.1.dylib
+       0x18f3b5000 -        0x18f3f0bdb  libsystem_containermanager.dylib (833.40.18.0.1) <BB240C3E-181D-3E64-81B5-FF7887CEA66A> /usr/lib/system/libsystem_containermanager.dylib
+       0x18f998000 -        0x18f9af277  libsystem_asl.dylib (409.40.3) <EEB736E2-F339-3BF3-9503-32C0418076B8> /usr/lib/system/libsystem_asl.dylib
+       0x190310000 -        0x190310f2f  libobjcMsgSend.dylib (973.1) <0B3C2D50-F0C7-3E78-8175-ADD879E8B1A1> /usr/lib/objc/libobjcMsgSend.dylib
+       0x197eec000 -        0x197f06e13  libsystem_networkextension.dylib (2365.40.3.0.2) <61ABFE3D-5B3B-3E48-9E91-3745FB6AD31E> /usr/lib/system/libsystem_networkextension.dylib
+       0x198175000 -        0x19817be03  libsystem_sandbox.dylib (3051.41.1) <041A67C3-6F5D-3406-8F91-4E212953E967> /usr/lib/system/libsystem_sandbox.dylib
+       0x198310000 -        0x198310f2f  libobjcMsgSend1.dylib (973.1) <670BD0AE-0137-3BFE-A1FF-7072BFCBC81C> /usr/lib/objc/libobjcMsgSend1.dylib
+       0x19be49000 -        0x19be50edf  libsystem_symptoms.dylib (2394.40.17) <DF6A7970-1174-31F7-AB3F-95CDB3D7473A> /usr/lib/system/libsystem_symptoms.dylib
+       0x1a02bf000 -        0x1a02c327f  libsystem_configuration.dylib (1453.40.1) <A24B3482-14E6-31AC-98CC-5B791865EB7B> /usr/lib/system/libsystem_configuration.dylib
+       0x1a0310000 -        0x1a0310f2f  libobjcMsgSend2.dylib (973.1) <6EA207E5-CF66-3C48-8E3C-1AA3019AA361> /usr/lib/objc/libobjcMsgSend2.dylib
+       0x1a8310000 -        0x1a8310f2f  libobjcMsgSend3.dylib (973.1) <BCB340D6-66C2-37A7-885E-389E166E39DF> /usr/lib/objc/libobjcMsgSend3.dylib
+       0x1b0310000 -        0x1b0310f2f  libobjcMsgSend4.dylib (973.1) <CBCE5322-7B74-37F3-AECE-7B6CFC07E0D8> /usr/lib/objc/libobjcMsgSend4.dylib
+       0x1b8310000 -        0x1b8310f2f  libobjcMsgSend5.dylib (973.1) <F928C2E1-E53A-3FEA-A87D-9E08A74C5185> /usr/lib/objc/libobjcMsgSend5.dylib
+       0x1c0193000 -        0x1c019baf7  libsystem_dnssd.dylib (3111.40.45) <B45D8BC6-6E29-33AA-8A81-11F69B4A4809> /usr/lib/system/libsystem_dnssd.dylib
+       0x1c0310000 -        0x1c0310f2f  libobjcMsgSend6.dylib (973.1) <2D3B1A7D-6831-374A-8B66-40B27CB9A62D> /usr/lib/objc/libobjcMsgSend6.dylib
+       0x1c66a1000 -        0x1c66a3f73  libquarantine.dylib (217.40.5) <2ECF6314-D521-331B-9916-2E960002EC0D> /usr/lib/system/libquarantine.dylib
+       0x1c8132000 -        0x1c813c837  libcopyfile.dylib (260.40.4) <6EE8B677-06A9-37C5-AC08-7767D5EF5BBE> /usr/lib/system/libcopyfile.dylib
+       0x1c8310000 -        0x1c8310f2f  libobjcMsgSend7.dylib (973.1) <AF8B3B4F-4E02-3956-9060-D971ECF3FF75> /usr/lib/objc/libobjcMsgSend7.dylib
+       0x1cc286000 -        0x1cc28cfe5  libRosetta.dylib (385) <5C834D15-B729-3F75-AFDA-30B19B63DC44> /usr/lib/libRosetta.dylib
+       0x1d0310000 -        0x1d0310f2f  libobjcMsgSend8.dylib (973.1) <658E3612-5716-3180-9EE8-83D96DE6E7F2> /usr/lib/objc/libobjcMsgSend8.dylib
+       0x1d8310000 -        0x1d8310f2f  libobjcMsgSend9.dylib (973.1) <AD31DFEA-A911-3B57-AB36-83C141C0D8BF> /usr/lib/objc/libobjcMsgSend9.dylib
+       0x1e0310000 -        0x1e0310f2f  libobjcMsgSend10.dylib (973.1) <23386B45-C079-3D2E-BAED-B398BF97A29F> /usr/lib/objc/libobjcMsgSend10.dylib
+       0x1e8310000 -        0x1e8310f2f  libobjcMsgSend11.dylib (973.1) <82969568-5718-3C22-B36A-B348DF322515> /usr/lib/objc/libobjcMsgSend11.dylib
+       0x210310000 -        0x210310f2f  libobjcMsgSend12.dylib (973.1) <17C2F368-D514-3BD8-B246-BC090B818B06> /usr/lib/objc/libobjcMsgSend12.dylib
+       0x218310000 -        0x218310f2f  libobjcMsgSend13.dylib (973.1) <C332A9C4-E29E-32B8-97D4-29A70A65D4F8> /usr/lib/objc/libobjcMsgSend13.dylib
+       0x220310000 -        0x220310f2f  libobjcMsgSend14.dylib (973.1) <A497729E-0C57-35FC-B013-50AA706E031E> /usr/lib/objc/libobjcMsgSend14.dylib
+       0x228310000 -        0x228310f2f  libobjcMsgSend15.dylib (973.1) <5156CA8E-B192-394C-A66D-4B47F4219FFC> /usr/lib/objc/libobjcMsgSend15.dylib
+       0x230310000 -        0x230310f2f  libobjcMsgSend16.dylib (973.1) <C81F7E7F-1CD7-36DC-A83B-BCDFF4EEA863> /usr/lib/objc/libobjcMsgSend16.dylib
+       0x238310000 -        0x238310f2f  libobjcMsgSend17.dylib (973.1) <6226B8A9-985F-3275-8A2E-D88F748F7B59> /usr/lib/objc/libobjcMsgSend17.dylib
+       0x240310000 -        0x240310f2f  libobjcMsgSend18.dylib (973.1) <BF6781B2-12A7-3658-AC63-EC81A1879CAE> /usr/lib/objc/libobjcMsgSend18.dylib
+       0x240d71000 -        0x240d78003  libiconv.2.dylib (123) <4FF0A750-C631-3959-8C50-030C5B02A61E> /usr/lib/libiconv.2.dylib
+       0x248310000 -        0x248310f2f  libobjcMsgSend19.dylib (973.1) <B2368B3C-7008-357E-B973-AD4D0F30F24B> /usr/lib/objc/libobjcMsgSend19.dylib
+       0x250310000 -        0x250310f2f  libobjcMsgSend20.dylib (973.1) <FA79D27E-71FE-39C7-9379-8FA044F0E812> /usr/lib/objc/libobjcMsgSend20.dylib
+       0x258310000 -        0x258310f2f  libobjcMsgSend21.dylib (973.1) <B8FDD041-87E1-353B-871E-F960D33C8EFC> /usr/lib/objc/libobjcMsgSend21.dylib
+       0x260310000 -        0x260310f2f  libobjcMsgSend22.dylib (973.1) <6B1DA446-7FCF-36A1-9179-D1D824DDDB90> /usr/lib/objc/libobjcMsgSend22.dylib
+       0x268310000 -        0x268310f2f  libobjcMsgSend23.dylib (973.1) <60FB2667-7C9D-3311-8D3A-CCDE42F1C951> /usr/lib/objc/libobjcMsgSend23.dylib
+       0x270310000 -        0x270310f2f  libobjcMsgSend24.dylib (973.1) <19CCC5A5-0A8B-36C0-8F48-0CECB87241A7> /usr/lib/objc/libobjcMsgSend24.dylib
+       0x290310000 -        0x290310f2f  libobjcMsgSend25.dylib (973.1) <2A8B86D1-94AD-3956-AB1A-2B05E082FF00> /usr/lib/objc/libobjcMsgSend25.dylib
+       0x298310000 -        0x298310f2f  libobjcMsgSend26.dylib (973.1) <FC71F8AA-332D-37B3-8455-B0EE8A59CF5B> /usr/lib/objc/libobjcMsgSend26.dylib
+       0x2a0310000 -        0x2a0310f2f  libobjcMsgSend27.dylib (973.1) <FD74E202-C0E6-3368-9609-69DA09F23711> /usr/lib/objc/libobjcMsgSend27.dylib
+       0x2a8310000 -        0x2a8310f2f  libobjcMsgSend28.dylib (973.1) <43791422-EA8E-34A9-B3FB-429DA1C13635> /usr/lib/objc/libobjcMsgSend28.dylib
+       0x2b0310000 -        0x2b0310f2f  libobjcMsgSend29.dylib (973.1) <0DEC0355-9D46-39AB-BA10-6D12BC54E809> /usr/lib/objc/libobjcMsgSend29.dylib
+       0x2b8310000 -        0x2b8310f2f  libobjcMsgSend30.dylib (973.1) <135A8216-EDAA-375D-9CFE-6D060E9B76FD> /usr/lib/objc/libobjcMsgSend30.dylib
+       0x2c0310000 -        0x2c0310f2f  libobjcMsgSend31.dylib (973.1) <B17E30B3-B38A-3606-8B49-06D5DD6340B8> /usr/lib/objc/libobjcMsgSend31.dylib
+       0x2c8310000 -        0x2c8310f2f  libobjcMsgSend32.dylib (973.1) <F3EF7513-6B57-3613-92EB-9A6CCE530CB1> /usr/lib/objc/libobjcMsgSend32.dylib
+       0x2d0310000 -        0x2d0310f2f  libobjcMsgSend33.dylib (973.1) <1B0D5975-9F13-30A1-B356-02C655CFE91A> /usr/lib/objc/libobjcMsgSend33.dylib
+       0x2d43ab000 -        0x2d43ac8f3  libSystem.B.dylib (1359.40.3) <DEAF2098-8EDD-3E5D-A821-F63A14D6C055> /usr/lib/libSystem.B.dylib
+       0x2d4a43000 -        0x2d4a43bdf  libcharset.1.dylib (123) <23686A9F-86A4-3E76-8638-C725A789C2F7> /usr/lib/libcharset.1.dylib
+       0x2d6145000 -        0x2d6149f1b  libcache.dylib (95) <F4C38893-98FF-369D-A029-12D5EB5F6EF3> /usr/lib/system/libcache.dylib
+       0x2d614a000 -        0x2d6156737  libcommonCrypto.dylib (600041.40.3) <EA957905-B0F9-37F1-A46A-709729B06F1D> /usr/lib/system/libcommonCrypto.dylib
+       0x2d6157000 -        0x2d615a8bf  libcompiler_rt.dylib (103.4) <02546E21-E652-3DCC-AD99-D9E07DC6F9D5> /usr/lib/system/libcompiler_rt.dylib
+       0x2d62c4000 -        0x2d62c4e27  libkeymgr.dylib (31) <03BA9BC5-4D21-368F-BF2E-18FDF0B8CB9B> /usr/lib/system/libkeymgr.dylib
+       0x2d62df000 -        0x2d62e24f7  libmacho.dylib (27104) <7CEA0703-3291-3697-84A9-E127BF93D284> /usr/lib/system/libmacho.dylib
+       0x2d62e3000 -        0x2d62e5987  libremovefile.dylib (96.40.3) <C21865A5-BE38-3A53-BAC4-7077D66BCAA4> /usr/lib/system/libremovefile.dylib
+       0x2d62e6000 -        0x2d62eb07f  libsystem_collections.dylib (1786.40.6) <CF9D77A4-F719-3A57-ADE7-3077B28642ED> /usr/lib/system/libsystem_collections.dylib
+       0x2d62ec000 -        0x2d62ef75b  libsystem_darwindirectory.dylib (129.0.1) <12774D59-1A1E-3B7C-BCDC-5A391B39BBD8> /usr/lib/system/libsystem_darwindirectory.dylib
+       0x2d62f0000 -        0x2d62faf1b  libsystem_eligibility.dylib (446.41.1) <BF729533-95A7-3A1D-A13F-B95649FA3D88> /usr/lib/system/libsystem_eligibility.dylib
+       0x2d62fb000 -        0x2d6338b67  libsystem_m.dylib (3326.40.2) <CA94FD98-6F85-3A92-84CD-F7DCA12C11F7> /usr/lib/system/libsystem_m.dylib
+       0x2d6339000 -        0x2d634242b  libsystem_sanitizers.dylib (32) <18C1008F-4D9F-3736-ABF5-02B613F44A3A> /usr/lib/system/libsystem_sanitizers.dylib
+       0x2d6343000 -        0x2d6345f1f  libsystem_secinit.dylib (182.40.2) <56FFB40F-A7BF-39F7-BB0D-D1D464E026FB> /usr/lib/system/libsystem_secinit.dylib
+       0x2d6346000 -        0x2d6346a1b  libsystem_trial.dylib (511.1.2) <AD4C6ADB-6566-3F9C-8F4D-2525BAAE2156> /usr/lib/system/libsystem_trial.dylib
+       0x2d6348000 -        0x2d6351c87  libunwind.dylib (2200.5) <C65DAC0C-6058-3F79-ABC3-06B7D1B54CD2> /usr/lib/system/libunwind.dylib
+       0x2d8310000 -        0x2d8310f2f  libobjcMsgSend34.dylib (973.1) <12502285-E2B1-3E0A-8475-278D2BF6DEB8> /usr/lib/objc/libobjcMsgSend34.dylib
+       0x2e0310000 -        0x2e0310f2f  libobjcMsgSend35.dylib (973.1) <3F84A789-91E0-36FF-8D95-884F84961AFE> /usr/lib/objc/libobjcMsgSend35.dylib

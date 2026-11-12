@@ -1,5 +1,5 @@
 import { it, expect } from "vitest";
-import { spawn } from "node:child_process";
+import { spawn, execFile } from "node:child_process";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -349,6 +349,22 @@ it("Rust output preserves every posting, float64 score within tolerance, forward
     expect(d.code).toBe(1);
     expect(d.stderr).toContain("duplicate document ID");
     await expect(readFile(dir + "/dup/root.json")).rejects.toThrow();
+    const pack = out + "/staging/run-000000/packs/plan-0.bin";
+    const packBytes = await readFile(pack);
+    await writeFile(pack, "corrupt");
+    const corruptPack = await run([
+      "build",
+      "--input",
+      input,
+      "--out",
+      out,
+      "--batch-mib",
+      "1",
+      "--resume",
+    ]);
+    expect(corruptPack.code).toBe(1);
+    expect(corruptPack.stderr).toContain("checksum mismatch");
+    await writeFile(pack, packBytes);
     const checkpoint = out + "/staging/run-000000/postings.stage";
     await writeFile(checkpoint, "corrupt");
     const broken = await run([
@@ -449,6 +465,51 @@ it("external posting merge works under a low descriptor limit", async () => {
       ["alpha", 90, 90],
       ["beta", 90, 90],
     ]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+it("streamed source input produces the same immutable generation as a regular file", async () => {
+  if (process.platform === "win32") return;
+  const dir = await mkdtemp(join(tmpdir(), "rust-stream-"));
+  try {
+    const fifo = dir + "/input.pipe",
+      input = dir + "/input.jsonl";
+    const payload =
+      [
+        { id: "a", body: "alpha beta alpha", title: "Beta" },
+        { id: "b", body: "😀 ＨＥＬＬＯ İ alpha" },
+        { id: "c", body: "", metadata: null },
+      ]
+        .map((d) => JSON.stringify(d))
+        .join("\n") + "\n";
+    await writeFile(input, payload);
+    await new Promise<void>((ok, no) =>
+      execFile("mkfifo", [fifo], (e) => (e ? no(e) : ok())),
+    );
+    const streamed = run([
+      "build",
+      "--input",
+      fifo,
+      "--out",
+      dir + "/streamed",
+    ]);
+    await writeFile(fifo, payload);
+    const result = await streamed;
+    expect(result.code, result.stderr).toBe(0);
+    const regular = await run([
+      "build",
+      "--input",
+      input,
+      "--out",
+      dir + "/regular",
+    ]);
+    expect(regular.code, regular.stderr).toBe(0);
+    const a = JSON.parse(await readFile(dir + "/streamed/root.json", "utf8")),
+      b = JSON.parse(await readFile(dir + "/regular/root.json", "utf8"));
+    expect(a.generation).toBe(b.generation);
+    expect(a.count).toBe(3);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

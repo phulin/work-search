@@ -27,9 +27,16 @@ consumes a cursor until it reaches its next competitor, reducing heap operations
 Posting merge fan-in is bounded by both 512 and the available descriptor limit,
 leaving 64 descriptors for other work. Larger inputs spill through additional
 bounded merge levels. Vocabulary and mapping merges have fan-in 48.
+Posting cursors use 256 KiB buffers. One producer merges, scores and encodes leaves;
+the consumer builds bounds, hashes and writes pages. Two bounded channels of 32
+blocks transfer and recycle column buffers. A producer error propagates to the
+writer; a writer error disconnects queues before joining the producer. The order
+of output bytes is identical to the earlier serial writer.
 
-Each stage has checksummed checkpoints. `--resume` verifies source record hashes
-and checkpoint artifacts; a completed generation is validated without rewriting
+Each stage has checksummed checkpoints. Fresh builds collect temporary-file
+hashes below a 1 MiB buffered writer and reuse immutable pack digests, rather than
+rereading those bytes to create their first checksum. `--resume` verifies source
+record hashes and checkpoint artifacts; a completed generation is validated without rewriting
 its immutable objects. An output-directory lock prevents two builders from writing
 the same generation. The root is the publication marker. Its generation identifier
 hashes the root with an empty generation, including every object's content hash,
@@ -74,7 +81,11 @@ rounded to the preceding whole scalar; full text and token offsets are retained.
 ## Memory, storage and limits
 
 Memory scales with worker count, batch size and bounded merge fan-in, rather than retaining all corpus postings. Run summaries and the final object/root
-directory still grow with corpus size. Per-document input is capped at 64 MiB before allocation.
+directory still grow with corpus size. For this real 100k workload, eight threads /
+16 MiB batches improve build time at roughly 2–2.5 GiB individual-process peak RSS;
+four-thread / 4 MiB batches use less memory. The default remains 4 MiB to keep small
+builds parallel. Larger merge read buffers did not improve repeatable results and
+were removed. Per-document input is capped at 64 MiB before allocation.
 The cap is a guard, not a recommendation: one huge document expands into tokens,
 positions and passage buffers. Default batches are soft byte boundaries, so the
 last record may exceed the batch budget. Active worker scratch, queued input,
@@ -97,7 +108,9 @@ per-occurrence comparison sort, V8 score subprocess, second scored-postings merg
 or whole-generation copy/patch pass. The first Rust implementation is frozen in
 `codex/rust-builder-v1-control`; it is not a selectable production engine. The
 original CWS1 TS builder and reader under `bench/rust-builder/control/` are frozen
-benchmark/reference tooling only. Gzip remains for text because changing its codec
+benchmark/reference tooling only. The later optimized control is frozen in `codex/rust-builder-v2-control`.
+The rejected large-buffer experiment is preserved only in Git history and its raw
+measurements. Gzip remains for text because changing its codec
 also changes serving decode support and needs a separate live latency comparison;
 the measured offline improvements use libdeflate, not lower-fidelity text.
 
@@ -107,4 +120,9 @@ The real 100k corpus, every-posting synthetic tests, and the existing 32-query
 oracle qualify the base format. This work does not establish 1M/full-corpus serving
 latency, live Worker memory, or the readiness of the replacement query engine.
 External merge structure supports larger inputs, but those sizes need measured
-builds and serving validation before full-corpus adoption.
+builds and serving validation before full-corpus adoption. Regular files and named
+FIFOs use the same bounded source reader; external gzip decompression can stream
+without materializing an uncompressed corpus. A FIFO producer must be restarted
+for resume validation. Content-derived generation is known only at completion;
+the main project's old source-hash streaming uploader needs adaptation before it
+can delete and upload native output during construction.

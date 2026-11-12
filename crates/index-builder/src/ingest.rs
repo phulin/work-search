@@ -158,7 +158,7 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
     let start = Instant::now();
     let mut packer = Packer::new(&dir.join("packs"), 0)?;
     let mut compressor = TextCompressor::new();
-    let mut docs = writer(&dir.join("documents.stage"))?;
+    let mut docs = digest_writer(&dir.join("documents.stage"))?;
     let mut dictionary = FxHashMap::default();
     let mut dfs = Vec::new();
     let mut rows = Vec::new();
@@ -341,7 +341,7 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
         ids.push((d.id, doc));
         phases[2] += stage.elapsed().as_micros();
     }
-    docs.flush()?;
+    let docs_hash = finish_digest(docs)?;
     let stage = Instant::now();
     let mut vocabulary: Vec<_> = dictionary
         .into_iter()
@@ -368,7 +368,7 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
     let rows = sorted;
     // Stable counting scatter: input rows are already in document order, so this
     // groups terms in linear time without comparison sorting.
-    let mut postings = writer(&dir.join("postings.stage"))?;
+    let mut postings = digest_writer(&dir.join("postings.stage"))?;
     for r in &rows {
         let mut header = [0; 44];
         for (i, n) in [
@@ -392,27 +392,26 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
         postings.write_all(&header)?;
         postings.write_all(&arena[r.at..r.at + r.blen + r.tlen])?;
     }
-    postings.flush()?;
-    let mut vocab = writer(&dir.join("vocabulary.bin"))?;
+    let postings_hash = finish_digest(postings)?;
+    let mut vocab = digest_writer(&dir.join("vocabulary.bin"))?;
     for v in &vocabulary {
         v.write(&mut vocab)?;
     }
-    vocab.flush()?;
+    let vocab_hash = finish_digest(vocab)?;
     ids.sort_unstable_by(|a, b| js_cmp(&a.0, &b.0));
-    let mut idout = writer(&dir.join("ids.bin"))?;
+    let mut idout = digest_writer(&dir.join("ids.bin"))?;
     for (id, doc) in ids {
         write_string(&mut idout, &id)?;
         u32le(&mut idout, doc)?;
     }
-    idout.flush()?;
+    let idout_hash = finish_digest(idout)?;
     let objects = packer.finish()?;
-    let names = vec![
-        "postings.stage".into(),
-        "documents.stage".into(),
-        "vocabulary.bin".into(),
-        "ids.bin".into(),
+    let mut files = vec![
+        ("postings.stage".into(), postings_hash),
+        ("documents.stage".into(), docs_hash),
+        ("vocabulary.bin".into(), vocab_hash),
+        ("ids.bin".into(), idout_hash),
     ];
-    let mut files = checked_files(&dir, names)?;
     // Immutable pack digests were computed while writing; do not reread them.
     files.extend(
         objects

@@ -2,6 +2,108 @@
   "kind": "Offline complete-build statistics; independent sessions; ranges describe observations, not confidence intervals; no serving latency conclusions",
   "sessions": [
     {
+      "path": "bench/rust-builder/results/latest-100k.json",
+      "sha256": "5a6f9592f5ec92fd853b0e32b5c41b8ec694b09cd77fbe6defeed98f030b3e79",
+      "groups": [
+        {
+          "count": 100000,
+          "variant": "rust-v2",
+          "samples": 3,
+          "wallMs": {
+            "median": 23167.429040999996,
+            "min": 21547.512082999994,
+            "max": 23550.493917
+          },
+          "medianIndividualRssBytes": 2193752064,
+          "medianSampledTreeRssBytes": 2158379008,
+          "outputBytes": 6813713369,
+          "generation": "c15c994fdac215e44e9b8df049826d1a65a2a5f3b890af8ec6aa34ffa7941c09",
+          "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06"
+        },
+        {
+          "count": 100000,
+          "variant": "rust",
+          "samples": 3,
+          "wallMs": {
+            "median": 21484.080167000004,
+            "min": 19226.399707999997,
+            "max": 26247.579790999996
+          },
+          "medianIndividualRssBytes": 2335162368,
+          "medianSampledTreeRssBytes": 2266644480,
+          "outputBytes": 6813713369,
+          "generation": "c15c994fdac215e44e9b8df049826d1a65a2a5f3b890af8ec6aa34ffa7941c09",
+          "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06"
+        }
+      ]
+    },
+    {
+      "path": "bench/rust-builder/results/latest-small.json",
+      "sha256": "079b9bbd0271932afd435ea8879a0769ebdb4eaeecaa2483ada91b2b4b909bf8",
+      "groups": [
+        {
+          "count": 1000,
+          "variant": "rust-v2",
+          "samples": 3,
+          "wallMs": {
+            "median": 346.3890839999999,
+            "min": 338.394584,
+            "max": 355.81575
+          },
+          "medianIndividualRssBytes": 117194752,
+          "medianSampledTreeRssBytes": 118013952,
+          "outputBytes": 78059333,
+          "generation": "814f215ea444fad140911784cbc4ca761cc35ca72b2672008e180d97ed3721b2",
+          "corpusHash": "0d1f31cf2125a4c0a73c993c74eb98b2083fcc716f107c4d132e485739d65a29"
+        },
+        {
+          "count": 1000,
+          "variant": "rust",
+          "samples": 3,
+          "wallMs": {
+            "median": 299.525375,
+            "min": 295.80158300000016,
+            "max": 344.62416700000006
+          },
+          "medianIndividualRssBytes": 107823104,
+          "medianSampledTreeRssBytes": 108658688,
+          "outputBytes": 78059333,
+          "generation": "814f215ea444fad140911784cbc4ca761cc35ca72b2672008e180d97ed3721b2",
+          "corpusHash": "0d1f31cf2125a4c0a73c993c74eb98b2083fcc716f107c4d132e485739d65a29"
+        },
+        {
+          "count": 10000,
+          "variant": "rust-v2",
+          "samples": 3,
+          "wallMs": {
+            "median": 2527.329125,
+            "min": 2385.4464160000007,
+            "max": 2909.747167
+          },
+          "medianIndividualRssBytes": 445415424,
+          "medianSampledTreeRssBytes": 446283776,
+          "outputBytes": 691825547,
+          "generation": "0fd7685b2bf7eabda34e9496865520105bdb9cd5b77b1b9daebac1f7da8c5c76",
+          "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7"
+        },
+        {
+          "count": 10000,
+          "variant": "rust",
+          "samples": 3,
+          "wallMs": {
+            "median": 2538.3073330000007,
+            "min": 2191.6995000000006,
+            "max": 2540.3986669999995
+          },
+          "medianIndividualRssBytes": 458326016,
+          "medianSampledTreeRssBytes": 459177984,
+          "outputBytes": 691825547,
+          "generation": "0fd7685b2bf7eabda34e9496865520105bdb9cd5b77b1b9daebac1f7da8c5c76",
+          "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7"
+        }
+      ]
+    },
+    {
       "path": "bench/rust-builder/results/final-100k.json",
       "sha256": "9ca5f4168f6d6f32bb9760b4b97d72fac70fe70b767e0dfbc9f20ed46ddc47d5",
       "groups": [
@@ -100,27 +202,6 @@
           "outputBytes": 691825547,
           "generation": "0fd7685b2bf7eabda34e9496865520105bdb9cd5b77b1b9daebac1f7da8c5c76",
           "corpusHash": "e695aab18a5b136422817f13c9dd1edb260fb8e9751ee16c0a9334be87663bd7"
-        }
-      ]
-    },
-    {
-      "path": "bench/rust-builder/results/final-publication-check-100k.json",
-      "sha256": "e47396cbd0a5cc9297d5fcccd014064281ce4b04d2cded1b2338e9dfd92bfa2e",
-      "groups": [
-        {
-          "count": 100000,
-          "variant": "rust",
-          "samples": 1,
-          "wallMs": {
-            "median": 44488.345792,
-            "min": 44488.345792,
-            "max": 44488.345792
-          },
-          "medianIndividualRssBytes": 760823808,
-          "medianSampledTreeRssBytes": 750927872,
-          "outputBytes": 6813453638,
-          "generation": "9e863c9de344f0276a375aab109f16318055418358b8fbc89d28e2cc212859b3",
-          "corpusHash": "e621b2654ab99a61b8f558dd912193002594de4086d8e1d560324637ef14fb06"
         }
       ]
     },
