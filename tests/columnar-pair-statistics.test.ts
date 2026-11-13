@@ -12,6 +12,46 @@ import {
   mergePairStatisticsRuns,
 } from "../src/columnar/construction/pair-statistics-runs.js";
 import { statisticsOutput } from "../src/columnar/construction/pair-statistics.js";
+it("preserves sorted chunks when overlapping writes complete out of order and propagates failures", async () => {
+  const store = new BuildStore({} as R2Bucket),
+    objects = new Map<string, Uint8Array>(),
+    completed: number[] = [];
+  let serial = 0,
+    active = 0,
+    peak = 0;
+  store.put = async (bytes: Uint8Array) => {
+    const id = serial++;
+    peak = Math.max(peak, ++active);
+    await new Promise((resolve) => setTimeout(resolve, id === 0 ? 20 : 1));
+    objects.set(String(id), bytes.slice());
+    completed.push(id);
+    active--;
+    return { key: String(id), size: bytes.length, sha256: String(id) };
+  };
+  const output = statisticsOutput(65537, 0, 1);
+  for (let i = 0; i < 65537; i++) output.put(i, i, 1, i + 1);
+  const input = new PairStatistics(output.finish(65537)),
+    run = await storePairStatistics(store, input, "words");
+  expect(peak).toBe(2);
+  expect(completed[0]).toBe(1);
+  expect(
+    run.chunks.map((chunk) =>
+      new PairStatistics(objects.get(chunk.key)!).key(0),
+    ),
+  ).toEqual([0, 32768, 65536]);
+  store.put = async () => {
+    throw Error("write failed");
+  };
+  await expect(storePairStatistics(store, input, "words")).rejects.toThrow(
+    "write failed",
+  );
+  store.get = async () => {
+    throw Error("read failed");
+  };
+  await expect(mergePairStatisticsRuns(store, [run])).rejects.toThrow(
+    "read failed",
+  );
+});
 it("counts sparse pairs in a 65536-word vocabulary, including unsigned maximum keys", async () => {
   const selected = Array.from({ length: 65536 }, (_, i) => i),
     ids = new Map([

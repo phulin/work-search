@@ -12,6 +12,8 @@ class Writer {
   chunks: Chunk[] = [];
   count = 0;
   output;
+  pending = new Set<Promise<void>>();
+  failure?: unknown;
   constructor(
     readonly store: BuildStore,
     readonly first: number,
@@ -24,9 +26,30 @@ class Writer {
   }
   async flush() {
     if (!this.count) return;
-    this.chunks.push(await this.store.put(this.output.finish(this.count)));
+    while (this.pending.size >= 2) await Promise.race(this.pending);
+    if (this.failure) throw this.failure;
+    const index = this.chunks.length,
+      bytes = this.output.finish(this.count);
+    this.chunks.length++;
+    const task = this.store
+      .put(bytes)
+      .then(
+        (chunk) => {
+          this.chunks[index] = chunk;
+        },
+        (error) => {
+          this.failure = error;
+        },
+      )
+      .finally(() => this.pending.delete(task));
+    this.pending.add(task);
     this.count = 0;
     this.output = statisticsOutput(CHUNK_ROWS, this.first, this.end);
+  }
+  async finish() {
+    await this.flush();
+    await Promise.all(this.pending);
+    if (this.failure) throw this.failure;
   }
 }
 export async function storePairStatistics(
@@ -39,7 +62,7 @@ export async function storePairStatistics(
     writer.put(stats.key(row), stats.df(row), stats.occurrences(row));
     if (writer.count === CHUNK_ROWS) await writer.flush();
   }
-  await writer.flush();
+  await writer.finish();
   return {
     first: stats.first,
     end: stats.end,
@@ -47,12 +70,13 @@ export async function storePairStatistics(
     chunks: writer.chunks,
   };
 }
-/** One validated physical chunk per input; no whole-corpus pair dictionary. */
+/** One active and one prefetched chunk per input; no whole-corpus dictionary. */
 class Cursor {
   chunk = 0;
   row = 0;
   stats?: PairStatistics;
   last = -1;
+  next?: Promise<Uint8Array>;
   constructor(
     readonly store: BuildStore,
     readonly run: PairStatisticsRun,
@@ -61,9 +85,15 @@ class Cursor {
     if (this.stats && this.row < this.stats.count) return;
     this.stats = undefined;
     if (this.chunk === this.run.chunks.length) return;
-    const stats = new PairStatistics(
-      await this.store.get(this.run.chunks[this.chunk++]),
-    );
+    const bytes = await (this.next ??
+      this.store.get(this.run.chunks[this.chunk]));
+    this.chunk++;
+    this.next =
+      this.chunk < this.run.chunks.length
+        ? this.store.get(this.run.chunks[this.chunk])
+        : undefined;
+    void this.next?.catch(() => {});
+    const stats = new PairStatistics(bytes);
     if (
       stats.first !== this.run.first ||
       stats.end !== this.run.end ||
@@ -122,6 +152,6 @@ export async function mergePairStatisticsRuns(
     if (writer.count === CHUNK_ROWS) await writer.flush();
     if (exhausted.length) await Promise.all(exhausted.map((c) => c.fill()));
   }
-  await writer.flush();
+  await writer.finish();
   return { first, end, vocabulary: runs[0].vocabulary, chunks: writer.chunks };
 }

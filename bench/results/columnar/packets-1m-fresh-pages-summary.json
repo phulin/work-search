@@ -1,0 +1,3508 @@
+{
+  "label": "packets-1m-fresh-pages",
+  "manifest": {
+    "finishedAt": "2026-11-13T08:48:15.113Z",
+    "label": "packets-1m-fresh-pages",
+    "condition": "fresh-namespace",
+    "warmup": false,
+    "countPerVariant": 152,
+    "totalRate": 1,
+    "clientConcurrencyLimit": 16,
+    "sessions": 2,
+    "seed": 20261112,
+    "queries": [
+      {
+        "q": "summary judgment",
+        "kind": "plain-common",
+        "options": {},
+        "oracleSha256": "28a87fa57231a468ebadc69ad27b27f87d4ff0c21643e758cc830b3c49c46f96"
+      },
+      {
+        "q": "personal jurisdiction",
+        "kind": "plain-common",
+        "options": {},
+        "oracleSha256": "c3a0402918224e728cbfecf18deef73894e50efc00ae1ac6a2bf035b0a94db00"
+      },
+      {
+        "q": "breach fiduciary duty",
+        "kind": "plain-selective",
+        "options": {},
+        "oracleSha256": "d3f451ff485a0fdfc93b6c9245074919da0b97edefbb82204cf8ff6c273d89b2"
+      },
+      {
+        "q": "arbitrary capricious agency",
+        "kind": "plain-selective",
+        "options": {},
+        "oracleSha256": "fd04723c16f83af818916a4d915064159d656cddde5d27481ce740e64b2c089c"
+      },
+      {
+        "q": "\"clear and convincing evidence\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "cded0d545232b397f3d577bb08cc186c63fad348c68b9f583ac9db55eb2d3af4"
+      },
+      {
+        "q": "\"res ipsa loquitur\"",
+        "kind": "phrase-rare",
+        "options": {},
+        "oracleSha256": "0e07c609127c3ac6f636cad6644d6021fcc65ecf2bea91fec4a1c7235de37322"
+      },
+      {
+        "q": "(standing OR mootness) AND jurisdiction",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "4ee0f22dd81ee900bf7f590c43627e82ced8fb3aca9682246eb22b7a021fd1a6"
+      },
+      {
+        "q": "(copyright OR trademark) AND injunction",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "37c06a33fc91c3e8f23c8aeb353e3865dd0660c69f5883e0db0e2a0e8339fa82"
+      },
+      {
+        "q": "qualified AND immunity NOT prison",
+        "kind": "boolean-not",
+        "options": {},
+        "oracleSha256": "70140c727463a98c5057c82e8cd79f30a50a82e2dc81c60722670b1ef4c2ed7e"
+      },
+      {
+        "q": "qualified /s immunity",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "34529972d842c419aaf2d5310fe67591c55183c354d2765b4bad0f360b244f85"
+      },
+      {
+        "q": "contract /10 breach",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "fa9367de9121748f1332ded6ebf60e35830f7d751e30740f65fa67e336890b89"
+      },
+      {
+        "q": "notice /p termination",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "e7d51c6fd203cad349d80707fb6cb56987b42e95502978766056366b0531cfee"
+      },
+      {
+        "q": "Christenberry Allen",
+        "kind": "case-name",
+        "options": {},
+        "oracleSha256": "13c6aff7cfa6bfacaa1a9b50347e0ee766f13e8ee6dd5ac2faad36f29f38ff04"
+      },
+      {
+        "q": "Twombly Iqbal",
+        "kind": "case-name",
+        "options": {},
+        "oracleSha256": "1643035f0089f5381efe376a051853bb49042ec71c7b200550b6648e912b94e1"
+      },
+      {
+        "q": "court",
+        "kind": "broad-stress",
+        "options": {},
+        "oracleSha256": "d1ba17d3ddd50316d296409d0f592dd46491b0104356de6908fb8afc117dd5c6"
+      },
+      {
+        "q": "unfindablebenchmarkzzzz",
+        "kind": "empty-control",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "res judicata",
+        "kind": "plain",
+        "options": {},
+        "oracleSha256": "8a5b3ee7a590ea84daf2156f22dff9172a85c3a6990664333cf0bee66335f522"
+      },
+      {
+        "q": "the pennsylvania",
+        "kind": "plain",
+        "options": {},
+        "oracleSha256": "273f848966b80dedfcd8484555344fa7ecf6e004057ab7649cdd054360478f7c"
+      },
+      {
+        "q": "breach contract",
+        "kind": "plain",
+        "options": {},
+        "oracleSha256": "2bbacf0f396c539a65bc3692f351565a7e0c7e1595ae18aaa00577232a3fcaa2"
+      },
+      {
+        "q": "fiduciary duty",
+        "kind": "plain",
+        "options": {},
+        "oracleSha256": "942b2234ed9b942e42ab8bd957a805497eeecd01585f4adecb195a2339cd8e19"
+      },
+      {
+        "q": "\"court cause number 2010\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "f0bbb181c19f4a4f354b5dcea3167f91bc67786ed5bccffe044dabfbe5b371fe"
+      },
+      {
+        "q": "\"strict scrutiny\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "f7a9a2b82ea02bbc19dd80e362372f3fffa473b34216ed46a651246d14c9937d"
+      },
+      {
+        "q": "\"and absent a showing\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "520a82b632bf621d97741a9d218118b4a1954838f287eba0cbadd3639945f699"
+      },
+      {
+        "q": "\"on that advice appellant\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "85b2c2dbd5bd631a3c3349ad2201cc50478a1b60e76bc43380dad0a44c80368d"
+      },
+      {
+        "q": "this /5 of",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "b8a9ed7bb3274e128fe0a9fb0f4ab4ba4b14a9f5a68ff867f44c412945a8378e"
+      },
+      {
+        "q": "motion /5 ten",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "c0bd18b3cf549d1cbc55ee971dbca939bcbc90b93efe54f7ca69ac6545315f4e"
+      },
+      {
+        "q": "prosecutorial /5 by",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "75560d92c45b877823e2c7134161cefe4f988fd30a4978a1452f63a7e3ca9f46"
+      },
+      {
+        "q": "subject /5 matter jurisdiction",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "b9e3520326fa1fd1c4ef4bdec7773e2a065fb703c6ce6d11fb0f67629d3442bd"
+      },
+      {
+        "q": "(fiduciary OR duty) AND court",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "ec6a55ddb75241432d8e4ca9f1437cf9ebf055fdc2c0e1db90f86e1c47085951"
+      },
+      {
+        "q": "(agreement OR 632was) AND by",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "f05f11ac248ea04810a2a0ce78b21080321830b14005dd956a154e08f1fd938a"
+      },
+      {
+        "q": "(any OR oral) AND because",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "2fc74342d3d2b23e088f4c0b72a1fae4eced047239609196cdff8ff8154fba22"
+      },
+      {
+        "q": "(\"and\" OR his) AND was",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "8c67d23a8881b28d8ed6fab90262d56b04f57d563404f6718a3cd408df11b6ab"
+      },
+      {
+        "q": "double jeopardy",
+        "kind": "plain",
+        "options": {},
+        "oracleSha256": "a39bf464819c76deab111fcefbed816b2722b9aa6198eaccf06a7064082425a9"
+      },
+      {
+        "q": "wrongful termination",
+        "kind": "plain",
+        "options": {},
+        "oracleSha256": "7645e4860567ac946e6aa0912bd533f1b03ff526d57e258da0412d08edf7aaf0"
+      },
+      {
+        "q": "burden proof",
+        "kind": "plain",
+        "options": {},
+        "oracleSha256": "91904f99a8bcd82faf2ff2c36c18567fc1eb849281c9e2144d0b2ed43747f8d5"
+      },
+      {
+        "q": "plea agreement",
+        "kind": "plain",
+        "options": {},
+        "oracleSha256": "3f91cf0eb066026204c8819a0c5161a47ea0bf2c1845d502a58ff6ac2b716681"
+      },
+      {
+        "q": "\"medical malpractice\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "ec7206873ec33baec9524836a4c5a236556d8af7fad9ee8f2023bb21b4bc7f0e"
+      },
+      {
+        "q": "\"1970 fence maintained cattle\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"excessive force\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "5d70fe6341d4d2272dfa34a4d3865c93d1b8fc004f634d2cca7b4a9ae3a419ff"
+      },
+      {
+        "q": "\"new york until it\"",
+        "kind": "phrase",
+        "options": {},
+        "oracleSha256": "6aa2ca5fe6d21e561e62ebdd90e4577c67d2ce9d4742a5ff9a87aa68bdd90c57"
+      },
+      {
+        "q": "material /75 fact",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "b0b1facc35e1fc1340a67a741d3e39aa06075b224fc2cf9e75d65e0a7e5078ae"
+      },
+      {
+        "q": "the /5 the",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "9feb6cd2b2872a70b243c8dd16626f4deaaac3d818367c4eac13a53b514406dc"
+      },
+      {
+        "q": "statute /5 limitations",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "a50b744f80bdae596d6fef41225de3d8e8d9e88ce82f9cfb35f60b74a70558f0"
+      },
+      {
+        "q": "jimmie /5 defendants",
+        "kind": "proximity",
+        "options": {},
+        "oracleSha256": "1f76163e4c8468eec7a73ebd2db8d94e848cc895a87a484502f51fd4a7cdf11f"
+      },
+      {
+        "q": "(rules OR of) AND rule",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "d68ccd372365910ff674b75ef3ae9bc5402ba9cabc1a88502eaaf4e4d8ad2a7b"
+      },
+      {
+        "q": "(of OR the) AND limit",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "9c3f867e8650e141cd7b256fda0e53b6d2974be1e5710556c3c5c5013ed0a2e9"
+      },
+      {
+        "q": "(firm OR s) AND \"or\"",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "ad6b8bf85c1bc4cafa754917f875f752b307479e80ff2d8a21bb03d99138f7e3"
+      },
+      {
+        "q": "(due OR process) AND court",
+        "kind": "boolean",
+        "options": {},
+        "oracleSha256": "db0303f3c1f108ef2f08604055269b5e01f6523579ea42ed0bf4b02b971b1a58"
+      },
+      {
+        "q": "\"the and of the\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "0640abb5d8dd4d3022879c952582a1ef4ab3d578926baa6800c444632d3bf319"
+      },
+      {
+        "q": "\"in the\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "fcedf64401362419909cc578e17cbdfb2105dc963735637f19e9133483828781"
+      },
+      {
+        "q": "\"court court court court\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"and on that advice\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "NOT \"summary judgment\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "01a20218e918fdf0d37dc64d235e6d7936cd4cc440e15138eded961062e66b5b"
+      },
+      {
+        "q": "court NOT \"personal jurisdiction\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "d1ba17d3ddd50316d296409d0f592dd46491b0104356de6908fb8afc117dd5c6"
+      },
+      {
+        "q": "NOT NOT \"clear and convincing evidence\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "cded0d545232b397f3d577bb08cc186c63fad348c68b9f583ac9db55eb2d3af4"
+      },
+      {
+        "q": "(jurisdiction OR \"summary judgment\") AND NOT \"res ipsa loquitur\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "19dede73f7801aae103f240c39898d8f52a8702ca997eeea6ec3f3cdaf7ff2aa"
+      },
+      {
+        "q": "\"summary judgment\" /10 evidence",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "1ec7a5771dc3a529beed7ee6df816a66b7ab1e91d5f1f24dba39c90ccd0cc238"
+      },
+      {
+        "q": "(motion OR court) +5 jurisdiction",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "54b45188bee9e4f18a0cc42583b6cfe9eb2fb364a96931f5c49b8fe7dedd8df1"
+      },
+      {
+        "q": "court OR the OR of OR \"and\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "80c5ab4bc902b3bebec15404aa2930c1e7d614e8a6e6e9cb8d798ea4cb887d96"
+      },
+      {
+        "q": "(the OR of) AND (court OR judgment)",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "92c91b24d8e986f6034878628180d7a323685d6aea5a78cca46d8fe3524ad07e"
+      },
+      {
+        "q": "\"ＪＵＲＩＳＤＩＣＴＩＯＮ\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "5c35180e563dadeb516872d3984a3bbcd08f16be4efed32d84217c0283af5831"
+      },
+      {
+        "q": "\"judgment summary\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "d68d7c696fa40e5c5c67c52b43e0510389c8e55c2fac2f911229159e1738ed3d"
+      },
+      {
+        "q": "\"and and\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "86cc20110cfb6d2b4c52778bea5d68dcb89ffcd681dc4a3c8dca7d9a947030ed"
+      },
+      {
+        "q": "\"unfindable word zero\"",
+        "kind": "heldout-adversarial",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "court",
+        "kind": "field-body",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "835231a93b9d3780049af30d1aa1da05fb5e21a2f96b9fa5d8182d841af4a917"
+      },
+      {
+        "q": "court",
+        "kind": "field-title",
+        "options": {
+          "field": "title"
+        },
+        "oracleSha256": "f587454178398fa5d816c0b03db6f9e6be5bab7ae099565e9eb63fb6ef785881"
+      },
+      {
+        "q": "court",
+        "kind": "tie-title-zero",
+        "options": {
+          "field": "title",
+          "titleBoost": 0
+        },
+        "oracleSha256": "b3d579fe5d159960a54c71435a42bf0a3633d0c696d3a3738f77a57042fe1a56"
+      },
+      {
+        "q": "court",
+        "kind": "boost-20",
+        "options": {
+          "titleBoost": 20
+        },
+        "oracleSha256": "530b97a8ca64eec03512a47fd8c29c6eef2df0af2b0f06bc8506818f84d237d5"
+      },
+      {
+        "q": "court",
+        "kind": "boost-arbitrary",
+        "options": {
+          "titleBoost": 3.25
+        },
+        "oracleSha256": "cbf56090fa1a0b7fac7c215a4a824a741365e80e5a236518512062899607a10c"
+      },
+      {
+        "q": "summary OR judgment",
+        "kind": "mode-or",
+        "options": {
+          "mode": "or"
+        },
+        "oracleSha256": "159259f9193269e9bf4db24f78134217eb6681c34d3e9e489edb031e33f5c171"
+      },
+      {
+        "q": "\"clear and convincing evidence\"",
+        "kind": "phrase-title",
+        "options": {
+          "field": "title"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"in the\"",
+        "kind": "common-phrase-body",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "dde501b77b391a0779c9d399362f8c5f914b08f98efed145764bc396143fa35e"
+      },
+      {
+        "q": "motion /5 ten",
+        "kind": "proximity-body",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "39a6c51df10435cbf019faf8d9829602cef39727eab2bc871508e7713a8de7b6"
+      },
+      {
+        "q": "court",
+        "kind": "pagination",
+        "cursorPredecessor": {
+          "id": "courtlistener-opinion:5665767",
+          "doc": 604485,
+          "score": 0.8687232092233179,
+          "title": "Davis v. Superior Court",
+          "metadata": {
+            "opinion_id": 5665767,
+            "cluster_id": 5810334,
+            "date_filed": "2011-06-13",
+            "precedential_status": "Published",
+            "text_field": "html_with_citations",
+            "url": "https://www.courtlistener.com/opinion/5810334/",
+            "snapshot": "2026-09-30"
+          }
+        },
+        "options": {
+          "after": {
+            "score": 0.8687232092233179,
+            "doc": 604485
+          }
+        },
+        "oracleSha256": "22b0be1f1a744d57253a39b73a0b677a3c830f088277d06f554c0c5a238ec2d1"
+      },
+      {
+        "q": "\"summary judgment\"",
+        "kind": "phrase-pagination",
+        "cursorPredecessor": {
+          "id": "courtlistener-opinion:3753400",
+          "doc": 813487,
+          "score": 5.492545990862462,
+          "title": "Gmac Mtge. Corp. v. Lee, Unpublished Decision (2-21-2006)",
+          "metadata": {
+            "opinion_id": 3753400,
+            "cluster_id": 3999576,
+            "date_filed": "2006-02-21",
+            "precedential_status": "Unpublished",
+            "text_field": "html_with_citations",
+            "url": "https://www.courtlistener.com/opinion/3999576/",
+            "snapshot": "2026-09-30"
+          }
+        },
+        "options": {
+          "after": {
+            "score": 5.492545990862462,
+            "doc": 813487
+          }
+        },
+        "oracleSha256": "38fff32ed6691dbb42c4c6a9124ab67845a23c0119fa4438dbf5376cf279bd11"
+      },
+      {
+        "q": "jurisdiction",
+        "kind": "large-page",
+        "options": {
+          "limit": 100
+        },
+        "oracleSha256": "c2ba303431d9ff7b96f5abdc04f357070c64e45a8b4173d6048fd236ed4fe14e"
+      }
+    ],
+    "health": {
+      "work-search-cws-near": {
+        "format": "CWS1",
+        "generation": "4c41c86b35e6e2689860be16765eb6990aea6314ca16a3f327866edef38081f4",
+        "documents": 1000000,
+        "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+        "directoryBytes": 33402940,
+        "isolate": "dead22d4-141f-4fd2-9a77-613714a28221",
+        "sequence": 1,
+        "cacheNamespace": "work-search-cws-near",
+        "pageBytes": 262144
+      }
+    },
+    "clientRegion": "local-New-England",
+    "node": "v26.7.0",
+    "startedAt": "2026-11-13T08:45:14.311Z",
+    "harnessSha256": "e1529a704a95b0934064bad87038e40716c6264109088fa818a83a4f9b5ebef5",
+    "responseCaching": false,
+    "resolvedCursors": {
+      "work-search-cws-near:73": {
+        "score": 0.8687232092233179,
+        "doc": 604485
+      },
+      "work-search-cws-near:74": {
+        "score": 5.492545990862462,
+        "doc": 813487
+      }
+    }
+  },
+  "rawSha256": "94b31daef5261a64631ec940c643512cb5ef5fda16c2b60bc131f0c00d382420",
+  "groups": [
+    {
+      "name": "work-search-cws-near",
+      "kind": "all-scenarios",
+      "attempts": 152,
+      "successes": 149,
+      "errors": {
+        "503": 3
+      },
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 149,
+        "p50": 3657.1554170000018,
+        "p95": 20800.968042000008,
+        "p99": 30143.046500000004,
+        "max": 34317.25212499999
+      },
+      "clientAllOutcomesMs": {
+        "n": 152,
+        "p50": 3608.657500000001,
+        "p95": 20800.968042000008,
+        "p99": 30143.046500000004,
+        "max": 34317.25212499999
+      },
+      "clientIncludingQueueMs": {
+        "n": 149,
+        "p50": 3659.4699170000094,
+        "p95": 20802.31570800001,
+        "p99": 30145.406709,
+        "max": 34318.75266700001
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 149,
+        "p50": [
+          2780.074999999999,
+          4844.333542000008
+        ],
+        "p95": [
+          11817.812834000011,
+          25599.809083000015
+        ],
+        "p99": [
+          23355.368709000002,
+          34317.25212499999
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 152,
+        "p50": 1.3688750000001164,
+        "p95": 2.4272499999788124,
+        "p99": 2.793375000001106,
+        "max": 3.119417000001704
+      },
+      "sampledCpuMs": {
+        "n": 149,
+        "p50": 467,
+        "p95": 2639,
+        "p99": 5872,
+        "max": 6142
+      },
+      "sampledWorkerWallMs": {
+        "n": 149,
+        "p50": 3567,
+        "p95": 20743,
+        "p99": 29701,
+        "max": 34257
+      },
+      "tailJoined": 149,
+      "workerReportedWallMs": {
+        "n": 149,
+        "p50": 3416,
+        "p95": 20571,
+        "p99": 29447,
+        "max": 33954
+      },
+      "metadataMs": {
+        "n": 149,
+        "p50": 222,
+        "p95": 319,
+        "p99": 1065,
+        "max": 1341
+      },
+      "activeBufferBytes": {
+        "n": 149,
+        "p50": 445248,
+        "p95": 1552524,
+        "p99": 3538693,
+        "max": 3538693
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 29,
+      "completionThroughputPerSec": 0.840850164678488,
+      "totals": {
+        "requests": 18095,
+        "bytes": 4172901039,
+        "sharedGets": 17535,
+        "sharedPuts": 17062,
+        "memoryHits": 752263,
+        "deduplicated": 99972,
+        "stages": 45033,
+        "postings": 76676813,
+        "candidates": 11383781,
+        "positionIntegers": 22510043,
+        "pairContextIntegers": 14172,
+        "forwardIntegers": 4959363,
+        "resultRequests": 2726,
+        "resultBytes": 99371157,
+        "resultSharedGets": 2682,
+        "resultMemoryHits": 0,
+        "coalescedReads": 110,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 1522122136,
+        "repeatedDecodedBytes": 92258272,
+        "inflatedBytes": 12690039,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "plain-selective",
+      "attempts": 4,
+      "successes": 4,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 4,
+        "p50": 599.4378330000036,
+        "p95": 751.3099999999977,
+        "p99": 751.3099999999977,
+        "max": 751.3099999999977
+      },
+      "clientAllOutcomesMs": {
+        "n": 4,
+        "p50": 599.4378330000036,
+        "p95": 751.3099999999977,
+        "p99": 751.3099999999977,
+        "max": 751.3099999999977
+      },
+      "clientIncludingQueueMs": {
+        "n": 4,
+        "p50": 600.78125,
+        "p95": 753.2724999999919,
+        "p99": 753.2724999999919,
+        "max": 753.2724999999919
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 4,
+        "p50": [
+          486.4748339999933,
+          751.3099999999977
+        ],
+        "p95": [
+          599.4378330000036,
+          751.3099999999977
+        ],
+        "p99": [
+          599.4378330000036,
+          751.3099999999977
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 4,
+        "p50": 1.8813329999975394,
+        "p95": 2.368709000000308,
+        "p99": 2.368709000000308,
+        "max": 2.368709000000308
+      },
+      "sampledCpuMs": {
+        "n": 4,
+        "p50": 243,
+        "p95": 282,
+        "p99": 282,
+        "max": 282
+      },
+      "sampledWorkerWallMs": {
+        "n": 4,
+        "p50": 538,
+        "p95": 707,
+        "p99": 707,
+        "max": 707
+      },
+      "tailJoined": 4,
+      "workerReportedWallMs": {
+        "n": 4,
+        "p50": 328,
+        "p95": 448,
+        "p99": 448,
+        "max": 448
+      },
+      "metadataMs": {
+        "n": 4,
+        "p50": 235,
+        "p95": 308,
+        "p99": 308,
+        "max": 308
+      },
+      "activeBufferBytes": {
+        "n": 4,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 4,
+      "completionThroughputPerSec": 0.025349456507745307,
+      "totals": {
+        "requests": 92,
+        "bytes": 23768406,
+        "sharedGets": 154,
+        "sharedPuts": 154,
+        "memoryHits": 0,
+        "deduplicated": 0,
+        "stages": 4,
+        "postings": 713864,
+        "candidates": 25948,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 340266,
+        "resultRequests": 80,
+        "resultBytes": 4571374,
+        "resultSharedGets": 80,
+        "resultMemoryHits": 0,
+        "coalescedReads": 12,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 17322688,
+        "repeatedDecodedBytes": 0,
+        "inflatedBytes": 398242,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "proximity",
+      "attempts": 22,
+      "successes": 21,
+      "errors": {
+        "503": 1
+      },
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 21,
+        "p50": 4844.333542000008,
+        "p95": 9883.54462500001,
+        "p99": 10558.902375000001,
+        "max": 10558.902375000001
+      },
+      "clientAllOutcomesMs": {
+        "n": 22,
+        "p50": 3948.901750000001,
+        "p95": 9883.54462500001,
+        "p99": 10558.902375000001,
+        "max": 10558.902375000001
+      },
+      "clientIncludingQueueMs": {
+        "n": 21,
+        "p50": 4846.141166999994,
+        "p95": 9884.580249999999,
+        "p99": 10559.650375000001,
+        "max": 10559.650375000001
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 21,
+        "p50": [
+          3432.298291999992,
+          6369.783125000002
+        ],
+        "p95": [
+          8121.536749999999,
+          10558.902375000001
+        ],
+        "p99": [
+          8351.830332999998,
+          10558.902375000001
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 22,
+        "p50": 1.49474999999984,
+        "p95": 2.178416999999172,
+        "p99": 2.202666999975918,
+        "max": 2.202666999975918
+      },
+      "sampledCpuMs": {
+        "n": 21,
+        "p50": 549,
+        "p95": 1086,
+        "p99": 1525,
+        "max": 1525
+      },
+      "sampledWorkerWallMs": {
+        "n": 21,
+        "p50": 4653,
+        "p95": 9837,
+        "p99": 10009,
+        "max": 10009
+      },
+      "tailJoined": 21,
+      "workerReportedWallMs": {
+        "n": 21,
+        "p50": 4464,
+        "p95": 9698,
+        "p99": 9883,
+        "max": 9883
+      },
+      "metadataMs": {
+        "n": 21,
+        "p50": 216,
+        "p95": 301,
+        "p99": 314,
+        "max": 314
+      },
+      "activeBufferBytes": {
+        "n": 21,
+        "p50": 510168,
+        "p95": 762880,
+        "p99": 762880,
+        "max": 762880
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 14,
+      "completionThroughputPerSec": 0.12724903008835456,
+      "totals": {
+        "requests": 2264,
+        "bytes": 500999670,
+        "sharedGets": 2324,
+        "sharedPuts": 2300,
+        "memoryHits": 66690,
+        "deduplicated": 5684,
+        "stages": 8852,
+        "postings": 6080829,
+        "candidates": 831664,
+        "positionIntegers": 276553,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 408,
+        "resultBytes": 14189174,
+        "resultSharedGets": 408,
+        "resultMemoryHits": 0,
+        "coalescedReads": 8,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 120409152,
+        "repeatedDecodedBytes": 12917840,
+        "inflatedBytes": 1960100,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "heldout-adversarial",
+      "attempts": 32,
+      "successes": 32,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 32,
+        "p50": 8589.701792,
+        "p95": 25599.809083000015,
+        "p99": 30143.046500000004,
+        "max": 30143.046500000004
+      },
+      "clientAllOutcomesMs": {
+        "n": 32,
+        "p50": 8589.701792,
+        "p95": 25599.809083000015,
+        "p99": 30143.046500000004,
+        "max": 30143.046500000004
+      },
+      "clientIncludingQueueMs": {
+        "n": 32,
+        "p50": 8592.821417000006,
+        "p95": 25601.213458,
+        "p99": 30145.406709,
+        "max": 30145.406709
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 32,
+        "p50": [
+          1584.241916999992,
+          10598.160499999998
+        ],
+        "p95": [
+          11513.520292000001,
+          30143.046500000004
+        ],
+        "p99": [
+          12256.809374999997,
+          30143.046500000004
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 32,
+        "p50": 0.9920419999980368,
+        "p95": 2.5783750000045984,
+        "p99": 3.119417000001704,
+        "max": 3.119417000001704
+      },
+      "sampledCpuMs": {
+        "n": 32,
+        "p50": 1237,
+        "p95": 4688,
+        "p99": 5872,
+        "max": 5872
+      },
+      "sampledWorkerWallMs": {
+        "n": 32,
+        "p50": 8483,
+        "p95": 25550,
+        "p99": 29701,
+        "max": 29701
+      },
+      "tailJoined": 32,
+      "workerReportedWallMs": {
+        "n": 32,
+        "p50": 8216,
+        "p95": 25298,
+        "p99": 29447,
+        "max": 29447
+      },
+      "metadataMs": {
+        "n": 32,
+        "p50": 222,
+        "p95": 307,
+        "p99": 319,
+        "max": 319
+      },
+      "activeBufferBytes": {
+        "n": 32,
+        "p50": 831768,
+        "p95": 3538693,
+        "p99": 3538693,
+        "max": 3538693
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 19,
+      "completionThroughputPerSec": 0.17823249425066195,
+      "totals": {
+        "requests": 5998,
+        "bytes": 1447161616,
+        "sharedGets": 5454,
+        "sharedPuts": 5276,
+        "memoryHits": 287562,
+        "deduplicated": 43105,
+        "stages": 12112,
+        "postings": 30463422,
+        "candidates": 5620790,
+        "positionIntegers": 12488708,
+        "pairContextIntegers": 14172,
+        "forwardIntegers": 970068,
+        "resultRequests": 480,
+        "resultBytes": 18371142,
+        "resultSharedGets": 480,
+        "resultMemoryHits": 0,
+        "coalescedReads": 8,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 591825560,
+        "repeatedDecodedBytes": 28377056,
+        "inflatedBytes": 2324294,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "phrase",
+      "attempts": 18,
+      "successes": 18,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 18,
+        "p50": 12370.375624999986,
+        "p95": 34317.25212499999,
+        "p99": 34317.25212499999,
+        "max": 34317.25212499999
+      },
+      "clientAllOutcomesMs": {
+        "n": 18,
+        "p50": 12370.375624999986,
+        "p95": 34317.25212499999,
+        "p99": 34317.25212499999,
+        "max": 34317.25212499999
+      },
+      "clientIncludingQueueMs": {
+        "n": 18,
+        "p50": 12370.684208000006,
+        "p95": 34318.75266700001,
+        "p99": 34318.75266700001,
+        "max": 34318.75266700001
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 18,
+        "p50": [
+          809.7395829999878,
+          20800.968042000008
+        ],
+        "p95": [
+          23355.368709000002,
+          34317.25212499999
+        ],
+        "p99": [
+          23355.368709000002,
+          34317.25212499999
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 18,
+        "p50": 1.278042000005371,
+        "p95": 2.6001670000005106,
+        "p99": 2.6001670000005106,
+        "max": 2.6001670000005106
+      },
+      "sampledCpuMs": {
+        "n": 18,
+        "p50": 1454,
+        "p95": 6142,
+        "p99": 6142,
+        "max": 6142
+      },
+      "sampledWorkerWallMs": {
+        "n": 18,
+        "p50": 12210,
+        "p95": 34257,
+        "p99": 34257,
+        "max": 34257
+      },
+      "tailJoined": 18,
+      "workerReportedWallMs": {
+        "n": 18,
+        "p50": 12044,
+        "p95": 33954,
+        "p99": 33954,
+        "max": 33954
+      },
+      "metadataMs": {
+        "n": 18,
+        "p50": 194,
+        "p95": 355,
+        "p99": 355,
+        "max": 355
+      },
+      "activeBufferBytes": {
+        "n": 18,
+        "p50": 1202472,
+        "p95": 1576912,
+        "p99": 1576912,
+        "max": 1576912
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 13,
+      "completionThroughputPerSec": 0.10479164203535529,
+      "totals": {
+        "requests": 4649,
+        "bytes": 1185162818,
+        "sharedGets": 4192,
+        "sharedPuts": 4018,
+        "memoryHits": 196092,
+        "deduplicated": 30682,
+        "stages": 7852,
+        "postings": 16708938,
+        "candidates": 240594,
+        "positionIntegers": 9530066,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 220,
+        "resultBytes": 7274026,
+        "resultSharedGets": 176,
+        "resultMemoryHits": 0,
+        "coalescedReads": 28,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 332345144,
+        "repeatedDecodedBytes": 25498136,
+        "inflatedBytes": 1056540,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "boolean",
+      "attempts": 20,
+      "successes": 20,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 20,
+        "p50": 5186.651209000003,
+        "p95": 7893.311082999999,
+        "p99": 9073.05520799999,
+        "max": 9073.05520799999
+      },
+      "clientAllOutcomesMs": {
+        "n": 20,
+        "p50": 5186.651209000003,
+        "p95": 7893.311082999999,
+        "p99": 9073.05520799999,
+        "max": 9073.05520799999
+      },
+      "clientIncludingQueueMs": {
+        "n": 20,
+        "p50": 5188.465666999997,
+        "p95": 7894.979708999999,
+        "p99": 9074.05075000001,
+        "max": 9074.05075000001
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 20,
+        "p50": [
+          4285.84258300002,
+          5733.840834000002
+        ],
+        "p95": [
+          5764.907917000004,
+          9073.05520799999
+        ],
+        "p99": [
+          5991.342916000023,
+          9073.05520799999
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 20,
+        "p50": 1.1673750000045402,
+        "p95": 2.3852500000066357,
+        "p99": 2.793375000001106,
+        "max": 2.793375000001106
+      },
+      "sampledCpuMs": {
+        "n": 20,
+        "p50": 737,
+        "p95": 1154,
+        "p99": 1157,
+        "max": 1157
+      },
+      "sampledWorkerWallMs": {
+        "n": 20,
+        "p50": 5136,
+        "p95": 7303,
+        "p99": 9026,
+        "max": 9026
+      },
+      "tailJoined": 20,
+      "workerReportedWallMs": {
+        "n": 20,
+        "p50": 4916,
+        "p95": 7076,
+        "p99": 8853,
+        "max": 8853
+      },
+      "metadataMs": {
+        "n": 20,
+        "p50": 229,
+        "p95": 264,
+        "p99": 288,
+        "max": 288
+      },
+      "activeBufferBytes": {
+        "n": 20,
+        "p50": 647496,
+        "p95": 717848,
+        "p99": 717848,
+        "max": 717848
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 11,
+      "completionThroughputPerSec": 0.11793071053369704,
+      "totals": {
+        "requests": 2033,
+        "bytes": 445192678,
+        "sharedGets": 2152,
+        "sharedPuts": 2083,
+        "memoryHits": 127799,
+        "deduplicated": 12933,
+        "stages": 6456,
+        "postings": 14670580,
+        "candidates": 2791456,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 1219188,
+        "resultRequests": 400,
+        "resultBytes": 16335886,
+        "resultSharedGets": 400,
+        "resultMemoryHits": 0,
+        "coalescedReads": 12,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 281878168,
+        "repeatedDecodedBytes": 15184808,
+        "inflatedBytes": 1963236,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "plain",
+      "attempts": 16,
+      "successes": 15,
+      "errors": {
+        "503": 1
+      },
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 15,
+        "p50": 540.0620409999974,
+        "p95": 5232.334916,
+        "p99": 5232.334916,
+        "max": 5232.334916
+      },
+      "clientAllOutcomesMs": {
+        "n": 16,
+        "p50": 536.1427079999994,
+        "p95": 5232.334916,
+        "p99": 5232.334916,
+        "max": 5232.334916
+      },
+      "clientIncludingQueueMs": {
+        "n": 15,
+        "p50": 542.4832080000051,
+        "p95": 5233.577584000006,
+        "p99": 5233.577584000006,
+        "max": 5233.577584000006
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 15,
+        "p50": [
+          494.1732499999998,
+          1720.5850419999988
+        ],
+        "p95": [
+          1720.5850419999988,
+          5232.334916
+        ],
+        "p99": [
+          1720.5850419999988,
+          5232.334916
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 16,
+        "p50": 1.2439590000067255,
+        "p95": 2.4206669999985024,
+        "p99": 2.4206669999985024,
+        "max": 2.4206669999985024
+      },
+      "sampledCpuMs": {
+        "n": 15,
+        "p50": 166,
+        "p95": 851,
+        "p99": 851,
+        "max": 851
+      },
+      "sampledWorkerWallMs": {
+        "n": 15,
+        "p50": 490,
+        "p95": 5194,
+        "p99": 5194,
+        "max": 5194
+      },
+      "tailJoined": 15,
+      "workerReportedWallMs": {
+        "n": 15,
+        "p50": 365,
+        "p95": 4999,
+        "p99": 4999,
+        "max": 4999
+      },
+      "metadataMs": {
+        "n": 15,
+        "p50": 233,
+        "p95": 300,
+        "p99": 300,
+        "max": 300
+      },
+      "activeBufferBytes": {
+        "n": 15,
+        "p50": 0,
+        "p95": 449008,
+        "p99": 449008,
+        "max": 449008
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 13,
+      "completionThroughputPerSec": 0.10633803575176407,
+      "totals": {
+        "requests": 520,
+        "bytes": 95309089,
+        "sharedGets": 634,
+        "sharedPuts": 632,
+        "memoryHits": 15862,
+        "deduplicated": 1944,
+        "stages": 1479,
+        "postings": 2968092,
+        "candidates": 243525,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 832868,
+        "resultRequests": 300,
+        "resultBytes": 11113769,
+        "resultSharedGets": 300,
+        "resultMemoryHits": 0,
+        "coalescedReads": 22,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 65615108,
+        "repeatedDecodedBytes": 3095152,
+        "inflatedBytes": 1410165,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "plain-common",
+      "attempts": 4,
+      "successes": 4,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 4,
+        "p50": 2009.9466250000114,
+        "p95": 3657.1554170000018,
+        "p99": 3657.1554170000018,
+        "max": 3657.1554170000018
+      },
+      "clientAllOutcomesMs": {
+        "n": 4,
+        "p50": 2009.9466250000114,
+        "p95": 3657.1554170000018,
+        "p99": 3657.1554170000018,
+        "max": 3657.1554170000018
+      },
+      "clientIncludingQueueMs": {
+        "n": 4,
+        "p50": 2010.9442080000008,
+        "p95": 3659.4699170000094,
+        "p99": 3659.4699170000094,
+        "max": 3659.4699170000094
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 4,
+        "p50": [
+          1803.005541999999,
+          3657.1554170000018
+        ],
+        "p95": [
+          2009.9466250000114,
+          3657.1554170000018
+        ],
+        "p99": [
+          2009.9466250000114,
+          3657.1554170000018
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 4,
+        "p50": 0.9968329999828711,
+        "p95": 2.314125000004424,
+        "p99": 2.314125000004424,
+        "max": 2.314125000004424
+      },
+      "sampledCpuMs": {
+        "n": 4,
+        "p50": 270,
+        "p95": 528,
+        "p99": 528,
+        "max": 528
+      },
+      "sampledWorkerWallMs": {
+        "n": 4,
+        "p50": 1925,
+        "p95": 3561,
+        "p99": 3561,
+        "max": 3561
+      },
+      "tailJoined": 4,
+      "workerReportedWallMs": {
+        "n": 4,
+        "p50": 1721,
+        "p95": 3418,
+        "p99": 3418,
+        "max": 3418
+      },
+      "metadataMs": {
+        "n": 4,
+        "p50": 208,
+        "p95": 248,
+        "p99": 248,
+        "max": 248
+      },
+      "activeBufferBytes": {
+        "n": 4,
+        "p50": 401648,
+        "p95": 421896,
+        "p99": 421896,
+        "max": 421896
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 3,
+      "completionThroughputPerSec": 0.03446672965021139,
+      "totals": {
+        "requests": 230,
+        "bytes": 41092168,
+        "sharedGets": 231,
+        "sharedPuts": 230,
+        "memoryHits": 9509,
+        "deduplicated": 446,
+        "stages": 1176,
+        "postings": 688640,
+        "candidates": 64844,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 184990,
+        "resultRequests": 80,
+        "resultBytes": 2457976,
+        "resultSharedGets": 80,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 14193608,
+        "repeatedDecodedBytes": 1134784,
+        "inflatedBytes": 395732,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "case-name",
+      "attempts": 4,
+      "successes": 4,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 4,
+        "p50": 420.2571670000034,
+        "p95": 974.9110000000001,
+        "p99": 974.9110000000001,
+        "max": 974.9110000000001
+      },
+      "clientAllOutcomesMs": {
+        "n": 4,
+        "p50": 420.2571670000034,
+        "p95": 974.9110000000001,
+        "p99": 974.9110000000001,
+        "max": 974.9110000000001
+      },
+      "clientIncludingQueueMs": {
+        "n": 4,
+        "p50": 421.22254200000316,
+        "p95": 977.0049169999984,
+        "p99": 977.0049169999984,
+        "max": 977.0049169999984
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 4,
+        "p50": [
+          274.167666000023,
+          974.9110000000001
+        ],
+        "p95": [
+          420.2571670000034,
+          974.9110000000001
+        ],
+        "p99": [
+          420.2571670000034,
+          974.9110000000001
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 4,
+        "p50": 0.965250000001106,
+        "p95": 2.09375,
+        "p99": 2.09375,
+        "max": 2.09375
+      },
+      "sampledCpuMs": {
+        "n": 4,
+        "p50": 65,
+        "p95": 123,
+        "p99": 123,
+        "max": 123
+      },
+      "sampledWorkerWallMs": {
+        "n": 4,
+        "p50": 377,
+        "p95": 413,
+        "p99": 413,
+        "max": 413
+      },
+      "tailJoined": 4,
+      "workerReportedWallMs": {
+        "n": 4,
+        "p50": 258,
+        "p95": 334,
+        "p99": 334,
+        "max": 334
+      },
+      "metadataMs": {
+        "n": 4,
+        "p50": 164,
+        "p95": 258,
+        "p99": 258,
+        "max": 258
+      },
+      "activeBufferBytes": {
+        "n": 4,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 4,
+      "completionThroughputPerSec": 0.028305725210759698,
+      "totals": {
+        "requests": 66,
+        "bytes": 5498760,
+        "sharedGets": 72,
+        "sharedPuts": 72,
+        "memoryHits": 0,
+        "deduplicated": 0,
+        "stages": 4,
+        "postings": 87246,
+        "candidates": 8294,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 132436,
+        "resultRequests": 58,
+        "resultBytes": 1828744,
+        "resultSharedGets": 58,
+        "resultMemoryHits": 0,
+        "coalescedReads": 8,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 2507424,
+        "repeatedDecodedBytes": 0,
+        "inflatedBytes": 266902,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "common-phrase-body",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 6446.843625000009,
+        "p95": 7343.492541000001,
+        "p99": 7343.492541000001,
+        "max": 7343.492541000001
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 6446.843625000009,
+        "p95": 7343.492541000001,
+        "p99": 7343.492541000001,
+        "max": 7343.492541000001
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 6447.718917000006,
+        "p95": 7343.187084000001,
+        "p99": 7343.187084000001,
+        "max": 7343.187084000001
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          6446.843625000009,
+          7343.492541000001
+        ],
+        "p95": [
+          6446.843625000009,
+          7343.492541000001
+        ],
+        "p99": [
+          6446.843625000009,
+          7343.492541000001
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0,
+        "p95": 0.8750419999996666,
+        "p99": 0.8750419999996666,
+        "max": 0.8750419999996666
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 663,
+        "p95": 1017,
+        "p99": 1017,
+        "max": 1017
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 6403,
+        "p95": 7299,
+        "p99": 7299,
+        "max": 7299
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 6203,
+        "p95": 7185,
+        "p99": 7185,
+        "max": 7185
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 175,
+        "p95": 230,
+        "p99": 230,
+        "max": 230
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 896560,
+        "p95": 896560,
+        "p99": 896560,
+        "max": 896560
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.018780781082918866,
+      "totals": {
+        "requests": 398,
+        "bytes": 93160868,
+        "sharedGets": 413,
+        "sharedPuts": 398,
+        "memoryHits": 5147,
+        "deduplicated": 844,
+        "stages": 500,
+        "postings": 325120,
+        "candidates": 115362,
+        "positionIntegers": 156466,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 40,
+        "resultBytes": 1391796,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 8021160,
+        "repeatedDecodedBytes": 120224,
+        "inflatedBytes": 182370,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "phrase-title",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 228.15958299999693,
+        "p95": 341.61129199998686,
+        "p99": 341.61129199998686,
+        "max": 341.61129199998686
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 228.15958299999693,
+        "p95": 341.61129199998686,
+        "p99": 341.61129199998686,
+        "max": 341.61129199998686
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 230.52216699999917,
+        "p95": 342.3687499999942,
+        "p99": 342.3687499999942,
+        "max": 342.3687499999942
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          228.15958299999693,
+          341.61129199998686
+        ],
+        "p95": [
+          228.15958299999693,
+          341.61129199998686
+        ],
+        "p99": [
+          228.15958299999693,
+          341.61129199998686
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0.757207999995444,
+        "p95": 2.362334000001283,
+        "p99": 2.362334000001283,
+        "max": 2.362334000001283
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 34,
+        "p95": 34,
+        "p99": 34,
+        "max": 34
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 194,
+        "p95": 303,
+        "p99": 303,
+        "max": 303
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 148,
+        "p95": 255,
+        "p99": 255,
+        "max": 255
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.019160095867090606,
+      "totals": {
+        "requests": 8,
+        "bytes": 1674816,
+        "sharedGets": 8,
+        "sharedPuts": 8,
+        "memoryHits": 212,
+        "deduplicated": 248,
+        "stages": 0,
+        "postings": 0,
+        "candidates": 0,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 0,
+        "resultBytes": 0,
+        "resultSharedGets": 0,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 1077360,
+        "repeatedDecodedBytes": 0,
+        "inflatedBytes": 0,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "broad-stress",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 3473.5255000000034,
+        "p95": 3577.2816250000033,
+        "p99": 3577.2816250000033,
+        "max": 3577.2816250000033
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 3473.5255000000034,
+        "p95": 3577.2816250000033,
+        "p99": 3577.2816250000033,
+        "max": 3577.2816250000033
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 3475.87025,
+        "p95": 3577.0307080000057,
+        "p99": 3577.0307080000057,
+        "max": 3577.0307080000057
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          3473.5255000000034,
+          3577.2816250000033
+        ],
+        "p95": [
+          3473.5255000000034,
+          3577.2816250000033
+        ],
+        "p99": [
+          3473.5255000000034,
+          3577.2816250000033
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0,
+        "p95": 2.3439589999979944,
+        "p99": 2.3439589999979944,
+        "max": 2.3439589999979944
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 299,
+        "p95": 350,
+        "p99": 350,
+        "max": 350
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 3454,
+        "p95": 3583,
+        "p99": 3583,
+        "max": 3583
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 3293,
+        "p95": 3416,
+        "p99": 3416,
+        "max": 3416
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 200,
+        "p95": 250,
+        "p99": 250,
+        "max": 250
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 272384,
+        "p95": 272384,
+        "p99": 272384,
+        "max": 272384
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.01930161325249143,
+      "totals": {
+        "requests": 162,
+        "bytes": 32449320,
+        "sharedGets": 162,
+        "sharedPuts": 162,
+        "memoryHits": 3626,
+        "deduplicated": 576,
+        "stages": 684,
+        "postings": 337152,
+        "candidates": 219206,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 124910,
+        "resultRequests": 40,
+        "resultBytes": 1645048,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 7425288,
+        "repeatedDecodedBytes": 114096,
+        "inflatedBytes": 180182,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "phrase-pagination",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 5687.1314580000035,
+        "p95": 5771.329542000003,
+        "p99": 5771.329542000003,
+        "max": 5771.329542000003
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 5687.1314580000035,
+        "p95": 5771.329542000003,
+        "p99": 5771.329542000003,
+        "max": 5771.329542000003
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 5688.24504200001,
+        "p95": 5772.9257499999985,
+        "p99": 5772.9257499999985,
+        "max": 5772.9257499999985
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          5687.1314580000035,
+          5771.329542000003
+        ],
+        "p95": [
+          5687.1314580000035,
+          5771.329542000003
+        ],
+        "p99": [
+          5687.1314580000035,
+          5771.329542000003
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 1.113375000000815,
+        "p95": 1.5952919999981532,
+        "p99": 1.5952919999981532,
+        "max": 1.5952919999981532
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 465,
+        "p95": 738,
+        "p99": 738,
+        "max": 738
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 5295,
+        "p95": 5558,
+        "p99": 5558,
+        "max": 5558
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 5112,
+        "p95": 5429,
+        "p99": 5429,
+        "max": 5429
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 214,
+        "p95": 227,
+        "p99": 227,
+        "max": 227
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 543700,
+        "p95": 543700,
+        "p99": 543700,
+        "max": 543700
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.021112606638959152,
+      "totals": {
+        "requests": 266,
+        "bytes": 59571760,
+        "sharedGets": 268,
+        "sharedPuts": 266,
+        "memoryHits": 5188,
+        "deduplicated": 434,
+        "stages": 746,
+        "postings": 350976,
+        "candidates": 35688,
+        "positionIntegers": 16900,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 40,
+        "resultBytes": 1017992,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 7051224,
+        "repeatedDecodedBytes": 388016,
+        "inflatedBytes": 197078,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "proximity-body",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 4580.525292000006,
+        "p95": 7400.264790999998,
+        "p99": 7400.264790999998,
+        "max": 7400.264790999998
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 4580.525292000006,
+        "p95": 7400.264790999998,
+        "p99": 7400.264790999998,
+        "max": 7400.264790999998
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 4582.953332999983,
+        "p95": 7401.8005840000005,
+        "p99": 7401.8005840000005,
+        "max": 7401.8005840000005
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          4580.525292000006,
+          7400.264790999998
+        ],
+        "p95": [
+          4580.525292000006,
+          7400.264790999998
+        ],
+        "p99": [
+          4580.525292000006,
+          7400.264790999998
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 1.5352090000014869,
+        "p95": 2.4272499999788124,
+        "p99": 2.4272499999788124,
+        "max": 2.4272499999788124
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 607,
+        "p95": 1026,
+        "p99": 1026,
+        "max": 1026
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 4531,
+        "p95": 7357,
+        "p99": 7357,
+        "max": 7357
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 4349,
+        "p95": 7180,
+        "p99": 7180,
+        "max": 7180
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 206,
+        "p95": 357,
+        "p99": 357,
+        "max": 357
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 510168,
+        "p95": 510168,
+        "p99": 510168,
+        "max": 510168
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.01519473665006241,
+      "totals": {
+        "requests": 226,
+        "bytes": 48539516,
+        "sharedGets": 228,
+        "sharedPuts": 226,
+        "memoryHits": 9802,
+        "deduplicated": 530,
+        "stages": 1150,
+        "postings": 898972,
+        "candidates": 76484,
+        "positionIntegers": 32458,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 40,
+        "resultBytes": 505260,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 16621816,
+        "repeatedDecodedBytes": 1739648,
+        "inflatedBytes": 155174,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "mode-or",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 2271.729041999999,
+        "p95": 3011.3041660000017,
+        "p99": 3011.3041660000017,
+        "max": 3011.3041660000017
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 2271.729041999999,
+        "p95": 3011.3041660000017,
+        "p99": 3011.3041660000017,
+        "max": 3011.3041660000017
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 2273.6385420000006,
+        "p95": 3012.956917000003,
+        "p99": 3012.956917000003,
+        "max": 3012.956917000003
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          2271.729041999999,
+          3011.3041660000017
+        ],
+        "p95": [
+          2271.729041999999,
+          3011.3041660000017
+        ],
+        "p99": [
+          2271.729041999999,
+          3011.3041660000017
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 1.6522919999988517,
+        "p95": 1.9088750000009895,
+        "p99": 1.9088750000009895,
+        "max": 1.9088750000009895
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 221,
+        "p95": 433,
+        "p99": 433,
+        "max": 433
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 2221,
+        "p95": 2534,
+        "p99": 2534,
+        "max": 2534
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 2104,
+        "p95": 2330,
+        "p99": 2330,
+        "max": 2330
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 194,
+        "p95": 222,
+        "p99": 222,
+        "max": 222
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 421896,
+        "p95": 421896,
+        "p99": 421896,
+        "max": 421896
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.02172630619934634,
+      "totals": {
+        "requests": 132,
+        "bytes": 24879760,
+        "sharedGets": 132,
+        "sharedPuts": 132,
+        "memoryHits": 4220,
+        "deduplicated": 262,
+        "stages": 408,
+        "postings": 246784,
+        "candidates": 144954,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 110422,
+        "resultRequests": 40,
+        "resultBytes": 1449920,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 5615720,
+        "repeatedDecodedBytes": 255552,
+        "inflatedBytes": 189974,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "tie-title-zero",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 703.1082079999978,
+        "p95": 709.9686250000086,
+        "p99": 709.9686250000086,
+        "max": 709.9686250000086
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 703.1082079999978,
+        "p95": 709.9686250000086,
+        "p99": 709.9686250000086,
+        "max": 709.9686250000086
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 704.7859170000011,
+        "p95": 710.5109999999986,
+        "p99": 710.5109999999986,
+        "max": 710.5109999999986
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          703.1082079999978,
+          709.9686250000086
+        ],
+        "p95": [
+          703.1082079999978,
+          709.9686250000086
+        ],
+        "p99": [
+          703.1082079999978,
+          709.9686250000086
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0.5420829999784473,
+        "p95": 1.6769170000043232,
+        "p99": 1.6769170000043232,
+        "max": 1.6769170000043232
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 68,
+        "p95": 86,
+        "p99": 86,
+        "max": 86
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 653,
+        "p95": 660,
+        "p99": 660,
+        "max": 660
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 581,
+        "p95": 589,
+        "p99": 589,
+        "max": 589
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 212,
+        "p95": 218,
+        "p99": 218,
+        "max": 218
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 274920,
+        "p95": 274920,
+        "p99": 274920,
+        "max": 274920
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.01656287698451021,
+      "totals": {
+        "requests": 54,
+        "bytes": 3298918,
+        "sharedGets": 54,
+        "sharedPuts": 54,
+        "memoryHits": 1894,
+        "deduplicated": 68,
+        "stages": 20,
+        "postings": 38912,
+        "candidates": 46,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 40,
+        "resultBytes": 806198,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 1619104,
+        "repeatedDecodedBytes": 18016,
+        "inflatedBytes": 12830,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "field-body",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 2486.466000000015,
+        "p95": 2738.049791999998,
+        "p99": 2738.049791999998,
+        "max": 2738.049791999998
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 2486.466000000015,
+        "p95": 2738.049791999998,
+        "p99": 2738.049791999998,
+        "max": 2738.049791999998
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 2486.471332999994,
+        "p95": 2738.151542000007,
+        "p99": 2738.151542000007,
+        "max": 2738.151542000007
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          2486.466000000015,
+          2738.049791999998
+        ],
+        "p95": [
+          2486.466000000015,
+          2738.049791999998
+        ],
+        "p99": [
+          2486.466000000015,
+          2738.049791999998
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0.00483299998450093,
+        "p95": 0.10162500000296859,
+        "p99": 0.10162500000296859,
+        "max": 0.10162500000296859
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 210,
+        "p95": 275,
+        "p99": 275,
+        "max": 275
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 2198,
+        "p95": 2440,
+        "p99": 2440,
+        "max": 2440
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 2074,
+        "p95": 2296,
+        "p99": 2296,
+        "max": 2296
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 198,
+        "p95": 204,
+        "p99": 204,
+        "max": 204
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 272656,
+        "p95": 272656,
+        "p99": 272656,
+        "max": 272656
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.015322210840979275,
+      "totals": {
+        "requests": 114,
+        "bytes": 19810432,
+        "sharedGets": 114,
+        "sharedPuts": 114,
+        "memoryHits": 1964,
+        "deduplicated": 202,
+        "stages": 208,
+        "postings": 72192,
+        "candidates": 50286,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 122840,
+        "resultRequests": 40,
+        "resultBytes": 1589072,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 2702400,
+        "repeatedDecodedBytes": 8960,
+        "inflatedBytes": 185416,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "large-page",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 1461.7205420000028,
+        "p95": 1929.522874999995,
+        "p99": 1929.522874999995,
+        "max": 1929.522874999995
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 1461.7205420000028,
+        "p95": 1929.522874999995,
+        "p99": 1929.522874999995,
+        "max": 1929.522874999995
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 1461.8854590000046,
+        "p95": 1930.94541700001,
+        "p99": 1930.94541700001,
+        "max": 1930.94541700001
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          1461.7205420000028,
+          1929.522874999995
+        ],
+        "p95": [
+          1461.7205420000028,
+          1929.522874999995
+        ],
+        "p99": [
+          1461.7205420000028,
+          1929.522874999995
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0.16475000000355067,
+        "p95": 1.4223330000095302,
+        "p99": 1.4223330000095302,
+        "max": 1.4223330000095302
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 357,
+        "p95": 631,
+        "p99": 631,
+        "max": 631
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 1401,
+        "p95": 1873,
+        "p99": 1873,
+        "max": 1873
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 1180,
+        "p95": 1503,
+        "p99": 1503,
+        "max": 1503
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 1065,
+        "p95": 1341,
+        "p99": 1341,
+        "max": 1341
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.033913524239041495,
+      "totals": {
+        "requests": 202,
+        "bytes": 16819468,
+        "sharedGets": 234,
+        "sharedPuts": 234,
+        "memoryHits": 0,
+        "deduplicated": 0,
+        "stages": 2,
+        "postings": 368728,
+        "candidates": 368728,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 594816,
+        "resultRequests": 200,
+        "resultBytes": 7906572,
+        "resultSharedGets": 200,
+        "resultMemoryHits": 0,
+        "coalescedReads": 2,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 10577688,
+        "repeatedDecodedBytes": 0,
+        "inflatedBytes": 968412,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "pagination",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 3892.234083000003,
+        "p95": 6273.94658399999,
+        "p99": 6273.94658399999,
+        "max": 6273.94658399999
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 3892.234083000003,
+        "p95": 6273.94658399999,
+        "p99": 6273.94658399999,
+        "max": 6273.94658399999
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 3894.429167000002,
+        "p95": 6275.590000000011,
+        "p99": 6275.590000000011,
+        "max": 6275.590000000011
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          3892.234083000003,
+          6273.94658399999
+        ],
+        "p95": [
+          3892.234083000003,
+          6273.94658399999
+        ],
+        "p99": [
+          3892.234083000003,
+          6273.94658399999
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 1.643208000008599,
+        "p95": 2.1949170000007143,
+        "p99": 2.1949170000007143,
+        "max": 2.1949170000007143
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 545,
+        "p95": 587,
+        "p99": 587,
+        "max": 587
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 3852,
+        "p95": 5483,
+        "p99": 5483,
+        "max": 5483
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 3633,
+        "p95": 5321,
+        "p99": 5321,
+        "max": 5321
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 218,
+        "p95": 356,
+        "p99": 356,
+        "max": 356
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 272384,
+        "p95": 272384,
+        "p99": 272384,
+        "max": 272384
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.023442276400480924,
+      "totals": {
+        "requests": 162,
+        "bytes": 32047396,
+        "sharedGets": 162,
+        "sharedPuts": 162,
+        "memoryHits": 3856,
+        "deduplicated": 586,
+        "stages": 684,
+        "postings": 367616,
+        "candidates": 243652,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 93734,
+        "resultRequests": 40,
+        "resultBytes": 1243124,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 7842584,
+        "repeatedDecodedBytes": 141552,
+        "inflatedBytes": 184500,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "boolean-not",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 1068.5268750000105,
+        "p95": 1083.2297920000055,
+        "p99": 1083.2297920000055,
+        "max": 1083.2297920000055
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 1068.5268750000105,
+        "p95": 1083.2297920000055,
+        "p99": 1083.2297920000055,
+        "max": 1083.2297920000055
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 1070.1575420000008,
+        "p95": 1084.5987920000043,
+        "p99": 1084.5987920000043,
+        "max": 1084.5987920000043
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          1068.5268750000105,
+          1083.2297920000055
+        ],
+        "p95": [
+          1068.5268750000105,
+          1083.2297920000055
+        ],
+        "p99": [
+          1068.5268750000105,
+          1083.2297920000055
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 1.3688750000001164,
+        "p95": 1.630457999999635,
+        "p99": 1.630457999999635,
+        "max": 1.630457999999635
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 307,
+        "p95": 467,
+        "p99": 467,
+        "max": 467
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 626,
+        "p95": 1004,
+        "p99": 1004,
+        "max": 1004
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 360,
+        "p95": 612,
+        "p99": 612,
+        "max": 612
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 271,
+        "p95": 354,
+        "p99": 354,
+        "max": 354
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.03837922472598044,
+      "totals": {
+        "requests": 46,
+        "bytes": 8635294,
+        "sharedGets": 68,
+        "sharedPuts": 68,
+        "memoryHits": 0,
+        "deduplicated": 0,
+        "stages": 2,
+        "postings": 245044,
+        "candidates": 9336,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 97178,
+        "resultRequests": 40,
+        "resultBytes": 1340398,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 6,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 5893584,
+        "repeatedDecodedBytes": 0,
+        "inflatedBytes": 216086,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "phrase-rare",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 1248.8444579999996,
+        "p95": 2032.025250000006,
+        "p99": 2032.025250000006,
+        "max": 2032.025250000006
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 1248.8444579999996,
+        "p95": 2032.025250000006,
+        "p99": 2032.025250000006,
+        "max": 2032.025250000006
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 1250.606667,
+        "p95": 2032.9730829999899,
+        "p99": 2032.9730829999899,
+        "max": 2032.9730829999899
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          1248.8444579999996,
+          2032.025250000006
+        ],
+        "p95": [
+          1248.8444579999996,
+          2032.025250000006
+        ],
+        "p99": [
+          1248.8444579999996,
+          2032.025250000006
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0.9474579999805428,
+        "p95": 1.762084000001778,
+        "p99": 1.762084000001778,
+        "max": 1.762084000001778
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 273,
+        "p95": 385,
+        "p99": 385,
+        "max": 385
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 1201,
+        "p95": 1248,
+        "p99": 1248,
+        "max": 1248
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 974,
+        "p95": 1013,
+        "p99": 1013,
+        "max": 1013
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 227,
+        "p95": 250,
+        "p99": 250,
+        "max": 250
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 552556,
+        "p95": 552556,
+        "p99": 552556,
+        "max": 552556
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.02039255148813686,
+      "totals": {
+        "requests": 70,
+        "bytes": 8396962,
+        "sharedGets": 70,
+        "sharedPuts": 70,
+        "memoryHits": 3944,
+        "deduplicated": 0,
+        "stages": 1026,
+        "postings": 223354,
+        "candidates": 3086,
+        "positionIntegers": 8892,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 40,
+        "resultBytes": 1614034,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 4,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 4280904,
+        "repeatedDecodedBytes": 2967696,
+        "inflatedBytes": 191084,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "boost-20",
+      "attempts": 2,
+      "successes": 1,
+      "errors": {
+        "503": 1
+      },
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 1,
+        "p50": 3572.473874999996,
+        "p95": 3572.473874999996,
+        "p99": 3572.473874999996,
+        "max": 3572.473874999996
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 59.23341600000276,
+        "p95": 3572.473874999996,
+        "p99": 3572.473874999996,
+        "max": 3572.473874999996
+      },
+      "clientIncludingQueueMs": {
+        "n": 1,
+        "p50": 3575.1055840000045,
+        "p95": 3575.1055840000045,
+        "p99": 3575.1055840000045,
+        "max": 3575.1055840000045
+      },
+      "uncertainty": {
+        "blocks": 1
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 2.067416999998386,
+        "p95": 2.631500000003143,
+        "p99": 2.631500000003143,
+        "max": 2.631500000003143
+      },
+      "sampledCpuMs": {
+        "n": 1,
+        "p50": 503,
+        "p95": 503,
+        "p99": 503,
+        "max": 503
+      },
+      "sampledWorkerWallMs": {
+        "n": 1,
+        "p50": 3527,
+        "p95": 3527,
+        "p99": 3527,
+        "max": 3527
+      },
+      "tailJoined": 1,
+      "workerReportedWallMs": {
+        "n": 1,
+        "p50": 3356,
+        "p95": 3356,
+        "p99": 3356,
+        "max": 3356
+      },
+      "metadataMs": {
+        "n": 1,
+        "p50": 191,
+        "p95": 191,
+        "p99": 191,
+        "max": 191
+      },
+      "activeBufferBytes": {
+        "n": 1,
+        "p50": 272384,
+        "p95": 272384,
+        "p99": 272384,
+        "max": 272384
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 1,
+      "completionThroughputPerSec": 0.03327663361095654,
+      "totals": {
+        "requests": 80,
+        "bytes": 15714146,
+        "sharedGets": 80,
+        "sharedPuts": 80,
+        "memoryHits": 1643,
+        "deduplicated": 264,
+        "stages": 330,
+        "postings": 143744,
+        "candidates": 91752,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 43171,
+        "resultRequests": 20,
+        "resultBytes": 574154,
+        "resultSharedGets": 20,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 3193588,
+        "repeatedDecodedBytes": 36480,
+        "inflatedBytes": 77638,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "field-title",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 3610.7623329999915,
+        "p95": 5571.6030829999945,
+        "p99": 5571.6030829999945,
+        "max": 5571.6030829999945
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 3610.7623329999915,
+        "p95": 5571.6030829999945,
+        "p99": 5571.6030829999945,
+        "max": 5571.6030829999945
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 3613.2916249999835,
+        "p95": 5572.278084000005,
+        "p99": 5572.278084000005,
+        "max": 5572.278084000005
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          3610.7623329999915,
+          5571.6030829999945
+        ],
+        "p95": [
+          3610.7623329999915,
+          5571.6030829999945
+        ],
+        "p99": [
+          3610.7623329999915,
+          5571.6030829999945
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0.6742920000106096,
+        "p95": 2.528874999989057,
+        "p99": 2.528874999989057,
+        "max": 2.528874999989057
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 494,
+        "p95": 511,
+        "p99": 511,
+        "max": 511
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 3567,
+        "p95": 5530,
+        "p99": 5530,
+        "max": 5530
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 3390,
+        "p95": 5393,
+        "p99": 5393,
+        "max": 5393
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 218,
+        "p95": 249,
+        "p99": 249,
+        "max": 249
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 274920,
+        "p95": 274920,
+        "p99": 274920,
+        "max": 274920
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.022816526193746682,
+      "totals": {
+        "requests": 162,
+        "bytes": 31722622,
+        "sharedGets": 162,
+        "sharedPuts": 162,
+        "memoryHits": 3862,
+        "deduplicated": 610,
+        "stages": 664,
+        "postings": 371712,
+        "candidates": 3102,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 40,
+        "resultBytes": 918350,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 7538080,
+        "repeatedDecodedBytes": 155040,
+        "inflatedBytes": 12418,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "empty-control",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 51.67079200000444,
+        "p95": 512.4422499999928,
+        "p99": 512.4422499999928,
+        "max": 512.4422499999928
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 51.67079200000444,
+        "p95": 512.4422499999928,
+        "p99": 512.4422499999928,
+        "max": 512.4422499999928
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 53.74858400000085,
+        "p95": 514.0122080000001,
+        "p99": 514.0122080000001,
+        "max": 514.0122080000001
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          51.67079200000444,
+          512.4422499999928
+        ],
+        "p95": [
+          51.67079200000444,
+          512.4422499999928
+        ],
+        "p99": [
+          51.67079200000444,
+          512.4422499999928
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 1.569792000009329,
+        "p95": 2.077292000001762,
+        "p99": 2.077292000001762,
+        "max": 2.077292000001762
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 2,
+        "p95": 6,
+        "p99": 6,
+        "max": 6
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 2,
+        "p95": 6,
+        "p99": 6,
+        "max": 6
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.07531696540848629,
+      "totals": {
+        "requests": 0,
+        "bytes": 0,
+        "sharedGets": 0,
+        "sharedPuts": 0,
+        "memoryHits": 0,
+        "deduplicated": 0,
+        "stages": 2,
+        "postings": 0,
+        "candidates": 0,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 0,
+        "resultRequests": 0,
+        "resultBytes": 0,
+        "resultSharedGets": 0,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 0,
+        "repeatedDecodedBytes": 0,
+        "inflatedBytes": 0,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "boost-arbitrary",
+      "attempts": 2,
+      "successes": 2,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 2,
+        "p50": 3608.657500000001,
+        "p95": 4274.2980830000015,
+        "p99": 4274.2980830000015,
+        "max": 4274.2980830000015
+      },
+      "clientAllOutcomesMs": {
+        "n": 2,
+        "p50": 3608.657500000001,
+        "p95": 4274.2980830000015,
+        "p99": 4274.2980830000015,
+        "max": 4274.2980830000015
+      },
+      "clientIncludingQueueMs": {
+        "n": 2,
+        "p50": 3609.3862500000105,
+        "p95": 4274.72054200001,
+        "p99": 4274.72054200001,
+        "max": 4274.72054200001
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 2,
+        "p50": [
+          3608.657500000001,
+          4274.2980830000015
+        ],
+        "p95": [
+          3608.657500000001,
+          4274.2980830000015
+        ],
+        "p99": [
+          3608.657500000001,
+          4274.2980830000015
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 2,
+        "p50": 0.42225000000325963,
+        "p95": 0.7284999999974389,
+        "p99": 0.7284999999974389,
+        "max": 0.7284999999974389
+      },
+      "sampledCpuMs": {
+        "n": 2,
+        "p50": 365,
+        "p95": 445,
+        "p99": 445,
+        "max": 445
+      },
+      "sampledWorkerWallMs": {
+        "n": 2,
+        "p50": 3561,
+        "p95": 4227,
+        "p99": 4227,
+        "max": 4227
+      },
+      "tailJoined": 2,
+      "workerReportedWallMs": {
+        "n": 2,
+        "p50": 3408,
+        "p95": 4099,
+        "p99": 4099,
+        "max": 4099
+      },
+      "metadataMs": {
+        "n": 2,
+        "p50": 201,
+        "p95": 220,
+        "p99": 220,
+        "max": 220
+      },
+      "activeBufferBytes": {
+        "n": 2,
+        "p50": 272384,
+        "p95": 272384,
+        "p99": 272384,
+        "max": 272384
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 2,
+      "completionThroughputPerSec": 0.056629473596207236,
+      "totals": {
+        "requests": 161,
+        "bytes": 31994556,
+        "sharedGets": 167,
+        "sharedPuts": 161,
+        "memoryHits": 3391,
+        "deduplicated": 554,
+        "stages": 672,
+        "postings": 304896,
+        "candidates": 194984,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 92476,
+        "resultRequests": 40,
+        "resultBytes": 1227148,
+        "resultSharedGets": 40,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 6564784,
+        "repeatedDecodedBytes": 105216,
+        "inflatedBytes": 161666,
+        "repeatedInflatedBytes": 0
+      }
+    }
+  ]
+}

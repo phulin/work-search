@@ -191,6 +191,7 @@ export function createColumnarWorker(
             directory?.clear();
           }
           const admitted = performance.now(),
+            sharedBudget = { remaining: 900 },
             reader = new Reader(
               root,
               new ColumnarR2(env.INDEX),
@@ -198,6 +199,7 @@ export function createColumnarWorker(
               shared,
               namespace,
               (p) => ctx.waitUntil(p),
+              sharedBudget,
             );
           const pairReader = pairs
             ? new Reader(
@@ -207,6 +209,7 @@ export function createColumnarWorker(
                 shared,
                 namespace,
                 (p) => ctx.waitUntil(p),
+                sharedBudget,
               )
             : undefined;
           const result = await index.search(

@@ -101,6 +101,7 @@ export class Reader {
     bytes: 0,
     sharedGets: 0,
     sharedPuts: 0,
+    sharedBudgetBypasses: 0,
     memoryHits: 0,
     deduplicated: 0,
     stages: 0,
@@ -140,7 +141,16 @@ export class Reader {
     readonly defer: (p: Promise<unknown>) => void = (p) => {
       void p.catch(() => {});
     },
+    readonly sharedBudget = { remaining: 900 },
   ) {}
+  private takeShared() {
+    if (this.sharedBudget.remaining > 0) {
+      this.sharedBudget.remaining--;
+      return true;
+    }
+    this.stats.sharedBudgetBypasses++;
+    return false;
+  }
   key(ref: Ref) {
     return `${this.root.generation}:${ref.join(":")}`;
   }
@@ -165,7 +175,7 @@ export class Reader {
       let data: Uint8Array | undefined,
         origin = false,
         checksum = o.checksums?.[page];
-      if (this.shared) {
+      if (this.shared && this.takeShared()) {
         this.stats.sharedGets++;
         data = await this.shared.get(key);
       }
@@ -191,7 +201,7 @@ export class Reader {
       )
         throw Error("Immutable page checksum mismatch");
       this.memory.pages.set(key, data, data.length);
-      if (this.shared && origin) {
+      if (this.shared && origin && this.takeShared()) {
         // Cache writes retain their input until completion. Backpressure bounds
         // this separately from the page LRU, including concurrent fetches.
         while (this.sharedWriteBytes >= 2 * 1048576)
@@ -297,7 +307,7 @@ export class Reader {
           this.stats.deduplicated++;
           return pending;
         }
-        if (this.shared) {
+        if (this.shared && this.takeShared()) {
           this.stats.sharedGets++;
           const data = await this.io.run(() => this.shared!.get(k));
           if (data) {
@@ -343,7 +353,7 @@ export class Reader {
             k = key(page);
           result.push(owned);
           this.memory.pages.set(k, owned, owned.length);
-          if (this.shared) {
+          if (this.shared && this.takeShared()) {
             while (this.sharedWriteBytes >= 2 * 1048576)
               await Promise.race(this.sharedWrites);
             this.stats.sharedPuts++;
@@ -454,7 +464,7 @@ export class Reader {
       return decoded(await old);
     }
     const task = this.io.run(async () => {
-      if (this.shared) {
+      if (this.shared && this.takeShared()) {
         this.stats.sharedGets++;
         const data = await this.shared.get(key);
         if (data) {
@@ -488,7 +498,11 @@ export class Reader {
       )
         throw Error("Document package digest mismatch");
       this.memory.pages.set(key, result.data, result.data.length);
-      if (this.shared && result.data.length <= 4 * 1048576) {
+      if (
+        this.shared &&
+        result.data.length <= 4 * 1048576 &&
+        this.takeShared()
+      ) {
         while (this.sharedWriteBytes >= 2 * 1048576)
           await Promise.race(this.sharedWrites);
         this.stats.sharedPuts++;

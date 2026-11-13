@@ -110,6 +110,41 @@ A randomized fresh-namespace range-transfer ablation issued 720 requests, with 1
 
 A subsequent randomized interleaved comparison completed 1,000 requests per engine across two sessions at four total arrivals/second. The packet replacement returned all checked answers correctly, without HTTP errors, at P50/P95/P99 736/3,709/5,663 ms; the same-corpus block control recorded 889/4,765/23,127 ms and two admission 503s. Joined CPU was 340/1,637/2,446 ms versus 417/2,267/12,933 ms. These are conditional scenario percentiles; class results and query/session-block bootstrap intervals remain separate in `packets-1m-interleaved-summary.json`. The 1,000 observations per engine are still below the finalist sample target. A separate 304-request in-request cache-reset run with existing shared pages passed all answers at 722/3,653/5,647 ms.
 
+A numeric block executor now decodes scores into reusable query-owned typed arrays.
+An interleaved comparison of 304 requests per version, across two sessions at four
+total arrivals/second, passed every answer with no HTTP errors. Client P50/P95/P99
+was 654/3,162/4,954 ms versus 790/3,726/5,001 ms; joined CPU was 292/1,159/1,964 ms
+versus 338/1,720/2,444 ms. The P99 difference is inconclusive at this sample size.
+The successful executor is now the normal packet engine; its temporary comparison
+Worker has been deleted. Raw observations, uncertainty and class results are in
+`packets-1m-batch-interleaved*`.
+
+Local inspector profiles provide supporting attribution, not native memory proof.
+For two repeated calls, estimated sampled cumulative allocation fell from 457 MB
+to 372 MB on the heavy phrase and from 336 MB to 259 MB on the broad OR query.
+Maximum observed heap plus backing storage increased from 140 MB to 150 MB across
+these local captures. Collection timing was uncontrolled; this is **not** a
+retained/peak-memory improvement. Raw profiles and compiled-bundle identities are
+under `results/columnar/profiles`.
+
+The following 152-request fresh-namespace pilot used the carried executor, reset
+application caches inside each request, and gave every request a distinct shared
+page namespace. It recorded three admission 503s; all 149 successful answers were
+correct. Successful-response P50/P95/P99 was 3,657/20,801/30,143 ms, with CPU
+467/2,639/5,872 ms. This cold-page condition remains unacceptable. The slow broad
+phrases used 338–817 R2 GETs and approximately 87–211 MB per response: the block
+fallback's page traffic, rather than result rendering, dominated these cases.
+The ongoing wider pair build targets this work, but its benefit is not yet
+measured. No claim is made about R2's opaque backend caches. See
+`packets-1m-fresh-pages*` for errors as well as successful latencies.
+
+Shared Cache API reads and writes now share a conservative 900-operation budget
+per request, including secondary pair readers. Exhausting it falls through to R2
+without changing coverage; `sharedBudgetBypasses` reports that extra work. This
+avoids treating cache-call exhaustion as a query failure. Separate live exact-total
+checks passed 14 contracts, including underfilled phrase heaps and the complement
+of a corpus-verified term DF (`packets-1m-totals.json`).
+
 Native positional/context pair construction completed on 1,000 documents in
 17.7 seconds, producing 4,096 selected pairs, 183,102 occurrences and 6,599,560 bytes.
 Its two numeric-token passes and four-way merges never parse display JSON.
@@ -133,7 +168,7 @@ Fresh grouped construction of 128 documents took 22.0 seconds from source throug
 publication, with no reused scoring output. The actual group containing the longest
 known document in the 1M corpus also completed: 128 documents, 567,448 tokens,
 7,448,709 package bytes and 2,571 ms native wall time. Receipts are under
-`results/columnar/construction`. All 213 repository tests pass, including the large-package shared-cache regression, sparse streamed pair statistics, and numeric batch corruption checks.
+`results/columnar/construction`. The full 214-test suite passed after the cache-operation budget and bounded pair I/O overlap changes. An additional focused test checks out-of-order write completion, bounded write concurrency and read/write failure propagation.
 
 The private benchmark and normal routes initially retained separate caches.
 They now share one page/decoded/directory budget and one admission counter.
@@ -141,6 +176,12 @@ Earlier mixed-route invocation-memory P99 reached 125,915,490 bytes; the subsequ
 corrected sample was 117,784,940 bytes. These cover different workloads and do not
 establish a controlled memory reduction or a peak. Full available-corpus native
 construction has started for 10,032,254 documents, using one Worker and R2.
+All documents finished ingestion at approximately 08:52 UTC on November 13;
+multi-level merging is running. Ingestion completion is not full index completion.
+The sparse pair statistics merger retains one active and one prefetched chunk
+per input and at most two pending output writes. A live replay produced identical
+output bytes; later large merges still took 152–211 seconds on different inputs,
+so these observations do not establish an I/O-overlap speedup.
 
 A rejected Cloudflare Queues dispatcher used the same Worker, not a Worker pool.
 Of 1,024 dispatched jobs, 966 exhausted retries on the application capacity gate;

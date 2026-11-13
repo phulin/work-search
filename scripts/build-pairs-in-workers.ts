@@ -120,6 +120,17 @@ if (
     "Pair construction source or code changed; use a new output/build",
   );
 const post = constructionHTTP(width);
+const statisticsIO =
+  process.env.CWS_PAIR_IO === "1"
+    ? ((await fetch(url + "/pair-io-health", {
+        headers: { authorization: `Bearer ${token}` },
+      }).then((r) => r.json())) as any)
+    : undefined;
+if (statisticsIO) {
+  if (statisticsIO.format !== "CPS1-stream-v1")
+    throw Error("Invalid streamed statistics I/O endpoint");
+  state.statisticsIOCode = statisticsIO.code;
+}
 if (reuseAt >= 0 && !state.statistics.length) {
   const previous = JSON.parse(
     await readFile(process.argv[reuseAt + 1] + "/build.json", "utf8"),
@@ -262,7 +273,9 @@ async function merge(kind: "statistics" | "occurrences", inputs: any[]) {
     await pool(jobs, async (batch, i) => {
       if (!outputs[i]) {
         const result = await call(
-          `/merge-pair-${kind}`,
+          kind === "statistics" && statisticsIO
+            ? "/merge-pair-statistics-io"
+            : `/merge-pair-${kind}`,
           `${kind}-merge-${level}-${i}`,
           { runs: batch },
         );
@@ -456,6 +469,7 @@ await writeFile(
       workers: [url],
       concurrency: width,
       reusedStatisticsBuild: state.reusedStatisticsBuild,
+      statisticsIOCode: state.statisticsIOCode,
     },
     null,
     2,
