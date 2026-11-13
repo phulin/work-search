@@ -1,0 +1,21 @@
+{
+  "build": "native-pairs-1m-wide-v1",
+  "code": "929039d6395647491158f0555ce117c0678a7873b39fd7975926173a69b1c2c8",
+  "baseGeneration": "c6ddc6f53e5acc7ba3520ad36b64dfbcd9d191f03f86daae2e43d5cbbe1c5b02",
+  "generation": "681472634d48bd5129592ef291c6ce13e198b9b1e5afc1b4ded4b00f82d9c216",
+  "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+  "startedAt": "2026-11-13T08:08:58.408Z",
+  "finishedAt": "2026-11-13T10:15:47.898Z",
+  "coverage": {
+    "documents": 1000000,
+    "vocabulary": 65536,
+    "pairs": 4096,
+    "occurrences": 19327527,
+    "bytes": 733124772
+  },
+  "workers": [
+    "https://work-search-cws-build-0.phulin.workers.dev"
+  ],
+  "concurrency": 32,
+  "statisticsIOCode": "d8e116245ee6ea873f675f87748aa74d849681f8fe08377d71914c1624e2d488"
+}

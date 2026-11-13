@@ -33,7 +33,9 @@ CDP2 document packages have six independent sections: whole-document term
 frequencies and field lengths; body token IDs; title token IDs; compressed display
 metadata; a passage index; and compressed text passages. Candidate verification
 and exact scoring decode only numeric sections. Winners decode metadata and the
-relevant passage. No second remote locator discovery is needed.
+relevant passage. Packed body scanning stops at the first query-relevant token
+when choosing a snippet, without expanding the whole token column. No second
+remote locator discovery is needed.
 
 A CDD1 bundled directory addresses every document directly. It stores a 32-byte
 content digest per group of at most 128 packages, plus packed package offsets.
@@ -72,6 +74,10 @@ and uses conservative field bounds rounded outward. Equality remains eligible
 for deterministic ties. An unfilled heap supplies no score-pruning threshold.
 Sparse anchors restrict ranges and masks; broad phrases use buffered positions.
 Resource exhaustion is an explicit error, never incomplete results.
+Nonpositional broad execution can prefetch four nearby ranges within a 2 MiB
+physical footprint. Prefetch uses conservative bounds from the current heap;
+execution rechecks bounds before decoding. It neither changes coverage nor
+materializes a temporary concatenated packet just to warm pages.
 
 CPP3 corpus-selected pair packets contain documents, field-specific positions,
 and one token of context on each side. Empty spans cost no bytes; singleton
@@ -127,7 +133,11 @@ sparse sorted occurrence keys, not a vocabulary-squared table. Global statistics
 merge through 512 KiB chunks with at most four input cursors; occurrence merges
 copy encoded spans. Counts retain float64 occurrence totals above 32 bits. The
 selection heap is bounded independently of corpus pair vocabulary. The wider
-1M pair build is running; its serving benefit is not yet measured.
+1M generation contains 4,096 pairs and 19,327,527 occurrences. It showed identical
+work counts to the smaller generation on existing scenarios; extra coverage has
+not yet established a serving benefit. Large occurrence merges partition sorted
+key ranges using restart keys written into chunk descriptors. A live 32-range
+replay produced byte-identical final packets, including context, to a full merge.
 
 See the [README commands](../README.md) for construction, resumption, publication,
 and isolated deployment. Generations identify the complete immutable layout and
@@ -148,9 +158,10 @@ path. Neither response caching nor approximate candidate truncation explains
 these results.
 
 The historical 4f97 control and the later same-corpus 1M block layout remain
-separate benchmark controls. Earlier local-builder/head/pair compatibility paths
-still exist in source and tooling; removing them from the normal production path
-is outstanding. Full-corpus directory/bundle limits, scale-specific latency and
+separate benchmark controls. The former local builder lives under benchmark control
+tooling; native construction is the default. Earlier head/legacy-render compatibility
+paths still exist in serving source and must be removed after the active builds
+and comparisons complete. Full-corpus directory/bundle limits, scale-specific latency and
 load, final large-sample comparisons, and native retained/peak memory remain
 adoption gates. Current Cloudflare limits are documented in the
 [official limits](https://developers.cloudflare.com/workers/platform/limits/).

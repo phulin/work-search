@@ -1,0 +1,11 @@
+{
+  "attemptedAt": "2026-11-13T09:56:23.539Z",
+  "kind": "Native remote-preview inspector availability check",
+  "wrangler": "4.161.0",
+  "previewHealthSucceeded": true,
+  "inspectorAvailable": false,
+  "evidence": "Wrangler ProxyController.inspectorEnabled explicitly returns false when latestConfig.dev.remote is true; all loopback inspector endpoints refused connections.",
+  "nativePeakMemoryEstablished": false,
+  "nativeRetainedMemoryEstablished": false,
+  "productionDeploymentChanged": false
+}

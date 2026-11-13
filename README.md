@@ -15,48 +15,38 @@ has not been changed during comparisons.
 
 ## Build and search
 
-Node 26.7, Yarn, and Rust 1.93 are required for matching Unicode 17 behavior.
-The TypeScript commands stream into the native external-sort builder. SQLite is
-used only when constructing optional positional accelerators. Input records contain
-`id`, `body`, and optional `title` and `metadata` fields.
+Node 26.7 and Yarn drive the TypeScript constructor on Cloudflare Workers.
+Sorting runs, postings, document packages and serving objects stay in R2; the
+local coordinator stores metadata and progress. Input records contain `id`,
+`body`, and optional `title` and `metadata` fields. The available corpus is already
+archived in R2.
 
 ```sh
 yarn install --frozen-lockfile
-yarn generate-sample
-yarn build-index data/sample.jsonl indexes/cws
-yarn columnar:pairs indexes/cws
-yarn columnar:heads indexes/cws
-yarn search-local indexes/cws '"search engine"'
-yarn search-local indexes/cws 'alpha OR beta' '{"field":"title","titleBoost":3.25}'
-yarn dev indexes/cws
-```
-
-`dev` runs the actual workerd execution path with local file-backed object reads
-at `http://127.0.0.1:8787/search?q=court`. Local diagnostics are not substitutes
-for live Worker measurements. The Node CLI returns results and work counters.
-
-`columnar:build` also accepts comma-separated source partitions, gzip JSONL,
-and an optional maximum document count. Construction does not pass through a
-legacy bundled index. The optional accelerators are selected from corpus
-statistics. Missing accelerator data always falls back to the complete executor.
-
-```sh
-yarn columnar:build corpus.jsonl.gz work/cws-1m 1000000
-yarn columnar:pairs work/cws-1m
-yarn columnar:heads work/cws-1m
-```
-
-Accelerators read the published format independently of builder staging files.
-For the already published R2 corpus, construction can run entirely in Workers.
-The local TypeScript process schedules requests and stores small checkpoints;
-postings, sorting runs, passage text and serving objects stay in R2.
-
-```sh
 yarn node --import tsx scripts/construction-source.ts work/full-flp/published.json
 yarn columnar:deploy:builder
-CWS_BUILD_CONCURRENCY=32 yarn columnar:build:r2 1000000 work/cws-r2-1m corpus-1m
-yarn deploy work/cws-r2-1m work-search-cws-r2-1m --deploy-only
+CWS_BUILD_CONCURRENCY=32 yarn build-index 1000000 work/cws-1m corpus-1m
+yarn node --import tsx scripts/build-pairs-in-workers.ts work/cws-1m work/cws-paired pairs-1m 1024
+yarn deploy work/cws-paired work-search-cws-example --deploy-only
 ```
+
+The optional accelerators are selected from corpus statistics. Missing
+accelerator data always falls back to complete exact verification. The default
+`build-index`, `columnar:build` and `columnar:build:r2` commands all use the same
+constructor, taking document count, output directory and build ID.
+
+```sh
+CWS_REMOTE_URL=https://work-search-cws-upload.phulin.workers.dev yarn search-local work/cws-paired '"search engine"'
+CWS_REMOTE_URL=https://work-search-cws-upload.phulin.workers.dev yarn dev work/cws-paired
+```
+
+`dev` runs workerd at `http://127.0.0.1:8787/search?q=court`; the CLI returns
+complete results and counters. These are local diagnostics, not live latency
+measurements. Their validated package-group reads may fetch more bytes than the
+production range-read path. Without `CWS_REMOTE_URL`, objects must be available
+locally. The older Rust 1.93 builder is retained under
+`bench/columnar/control` for frozen controls and independent fixtures;
+`yarn bench:columnar:build-offline` is its explicit diagnostic entry point.
 
 Repeating the build command resumes completed R2 tasks. Use a new build ID and
 output directory after changing construction code or source. Source generations
@@ -80,7 +70,9 @@ yarn node --import tsx scripts/build-packets-in-workers.ts work/old-native-build
 ```
 
 Corpus-selected positional pairs are constructed from grouped numeric document
-tokens, with bounded four-way merge levels:
+tokens, with bounded four-way merge levels. Large occurrence merges divide into
+independent pair-key ranges, retaining restart fences in their chunk descriptors.
+This preserves parallel work at the final merge level:
 
 ```sh
 yarn node --import tsx scripts/build-pairs-in-workers.ts work/new-packets work/new-paired pairs-v1
@@ -105,10 +97,9 @@ The output includes account/bucket activity from other work. Invocation memory
 percentiles are separate from peak or retained memory, and paid-plan usage
 allowances are billing thresholds rather than hard request limits.
 
-The default builder reclaims consumed staging data. For corpora larger than local
-disk, set `CWS_OFFLINE_STORE` to the authenticated uploader; construction spills
-checksummed temporary streams to R2 with bounded upload backpressure. Build results
-record the source checksum and builder version; construction does not depend on a CI service.
+Build results record source checksums and construction code. Temporary R2 runs
+are reclaimed after they are no longer needed by active jobs or validation.
+Construction does not depend on a CI service or local index-sized storage.
 
 ## Isolated deployment and comparison
 

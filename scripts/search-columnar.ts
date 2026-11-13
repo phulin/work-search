@@ -3,6 +3,8 @@ import { ColumnarIndex } from "../src/columnar/search.js";
 import { Reader, Memory } from "../src/columnar/storage.js";
 import { OfflineObjects } from "../src/columnar/offline.js";
 import { Heads } from "../src/columnar/heads.js";
+import { TermDirectory } from "../src/columnar/term-directory.js";
+import { DocumentDirectory } from "../src/columnar/document-directory.js";
 import { benchmarkToken } from "../bench/columnar/token.js";
 const [dir, q, opts] = process.argv.slice(2);
 if (!dir || !q)
@@ -20,6 +22,13 @@ const root = JSON.parse(await readFile(dir + "/root.json", "utf8")),
     root,
     headRoot
       ? new Heads(headRoot, await readFile(dir + "/heads.bin"), root)
+      : undefined,
+    root.directory
+      ? new TermDirectory(await readFile(dir + "/directory.bin"), root.count)
+      : undefined,
+    undefined,
+    root.documentPackages?.locators
+      ? new DocumentDirectory(await readFile(dir + "/documents.bin"))
       : undefined,
   ),
   remote = process.env.CWS_REMOTE_URL

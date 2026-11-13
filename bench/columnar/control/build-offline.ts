@@ -1,10 +1,10 @@
-import { buildColumnar } from "../src/columnar/build.js";
+import { buildColumnar } from "./offline-build.js";
 const [input, out, max] = process.argv
   .slice(2)
   .filter((a) => !a.startsWith("--"));
 if (!input || !out)
   throw Error(
-    "Usage: yarn columnar:build INPUT.jsonl[,INPUT...] OUT [MAX_DOCS]",
+    "Usage: yarn bench:columnar:build-offline INPUT.jsonl[,INPUT...] OUT [MAX_DOCS]",
   );
 const r = await buildColumnar({
   input: input.split(","),

@@ -449,13 +449,74 @@ export class ColumnarIndex {
     const scoreBatches = names.map(() => new ScoreBatch(BAND)),
       candidateBuffer = new Uint32Array(BAND),
       scoreBuffer = new Float64Array(BAND);
-    for (const band of bands) {
+    let window: Branch[][][] = [];
+    for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
+      const band = bands[bandIndex];
+      // Broad numeric scans amortize physical GETs over four nearby bands.
+      // Positions remain demand-loaded. A 2-MiB aligned/coalesced footprint cap
+      // bounds speculative bytes; later, stronger heap bounds still apply.
+      if (!positions && bands.length >= 8 && bandIndex % 4 === 0) {
+        window = await Promise.all(
+          bands
+            .slice(bandIndex, bandIndex + 4)
+            .map((next) =>
+              Promise.all(
+                names.map((name) =>
+                  leaves(
+                    reader,
+                    terms.get(name)!.tree,
+                    next * BAND,
+                    Math.min(this.root.count, (next + 1) * BAND),
+                  ),
+                ),
+              ),
+            ),
+        );
+        const refs = window.flatMap((bs, i) => {
+          if (
+            coarse(ast, (name) => (bs[names.indexOf(name)].length ? 2 : 0)) ===
+            0
+          )
+            return [];
+          let upper = 0;
+          for (const j of scoring) {
+            let b = 0,
+              t = 0;
+            for (const block of bs[j]) {
+              b = Math.max(b, block.b);
+              t = Math.max(t, block.t);
+            }
+            upper +=
+              (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0);
+          }
+          upper *= 1 + Number.EPSILON * 32;
+          const first = bands[bandIndex + i] * BAND;
+          if (
+            !options.exactTotal &&
+            heap.threshold &&
+            (upper < heap.threshold.score ||
+              (upper === heap.threshold.score && first > heap.threshold.doc))
+          )
+            return [];
+          return bs.flatMap((blocks) => blocks.map((block) => block.score));
+        });
+        const footprint = reader.packetFootprint(refs);
+        if (footprint <= 2 * 1048576) {
+          const before = reader.stats.bytes;
+          reader.stats.prefetchWindows++;
+          reader.stats.prefetchTransferBytes += footprint;
+          await reader.prefetch(refs);
+          reader.stats.prefetchOriginBytes += reader.stats.bytes - before;
+        }
+      }
       const lo = band * BAND,
         hi = Math.min(this.root.count, lo + BAND),
         size = hi - lo;
-      const blocks = await Promise.all(
-        names.map((n) => leaves(reader, terms.get(n)!.tree, lo, hi)),
-      );
+      const blocks =
+        window[bandIndex % 4] ??
+        (await Promise.all(
+          names.map((n) => leaves(reader, terms.get(n)!.tree, lo, hi)),
+        ));
       if (coarse(ast, (n) => (blocks[names.indexOf(n)].length ? 2 : 0)) === 0) {
         reader.stats.skippedRanges++;
         continue;

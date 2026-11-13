@@ -12,6 +12,7 @@ interface Env {
   INTERNAL_TOKEN?: string;
   CACHE_NAMESPACE?: string;
   PAGE_CACHE?: string;
+  CF_VERSION_METADATA?: { id: string; tag: string; timestamp: string };
 }
 export function createColumnarWorker(
   root: Root,
@@ -75,6 +76,7 @@ export function createColumnarWorker(
           sequence,
           cacheNamespace: env.CACHE_NAMESPACE ?? "default",
           pageBytes: 262144,
+          version: env.CF_VERSION_METADATA,
         });
       if (url.pathname !== "/search")
         return new Response("Not found", { status: 404 });
@@ -241,6 +243,7 @@ export function createColumnarWorker(
           isolate,
           requestNumber,
           wallMs: performance.now() - arrival,
+          version: env.CF_VERSION_METADATA,
         };
         console.log(JSON.stringify({ benchmark: telemetry }));
         return Response.json(

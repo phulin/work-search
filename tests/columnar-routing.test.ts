@@ -2,7 +2,7 @@ import { it, expect } from "vitest";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildColumnar } from "../src/columnar/build.js";
+import { buildColumnar } from "../bench/columnar/control/offline-build.js";
 import { ColumnarIndex } from "../src/columnar/search.js";
 import { Reader } from "../src/columnar/storage.js";
 import { OfflineObjects } from "../src/columnar/offline.js";

@@ -89,6 +89,26 @@ export interface Source {
     expectedSha256?: string,
   ): Promise<{ data: Uint8Array; checksum?: number }>;
 }
+function packetGroups(refs: Ref[]) {
+  const groups: { ref: Ref; entries: { ref: Ref; index: number }[] }[] = [];
+  for (const entry of refs
+    .map((ref, index) => ({ ref, index }))
+    .sort((a, b) => a.ref[0] - b.ref[0] || a.ref[1] - b.ref[1])) {
+    const group = groups.at(-1),
+      end = entry.ref[1] + entry.ref[2];
+    if (
+      group &&
+      group.ref[0] === entry.ref[0] &&
+      entry.ref[1] <= group.ref[1] + group.ref[2] + PAGE &&
+      Math.max(group.ref[1] + group.ref[2], end) - group.ref[1] <= 8 * 1048576
+    ) {
+      group.ref[2] = Math.max(group.ref[1] + group.ref[2], end) - group.ref[1];
+      group.entries.push(entry);
+    } else groups.push({ ref: [...entry.ref], entries: [entry] });
+  }
+  return groups;
+}
+const EMPTY_PACKET = new Uint8Array(0);
 export class Reader {
   // I/O promises belong to their request context in workerd. Share validated
   // bytes across requests; deduplicate outstanding I/O within each request.
@@ -126,6 +146,9 @@ export class Reader {
     peakPendingSharedBytes: 0,
     coalescedReads: 0,
     coalescedExtraBytes: 0,
+    prefetchWindows: 0,
+    prefetchTransferBytes: 0,
+    prefetchOriginBytes: 0,
   };
   seenDecoded = new Set<number>();
   seenInflated = new Set<number>();
@@ -278,7 +301,7 @@ export class Reader {
       this.pending.delete(key);
     }
   }
-  private async readPacket(ref: Ref): Promise<Uint8Array> {
+  private async readPacket(ref: Ref, warmOnly = false): Promise<Uint8Array> {
     const [object, offset, length] = ref,
       descriptor = objectAt(this.root, object);
     if (
@@ -389,28 +412,13 @@ export class Reader {
           this.pending.delete(key(page));
       }
     }
+    if (warmOnly) return EMPTY_PACKET;
     const data = pages.length === 1 ? pages[0]! : concat(pages as Uint8Array[]);
     return data.subarray(offset % PAGE, (offset % PAGE) + length);
   }
   async packets(refs: Ref[]) {
     this.stats.stages++;
-    const groups: { ref: Ref; entries: { ref: Ref; index: number }[] }[] = [];
-    for (const entry of refs
-      .map((ref, index) => ({ ref, index }))
-      .sort((a, b) => a.ref[0] - b.ref[0] || a.ref[1] - b.ref[1])) {
-      const group = groups.at(-1),
-        end = entry.ref[1] + entry.ref[2];
-      if (
-        group &&
-        group.ref[0] === entry.ref[0] &&
-        entry.ref[1] <= group.ref[1] + group.ref[2] + PAGE &&
-        Math.max(group.ref[1] + group.ref[2], end) - group.ref[1] <= 8 * 1048576
-      ) {
-        group.ref[2] =
-          Math.max(group.ref[1] + group.ref[2], end) - group.ref[1];
-        group.entries.push(entry);
-      } else groups.push({ ref: [...entry.ref], entries: [entry] });
-    }
+    const groups = packetGroups(refs);
     const result: Uint8Array[] = new Array(refs.length);
     await Promise.all(
       groups.map(async (group) => {
@@ -423,6 +431,23 @@ export class Reader {
       }),
     );
     return result;
+  }
+  /** Conservative physical transfer footprint, including page alignment and
+   * the same range coalescing used by packets(). No bytes are decoded here. */
+  packetFootprint(refs: Ref[]) {
+    return packetGroups(refs).reduce(
+      (bytes, { ref: [, offset, length] }) =>
+        bytes +
+        (Math.ceil((offset + length) / PAGE) - Math.floor(offset / PAGE)) *
+          PAGE,
+      0,
+    );
+  }
+  async prefetch(refs: Ref[]) {
+    this.stats.stages++;
+    await Promise.all(
+      packetGroups(refs).map(({ ref }) => this.readPacket(ref, true)),
+    );
   }
   async document(
     generation: string,

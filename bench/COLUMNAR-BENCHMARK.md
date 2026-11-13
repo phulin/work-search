@@ -5,6 +5,121 @@ adoption** while the scale, startup, load and native memory gates below remain.
 The public demo has not changed. This ledger distinguishes completed measurements
 from work still running.
 
+## Latest measured iterations
+
+The finalist comparison is running with 10,000 measured requests per engine,
+randomized interleaving, three sessions and four total arrivals/second. It compares
+the frozen same-source 1M block layout with the packet engine, including result
+metadata and snippets. Neither serving deployment will change during the campaign.
+Both native CPU streams joined every request in the preceding 12-request-per-engine
+availability pilot. Results are pending. This control is distinct from the
+historical 4f97 baseline.
+
+The benchmark client now appends each completed observation to a JSONL journal and
+compresses its final report after the measured requests drain. Previously, repeated
+synchronous compression of the growing result array could perturb client launch
+timing. A 12-request pilot verified the journal and final report contained identical
+observations. Earlier campaigns retain their recorded launch-lateness measurements;
+they are not silently reinterpreted as using the repaired client.
+
+Packed snippet scanning reads body token IDs only until the first relevant token,
+instead of expanding the entire body. In 304 requests per variant over two sessions,
+decoded forward integers fell from 10,092,180 to 1,147,888. Client P50/P95/P99 changed
+from 709/3,108/5,333 to 689/3,145/5,954 ms, and joined CPU from 323/1,224/2,301 to
+269/1,087/2,126 ms. All responses were correct, with no HTTP errors. The change
+retains its work and CPU reduction; the latency tail is mixed, not an established
+P99 improvement. See `packets-1m-snippet-warm*`.
+
+The wider corpus-selected pair generation completed with 4,096 pairs, 19,327,527
+occurrences and 733,124,772 bytes. It covers 65,536 eligible words without consulting
+benchmark query strings. A warmed comparison against the earlier 213-pair generation
+returned all 608 responses correctly, with identical work counters on the existing
+76 scenarios: 28,344 context integers and 45,028,472 ordinary position integers per
+variant. Client P50/P95/P99 was 714/2,967/4,927 versus 670/2,999/4,650 ms. The wider
+variant's native tail stream did not capture the measured requests, so its CPU
+percentiles are unavailable. Overlapping tail sessions were observed and are now
+avoided; causality is not established. This workload shows no benefit from the extra
+pair storage. A fresh 84-query workload sampled from source token windows is being
+validated independently to examine coverage beyond the old scenarios.
+
+Parallel pair occurrence merging now partitions sorted key ranges using explicit
+restart keys. A live replay merged 32 ranges in 100.9 seconds while full-corpus
+construction was active. All 4,096 output packets, including positions and context,
+were byte-identical to the previous complete merge. Old runs first required indexing
+their chunk fences; new runs write them directly. The original serial final-merge
+wall time is unavailable, and cache/load conditions were uncontrolled, so this is
+an exactness and parallel-completion measurement, not a speedup ratio. See
+`pair-range-replay-*`.
+
+Bounded lookahead now prefetches up to four nearby numeric execution bands when
+their coalesced physical footprint is at most 2 MiB. It uses conservative bounds
+from the current heap snapshot; ordinary pruning still runs afterward. Positions
+are excluded. Warming a range no longer concatenates cached pages into a temporary
+packet. A 32,769-document exhaustive test covers ties, zero title boosts and
+pagination across lookahead windows.
+
+Two interleaved sessions on 37 nonpositional contracts measured 304 warmed
+requests per variant at four total arrivals/second. Client P50/P95/P99 changed
+from 465/1,817/2,954 to 427/1,591/2,095 ms; sampled CPU from 198/805/1,539 to
+198/868/1,213 ms. Every answer was correct, with no errors. Fresh application and
+shared namespaces, 152 requests per variant at two total arrivals/second, showed
+the tradeoff: client 2,204/10,018/12,391 versus 2,390/7,511/10,496 ms, sampled CPU
+314/1,349/2,423 versus 364/1,506/2,655 ms. The latter had three versus two admission
+503s. Successful responses were correct. This improves the measured broad-query
+tail while increasing cold median and CPU cost; these pilots do not establish
+a stable P99 or a universal improvement. Raw results, class distributions and
+query/session-block bootstrap intervals are `packets-1m-prefetch2-{warm,cold}*`.
+The earlier copying prototype is retained as `packets-1m-prefetch-cold*`.
+
+Six actual deployments tested the first search before a health request or warmup.
+Version metadata confirmed each response came from the newly deployed version;
+each had request number one. The complete responses were correct. The same
+query was tried once with a fresh shared namespace and once after preparing its
+shared pages before redeployment:
+
+| Query               | Fresh namespace client / CPU ms | Prepared shared pages client / CPU ms |
+| ------------------- | ------------------------------: | ------------------------------------: |
+| Christenberry Allen |                      2,873 / 94 |                              643 / 53 |
+| court               |                     3,911 / 407 |                           1,146 / 317 |
+| `"the and of the"`  |                       905 / 120 |                            1,073 / 86 |
+
+Reported module startup was 9–30 ms. This tiny deployment pilot is separate from
+in-request application-cache reset; it provides no reliable tail estimate or
+control of platform preparation or opaque R2 caches. The temporary startup Worker
+was deleted. See `packets-1m-startup*` for complete deployment and source provenance.
+
+A redundant single-word-phrase simplifier was rejected: parsing already produces
+ordinary term nodes for single-word quotes. Its 240-request-per-variant comparison
+had identical posting/candidate/position counts, no errors, mixed timings and no
+established execution benefit. The redundant production change was removed;
+`packets-1m-single-quote-{pilot,warm}*` records the null experiment. Exhaustive
+quoted-word/proximity tests remain useful regression coverage.
+
+A full-directory representation diagnostic round-tripped every one of the
+2,812,380 entries, including float64 bounds and all addresses. Omitting implied
+leaf spans and default counts, and predicting contiguous addresses, reduced the
+128-term-block directory from 33.4 MB to 22.8 MB. Larger blocks reached 18.8 MB
+at 1,024 terms, at the cost of decoding more metadata on a miss. This codec is
+an offline experiment, not a measured live optimization or proof that the full
+10M bundle fits. The running constructor still emits the validated CTD2 layout.
+
+The remote-preview memory diagnostic reached a genuine Cloudflare preview, but
+Wrangler 4.161.0 explicitly disables its inspector for remote mode. The preview
+was stopped. Combined with the production profiler's 404 responses, native peak
+and retained memory remain unestablished; see `remote-inspector-availability.json`.
+At 09:26 UTC construction invocation-memory P99 reached 136,476,940 bytes; a later
+09:52 UTC sample was 68,538,424 bytes. No resource-limit outcomes were reported in
+either window. These lagged invocation samples are not peak-memory measurements,
+and the higher observation leaves insufficient demonstrated headroom.
+
+The full 10,032,254-document build completed ingestion and four merge levels,
+including all 576 lexical jobs. Its 96 final lexical merges are running. The
+broader 4,096-pair generation is complete and deployed. Both coordinators encountered
+client timeouts; completed immutable work was retained. Capacity-busy and network
+retry budgets are now separate, preventing busy responses from exhausting the
+network retry budget. The full index is not complete. Its independent source oracle
+is waiting for the scoring root so validation can overlap package construction.
+
 ## Packet-path work, November 13
 
 The native 1M block-layout generation `d989bc2c…` completed and is deployed on
@@ -155,7 +270,7 @@ selected only 190 pairs. All 76 measured responses and warmups passed the oracle
 P50/P95/P99(max) 667/3,551/5,357 ms, native CPU 271/1,542/2,201 ms. The earlier
 18.8-second few-hit phrase fell to 416 ms and 26,881 position integers, from
 202,779,676. These remain noninterleaved pilots, not a final traffic comparison.
-The measured generation covers adjacent combinations of the 1,024 highest-DF words. A new sparse, streamed statistics pass over 65,536 corpus-selected words is building; its serving benefit remains unmeasured. Selected descriptors currently fit in the bundle; a remote pair dictionary has not been implemented. Pair evidence now also restricts block fallback ranges and
+The measured generation covers adjacent combinations of the 1,024 highest-DF words. The later 65,536-word pass and its measured limitations are described above. Selected descriptors currently fit in the bundle; a remote pair dictionary has not been implemented. Pair evidence now also restricts block fallback ranges and
 eliminates ordinary word-position decoding where context proves a phrase; reference
 tests cover scores, fields, negatives and matching snippets. Cheap context reads
 can now precede the candidate-package budget decision; failed estimates preserve
@@ -414,10 +529,10 @@ coverage receipts instead of issuing an unbounded number of HEADs in one request
 
 The available published R2 source contains 10,032,254 documents across 254
 partitions. This is not proof that the entire official CSV snapshot was imported.
-Actual 1M and largest-corpus live search performance remain pending and are not
-inferred from either pilot or the 100k comparison.
+The later 1M complete-response measurements are recorded above. Largest-corpus live
+search performance remains pending and is not inferred from these smaller runs.
 
-196 repository tests pass, including independent exhaustive small corpora,
+The earlier 196-test validation included independent exhaustive small corpora,
 70k-vocabulary hierarchical routing, adversarial compound winners absent from
 single-term certificates, phrases/proximity/negatives, long repeated documents,
 fields/boosts, deterministic ties, search-after, corruption, generation consistency,
@@ -429,7 +544,8 @@ returned score.
 
 ## Memory, profiling and remaining gates
 
-Page and decoded cache charges are bounded at 24 MiB and 4 MiB. Active numeric
+The earlier control used a 24 MiB page cache; the packet engine uses 12 MiB for
+pages/packages, 4 MiB decoded columns and 2 MiB decoded directory groups. Active numeric
 buffers, pending shared-write bytes and cumulative decoded/inflated bytes are
 reported separately. Local inspector heap plus backing storage reached about
 93.6 MB with concurrent requests, including pending garbage. Forced collection
@@ -453,8 +569,8 @@ were no reported resource-limit outcomes; the search bucket had about 27.9M read
 in the preceding hour, including the stopped diagnostic and other work. The high
 read amplification prompted the dictionary-path replacement above.
 
-Remaining adoption gates: fresh namespaces and actual deployment/startup trials; controlled load ladders
-with queueing/rejections; live correctness/performance at 1M and the full available
+Remaining adoption gates: substantial finalist results; controlled load ladders
+with queueing/rejections; live correctness/performance on the full available
 snapshot; native retained/peak memory under load; and identification/optimization
 of scale-specific bottlenecks. See [the design](COLUMNAR-DESIGN.md) for the final
 format and reproducible construction/deployment commands. Current official limits

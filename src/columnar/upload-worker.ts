@@ -24,6 +24,28 @@ export default {
         return Response.json({ error: String(error) }, { status: 400 });
       }
     }
+    if (key === "__delete-staging" && request.method === "POST") {
+      const keys: unknown = await request.json();
+      if (
+        !Array.isArray(keys) ||
+        keys.length < 1 ||
+        keys.length > 1000 ||
+        keys.some((key) => {
+          if (typeof key !== "string") return true;
+          const match = /^([a-f0-9]{64})\/stage-([a-f0-9]{64})\.bin$/.exec(key);
+          return !match || match[1] !== match[2];
+        }) ||
+        new Set(keys).size !== keys.length
+      )
+        return new Response(
+          "Only distinct content-addressed temporary streams",
+          {
+            status: 400,
+          },
+        );
+      await env.INDEX.delete(keys);
+      return Response.json({ deleted: keys.length });
+    }
     if (!/^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64})\.bin$/.test(key))
       return new Response("Invalid key", { status: 400 });
     const generation = key.split("/")[0],

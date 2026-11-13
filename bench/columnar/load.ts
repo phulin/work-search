@@ -1,6 +1,10 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
-import { gzipSync } from "node:zlib";
+import { createGzip } from "node:zlib";
+import { createWriteStream } from "node:fs";
+import { Readable } from "node:stream";
+import { pipeline, finished } from "node:stream/promises";
+import { once } from "node:events";
 import { performance } from "node:perf_hooks";
 import { benchmarkToken } from "./token.js";
 import { demoWorkload } from "../demo-workload.js";
@@ -72,6 +76,14 @@ for (const name of variants) {
     !(
       health[name].corpusHash === externalScenarios.corpusHash &&
       health[name].documents === externalScenarios.count
+    ) &&
+    !externalScenarios.controls?.some(
+      (c: any) =>
+        c.generation === health[name].generation &&
+        c.corpusHash === externalScenarios.corpusHash &&
+        c.count === externalScenarios.count &&
+        health[name].documents === c.count &&
+        /^[a-f0-9]{64}$/.test(c.rootSha256),
     )
   )
     throw Error("Scenario generation mismatch " + name);
@@ -134,6 +146,7 @@ const manifest = {
   sessions,
   seed,
   queries,
+  controls: externalScenarios?.controls,
   health,
   clientRegion: process.env.CWS_CLIENT_REGION ?? "local-New-England",
   node: process.version,
@@ -144,6 +157,11 @@ const manifest = {
   responseCaching: false,
   resolvedCursors: Object.fromEntries(resolvedCursors),
 };
+const journal = createWriteStream(`work/columnar-bench/${label}.jsonl`);
+let journalFailure: Error | undefined;
+journal.on("error", (error) => {
+  journalFailure = error;
+});
 async function call(
   name: string,
   query: {
@@ -257,13 +275,19 @@ async function call(
     row.error = String(e);
   } finally {
     rows.push(row);
+    if (journalFailure) throw journalFailure;
+    if (!journal.write(JSON.stringify(row) + "\n"))
+      await once(journal, "drain");
   }
   return row;
 }
+// Do not repeatedly stringify and synchronously compress all previous samples
+// while requests are in flight. The incremental journal is the crash record;
+// assemble the regular report artifact only after the workload has drained.
 const save = () =>
   writeFile(
-    `work/columnar-bench/${label}.json.gz`,
-    gzipSync(JSON.stringify({ manifest, rows })),
+    `work/columnar-bench/${label}-progress.json`,
+    JSON.stringify({ manifest, completed: rows.length }),
   );
 let done = 0;
 try {
@@ -314,7 +338,24 @@ try {
   }
 } finally {
   manifest.finishedAt = new Date().toISOString();
+  journal.end();
+  await finished(journal);
+  async function* reportParts() {
+    yield `{"manifest":${JSON.stringify(manifest)},"rows":[`;
+    for (let i = 0; i < rows.length; i++)
+      yield (i ? "," : "") + JSON.stringify(rows[i]);
+    yield "]}";
+  }
+  await pipeline(
+    Readable.from(reportParts()),
+    createGzip(),
+    createWriteStream(`work/columnar-bench/${label}.json.gz`),
+  );
   await save();
+  await writeFile(
+    `work/columnar-bench/${label}-complete.json`,
+    JSON.stringify({ finishedAt: manifest.finishedAt, rows: rows.length }),
+  );
 }
 if (rows.some((r) => !r.warmup && r.correct === false))
   throw Error("Correctness failure; raw responses must be investigated");

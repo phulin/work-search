@@ -20,6 +20,7 @@ import {
   finishPairsJob,
 } from "./pair-jobs.js";
 import { mergePairOccurrenceRuns } from "./pair-occurrences.js";
+import { pairRangeJob } from "./pair-range-jobs.js";
 import { finishPacketTerms } from "./packet-terms.js";
 import { buildVocabulary, readVocabulary } from "./vocabulary.js";
 export function createConstructionWorker(root: SourceRoot, code: string) {
@@ -43,7 +44,7 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
         request.headers.get("authorization") !== `Bearer ${env.INTERNAL_TOKEN}`
       )
         return new Response("Not found", { status: 404 });
-      if (url.pathname === "/health")
+      if (url.pathname === "/health" || url.pathname === "/pair-range-health")
         return Response.json({
           code,
           sourceDocuments: root.documents,
@@ -173,6 +174,8 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
             "/merge-pair-statistics",
             "/pair-occurrences",
             "/merge-pair-occurrences",
+            "/merge-pair-occurrences-range",
+            "/pair-restarts",
             "/finish-pairs",
             "/vocabulary",
             "/publish",
@@ -355,8 +358,12 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
               );
               return { generation: input.root.generation };
             };
-            const output =
-              url.pathname === "/pair-statistics"
+            const output = [
+              "/pair-restarts",
+              "/merge-pair-occurrences-range",
+            ].includes(url.pathname)
+              ? await pairRangeJob(store, url.pathname, input)
+              : url.pathname === "/pair-statistics"
                 ? await pairStatisticsJob(store, input)
                 : url.pathname === "/merge-pair-statistics"
                   ? await mergePairStatisticsJob(store, input)

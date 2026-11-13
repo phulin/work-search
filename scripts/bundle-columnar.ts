@@ -22,10 +22,27 @@ await writeFile(
   out + "/entry.ts",
   `${root.documentPackages?.locators ? `import documents from ${JSON.stringify(dir + "/documents.bin")};` : ""}import root from ${JSON.stringify(dir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(dir + "/pairs-root.json")};` : ""}${heads ? `import heads from ${JSON.stringify(dir + "/heads-root.json")};import data from ${JSON.stringify(dir + "/heads.bin")};` : ""}${root.directory ? `import directory from ${JSON.stringify(dir + "/directory.bin")};` : ""}import{createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};export default createColumnarWorker(root as any,${pairs ? "pairs as any" : "undefined"},${heads ? "{root:heads as any,data:new Uint8Array(data)}" : "undefined"},${root.directory ? "new Uint8Array(directory)" : "undefined"},${root.documentPackages?.locators ? "new Uint8Array(documents)" : "undefined"});`,
 );
+await writeFile(
+  out + "/wrangler.json",
+  JSON.stringify({
+    name: "work-search-cws-bundle",
+    main: out + "/entry.ts",
+    compatibility_date: "2026-11-01",
+    rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
+  }),
+);
 await new Promise<void>((ok, no) => {
   const child = spawn(
     "yarn",
-    ["wrangler", "deploy", "--dry-run", "--outdir", "dist"],
+    [
+      "wrangler",
+      "deploy",
+      "--config",
+      out + "/wrangler.json",
+      "--dry-run",
+      "--outdir",
+      out + "/dist",
+    ],
     { stdio: "inherit" },
   );
   child.once("error", no);

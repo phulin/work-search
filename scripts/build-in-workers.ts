@@ -111,6 +111,8 @@ function save(force = false) {
 const post = constructionHTTP(width);
 async function call(worker: number, path: string, input: any) {
   const url = urls[worker % urls.length];
+  let busyRetries = 0,
+    transientRetries = 0;
   for (let retry = 0; ; retry++) {
     let busy = false;
     try {
@@ -161,12 +163,12 @@ async function call(worker: number, path: string, input: any) {
           error: String(e),
         }) + "\n",
       );
-      if (retry >= (busy ? 60 : 6)) throw e;
+      if (busy ? ++busyRetries > 60 : ++transientRetries > 6) throw e;
       console.log("Retry", url, path, String(e));
       await new Promise((r) =>
         setTimeout(
           r,
-          (busy ? 500 : Math.min(10000, 500 * 2 ** retry)) *
+          (busy ? 500 : Math.min(10000, 500 * 2 ** (transientRetries - 1))) *
             (0.75 + Math.random() * 0.5),
         ),
       );

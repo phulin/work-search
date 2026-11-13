@@ -209,17 +209,46 @@ export class DocumentPackage {
       this.observe?.("inflated", 3, n),
     ));
   }
+  private firstBodyToken(wanted: Set<number>) {
+    if (!wanted.size) return undefined;
+    if (this.body) {
+      for (let p = 0; p < this.body.length; p++)
+        if (wanted.has(this.body[p])) return p;
+      return undefined;
+    }
+    // Rendering needs one occurrence, not an expanded whole-document token
+    // array. Fixed-width packing permits a buffered scan with an early exit.
+    const raw = this.section(1),
+      v = view(raw);
+    if (raw.length < 12) throw Error("Truncated body tokens");
+    const n = v.getUint32(0, true),
+      width = v.getUint8(8);
+    if (
+      n !== this.bodyLength ||
+      width > 32 ||
+      v.getUint8(9) !== 0 ||
+      raw.length !== 12 + Math.ceil((n * width) / 32) * 4
+    )
+      throw Error("Invalid body token column");
+    const mask = width === 32 ? 0xffffffff : 2 ** width - 1;
+    for (let p = 0; p < n; p++) {
+      const bit = p * width,
+        at = 12 + (bit >>> 5) * 4,
+        shift = bit & 31;
+      let id = width ? v.getUint32(at, true) >>> shift : 0;
+      if (shift + width > 32) id |= v.getUint32(at + 4, true) << (32 - shift);
+      if (wanted.has((id & mask) >>> 0)) {
+        this.observe?.("tokens", 1, p + 1);
+        return p;
+      }
+    }
+    this.observe?.("tokens", 1, n);
+    return undefined;
+  }
   async snippet(wanted: Set<number>, first?: number, titleOnly = false) {
     if (titleOnly)
       return String((await this.display()).title ?? "").slice(0, 400);
-    if (first === undefined) {
-      const tokens = this.tokens(0);
-      for (let p = 0; p < tokens.length; p++)
-        if (wanted.has(tokens[p])) {
-          first = p;
-          break;
-        }
-    }
+    if (first === undefined) first = this.firstBodyToken(wanted);
     const directory = view(this.section(4)),
       frame = Math.floor((first ?? 0) / 256),
       at = frame * 16;

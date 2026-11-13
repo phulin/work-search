@@ -24,7 +24,7 @@ const source = spawn(
 );
 const builder = spawn(
   process.execPath,
-  ["--import", "tsx", "scripts/build-columnar.ts", "-", out],
+  ["--import", "tsx", "bench/columnar/control/build-offline.ts", "-", out],
   { env, stdio: ["pipe", "inherit", "inherit"] },
 );
 source.stdout.pipe(builder.stdin);

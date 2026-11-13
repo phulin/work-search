@@ -1,0 +1,72 @@
+{
+  "directorySha256": "82735851be0140d331026356ad354479d6c81398416d44362f5a327f403f5093",
+  "currentBytes": 33402940,
+  "statistics": {
+    "terms": 2812380,
+    "singleton": 1903636,
+    "small": 2760854,
+    "ordinalIds": 2812380,
+    "derivableSingleBlock": 2760854,
+    "bodyOnceOnly": 2140994,
+    "embeddedBytes": 0
+  },
+  "variants": [
+    {
+      "codec": "current",
+      "size": 128,
+      "bytes": 33270090,
+      "blocks": 21972,
+      "rawBytes": 81325286
+    },
+    {
+      "codec": "current",
+      "size": 256,
+      "bytes": 30332456,
+      "blocks": 10986,
+      "rawBytes": 80996602
+    },
+    {
+      "codec": "current",
+      "size": 512,
+      "bytes": 28386499,
+      "blocks": 5493,
+      "rawBytes": 80832183
+    },
+    {
+      "codec": "current",
+      "size": 1024,
+      "bytes": 26985990,
+      "blocks": 2747,
+      "rawBytes": 80750161
+    },
+    {
+      "codec": "compact",
+      "size": 128,
+      "bytes": 22844937,
+      "blocks": 21972,
+      "rawBytes": 31826654
+    },
+    {
+      "codec": "compact",
+      "size": 256,
+      "bytes": 20841161,
+      "blocks": 10986,
+      "rawBytes": 31431067
+    },
+    {
+      "codec": "compact",
+      "size": 512,
+      "bytes": 19591612,
+      "blocks": 5493,
+      "rawBytes": 31229718
+    },
+    {
+      "codec": "compact",
+      "size": 1024,
+      "bytes": 18757159,
+      "blocks": 2747,
+      "rawBytes": 31128136
+    }
+  ],
+  "caveat": "Offline format-size diagnostic. Lookup CPU and live serving behavior are not measured by this script."
+}

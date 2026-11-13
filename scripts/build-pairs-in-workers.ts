@@ -170,6 +170,8 @@ async function call(
   value: any = {},
   targetBuild = build,
 ) {
+  let busyRetries = 0,
+    transientRetries = 0;
   for (let retry = 0; ; retry++) {
     const started = performance.now();
     let busy = false;
@@ -197,11 +199,12 @@ async function call(
       );
       return result.output;
     } catch (error) {
-      if (retry >= (busy ? 60 : 6)) throw error;
+      if (busy ? ++busyRetries > 60 : ++transientRetries > 6) throw error;
+      console.log("Retry", path, task, String(error));
       await new Promise((r) =>
         setTimeout(
           r,
-          (busy ? 500 : Math.min(10000, 500 * 2 ** retry)) *
+          (busy ? 500 : Math.min(10000, 500 * 2 ** (transientRetries - 1))) *
             (0.75 + Math.random() * 0.5),
         ),
       );
@@ -272,11 +275,70 @@ async function merge(kind: "statistics" | "occurrences", inputs: any[]) {
     state.levels[`${kind}-${level}`] = outputs;
     await pool(jobs, async (batch, i) => {
       if (!outputs[i]) {
+        const task = `${kind}-merge-${level}-${i}`,
+          bytes = batch.reduce(
+            (n, run) =>
+              n + run.chunks.reduce((s: number, c: any) => s + c.size, 0),
+            0,
+          );
+        if (kind === "occurrences" && bytes > 64 * 1048576) {
+          const rangeState = ((state.rangeMerges ??= {})[task] ??= {
+            outputs: [],
+          });
+          if (!rangeState.runs) {
+            rangeState.runs = batch.every((r) =>
+              r.chunks.every((c: any) => c.firstKey !== undefined),
+            )
+              ? batch
+              : (
+                  await call("/pair-restarts", task + "-restarts", {
+                    runs: batch,
+                  })
+                ).runs;
+            const pairs = state.selection.pairs,
+              n = Math.min(32, Math.ceil(bytes / (32 * 1048576))),
+              target = pairs.reduce((s: number, p: any) => s + p.cost, 0) / n;
+            const boundaries = [0];
+            let cumulative = 0;
+            for (let j = 0; j + 1 < pairs.length; j++) {
+              cumulative += pairs[j].cost;
+              if (
+                cumulative >= target * boundaries.length &&
+                boundaries.length < n
+              )
+                boundaries.push(pairs[j + 1].key);
+            }
+            boundaries.push(2 ** 32);
+            rangeState.ranges = boundaries
+              .slice(1)
+              .map((endKey, j) => ({ firstKey: boundaries[j], endKey }));
+            await save(true);
+          }
+          await pool<any>(rangeState.ranges, async (range, j) => {
+            if (rangeState.outputs[j]) return;
+            rangeState.outputs[j] = (
+              await call(
+                "/merge-pair-occurrences-range",
+                task + "-range-" + j,
+                { runs: rangeState.runs, range },
+              )
+            ).run;
+            await save();
+          });
+          outputs[i] = {
+            first: batch[0].first,
+            end: batch.at(-1)!.end,
+            selection: batch[0].selection,
+            chunks: rangeState.outputs.flatMap((r: any) => r.chunks),
+          };
+          await save();
+          return;
+        }
         const result = await call(
           kind === "statistics" && statisticsIO
             ? "/merge-pair-statistics-io"
             : `/merge-pair-${kind}`,
-          `${kind}-merge-${level}-${i}`,
+          task,
           { runs: batch },
         );
         outputs[i] = kind === "occurrences" ? result.run : result;

@@ -1,6 +1,6 @@
 // Offline builders may consume already-published immutable objects without
 // retaining a second full local copy. This is not a serving dependency.
-import { open } from "node:fs/promises";
+import { open, readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import type { Root, Ref } from "./format.js";
 import { PAGE, concat, objectAt } from "./format.js";
@@ -19,8 +19,14 @@ export class OfflineObjects {
   downloadSlots = new Semaphore(2);
   pageSlots = new Semaphore(6);
   validated = new Map<number, Promise<void>>();
+  packageGroups = new Lru<Uint8Array>(16 * 1048576);
+  packageReads = new Map<string, Promise<Uint8Array>>();
   keys?: Map<string, number>;
   source = {
+    readWhole: (
+      key: string,
+      range?: { offset: number; length: number; doc: number; first: number },
+    ) => this.readDocument(key, range),
     read: (key: string, offset: number, length: number) =>
       this.readKey(key, offset, length),
     readPage: async (key: string, offset: number, length: number) => {
@@ -33,6 +39,73 @@ export class OfflineObjects {
     readonly root: Pick<Root, "generation" | "objects" | "objectIds">,
     readonly remote?: { url: string; token: string },
   ) {}
+  async readGroup(key: string) {
+    if (!/^[a-f0-9]{64}\/plan-\d+\.bin$/.test(key))
+      throw Error("Invalid offline package key");
+    let bytes = this.packageGroups.get(key);
+    if (!bytes) {
+      let pending = this.packageReads.get(key);
+      if (!pending) {
+        pending = (async () => {
+          let raw: Uint8Array;
+          try {
+            raw = await readFile(this.dir + "/packages/" + key);
+          } catch (error: any) {
+            if (error.code !== "ENOENT" || !this.remote) throw error;
+            const r = await fetch(this.remote.url + "/" + key, {
+              headers: { authorization: `Bearer ${this.remote.token}` },
+              signal: AbortSignal.timeout(180000),
+            });
+            if (!r.ok || r.headers.get("x-generation") !== key.split("/")[0])
+              throw Error("Offline document source mismatch");
+            raw = new Uint8Array(await r.arrayBuffer());
+          }
+          if (
+            createHash("sha256").update(raw).digest("hex") !== key.split("/")[0]
+          )
+            throw Error("Offline document group checksum mismatch");
+          this.packageGroups.set(key, raw, raw.length);
+          return raw;
+        })();
+        this.packageReads.set(key, pending);
+      }
+      try {
+        bytes = await pending;
+      } finally {
+        this.packageReads.delete(key);
+      }
+    }
+    return bytes;
+  }
+  async readDocument(
+    key: string,
+    range?: { offset: number; length: number; doc: number; first: number },
+  ) {
+    if (!range)
+      throw Error("Offline document access requires a grouped package locator");
+    const bytes = await this.readGroup(key),
+      { offset, length, doc, first } = range;
+    if (
+      ![offset, length, doc, first].every(Number.isInteger) ||
+      offset < 0 ||
+      length < 64 ||
+      doc < first ||
+      offset + length > bytes.length
+    )
+      throw Error("Invalid offline document range");
+    if (
+      new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(
+        4,
+        true,
+      ) !== first
+    )
+      throw Error("Offline package group identity mismatch");
+    const data = bytes.subarray(offset, offset + length),
+      v = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    if (v.getUint32(0, true) !== 0x32504443 || v.getUint32(4, true) !== doc)
+      throw Error("Offline document identity mismatch");
+    return { data, checksum: crc32(data) };
+  }
   async readKey(key: string, offset: number, length: number) {
     this.keys ??= new Map(
       this.root.objects.map((o, i) => [
@@ -248,5 +321,6 @@ export class OfflineObjects {
     this.objects.clear();
     this.pages.clear();
     this.validated.clear();
+    this.packageGroups.clear();
   }
 }

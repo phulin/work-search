@@ -3,7 +3,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
-import { buildColumnar } from "../src/columnar/build.js";
+import { buildColumnar } from "../bench/columnar/control/offline-build.js";
 import { OfflineObjects } from "../src/columnar/offline.js";
 import { Reader } from "../src/columnar/storage.js";
 import { ColumnarIndex, leaves, type Options } from "../src/columnar/search.js";

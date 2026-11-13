@@ -33,7 +33,28 @@ if (!out || !Number.isInteger(width) || width < 1 || width > 64)
 const regression = JSON.parse(
   await readFile("bench/columnar/query-contract.json", "utf8"),
 );
-const root = JSON.parse(await readFile(dir + "/root.json", "utf8")),
+const rootFile =
+  dir +
+  (process.argv.includes("--scoring-root")
+    ? "/scoring-root.json"
+    : "/root.json");
+if (process.argv.includes("--wait-for-scoring-root")) {
+  if (!process.argv.includes("--scoring-root"))
+    throw Error("--wait-for-scoring-root requires --scoring-root");
+  for (;;) {
+    const ready = await readFile(rootFile).then(
+      () => true,
+      (error: NodeJS.ErrnoException) => {
+        if (error.code !== "ENOENT") throw error;
+        return false;
+      },
+    );
+    if (ready) break;
+    await new Promise((resolve) => setTimeout(resolve, 30000));
+  }
+}
+const sourceRootBytes = await readFile(rootFile);
+const root = JSON.parse(sourceRootBytes.toString()),
   contracts =
     definitions === "regression"
       ? [
@@ -94,6 +115,8 @@ const configuration: OracleConfiguration = {
   post = constructionHTTP(width);
 await mkdir(partsDir, { recursive: true });
 async function call(path: string, input: unknown) {
+  let busyRetries = 0,
+    transientRetries = 0;
   for (let retry = 0; ; retry++) {
     let busy = false,
       retryable = true;
@@ -114,11 +137,14 @@ async function call(path: string, input: unknown) {
           error: String(error),
         }) + "\n",
       );
-      if (!retryable || retry >= (busy ? 120 : 6)) throw error;
+      if (!retryable || (busy ? ++busyRetries > 120 : ++transientRetries > 6))
+        throw error;
       await new Promise((r) =>
         setTimeout(
           r,
-          busy ? 500 + Math.random() * 1000 : Math.min(10000, 500 * 2 ** retry),
+          busy
+            ? 500 + Math.random() * 1000
+            : Math.min(10000, 500 * 2 ** (transientRetries - 1)),
         ),
       );
     }
@@ -294,6 +320,10 @@ if (first !== 0 || end !== root.count) {
       count: root.count,
       code: health.code,
       configurationHash,
+      statisticsRoot: {
+        kind: process.argv.includes("--scoring-root") ? "scoring" : "serving",
+        sha256: hash(sourceRootBytes),
+      },
       parallelism: width,
       independentDfVerified: true,
       independentGlobalStatsVerified: true,

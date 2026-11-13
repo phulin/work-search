@@ -7,6 +7,7 @@ import { Miniflare } from "miniflare";
 import "./workerd-runtime.js";
 import { crc32 } from "../src/format/codec.js";
 import { OfflineObjects } from "../src/columnar/offline.js";
+import { benchmarkToken } from "../bench/columnar/token.js";
 const dir = resolve(process.argv[2] ?? "indexes/cws");
 await mkdir("work/columnar-local", { recursive: true });
 const temp = await mkdtemp(resolve("work/columnar-local/runtime-"));
@@ -19,11 +20,16 @@ const root = JSON.parse(await readFile(dir + "/root.json", "utf8")),
     JSON.parse,
     () => undefined,
   ),
-  objects = new OfflineObjects(dir, root),
-  pairObjects = pairs ? new OfflineObjects(dir + "/pairs", pairs) : undefined;
+  remote = process.env.CWS_REMOTE_URL
+    ? { url: process.env.CWS_REMOTE_URL, token: await benchmarkToken() }
+    : undefined,
+  objects = new OfflineObjects(dir, root, remote),
+  pairObjects = pairs
+    ? new OfflineObjects(dir + "/pairs", pairs, remote)
+    : undefined;
 await writeFile(
   temp + "/entry.ts",
-  `import root from ${JSON.stringify(dir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(dir + "/pairs-root.json")};` : ""}${heads ? `import hr from ${JSON.stringify(dir + "/heads-root.json")};import hd from ${JSON.stringify(dir + "/heads.bin")};` : ""}import{createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};const worker=createColumnarWorker(root,${pairs ? "pairs" : "undefined"}${heads ? ",{root:hr,data:new Uint8Array(hd)}" : ""});export default{fetch(request,env,ctx){return worker.fetch(request,{...env,INDEX:{async get(key,options){const r=await env.FILES.fetch('http://files/'+key,{headers:{offset:String(options.range.offset),length:String(options.range.length)}});if(!r.ok)throw Error('Local object '+r.status);return{customMetadata:{generation:key.split('/')[0],sha256:r.headers.get('x-sha256'),crc32:r.headers.get('x-page-crc32')},arrayBuffer:()=>r.arrayBuffer()};}}},ctx);}};`,
+  `import root from ${JSON.stringify(dir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(dir + "/pairs-root.json")};` : ""}${heads ? `import hr from ${JSON.stringify(dir + "/heads-root.json")};import hd from ${JSON.stringify(dir + "/heads.bin")};` : ""}${root.directory ? `import td from ${JSON.stringify(dir + "/directory.bin")};` : ""}${root.documentPackages?.locators ? `import dd from ${JSON.stringify(dir + "/documents.bin")};` : ""}import{createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};const worker=createColumnarWorker(root,${pairs ? "pairs" : "undefined"},${heads ? "{root:hr,data:new Uint8Array(hd)}" : "undefined"},${root.directory ? "new Uint8Array(td)" : "undefined"},${root.documentPackages?.locators ? "new Uint8Array(dd)" : "undefined"});export default{fetch(request,env,ctx){return worker.fetch(request,{...env,INDEX:{async get(key,options){const r=await env.FILES.fetch('http://files/'+key,{headers:{offset:String(options.range.offset),length:String(options.range.length)}});if(!r.ok)throw Error('Local object '+r.status);return{customMetadata:r.headers.has('x-cws-meta')?JSON.parse(r.headers.get('x-cws-meta')):{generation:key.split('/')[0],sha256:r.headers.get('x-sha256'),crc32:r.headers.get('x-page-crc32')},arrayBuffer:()=>r.arrayBuffer()};}}},ctx);}};`,
 );
 await writeFile(
   temp + "/wrangler.json",
@@ -31,6 +37,7 @@ await writeFile(
     name: "cws-local",
     main: temp + "/entry.ts",
     compatibility_date: "2026-11-01",
+    rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
   }),
 );
 const dry = spawnSync(
@@ -47,6 +54,7 @@ const dry = spawnSync(
   { encoding: "utf8" },
 );
 if (dry.status) throw Error(dry.stdout + dry.stderr);
+const packageMetadata = new WeakMap<Uint8Array, Record<string, string>>();
 const mf = new Miniflare({
   compatibilityDate: "2026-11-01",
   compatibilityFlags: ["nodejs_compat"],
@@ -64,6 +72,49 @@ const mf = new Miniflare({
             (o) => (o.key ?? `${s.root.generation}/${o.name}`) === key,
           ),
         );
+      if (!source && root.documentPackages?.locators) {
+        const full = await objects.readGroup(key);
+        let meta = packageMetadata.get(full);
+        if (!meta) {
+          const v = new DataView(full.buffer, full.byteOffset, full.byteLength),
+            checksums: number[] = [];
+          let at = 0,
+            first = -1;
+          while (at < full.length) {
+            if (at + 64 > full.length || v.getUint32(at, true) !== 0x32504443)
+              throw Error("Invalid local package group");
+            const doc = v.getUint32(at + 4, true),
+              n = v.getUint32(at + 56, true) + v.getUint32(at + 60, true);
+            if (first < 0) first = doc;
+            if (
+              doc !== first + checksums.length ||
+              n < 64 ||
+              at + n > full.length
+            )
+              throw Error("Invalid local package coverage");
+            checksums.push(crc32(full.subarray(at, at + n)));
+            at += n;
+          }
+          meta = {
+            generation: key.split("/")[0],
+            sha256: key.split("/")[0],
+            packageFirst: String(first),
+            packageEnd: String(first + checksums.length),
+            packageCrc32: Buffer.from(
+              Uint32Array.from(checksums).buffer,
+            ).toString("base64"),
+          };
+          packageMetadata.set(full, meta);
+        }
+        const offset = Number(request.headers.get("offset")),
+          length = Number(request.headers.get("length"));
+        if (offset < 0 || length < 1 || offset + length > full.length)
+          throw Error("Invalid local package range");
+        return new Response(
+          full.subarray(offset, offset + length) as BodyInit,
+          { headers: { "x-cws-meta": JSON.stringify(meta) } },
+        );
+      }
       if (!source)
         return new Response("Missing local generation", { status: 404 });
       const object = source.root.objects.find(

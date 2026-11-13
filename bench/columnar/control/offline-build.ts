@@ -7,7 +7,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
-import type { Root } from "./format.js";
+import type { Root } from "../../../src/columnar/format.js";
 export interface BuildOptions {
   input: string | string[];
   out: string;
@@ -19,8 +19,8 @@ export interface BuildOptions {
   remoteStore?: { url: string; tokenFile: string };
 }
 let compiled: Promise<unknown> | undefined;
-/** Streaming adapter to the single production builder. Input decompression is
- * bounded; external numeric runs and all scoring/encoding happen offline. */
+/** Frozen offline control/fixture builder. Production construction is TypeScript
+ * on the constructor Worker, driven by scripts/build-in-workers.ts. */
 export async function buildColumnar(options: BuildOptions): Promise<Root> {
   await (compiled ??= promisify(execFile)(
     "cargo",

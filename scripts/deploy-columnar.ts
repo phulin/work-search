@@ -95,6 +95,20 @@ if (!out || !/^[a-z0-9-]{1,48}$/.test(name ?? ""))
   );
 if (!name.startsWith("work-search-cws-"))
   throw Error("Benchmark Worker name must begin work-search-cws-");
+const probeAt = process.argv.indexOf("--first-search"),
+  probeContract =
+    probeAt === -1
+      ? undefined
+      : JSON.parse(await readFile(process.argv[probeAt + 1], "utf8"));
+if (
+  probeAt !== -1 &&
+  (typeof probeContract.q !== "string" ||
+    !Array.isArray(probeContract.oracle) ||
+    probeContract.options?.after)
+)
+  throw Error(
+    "First-search probe requires a complete non-pagination oracle contract",
+  );
 const root: Root = JSON.parse(await readFile(out + "/root.json", "utf8")),
   token = await benchmarkToken();
 const pairs: PairRoot | undefined = await readFile(
@@ -366,6 +380,7 @@ await writeFile(
         PAGE_CACHE: "1",
       },
       observability: { enabled: true },
+      version_metadata: { binding: "CF_VERSION_METADATA" },
     },
     null,
     2,
@@ -383,11 +398,87 @@ async function wrangler(args: string[], input?: string) {
     );
   });
 }
+const deployRequestedAt = Date.now();
 await wrangler(["deploy", "--config", config]);
 await wrangler(
   ["secret", "put", "INTERNAL_TOKEN", "--config", config],
   await benchmarkToken(),
 );
+let deploymentProbe: any;
+if (probeAt !== -1) {
+  const contract = probeContract,
+    attempts: any[] = [];
+  for (let attempt = 0; ; attempt++) {
+    const requestId = crypto.randomUUID(),
+      startedAt = new Date().toISOString(),
+      started = performance.now();
+    const response = await fetch(
+      `https://${name}.phulin.workers.dev/search?requestId=${requestId}`,
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ q: contract.q, ...contract.options }),
+        signal: AbortSignal.timeout(120000),
+      },
+    );
+    const text = await response.text(),
+      ms = performance.now() - started;
+    let result: any;
+    try {
+      result = JSON.parse(text);
+    } catch {
+      result = { error: text.slice(0, 500) };
+    }
+    const version = result.telemetry?.version,
+      current =
+        result.generation === root.generation &&
+        Date.parse(version?.timestamp) >= deployRequestedAt - 2000,
+      correct =
+        response.ok &&
+        current &&
+        result.results?.length === contract.oracle.length &&
+        result.results.every((hit: any, i: number) => {
+          const expected = contract.oracle[i];
+          return (
+            hit.id === expected.id &&
+            Math.abs(hit.score - expected.score) <=
+              1e-11 * Math.max(1, Math.abs(expected.score)) &&
+            JSON.stringify([hit.title, hit.metadata]) ===
+              JSON.stringify([expected.title, expected.metadata]) &&
+            typeof hit.snippet === "string"
+          );
+        });
+    attempts.push({
+      requestId,
+      startedAt,
+      ms,
+      status: response.status,
+      current,
+      correct,
+      result,
+      bytes: Buffer.byteLength(text),
+    });
+    deploymentProbe = {
+      deployRequestedAt: new Date(deployRequestedAt).toISOString(),
+      q: contract.q,
+      options: contract.options,
+      attempts,
+      condition:
+        "Search before any health/warmup request after actual deployment; shared namespace as configured; opaque R2 caches uncontrolled",
+    };
+    await writeFile(
+      `work/columnar-deploy/${name}-first-search.json`,
+      JSON.stringify(deploymentProbe, null, 2),
+    );
+    if (correct) break;
+    if (current || attempt === 29)
+      throw Error("Deployment first-search probe failed");
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+}
 // Deployment acknowledgement can precede workers.dev route propagation.
 for (let attempt = 0; ; attempt++) {
   const healthy = await fetch(`https://${name}.phulin.workers.dev/health`)
@@ -430,6 +521,7 @@ await writeFile(
       namespace: process.env.CWS_NAMESPACE ?? name,
       sourceHash,
       sourceFiles,
+      deploymentProbe,
       packageSha256: createHash("sha256")
         .update(await readFile("package.json"))
         .digest("hex"),

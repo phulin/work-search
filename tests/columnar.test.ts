@@ -2,7 +2,7 @@ import { it, expect } from "vitest";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildColumnar } from "../src/columnar/build.js";
+import { buildColumnar } from "../bench/columnar/control/offline-build.js";
 import { pack, unpack } from "../src/columnar/format.js";
 import { Reader, Memory } from "../src/columnar/storage.js";
 import { ColumnarIndex } from "../src/columnar/search.js";
@@ -114,6 +114,59 @@ it("round trips full-width, delta, constant and short integer blocks; rejects co
       expect([...unpack(pack(a, delta))]).toEqual(a);
   expect(() => unpack(pack([1, 2, 3]).subarray(0, 12))).toThrow();
 });
+it("preserves exhaustive ranks, zero-score ties and pagination across bounded prefetch windows", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "cws-prefetch-"));
+  try {
+    const docs = Array.from({ length: 32769 }, (_, i) => ({
+        id: "d" + String(i).padStart(5, "0"),
+        body: "alpha ".repeat(i % 7) + "beta",
+        title: i % 3 ? "Alpha" : "Beta",
+      })),
+      input = dir + "/input";
+    await writeFile(input, docs.map((d) => JSON.stringify(d)).join("\n"));
+    const root = await buildColumnar({ input, out: dir + "/index" }),
+      objects = new OfflineObjects(dir + "/index", root),
+      index = new ColumnarIndex(root);
+    try {
+      const reader = new Reader(root, objects.source),
+        got = await index.search("alpha OR beta", reader, {
+          limit: 7,
+          exactTotal: true,
+        }),
+        expected = reference(docs, "alpha beta", "or").slice(0, 7);
+      expect(got.results.map((d) => d.id)).toEqual(expected.map((d) => d.id));
+      got.results.forEach((d, i) =>
+        expect(d.score).toBeCloseTo(expected[i].score, 11),
+      );
+      expect(got.total).toBe(docs.length);
+      expect(reader.stats.prefetchWindows).toBe(3);
+      const tied = await index.search(
+        "alpha OR beta",
+        new Reader(root, objects.source),
+        { field: "title", titleBoost: 0, limit: 7, exactTotal: true },
+      );
+      expect(tied.results.map((d) => d.id)).toEqual(
+        docs.slice(0, 7).map((d) => d.id),
+      );
+      expect(tied.results.every((d) => d.score === 0)).toBe(true);
+      const after = await index.search(
+        "alpha OR beta",
+        new Reader(root, objects.source),
+        {
+          field: "title",
+          titleBoost: 0,
+          limit: 7,
+          after: { score: 0, doc: 32767 },
+        },
+      );
+      expect(after.results.map((d) => d.id)).toEqual([docs[32768].id]);
+    } finally {
+      await objects.close();
+    }
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}, 120000);
 it("matches exhaustive ranking, AST oracle, field boosts, phrases, complements and search-after across hierarchy boundaries", async () => {
   const dir = await mkdtemp(join(tmpdir(), "cws-"));
   try {

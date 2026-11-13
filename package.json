@@ -8,7 +8,7 @@
   },
   "scripts": {
     "generate-sample": "tsx src/cli/main.ts generate --count 100",
-    "build-index": "node --import tsx scripts/build-columnar.ts",
+    "build-index": "node --import tsx scripts/build-in-workers.ts",
     "search-local": "node --import tsx scripts/search-columnar.ts",
     "dev": "node --import tsx scripts/dev-columnar.ts",
     "deploy": "node --import tsx scripts/deploy-columnar.ts",
@@ -26,7 +26,8 @@
     "builder:check": "cargo fmt -- --check && cargo clippy --locked -- -D warnings",
     "builder:test": "yarn builder:compile && cargo test --locked && vitest run tests/rust-builder.test.ts && node --import tsx bench/rust-builder/unicode.ts",
     "bench:builder": "node --import tsx bench/rust-builder/benchmark.ts",
-    "columnar:build": "node --import tsx scripts/build-columnar.ts",
+    "columnar:build": "node --import tsx scripts/build-in-workers.ts",
+    "bench:columnar:build-offline": "node --import tsx bench/columnar/control/build-offline.ts",
     "columnar:build:r2": "node --import tsx scripts/build-in-workers.ts",
     "columnar:deploy:builder": "node --import tsx scripts/deploy-construction.ts",
     "columnar:pairs": "node --import tsx scripts/build-columnar-pairs.ts",

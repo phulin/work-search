@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { Miniflare } from "miniflare";
 import "../scripts/workerd-runtime.js";
-import { buildColumnar } from "../src/columnar/build.js";
+import { buildColumnar } from "../bench/columnar/control/offline-build.js";
 it.each(["bundled", "metadata"])(
   "serves exact complete responses with %s integrity directories through workerd R2 and validated shared pages",
   async (integrity) => {

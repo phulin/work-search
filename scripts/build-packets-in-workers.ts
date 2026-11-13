@@ -118,6 +118,8 @@ function wake() {
   }
 }
 async function call(path: string, task: string, value: any = {}) {
+  let busyRetries = 0,
+    transientRetries = 0;
   for (let retry = 0; ; retry++) {
     if (active >= window) await new Promise<void>((r) => waiting.push(r));
     else active++;
@@ -178,11 +180,12 @@ async function call(path: string, task: string, value: any = {}) {
           error: String(e),
         }) + "\n",
       );
-      if (retry >= (busy ? 24 : 6)) throw e;
+      if (busy ? ++busyRetries > 120 : ++transientRetries > 6) throw e;
       await new Promise((r) =>
         setTimeout(
           r,
-          Math.min(10000, 500 * 2 ** retry) * (0.75 + Math.random() * 0.5),
+          (busy ? 500 : Math.min(10000, 500 * 2 ** (transientRetries - 1))) *
+            (0.75 + Math.random() * 0.5),
         ),
       );
     }

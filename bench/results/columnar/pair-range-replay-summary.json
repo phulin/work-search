@@ -1,0 +1,19 @@
+{
+  "startedAt": "2026-11-13T10:11:56.837Z",
+  "finishedAt": "2026-11-13T10:18:30.790Z",
+  "health": {
+    "code": "f307ca109c47faffe233bd7cbed68e4f3a66c97389e3a08aa651c19194cfca2c",
+    "isolate": "5e2acc3b-7407-4836-8b0e-c94ae9873a65"
+  },
+  "mergeMs": 100868.52458299999,
+  "ranges": 32,
+  "packets": 4096,
+  "bytes": 733124772,
+  "downloaded": 1495393108,
+  "validationMs": 138687.47604199997,
+  "exactPacketBytes": true,
+  "caveats": [
+    "One live replay while a separate full-corpus build was active; cache state was not controlled.",
+    "Reference final merge was recovered from a saved acknowledgement after client timeouts; its complete original wall time is unavailable."
+  ]
+}
