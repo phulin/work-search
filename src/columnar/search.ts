@@ -42,7 +42,12 @@ import { planPairAnchor } from "./pair-evidence.js";
 import { readPairAnchor } from "./pair-execution.js";
 import { ScoreBatch } from "./score-batch.js";
 import { selectCandidates, scoreCandidates, pruneCells } from "./score-scan.js";
-import { essentialTerms, cellBounds, deferScoreFetch } from "./maxscore.js";
+import {
+  essentialTerms,
+  cellBounds,
+  deferScoreFetch,
+  blocksInCells,
+} from "./maxscore.js";
 import { lookupRemotePairs } from "./pair-lookup.js";
 import {
   planMembershipAnchor,
@@ -471,7 +476,8 @@ export class ColumnarIndex {
       context: Awaited<ReturnType<typeof readPairAnchor>> | undefined;
     // Four document-directory windows per numeric batch amortize the two score
     // phases without adding another remote stage per 4096 documents.
-    const BAND = 16384;
+    const BAND = 16384,
+      LOOKAHEAD = 8;
     if (loadedMembership) {
       wantedPositions.clear();
       for (const name of positionalTerms(ast, loadedMembership.covered))
@@ -644,14 +650,38 @@ export class ColumnarIndex {
     let presenceDoc = presenceCursor?.next() ?? Infinity;
     for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
       const band = bands[bandIndex];
-      // Broad numeric scans amortize physical GETs over four nearby bands.
-      // Positions remain demand-loaded. A 2-MiB aligned/coalesced footprint cap
-      // bounds speculative bytes; later, stronger heap bounds still apply.
-      if (!positions && bands.length >= 8 && bandIndex % 4 === 0) {
-        window = await Promise.all(
-          bands
-            .slice(bandIndex, bandIndex + 4)
-            .map((next) =>
+      // Score lookahead is independent of positional decoding. Restrict new
+      // positional lookahead to broad scans without selective candidate masks.
+      if (
+        (!positions ||
+          (scoring.length > 0 && !loadedMembership && !pairCandidates)) &&
+        bands.length >= 8 &&
+        bandIndex % LOOKAHEAD === 0
+      ) {
+        const nextBands = bands.slice(bandIndex, bandIndex + LOOKAHEAD);
+        if (nextBands.at(-1)! - nextBands[0] === nextBands.length - 1) {
+          const combined = await Promise.all(
+            names.map((name) =>
+              leaves(
+                reader,
+                terms.get(name)!.tree,
+                nextBands[0] * BAND,
+                Math.min(this.root.count, (nextBands.at(-1)! + 1) * BAND),
+              ),
+            ),
+          );
+          window = nextBands.map((next) =>
+            combined.map((bs) =>
+              bs.filter(
+                (b) =>
+                  b.last >= next * BAND &&
+                  b.first < Math.min(this.root.count, (next + 1) * BAND),
+              ),
+            ),
+          );
+        } else {
+          window = await Promise.all(
+            nextBands.map((next) =>
               Promise.all(
                 names.map((name) =>
                   leaves(
@@ -663,7 +693,8 @@ export class ColumnarIndex {
                 ),
               ),
             ),
-        );
+          );
+        }
         const refs = window.flatMap((bs, i) => {
           if (
             coarse(ast, (name) => (bs[names.indexOf(name)].length ? 2 : 0)) ===
@@ -691,18 +722,38 @@ export class ColumnarIndex {
           )
             return [];
           const perTermBounds = bs.map((blocks) => {
-              let b = 0,
-                t = 0;
-              for (const block of blocks) {
-                b = Math.max(b, block.b);
-                t = Math.max(t, block.t);
-              }
-              return (
-                (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0)
-              );
-            }),
+            let b = 0,
+              t = 0;
+            for (const block of blocks) {
+              b = Math.max(b, block.b);
+              t = Math.max(t, block.t);
+            }
+            return (
+              (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0)
+            );
+          });
+          // Use the same current verified threshold/cell proof as execution.
+          // Later stronger thresholds can make this speculative, never required.
+          const cells = new Uint8Array(
+            Math.ceil(Math.min(BAND, this.root.count - first) / 128),
+          ).fill(1);
+          if (!options.exactTotal && heap.threshold)
+            pruneCells(
+              cells,
+              cellBounds(
+                bs,
+                first,
+                Math.min(BAND, this.root.count - first),
+                field,
+                boost,
+              ),
+              scoring,
+              first,
+              heap.threshold,
+            );
+          const selected = blocksInCells(bs, cells, first),
             essential = essentialTerms(
-              bs,
+              selected,
               perTermBounds,
               scoring,
               requiredIndices,
@@ -710,15 +761,15 @@ export class ColumnarIndex {
               heap.threshold?.score,
               options.exactTotal ?? false,
             );
-          const lazy = deferScoreFetch(bs, essential, BAND, (ref) =>
+          const lazy = deferScoreFetch(selected, essential, BAND, (ref) =>
             reader.resident(ref),
           );
-          return (lazy ? essential!.flatMap((j) => bs[j]) : bs.flat()).map(
-            (block) => block.score,
-          );
+          return (
+            lazy ? essential!.flatMap((j) => selected[j]) : selected.flat()
+          ).map((block) => block.score);
         });
         const footprint = reader.packetFootprint(refs);
-        if (footprint <= 2 * 1048576) {
+        if (footprint <= Math.min(4 * 1048576, reader.memory.pages.limit / 3)) {
           const before = reader.stats.bytes;
           reader.stats.prefetchWindows++;
           reader.stats.prefetchTransferBytes += footprint;
@@ -730,7 +781,7 @@ export class ColumnarIndex {
         hi = Math.min(this.root.count, lo + BAND),
         size = hi - lo;
       const blocks =
-        window[bandIndex % 4] ??
+        window[bandIndex % LOOKAHEAD] ??
         (await Promise.all(
           names.map((n) => leaves(reader, terms.get(n)!.tree, lo, hi)),
         ));
@@ -814,16 +865,8 @@ export class ColumnarIndex {
       if (!options.exactTotal && heap.threshold)
         pruneCells(cells, localBounds, scoring, lo, heap.threshold);
       if (loadedMembership || pairCandidates || heap.threshold) {
-        for (let j = 0; j < blocks.length; j++)
-          blocks[j] = blocks[j].filter((b) => {
-            const first = Math.max(0, Math.floor((b.first - lo) / 128)),
-              last = Math.min(
-                cells.length - 1,
-                Math.floor((b.last - lo) / 128),
-              );
-            for (let c = first; c <= last; c++) if (cells[c]) return true;
-            return false;
-          });
+        const filtered = blocksInCells(blocks, cells, lo);
+        for (let j = 0; j < blocks.length; j++) blocks[j] = filtered[j];
       }
       const essential = essentialTerms(
           blocks,

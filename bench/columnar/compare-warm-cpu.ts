@@ -141,6 +141,12 @@ if (process.env.CWS_CPU_CHILD) {
       search: createHash("sha256")
         .update(await readFile(resolve(base, "src/columnar/search.ts")))
         .digest("hex"),
+      maxscore: createHash("sha256")
+        .update(await readFile(resolve(base, "src/columnar/maxscore.ts")))
+        .digest("hex"),
+      storage: createHash("sha256")
+        .update(await readFile(resolve(base, "src/columnar/storage.ts")))
+        .digest("hex"),
       kernel: await readFile(resolve(base, "src/columnar/score-scan.ts"))
         .then((b) => createHash("sha256").update(b).digest("hex"))
         .catch((e) => {

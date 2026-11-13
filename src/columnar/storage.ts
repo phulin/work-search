@@ -161,6 +161,8 @@ export class Reader {
     eagerScoreWindows: 0,
     eagerScoreFetchWindows: 0,
     partialScoreRejected: 0,
+    packetCopyBytes: 0,
+    packetViewBytes: 0,
     decodedBytes: 0,
     repeatedDecodedBytes: 0,
     positionIntegers: 0,
@@ -411,6 +413,39 @@ export class Reader {
     )
       throw Error("Invalid packet reference");
     if (!descriptor.checksums || length > 8 * 1048576) return this.read(ref);
+    const pages = await this.packetPages(ref);
+    return warmOnly
+      ? EMPTY_PACKET
+      : this.packetSlice(pages, offset % PAGE, length);
+  }
+  private packetPageReads = new Map<string, Promise<Uint8Array[]>>();
+  private async packetPages(ref: Ref) {
+    const key = this.key(ref),
+      old = this.packetPageReads.get(key);
+    if (old) {
+      this.stats.deduplicated++;
+      return old;
+    }
+    const task = this.loadPacketPages(ref);
+    this.packetPageReads.set(key, task);
+    try {
+      return await task;
+    } finally {
+      this.packetPageReads.delete(key);
+    }
+  }
+  private async loadPacketPages(ref: Ref): Promise<Uint8Array[]> {
+    const [object, offset, length] = ref,
+      descriptor = objectAt(this.root, object);
+    if (
+      !descriptor ||
+      !Number.isSafeInteger(offset) ||
+      !Number.isSafeInteger(length) ||
+      offset < 0 ||
+      length < 1 ||
+      offset + length > descriptor.size
+    )
+      throw Error("Invalid packet reference");
     const first = Math.floor(offset / PAGE),
       last = Math.floor((offset + length - 1) / PAGE),
       indices = Array.from({ length: last - first + 1 }, (_, i) => first + i),
@@ -511,9 +546,27 @@ export class Reader {
           this.pending.delete(key(page));
       }
     }
-    if (warmOnly) return EMPTY_PACKET;
-    const data = pages.length === 1 ? pages[0]! : concat(pages as Uint8Array[]);
-    return data.subarray(offset % PAGE, (offset % PAGE) + length);
+    return pages as Uint8Array[];
+  }
+  /** Transfer groups retain their independently owned pages until all requested
+   * block views are made, even when the group is larger than the page LRU. */
+  private packetSlice(pages: Uint8Array[], offset: number, length: number) {
+    const first = Math.floor(offset / PAGE),
+      at = offset % PAGE;
+    if (at + length <= pages[first].length) {
+      this.stats.packetViewBytes += length;
+      return pages[first].subarray(at, at + length);
+    }
+    this.stats.packetCopyBytes += length;
+    const data = new Uint8Array(length);
+    let written = 0;
+    for (let p = first; written < length; p++) {
+      const start = p === first ? at : 0;
+      const n = Math.min(length - written, pages[p].length - start);
+      data.set(pages[p].subarray(start, start + n), written);
+      written += n;
+    }
+    return data;
   }
   async packets(refs: Ref[]) {
     this.stats.stages++;
@@ -531,12 +584,24 @@ export class Reader {
     const groups = packetGroups(pending);
     await Promise.all(
       groups.map(async (group) => {
-        const data = await this.packet(group.ref);
-        for (const { ref, index } of group.entries)
-          result[indices[index]] = data.subarray(
-            ref[1] - group.ref[1],
-            ref[1] - group.ref[1] + ref[2],
-          );
+        const descriptor = objectAt(this.root, group.ref[0]);
+        if (descriptor?.checksums && group.ref[2] <= 8 * 1048576) {
+          const pages = await this.packetPages(group.ref),
+            first = Math.floor(group.ref[1] / PAGE) * PAGE;
+          for (const { ref, index } of group.entries)
+            result[indices[index]] = this.packetSlice(
+              pages,
+              ref[1] - first,
+              ref[2],
+            );
+        } else {
+          const data = await this.packet(group.ref);
+          for (const { ref, index } of group.entries)
+            result[indices[index]] = data.subarray(
+              ref[1] - group.ref[1],
+              ref[1] - group.ref[1] + ref[2],
+            );
+        }
       }),
     );
     return result;

@@ -1,8 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-const revision = "3572902",
-  out = "work/cpu-control-3572902";
+const revision = process.argv[2] ?? "3572902",
+  out = "work/cpu-control-" + revision;
 await mkdir(out, { recursive: true });
 execFileSync("tar", ["-x", "-C", out], {
   input: execFileSync("git", ["archive", revision, "src"], {

@@ -80,10 +80,24 @@ it("keeps a provably sufficient essential union, ties, mandatory anchors and exa
     ),
   ).toBe(true);
 });
+it("keeps separate field maxima across cell boundaries and clipped document windows", () => {
+  const blocks = [
+    [
+      { ...branch(2, 10), first: 0, last: 127 },
+      { ...branch(10, 2), first: 128, last: 255 },
+      { ...branch(7, 7), first: 100, last: 200 },
+      { ...branch(1000, 1000), first: 256, last: 300 },
+    ],
+  ];
+  expect([...cellBounds(blocks, 0, 256, "all", 3)[0]]).toEqual([37, 31]);
+  expect([...cellBounds(blocks, 0, 256, "body", 3)[0]]).toEqual([7, 10]);
+  expect([...cellBounds(blocks, 0, 256, "title", 3)[0]]).toEqual([30, 21]);
+  expect([...cellBounds(blocks, 96, 160, "all", 3)[0]]).toEqual([40, 16]);
+});
 it("matches independent exhaustive ranks across lazy blocks, false positional leaders, fields, ties, totals and pagination", async () => {
   const dir = await mkdtemp(join(tmpdir(), "cws-maxscore-"));
   try {
-    const docs = Array.from({ length: 32769 }, (_, i) => ({
+    const docs = Array.from({ length: 131073 }, (_, i) => ({
       id: "d" + String(i).padStart(5, "0"),
       title: "common filler",
       body:
@@ -116,6 +130,7 @@ it("matches independent exhaustive ranks across lazy blocks, false positional le
       const queries = [
         "rare OR common OR filler",
         "rare AND common",
+        "(rare OR gap) AND rare",
         '"rare common"',
         '"rare rare"',
         "rare /3 common",

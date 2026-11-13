@@ -1,5 +1,5 @@
 import { it, expect } from "vitest";
-import { Reader, Memory } from "../src/columnar/storage.js";
+import { Reader, Memory, Lru } from "../src/columnar/storage.js";
 import { PAGE } from "../src/columnar/format.js";
 import { crc32 } from "../src/format/codec.js";
 it("preserves complete reads after the shared-cache operation budget is exhausted", async () => {
@@ -114,4 +114,61 @@ it("uses one contiguous GET for 900 KiB, reuses independent pages, coalesces adj
   const tail = await new Reader(root, source).packet([0, PAGE * 6 + 20, 111]);
   expect(tail).toEqual(data.subarray(PAGE * 6 + 20));
   expect(calls.at(-1)).toEqual({ offset: PAGE * 6, length: 131 });
+});
+
+it("retains independent pages across LRU eviction and concurrent grouped reads, copying only crossing blocks", async () => {
+  const data = Uint8Array.from(
+      { length: PAGE * 3 + 17 },
+      (_, i) => (i * 13 + (i >>> 15)) & 255,
+    ),
+    checksums = Array.from({ length: 4 }, (_, i) =>
+      crc32(data.subarray(i * PAGE, (i + 1) * PAGE)),
+    ),
+    root = {
+      generation: "g",
+      objects: [{ name: "o", size: data.length, sha256: "x", checksums }],
+    },
+    memory = new Memory();
+  memory.pages = new Lru(PAGE);
+  let reads = 0;
+  const source = {
+      async read(_k: string, offset: number, length: number) {
+        reads++;
+        return data.slice(offset, offset + length);
+      },
+    },
+    r = new Reader(root, source, memory),
+    refs: [number, number, number][] = [
+      [0, PAGE - 17, 41],
+      [0, PAGE + 99, 100],
+      [0, PAGE * 2 + 5, 10],
+      [0, PAGE * 3 + 2, 15],
+    ],
+    [a, b] = await Promise.all([r.packets(refs), r.packets(refs)]);
+  expect(reads).toBe(1);
+  refs.forEach((ref, i) => {
+    expect(a[i]).toEqual(data.subarray(ref[1], ref[1] + ref[2]));
+    expect(b[i]).toEqual(a[i]);
+  });
+  expect(a[0].buffer.byteLength).toBe(41);
+  expect(a[1].buffer.byteLength).toBe(PAGE);
+  expect(a[1].buffer).toBe(b[1].buffer);
+  expect(a[2].buffer.byteLength).toBe(PAGE);
+  expect(a[3].buffer.byteLength).toBe(17);
+  expect(r.stats.packetCopyBytes).toBe(82);
+  memory.clear();
+  expect(a[1]).toEqual(data.subarray(PAGE + 99, PAGE + 199));
+  const corrupt = {
+    async read(k: string, offset: number, length: number) {
+      const raw = await source.read(k, offset, length);
+      raw[PAGE + 120] ^= 1;
+      return raw;
+    },
+  };
+  await expect(new Reader(root, corrupt).packets(refs)).rejects.toThrow(
+    "checksum",
+  );
+  await expect(new Reader(root, source).packets([[0, -1, 10]])).rejects.toThrow(
+    "reference",
+  );
 });

@@ -214,6 +214,30 @@ await writeFile(
           ),
         )
         .digest("hex"),
+      maxscoreSha256: createHash("sha256")
+        .update(
+          await readFile(
+            resolve(
+              base,
+              process.env.CWS_PROFILE_COMPILED
+                ? "columnar/maxscore.js"
+                : "src/columnar/maxscore.ts",
+            ),
+          ),
+        )
+        .digest("hex"),
+      storageSha256: createHash("sha256")
+        .update(
+          await readFile(
+            resolve(
+              base,
+              process.env.CWS_PROFILE_COMPILED
+                ? "columnar/storage.js"
+                : "src/columnar/storage.ts",
+            ),
+          ),
+        )
+        .digest("hex"),
       kernelSha256: await readFile(
         resolve(
           base,

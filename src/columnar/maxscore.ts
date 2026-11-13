@@ -45,20 +45,27 @@ export function cellBounds(
   boost: number,
 ) {
   return blocks.map((bs) => {
-    const result = new Float64Array(Math.ceil(size / 128));
-    for (let cell = 0; cell < result.length; cell++) {
-      const lo = first + cell * 128,
-        hi = Math.min(first + size, lo + 128);
-      let b = 0,
-        t = 0;
-      for (const block of bs)
-        if (block.last >= lo && block.first < hi) {
-          b = Math.max(b, block.b);
-          t = Math.max(t, block.t);
-        }
-      result[cell] =
-        (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0);
+    const result = new Float64Array(Math.ceil(size / 128)),
+      titles = new Float64Array(result.length);
+    // Visit only the cells a block overlaps, rather than rescanning every
+    // posting block for each cell. Keep the two field maxima independent.
+    for (let i = 0; i < bs.length; i++) {
+      const block = bs[i];
+      if (block.last < first || block.first >= first + size) continue;
+      const from = Math.max(0, Math.floor((block.first - first) / 128)),
+        to = Math.min(
+          result.length - 1,
+          Math.floor((block.last - first) / 128),
+        );
+      for (let c = from; c <= to; c++) {
+        result[c] = Math.max(result[c], block.b);
+        titles[c] = Math.max(titles[c], block.t);
+      }
     }
+    for (let c = 0; c < result.length; c++)
+      result[c] =
+        (field !== "title" ? result[c] : 0) +
+        (field !== "body" ? boost * titles[c] : 0);
     return result;
   });
 }
@@ -93,4 +100,20 @@ export function deferScoreFetch(
   // For resident pages the extra logical phase adds no network dependency.
   // Otherwise require enough expected avoided transfer/decode work to repay it.
   return optional.every(resident) || expectedSaved >= 65536;
+}
+
+/** A block can be omitted only when every document cell it overlaps is dead. */
+export function blocksInCells(
+  blocks: Branch[][],
+  cells: Uint8Array,
+  first: number,
+) {
+  return blocks.map((bs) =>
+    bs.filter((b) => {
+      const from = Math.max(0, Math.floor((b.first - first) / 128)),
+        to = Math.min(cells.length - 1, Math.floor((b.last - first) / 128));
+      for (let c = from; c <= to; c++) if (cells[c]) return true;
+      return false;
+    }),
+  );
 }
