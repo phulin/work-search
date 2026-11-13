@@ -4,6 +4,23 @@ import { PAGE } from "./format.js";
  * need not bundle every page checksum or add a remote discovery request. */
 export class ColumnarR2 implements Source {
   constructor(readonly bucket: R2Bucket) {}
+  async readNamed(key: string, bytes: number) {
+    if (
+      !/^[a-f0-9]{64}\/(?:pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+)\.bin$/.test(
+        key,
+      ) ||
+      bytes > 32 * 1048576
+    )
+      throw Error("Invalid pair object");
+    const object = await this.bucket.get(key);
+    if (
+      !object ||
+      object.size !== bytes ||
+      object.customMetadata?.generation !== key.split("/")[0]
+    )
+      throw Error("Pair object generation mismatch");
+    return new Uint8Array(await object.arrayBuffer());
+  }
   async readWhole(
     key: string,
     range?: { offset: number; length: number; doc: number; first: number },

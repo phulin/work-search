@@ -10,6 +10,23 @@ type PackageMetadata = { first: number; checksums: number[] };
 /** Persistent immutable data, independent of the simulated application caches.
  * Network is permitted only during preparation. Timed replay fails on a miss. */
 export class LocalObjects implements Source {
+  namedDirectory?: string;
+  async readNamed(key: string, _bytes: number) {
+    if (
+      !this.namedDirectory ||
+      !/^[a-f0-9]{64}\/(?:pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+)\.bin$/.test(
+        key,
+      )
+    )
+      throw Error("Missing local named packet store");
+    const name = key.split("/")[1];
+    return readFile(
+      this.namedDirectory +
+        (name.startsWith("presence-")
+          ? "/presence/" + name.slice(9)
+          : "/objects/" + name),
+    );
+  }
   remoteEnabled = false;
   downloads = 0;
   downloadedBytes = 0;

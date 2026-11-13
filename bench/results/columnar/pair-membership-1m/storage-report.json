@@ -1,0 +1,27 @@
+{
+  "generation": "a4b591520b45473a7d3d5e10ac623ee208c33a5474550e4387de5b2776df45ab",
+  "baseGeneration": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+  "routerSha256": "186e456cfb168f414894ac6cb2bd3d398ea53270eef728f7284fea0dc9d55ec7",
+  "validation": "Every packet size/CRC; every record span/count/list-mode; distributed exact routing and decoded membership checks. This is not an exhaustive source-to-pair identity comparison.",
+  "totals": {
+    "packets": 166490,
+    "packetBytes": 15778447162,
+    "pairs": 44995185,
+    "documentMemberships": 990101772,
+    "fieldMemberships": 991610351,
+    "bodyOccurrences": 1493537623,
+    "titleOccurrences": 3977488,
+    "membershipBytes": 4066200876,
+    "recordBytes": 14543493200,
+    "contextPairs": 44529289,
+    "contextBytes": 10477292324,
+    "contextMemberships": 191175942,
+    "contextOccurrences": 235417244,
+    "sampledRecords": 10985,
+    "sampledMembershipIntegers": 336498
+  },
+  "contextMembershipFraction": 0.1930871627608803,
+  "contextOccurrenceFraction": 0.15720525440494204,
+  "elapsedMs": 129437.930917,
+  "finishedAt": "2026-11-13T17:31:22.608Z"
+}

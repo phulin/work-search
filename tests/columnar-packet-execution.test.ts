@@ -1,4 +1,4 @@
-import { it, expect } from "vitest";
+import { it, expect, vi } from "vitest";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -29,6 +29,12 @@ import {
   executePackets,
   packetPlan,
 } from "../src/columnar/packet-execution.js";
+import {
+  encodePairMembership,
+  encodePairMembershipPacket,
+} from "../src/columnar/pair-membership.js";
+import { encodePairRouter, PairRouter } from "../src/columnar/pair-router.js";
+import { crc32 } from "../src/format/codec.js";
 it("complete terms and anchor packages preserve exhaustive Boolean/positional matching, scores, fields, ties and cursors", async () => {
   const dir = await mkdtemp(join(tmpdir(), "cws-packets-"));
   let original: OfflineObjects | undefined, objects: OfflineObjects | undefined;
@@ -122,6 +128,30 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
       }),
       control = new ColumnarIndex(before);
     const executors = new Set<string>();
+    // A selective anchor can lead to unusually long documents. Direct package
+    // lengths must reject an over-budget transfer before fetching any package.
+    const longQuery = parse('"rare alpha"'),
+      longReader = new Reader(root, objects.source),
+      longTerms = await directory.lookup(queryTerms(longQuery), longReader),
+      load = vi.fn(
+        async (doc: number) => new DocumentPackage(packages.get(doc)!, doc),
+      );
+    expect(
+      await executePackets(
+        longQuery,
+        longTerms,
+        root,
+        longReader,
+        { metadata: false, snippets: false },
+        {
+          averageBytes: 500,
+          byteLength: () => 9 * 1048576,
+          load,
+        },
+        "documents",
+      ),
+    ).toBeUndefined();
+    expect(load).not.toHaveBeenCalled();
     for (const q of [
       "alpha",
       "rare alpha",
@@ -392,6 +422,218 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
           11,
         );
     }
+    // A complete authoritative packet includes every observed ordered pair.
+    // Exercise absent pairs, field separation, OR/NOT safety, common-anchor
+    // exclusions and candidate-preserving fallback against the same reference.
+    const allPairs = new Map<
+      string,
+      { a: string; b: string; rows: PairRow[] }
+    >();
+    docs.forEach((d, doc) => {
+      const perDoc = new Map<
+        string,
+        { a: string; b: string; body: PairRow["body"]; title: PairRow["title"] }
+      >();
+      for (const field of ["body", "title"] as const) {
+        const tokens = tokenize(d[field]);
+        for (let p = 0; p + 1 < tokens.length; p++) {
+          const a = tokens[p],
+            b = tokens[p + 1],
+            key = a + "\0" + b;
+          let entry = perDoc.get(key);
+          if (!entry) {
+            entry = { a, b, body: [], title: [] };
+            perDoc.set(key, entry);
+          }
+          entry[field].push({
+            position: p,
+            previous: ids.get(tokens[p - 1]),
+            next: ids.get(tokens[p + 2]),
+          });
+        }
+      }
+      for (const [key, entry] of perDoc) {
+        let pair = allPairs.get(key);
+        if (!pair) {
+          pair = { a: entry.a, b: entry.b, rows: [] };
+          allPairs.set(key, pair);
+        }
+        pair.rows.push({ doc, body: entry.body, title: entry.title });
+      }
+    });
+    const orderedPairs = [...allPairs.values()].sort(
+        (a, b) =>
+          b.rows.length - a.rows.length ||
+          a.a.localeCompare(b.a) ||
+          a.b.localeCompare(b.b),
+      ),
+      packetEntries = orderedPairs.map((p) => {
+        const context = encodePairPacket(ids.get(p.a)!, ids.get(p.b)!, p.rows),
+          data = encodePairMembership(
+            {
+              a: ids.get(p.a)!,
+              b: ids.get(p.b)!,
+              df: p.rows.length,
+              body: Uint32Array.from(
+                p.rows.filter((r) => r.body.length),
+                (r) => r.doc,
+              ),
+              title: Uint32Array.from(
+                p.rows.filter((r) => r.title.length),
+                (r) => r.doc,
+              ),
+              bodyOccurrences: p.rows.reduce((n, r) => n + r.body.length, 0),
+              titleOccurrences: p.rows.reduce((n, r) => n + r.title.length, 0),
+              context: context.length < 4096 ? context : undefined,
+            },
+            root.count,
+          );
+        return { a: p.a, b: p.b, data };
+      }),
+      membershipPacket = encodePairMembershipPacket(packetEntries),
+      membershipRoot = {
+        ...root,
+        positionalPairs: undefined,
+        pairDirectory: undefined,
+      },
+      router = new PairRouter(
+        encodePairRouter(
+          {
+            generation: "a".repeat(64),
+            baseGeneration: root.generation,
+            documents: root.count,
+            targetBytes: 131072,
+            contextBytes: 8192,
+            namespaces: [],
+            roots: [-1],
+            commonWords: terms
+              .map(([word, t]) => ({ word, id: t.id, df: t.df }))
+              .sort((a, b) => b.df - a.df || a.id - b.id),
+          },
+          [],
+          [
+            {
+              namespace: 0,
+              bits: 0,
+              prefix: 0,
+              bytes: membershipPacket.length,
+              crc32: crc32(membershipPacket),
+              pairs: allPairs.size,
+            },
+          ],
+          encodePairMembershipPacket(
+            orderedPairs.map((p, rank) => ({
+              a: p.a,
+              b: p.b,
+              data: new Uint8Array(
+                Uint32Array.from([
+                  p.rows.length,
+                  p.rows.filter((r) => r.body.length).length,
+                  p.rows.filter((r) => r.title.length).length,
+                  packetEntries[rank].data.length,
+                  rank + 1,
+                ]).buffer,
+              ),
+            })),
+          ),
+        ),
+      );
+    const presence = router.metadata.commonWords.map((word) => {
+        const body: number[] = [],
+          title: number[] = [];
+        let bodyOccurrences = 0,
+          titleOccurrences = 0;
+        docs.forEach((d, doc) => {
+          for (const field of ["body", "title"] as const) {
+            const n = tokenize(d[field]).filter((t) => t === word.word).length;
+            if (n) (field === "body" ? body : title).push(doc);
+            if (field === "body") bodyOccurrences += n;
+            else titleOccurrences += n;
+          }
+        });
+        return encodePairMembership(
+          {
+            a: word.id,
+            b: word.id,
+            df: word.df,
+            body: Uint32Array.from(body),
+            title: Uint32Array.from(title),
+            bodyOccurrences,
+            titleOccurrences,
+          },
+          root.count,
+        );
+      }),
+      presenceMetadata = {
+        generation: router.metadata.generation,
+        entries: presence.map((data) => ({
+          bytes: data.length,
+          crc32: crc32(data),
+        })),
+      };
+    for (const averageBytes of [500, 50000])
+      for (const [N, M] of [
+        [0, 0],
+        [2, 1],
+        [200, 2000],
+      ]) {
+        const engine = new ColumnarIndex(
+            membershipRoot,
+            undefined,
+            directory,
+            {
+              averageBytes,
+              load: async (doc) => new DocumentPackage(packages.get(doc)!, doc),
+            },
+            undefined,
+            { router, N, M, presence: presenceMetadata },
+          ),
+          source = {
+            ...objects.source,
+            readNamed: async (key: string) =>
+              key.includes("/presence-")
+                ? presence[Number(key.split("/presence-")[1].split(".")[0])]
+                : membershipPacket,
+          };
+        for (const q of [
+          '"alpha beta"',
+          '"alpha beta gamma"',
+          '"alpha alpha"',
+          '"rare alpha"',
+          '"alpha beta" AND NOT "beta gamma"',
+          '("alpha beta" AND rare) OR ("alpha beta" AND gamma)',
+          'NOT "alpha beta"',
+          '"alpha beta" OR rare',
+          "rare AND alpha",
+          "alpha OR beta",
+          '"alpha beta" /2 gamma',
+        ])
+          for (const field of ["all", "body", "title"] as const) {
+            const options: Options = {
+                limit: 7,
+                field,
+                exactTotal: true,
+                titleBoost: 0,
+              },
+              expected = await control.search(
+                q,
+                new Reader(before, original.source),
+                options,
+              ),
+              got = await engine.search(
+                q,
+                new Reader(membershipRoot, source),
+                options,
+              );
+            expect(got.total, `${q} ${field} N${N} M${M}`).toBe(expected.total);
+            expect(got.results.map((h) => h.id)).toEqual(
+              expected.results.map((h) => h.id),
+            );
+            got.results.forEach((h, i) =>
+              expect(h.score).toBeCloseTo(expected.results[i].score, 11),
+            );
+          }
+      }
   } finally {
     await original?.close();
     await objects?.close();

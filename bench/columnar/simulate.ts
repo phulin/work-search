@@ -16,6 +16,25 @@ import type { Root } from "../../src/columnar/format.js";
 import { LocalObjects } from "./local-storage.js";
 import { SimulatedIO } from "./latency-model.js";
 import { benchmarkToken } from "./token.js";
+import { PairRouter } from "../../src/columnar/pair-router.js";
+async function implementationDigest() {
+  const hash = createHash("sha256");
+  async function visit(path: string) {
+    for (const item of (await readdir(path, { withFileTypes: true })).sort(
+      (a, b) => a.name.localeCompare(b.name),
+    )) {
+      const file = path + "/" + item.name;
+      if (item.isDirectory()) await visit(file);
+      else hash.update(file).update(await readFile(file));
+    }
+  }
+  for (const path of ["src/columnar", "src/query", "src/format"])
+    await visit(path);
+  for (const file of ["simulate.ts", "local-storage.ts", "latency-model.ts"])
+    hash.update(file).update(await readFile("bench/columnar/" + file));
+  return hash.digest("hex");
+}
+const implementationSha256 = await implementationDigest();
 
 const dir = process.argv[2],
   contract = process.argv[3],
@@ -23,9 +42,15 @@ const dir = process.argv[2],
   store = process.env.CWS_LOCAL_DATA ?? "work/columnar-local-data",
   condition = process.env.CWS_CONDITION ?? "memory-reuse",
   repeats = Number(process.env.CWS_REPEATS ?? 3),
-  plans = (
-    process.env.CWS_PLANS ?? "auto,complete-terms,documents,blocks"
-  ).split(",");
+  plans = [
+    ...(process.env.CWS_PLANS ?? "auto,complete-terms,documents,blocks").split(
+      ",",
+    ),
+    ...(process.env.CWS_PAIR_SETTINGS ?? "")
+      .split(",")
+      .filter(Boolean)
+      .map((s) => "auto-N" + s.replace(":", "-M")),
+  ];
 if (
   !dir ||
   !contract ||
@@ -35,7 +60,9 @@ if (
   !Number.isInteger(repeats) ||
   repeats < 1 ||
   plans.some(
-    (p) => !["auto", "complete-terms", "documents", "blocks"].includes(p),
+    (p) =>
+      !["auto", "complete-terms", "documents", "blocks"].includes(p) &&
+      !/^auto-N\d+-M\d+$/.test(p),
   )
 )
   throw Error(
@@ -51,7 +78,15 @@ if (
 )
   throw Error("Simulation requires a matching 1M corpus and analysis contract");
 const raw = await readFile(dir + "/directory.bin"),
-  documentRaw = await readFile(dir + "/documents.bin");
+  documentRaw = await readFile(dir + "/documents.bin"),
+  pairRaw = process.env.CWS_PAIR_INDEX
+    ? await readFile(process.env.CWS_PAIR_INDEX + "/router.bin")
+    : undefined;
+const commonPresence = process.env.CWS_PAIR_INDEX
+  ? JSON.parse(
+      await readFile(process.env.CWS_PAIR_INDEX + "/presence.json", "utf8"),
+    )
+  : undefined;
 if (
   createHash("sha256").update(raw).digest("hex") !== root.directory?.sha256 ||
   createHash("sha256").update(documentRaw).digest("hex") !==
@@ -78,8 +113,21 @@ const source = new LocalObjects(
     seed: 20261113,
   },
   sharedCacheMiB = Number(process.env.CWS_SHARED_CACHE_MIB ?? 256);
+source.namedDirectory = process.env.CWS_PAIR_INDEX;
 const runtimes = new Map(
   plans.map((plan) => {
+    const setting = /^auto-N(\d+)-M(\d+)$/.exec(plan),
+      membership =
+        setting && pairRaw
+          ? {
+              router: new PairRouter(pairRaw),
+              N: Number(setting[1]),
+              M: Number(setting[2]),
+              presence: commonPresence,
+            }
+          : undefined;
+    if (setting && !membership)
+      throw Error("Pair settings require CWS_PAIR_INDEX");
     const memory = new Memory(),
       directory = new TermDirectory(raw, root.count),
       documents = new DocumentDirectory(documentRaw),
@@ -89,6 +137,7 @@ const runtimes = new Map(
         directory,
         undefined,
         documents,
+        membership,
       ),
       blockIndex = new ColumnarIndex(
         root,
@@ -149,6 +198,7 @@ async function query(
       cursors.get(plan + ":" + selected.indexOf(scenario)) ?? options.after;
   const packages = {
     averageBytes: root.documentPackages!.averageBytes,
+    byteLength: (doc: number) => documents.lookup(doc).length,
     load: (doc: number) =>
       reader.document(
         root.documentPackages!.generation,
@@ -157,7 +207,8 @@ async function query(
       ),
   };
   let result;
-  if (plan === "auto") result = await index.search(scenario.q, reader, options);
+  if (plan === "auto" || plan.startsWith("auto-N"))
+    result = await index.search(scenario.q, reader, options);
   else {
     const original = parse(
         scenario.q,
@@ -218,6 +269,29 @@ async function query(
       )
     )
       throw Error("Independent oracle mismatch: " + scenario.q + ":" + plan);
+    if (scenario.assertPhraseSnippet && options.snippets !== false) {
+      const analyze = tokenizerFor(root.analysis),
+        words = analyze(scenario.q);
+      for (const hit of result.results) {
+        const tokens = analyze(hit.snippet ?? "");
+        let found = false;
+        outer: for (let at = 0; at + words.length <= tokens.length; at++) {
+          for (let i = 0; i < words.length; i++)
+            if (tokens[at + i] !== words[i]) continue outer;
+          found = true;
+          break;
+        }
+        if (!found)
+          throw Error(
+            "Query-relevant phrase missing from snippet: " +
+              scenario.q +
+              ":" +
+              plan +
+              ":" +
+              hit.id,
+          );
+      }
+    }
   }
   return {
     q: scenario.q,
@@ -276,12 +350,15 @@ if (source.remoteEnabled) {
 if (process.argv.includes("--prepare-only")) process.exit(0);
 // An untimed pass warms shared data and JIT execution. Fresh namespaces still
 // miss both cache layers during measurements; application reset stays in-request.
+for (const runtime of runtimes.values()) runtime.io.delaysEnabled = false;
 for (const scenario of selected)
   for (const plan of plans) {
     reset(plan);
-    await query(scenario, plan, false, "simulation");
+    const warmed = await query(scenario, plan, false, "simulation");
+    console.log("Warmed", plan, scenario.q, Math.round(warmed.wallMs), "ms");
   }
 reset();
+for (const runtime of runtimes.values()) runtime.io.delaysEnabled = true;
 let seed = 20261113;
 const random = () => {
   seed ^= seed << 13;
@@ -310,28 +387,17 @@ const manifest = {
     .digest("hex"),
   node: process.version,
   responseCaching: false,
+  pairRouterSha256: pairRaw
+    ? createHash("sha256").update(pairRaw).digest("hex")
+    : undefined,
   includes:
     "Matching, exact ranking, metadata, query-relevant snippet and JSON serialization",
   preparedDownloads: source.downloads,
   preparedBytes: source.downloadedBytes,
+  warmup:
+    "Production execution and bounded cache population without artificial delays; all modeled delays enabled for measured responses",
   startedAt: new Date().toISOString(),
-  implementationSha256: await (async () => {
-    const hash = createHash("sha256");
-    async function visit(path: string) {
-      for (const item of (await readdir(path, { withFileTypes: true })).sort(
-        (a, b) => a.name.localeCompare(b.name),
-      )) {
-        const file = path + "/" + item.name;
-        if (item.isDirectory()) await visit(file);
-        else hash.update(file).update(await readFile(file));
-      }
-    }
-    for (const path of ["src/columnar", "src/query", "src/format"])
-      await visit(path);
-    for (const file of ["simulate.ts", "local-storage.ts", "latency-model.ts"])
-      hash.update(file).update(await readFile("bench/columnar/" + file));
-    return hash.digest("hex");
-  })(),
+  implementationSha256,
 };
 await mkdir("work/columnar-bench", { recursive: true });
 const save = () =>
@@ -370,6 +436,10 @@ for (let repeat = 0; repeat < repeats; repeat++) {
     await save();
   }
 }
+if ((await implementationDigest()) !== implementationSha256)
+  throw Error(
+    "Implementation changed during local measurement; rerun before comparing results",
+  );
 console.log("Saved local simulation", label, rows.length, "responses");
 for (const plan of plans) {
   const all = rows.filter((r) => r.plan === plan),

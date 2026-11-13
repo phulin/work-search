@@ -15,6 +15,7 @@ export interface LatencyModel {
 /** Delays happen at the real Reader's storage boundary, inside its six-slot
  * scheduling. Overlapping GETs overlap; dependent fetches remain dependent. */
 export class SimulatedIO {
+  delaysEnabled = true;
   private randomState: number;
   readonly sharedBytes: Lru<Uint8Array>;
   readonly source: Source;
@@ -37,6 +38,13 @@ export class SimulatedIO {
     this.randomState = model.seed || 1;
     this.sharedBytes = new Lru(sharedMiB * 1048576);
     this.source = {
+      readNamed: base.readNamed
+        ? async (key, bytes) => {
+            this.calls.r2++;
+            await this.pause("r2", bytes);
+            return base.readNamed!(key, bytes);
+          }
+        : undefined,
       read: async (key, offset, length) => {
         this.calls.r2++;
         await this.pause("r2", length);
@@ -72,6 +80,7 @@ export class SimulatedIO {
     };
   }
   private async pause(kind: "r2" | "shared", bytes: number) {
+    if (!this.delaysEnabled) return;
     let x = this.randomState;
     x ^= x << 13;
     x ^= x >>> 17;

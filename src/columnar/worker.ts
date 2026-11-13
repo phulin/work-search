@@ -7,6 +7,7 @@ import { QuerySyntaxError } from "../query/parser.js";
 import { QueryResourceError } from "../query/evaluate.js";
 import type { Root, PairRoot } from "./format.js";
 import { Heads, type HeadRoot } from "./heads.js";
+import type { MembershipSettings } from "./membership-anchor.js";
 interface Env {
   INDEX: R2Bucket;
   INTERNAL_TOKEN?: string;
@@ -25,6 +26,7 @@ export function createColumnarWorker(
     directory: TermDirectory;
     documents?: DocumentDirectory;
   },
+  membership?: MembershipSettings,
 ) {
   if (pairs && pairs.baseGeneration !== root.generation)
     throw Error("Pair generation mismatch");
@@ -53,6 +55,7 @@ export function createColumnarWorker(
         (documentDirectoryData
           ? new DocumentDirectory(documentDirectoryData)
           : undefined),
+      membership,
     ),
     memory = runtime?.memory ?? new Memory();
   if (directoryData) memory.pages = new Lru(12 * 1048576);
@@ -73,6 +76,14 @@ export function createColumnarWorker(
           documents: root.count,
           corpusHash: root.corpusHash,
           directoryBytes: root.directory?.bytes,
+          ...(membership
+            ? {
+                pairGeneration: membership.router.metadata.generation,
+                commonWordAnchorsExcluded: membership.N,
+                commonPairAnchorsExcluded: membership.M,
+                pairRouterBytes: membership.router.bytes.length,
+              }
+            : {}),
           isolate,
           sequence,
           cacheNamespace: env.CACHE_NAMESPACE ?? "default",

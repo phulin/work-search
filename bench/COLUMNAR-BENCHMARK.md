@@ -7,6 +7,14 @@ from work still running.
 
 ## Current experiment scope and analysis change
 
+The latest [complete-pair experiment](COMPLETE-PAIR-EXPERIMENT.md) has finished
+the nine-setting local N/M grid (600 correct measured responses), two measured
+execution corrections, a three-setting follow-up (400 correct responses), and
+the full 160-contract 1M correctness replay. The complete 44,995,185-pair index
+uses compressed sorted lists, no bitmap encodings, and a 6.5 MB bundled router.
+These are modeled-I/O local results; the new pair format is not live yet.
+The linked report includes regressions, storage/context coverage and raw data.
+
 At the user's request, further experiments use **1M documents** until the index
 format and query planner are stable. The 10M serving conversion and unfinished
 65,536-pair merge were stopped; their checkpoints remain. The completed full-source

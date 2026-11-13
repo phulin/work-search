@@ -30,8 +30,13 @@ import type { Options } from "./search.js";
 import { renderResults } from "./render.js";
 import { Heap, type Hit } from "./top-k.js";
 import { bm25 } from "../query/engine.js";
+import type { MembershipAnchor } from "./membership-anchor.js";
 export interface CandidatePackages {
+  membership?: MembershipAnchor;
+  presenceFilter?: (doc: number) => boolean;
+  excludedWords?: ReadonlySet<string>;
   averageBytes: number;
+  byteLength?(doc: number): number;
   load(doc: number): Promise<DocumentPackage>;
 }
 interface Columns {
@@ -215,6 +220,7 @@ export function mandatoryTerms(ast: Node): Set<string> {
   return ast.kind === "except" ? a : new Set([...a, ...b]);
 }
 export interface PacketPlan {
+  membershipAnchor?: MembershipAnchor;
   kind: "complete-terms" | "documents" | "blocks";
   frequencyBytes: number;
   positionBytes: number;
@@ -232,8 +238,9 @@ function anchorsFor(
   terms: Map<string, DirectoryTerm>,
   root: Root,
   averageBytes: number,
+  excludedWords?: ReadonlySet<string>,
 ) {
-  const choices = [...mandatoryTerms(ast)]
+  const allChoices = [...mandatoryTerms(ast)]
     .map((name) => ({ name, term: terms.get(name)! }))
     .filter((a) => a.term?.frequencies[2])
     .sort(
@@ -242,6 +249,8 @@ function anchorsFor(
         a.term.df * averageBytes -
         (frequencyBytesOf(b.term) + b.term.df * averageBytes),
     );
+  const ordinary = allChoices.filter((a) => !excludedWords?.has(a.name)),
+    choices = ordinary.length ? ordinary : allChoices;
   const anchors = choices.slice(0, 1);
   let candidates = anchors[0]?.term.df ?? root.count,
     bytes = anchors.length ? frequencyBytesOf(anchors[0].term) : 0;
@@ -289,7 +298,13 @@ export function packetPlan(
         ) ||
           t.positional[2] > 0),
     ),
-    selected = anchorsFor(ast, terms, root, packages?.averageBytes ?? 16384),
+    selected = anchorsFor(
+      ast,
+      terms,
+      root,
+      packages?.averageBytes ?? 16384,
+      packages?.excludedWords,
+    ),
     anchor = selected.anchors[0],
     candidateCount = selected.candidates,
     documentBytes = candidateCount * (packages?.averageBytes ?? 16384),
@@ -464,10 +479,29 @@ export async function executePackets(
     }
   };
   const packageHits = new Map<number, DocumentPackage>();
-  let phraseEvidence: ReturnType<typeof pairPhraseEvidence> | undefined;
+  let phraseEvidence: ReturnType<typeof pairPhraseEvidence> | undefined =
+    packages?.membership?.evidence;
   if (plan.kind === "documents") {
+    if (packages?.membership) {
+      wantedPositions.clear();
+      positionalIds.clear();
+      for (const name of positionalTerms(ast, packages.membership.covered)) {
+        wantedPositions.add(name);
+        positionalIds.add(terms.get(name)!.id);
+      }
+    }
     let candidates: Uint32Array;
-    if (plan.pairAnchors) {
+    if (plan.membershipAnchor) {
+      const pair = plan.membershipAnchor;
+      candidates = Uint32Array.from(pair.values());
+      phraseEvidence = pair.evidence;
+      wantedPositions.clear();
+      positionalIds.clear();
+      for (const name of positionalTerms(ast, pair.covered)) {
+        wantedPositions.add(name);
+        positionalIds.add(terms.get(name)!.id);
+      }
+    } else if (plan.pairAnchors) {
       const pair = await readPairAnchor(
         plan.pairAnchors,
         plan.phraseAnchor!,
@@ -509,12 +543,24 @@ export async function executePackets(
       }
       candidates = candidateBuffer.subarray(0, n);
     }
+    if (packages?.membership && !plan.membershipAnchor) {
+      let n = 0;
+      for (const doc of candidates)
+        if (packages.membership.has(doc)) candidates[n++] = doc;
+      candidates = candidates.subarray(0, n);
+    }
+    if (packages?.presenceFilter) {
+      let n = 0;
+      for (const doc of candidates)
+        if (packages.presenceFilter(doc)) candidates[n++] = doc;
+      candidates = candidates.subarray(0, n);
+    }
     // An overestimate changes the execution plan; no document is silently lost.
-    if (
-      candidates.length > 512 ||
-      candidates.length * packages!.averageBytes > 8 * 1048576
-    )
-      return;
+    if (candidates.length > 512) return;
+    const packageBytes = packages!.byteLength
+      ? candidates.reduce((n, doc) => n + packages!.byteLength!(doc), 0)
+      : candidates.length * packages!.averageBytes;
+    if (packageBytes > 8 * 1048576) return;
     let candidateBytes = 0;
     const batchSize = packages!.averageBytes > 262144 ? 2 : 6;
     for (let from = 0; from < candidates.length; from += batchSize) {

@@ -12,6 +12,14 @@ replay refuses network reads. Plan comparisons isolate their application and
 shared caches, and reuse the production readers/executors. Live Workers validate
 finalists after the faster local experiments.
 
+The current [complete-pair experiment](COMPLETE-PAIR-EXPERIMENT.md) replaces
+selected-pair coverage with every observed adjacent pair on the local stemmed
+1M generation. Its string-routed, self-contained packets use compressed sorted
+document lists with independent field membership; there are no bitmap encodings.
+The 6.5 MB router stays bundled and packet payloads stay remote. N/M common-anchor
+exclusions are planner settings; they never remove matching or scoring data.
+These new pair packets have not yet been deployed to Workers.
+
 ## Binary layout
 
 CTD3 bundles metadata for at most one million high-DF terms and a compact direct

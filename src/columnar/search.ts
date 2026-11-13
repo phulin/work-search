@@ -41,6 +41,13 @@ import { planPairAnchor } from "./pair-evidence.js";
 import { readPairAnchor } from "./pair-execution.js";
 import { ScoreBatch } from "./score-batch.js";
 import { lookupRemotePairs } from "./pair-lookup.js";
+import {
+  lookupMembershipAnchor,
+  membershipAnchor,
+  commonWordExclusions,
+  loadCommonPresence,
+  type MembershipSettings,
+} from "./membership-anchor.js";
 export interface Options {
   mode?: "and" | "or";
   limit?: number;
@@ -163,8 +170,21 @@ export class ColumnarIndex {
     readonly directory?: TermDirectory,
     readonly packages?: CandidatePackages,
     readonly documentDirectory?: DocumentDirectory,
+    readonly membership?: MembershipSettings,
   ) {
     tokenizerFor(root.analysis);
+    if (
+      membership &&
+      (membership.router.metadata.baseGeneration !== root.generation ||
+        membership.router.metadata.documents !== root.count ||
+        !Number.isInteger(membership.N) ||
+        membership.N < 0 ||
+        membership.N > 200 ||
+        !Number.isInteger(membership.M) ||
+        membership.M < 0 ||
+        membership.M > 2000)
+    )
+      throw Error("Invalid complete-pair generation or planner settings");
     if (
       root.format !== "CWS1" ||
       !/^[a-f0-9]{64}$/.test(root.generation) ||
@@ -236,7 +256,36 @@ export class ColumnarIndex {
     }
     const started = performance.now(),
       original = parse(q, options.mode, tokenizerFor(this.root.analysis)),
-      terms = await this.terms(queryTerms(original), reader),
+      requested = queryTerms(original),
+      bundled =
+        this.membership && this.directory
+          ? await this.directory.lookupBundled(requested)
+          : undefined,
+      termRequest = bundled
+        ? this.terms(
+            requested.filter((name) => !bundled.has(name)),
+            reader,
+          ).then((terms) => {
+            for (const [name, term] of bundled) terms.set(name, term);
+            return terms;
+          })
+        : this.terms(requested, reader),
+      [terms, selection, presence] = await Promise.all([
+        termRequest,
+        this.membership
+          ? lookupMembershipAnchor(
+              original,
+              reader,
+              this.membership,
+              bundled,
+              this.root.documentPackages?.averageBytes,
+              options.field,
+            )
+          : undefined,
+        this.membership
+          ? loadCommonPresence(mandatory(original), reader, this.membership)
+          : [],
+      ]),
       ast = simplify(original, (t) => terms.has(t)),
       names = queryTerms(ast),
       positive = new Set(queryTerms(ast, true)),
@@ -246,11 +295,24 @@ export class ColumnarIndex {
       boost = options.titleBoost ?? 2,
       field = options.field ?? "all",
       heap = new Heap(limit);
-    const packages =
+    const loadedMembership = selection
+      ? membershipAnchor(
+          selection,
+          new Map([...terms].map(([name, t]) => [name, t.id])),
+          field,
+        )
+      : undefined;
+    const excludedWords = this.membership
+      ? commonWordExclusions(this.membership)
+      : undefined;
+    const basePackages =
       this.packages ??
       (this.root.documentPackages
         ? {
             averageBytes: this.root.documentPackages.averageBytes,
+            byteLength: this.documentDirectory
+              ? (doc: number) => this.documentDirectory!.lookup(doc).length
+              : undefined,
             load: (doc: number) =>
               reader.document(
                 this.root.documentPackages!.generation,
@@ -259,6 +321,21 @@ export class ColumnarIndex {
               ),
           }
         : undefined);
+    const presenceFilter = presence.length
+      ? (doc: number) => {
+          for (let i = 0; i < presence.length; i++)
+            if (!presence[i].has(doc, field)) return false;
+          return true;
+        }
+      : undefined;
+    const packages = basePackages
+      ? {
+          ...basePackages,
+          excludedWords,
+          presenceFilter,
+          membership: loadedMembership,
+        }
+      : undefined;
     if (
       !Number.isInteger(limit) ||
       limit < 1 ||
@@ -302,6 +379,25 @@ export class ColumnarIndex {
           options,
           packages,
         );
+      if (
+        loadedMembership &&
+        !(
+          planned.kind === "documents" &&
+          !planned.pairAnchors &&
+          planned.expectedCandidates < loadedMembership.count
+        )
+      )
+        planned = {
+          ...planned,
+          kind:
+            loadedMembership.count <= 512 &&
+            loadedMembership.count * (packages?.averageBytes ?? Infinity) <=
+              8 * 1048576
+              ? "documents"
+              : "blocks",
+          expectedCandidates: loadedMembership.count,
+          membershipAnchor: loadedMembership,
+        };
       const result = await executePackets(
         ast,
         terms as Map<string, DirectoryTerm>,
@@ -317,7 +413,8 @@ export class ColumnarIndex {
         .map((n, i) => (positive.has(n) ? i : -1))
         .filter((i) => i >= 0),
       required = mandatory(ast),
-      anchor = [...required]
+      ordinaryRequired = [...required].filter((n) => !excludedWords?.has(n)),
+      anchor = (ordinaryRequired.length ? ordinaryRequired : [...required])
         .map((n) => terms.get(n)!)
         .sort((a, b) => a.df - b.df)[0];
     let bands: number[] = [],
@@ -327,6 +424,16 @@ export class ColumnarIndex {
       pairOffset = 0,
       context: Awaited<ReturnType<typeof readPairAnchor>> | undefined;
     const BAND = 4096;
+    if (loadedMembership) {
+      wantedPositions.clear();
+      for (const name of positionalTerms(ast, loadedMembership.covered))
+        wantedPositions.add(name);
+      const cursor = loadedMembership.cursor();
+      for (let doc = cursor.next(); doc !== Infinity; doc = cursor.next()) {
+        const band = Math.floor(doc / BAND);
+        if (bands.at(-1) !== band) bands.push(band);
+      }
+    }
     if (pairs) {
       if (
         pairs.root.baseGeneration !== this.root.generation ||
@@ -406,7 +513,7 @@ export class ColumnarIndex {
             );
       }
     }
-    if (!pairCandidates && queryRoot.positionalPairs) {
+    if (!loadedMembership && !pairCandidates && queryRoot.positionalPairs) {
       const ids = new Map([...terms].map(([name, t]) => [name, t.id])),
         selected = planPairAnchor(ast, ids, queryRoot);
       if (selected) {
@@ -431,7 +538,8 @@ export class ColumnarIndex {
       !pairCandidates &&
       ast.kind !== "empty" &&
       anchor &&
-      anchor.df < this.root.count / 16
+      anchor.df < this.root.count / 16 &&
+      (!loadedMembership || anchor.df < loadedMembership.count)
     ) {
       const selected = new Set<number>();
       const selectedDocs =
@@ -445,7 +553,10 @@ export class ColumnarIndex {
         );
         for (const s of scores)
           for (let r = 0; r < s.docs.length; r++)
-            if (field === "all" || s[field][r]) {
+            if (
+              (field === "all" || s[field][r]) &&
+              (!loadedMembership || loadedMembership.has(s.docs[r]))
+            ) {
               selected.add(Math.floor(s.docs[r] / BAND));
               if (selectedDocs) selectedDocs[selectedCount++] = s.docs[r];
             }
@@ -459,7 +570,7 @@ export class ColumnarIndex {
       if (selectedDocs)
         pairCandidates = selectedDocs.subarray(0, selectedCount);
       bands = [...selected].sort((a, b) => a - b);
-    } else if (!pairCandidates && ast.kind !== "empty")
+    } else if (!loadedMembership && !pairCandidates && ast.kind !== "empty")
       bands = Array.from(
         { length: Math.ceil(this.root.count / BAND) },
         (_, i) => i,
@@ -469,6 +580,8 @@ export class ColumnarIndex {
       candidateBuffer = new Uint32Array(BAND),
       scoreBuffer = new Float64Array(BAND);
     let window: Branch[][][] = [];
+    const membershipCursor = loadedMembership?.cursor();
+    let membershipDoc = membershipCursor?.next() ?? Infinity;
     for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
       const band = bands[bandIndex];
       // Broad numeric scans amortize physical GETs over four nearby bands.
@@ -563,7 +676,21 @@ export class ColumnarIndex {
       }
       const cells = new Uint8Array(Math.ceil(size / 128)).fill(1);
       let candidateMask: Uint8Array | undefined;
+      if (loadedMembership) {
+        candidateMask = new Uint8Array(size);
+        cells.fill(0);
+        // Bands advance in document order. Reuse the membership cursor rather
+        // than searching its restart table for every document in every band.
+        while (membershipDoc < lo) membershipDoc = membershipCursor!.next();
+        while (membershipDoc < hi) {
+          const d = membershipDoc - lo;
+          candidateMask[d] = 1;
+          cells[d >>> 7] = 1;
+          membershipDoc = membershipCursor!.next();
+        }
+      }
       if (pairCandidates) {
+        const previousMask = candidateMask;
         candidateMask = new Uint8Array(size);
         cells.fill(0);
         for (
@@ -571,9 +698,17 @@ export class ColumnarIndex {
           i < pairCandidates.length && pairCandidates[i] < hi;
           i++
         ) {
+          if (previousMask && !previousMask[pairCandidates[i] - lo]) continue;
           cells[(pairCandidates[i] - lo) >>> 7] = 1;
           candidateMask[pairCandidates[i] - lo] = 1;
         }
+      }
+      if (presenceFilter) {
+        candidateMask ??= new Uint8Array(size).fill(1);
+        cells.fill(0);
+        for (let d = 0; d < size; d++)
+          if (candidateMask[d] && presenceFilter(lo + d)) cells[d >>> 7] = 1;
+          else candidateMask[d] = 0;
       }
       if (!options.exactTotal && heap.threshold) {
         const threshold = heap.threshold;
@@ -600,7 +735,7 @@ export class ColumnarIndex {
             cells[cell] = 0;
         }
       }
-      if (pairCandidates || heap.threshold) {
+      if (loadedMembership || pairCandidates || heap.threshold) {
         for (let j = 0; j < blocks.length; j++)
           blocks[j] = blocks[j].filter((b) => {
             const first = Math.max(0, Math.floor((b.first - lo) / 128)),
@@ -774,7 +909,7 @@ export class ColumnarIndex {
               scratchSpans: 1048576,
               checks: 100000000,
             },
-            context?.evidence,
+            loadedMembership?.evidence ?? context?.evidence,
           )
         : undefined;
       for (let i = 0; i < nc; i++) {
@@ -902,14 +1037,17 @@ export class ColumnarIndex {
                 planned.kind !== "blocks" ? planned.kind : undefined,
             }
           : undefined,
-        positionalPairCandidates: context?.candidates.length,
-        executor: context
-          ? "pair-blocks"
-          : pairAnchor
-            ? "positional-pair"
-            : anchor && anchor.df < this.root.count / 16
-              ? "selective"
-              : "block-max-maxscore",
+        positionalPairCandidates:
+          loadedMembership?.count ?? context?.candidates.length,
+        executor: loadedMembership
+          ? "membership-blocks"
+          : context
+            ? "pair-blocks"
+            : pairAnchor
+              ? "positional-pair"
+              : anchor && anchor.df < this.root.count / 16
+                ? "selective"
+                : "block-max-maxscore",
         wallMs: performance.now() - started,
         retainedPageBytes: reader.memory.pages.bytes,
         retainedDecodedBytes: reader.memory.decoded.bytes,

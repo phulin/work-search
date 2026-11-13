@@ -396,6 +396,17 @@ export class TermDirectory {
       yield* decodeDirectoryBlock(raw, this.documents);
     }
   }
+  /** Offline streaming enumeration, holding one cold shard at a time. */
+  async *allEntries(reader: Reader) {
+    yield* this.bundledEntries();
+    if (this.cold)
+      for (let i = 0; i < this.cold.blocks; i++) {
+        const ref = refAt(view(this.cold.block(i)), 0),
+          [raw] = await reader.packets([ref]),
+          shard = await TermShard.decode(raw, this.documents);
+        yield* shard.entries;
+      }
+  }
   private first(i: number) {
     const p = 16 + i * 20;
     return decoder.decode(
@@ -421,7 +432,10 @@ export class TermDirectory {
     }
     return lo - 1;
   }
-  async lookup(names: string[], reader?: Reader) {
+  lookupBundled(names: string[]) {
+    return this.lookup(names, undefined, true);
+  }
+  async lookup(names: string[], reader?: Reader, bundledOnly = false) {
     const wanted = new Map<number, string[]>();
     for (const name of names) {
       const i = this.route(name);
@@ -458,6 +472,7 @@ export class TermDirectory {
         }),
       ),
     );
+    if (bundledOnly) return found;
     const remote = new Map<number, string[]>();
     if (this.cold)
       for (const name of new Set(names)) {

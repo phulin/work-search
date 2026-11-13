@@ -77,6 +77,7 @@ export class Memory {
   }
 }
 export interface Source {
+  readNamed?(key: string, bytes: number): Promise<Uint8Array>;
   readWhole?(
     key: string,
     range?: { offset: number; length: number; doc: number; first: number },
@@ -154,6 +155,9 @@ export class Reader {
     repeatedDecodedBytes: 0,
     positionIntegers: 0,
     pairContextIntegers: 0,
+    pairMembershipIntegers: 0,
+    pairMembershipDecodedBytes: 0,
+    pairMembershipRepeatedDecodedBytes: 0,
     forwardIntegers: 0,
     postings: 0,
     candidates: 0,
@@ -492,6 +496,69 @@ export class Reader {
         this.readPacket(ref, true),
       ),
     );
+  }
+  /** Whole immutable pair packets use the same bounded cache and I/O slots as
+   * posting pages. The bundled router supplies their exact length and checksum. */
+  async named(address: string, length: number, checksum: number) {
+    if (!this.source.readNamed || length < 16 || length > 32 * 1048576)
+      throw Error("Invalid named packet source");
+    const key = `${this.root.generation}/${this.namespace}/named/${address}`;
+    const validate = (data: Uint8Array) => {
+      if (data.length !== length || crc32(data) !== checksum)
+        throw Error("Named packet checksum mismatch");
+      return data;
+    };
+    const cached = this.memory.pages.get(key);
+    if (cached) {
+      this.stats.memoryHits++;
+      return cached;
+    }
+    const old = this.pending.get(key);
+    if (old) {
+      this.stats.deduplicated++;
+      return old;
+    }
+    const task = this.io.run(async () => {
+      if (this.shared && this.takeShared()) {
+        this.stats.sharedGets++;
+        const cached = await this.shared.get(key);
+        if (cached) {
+          validate(cached);
+          this.memory.pages.set(key, cached, cached.length);
+          return cached;
+        }
+      }
+      const data = validate(await this.source.readNamed!(address, length));
+      this.stats.requests++;
+      this.stats.bytes += data.length;
+      this.memory.pages.set(key, data, data.length);
+      if (this.shared && this.takeShared()) {
+        while (this.sharedWriteBytes >= 2 * 1048576)
+          await Promise.race(this.sharedWrites);
+        this.stats.sharedPuts++;
+        this.sharedWriteBytes += data.length;
+        this.stats.peakPendingSharedBytes = Math.max(
+          this.stats.peakPendingSharedBytes,
+          this.sharedWriteBytes,
+        );
+        const write = this.shared
+          .put(key, data)
+          .catch(() => {})
+          .finally(() => {
+            this.sharedWriteBytes -= data.length;
+            this.sharedWrites.delete(write);
+          });
+        this.sharedWrites.add(write);
+        this.defer(write);
+      }
+      return data;
+    });
+    this.pending.set(key, task);
+    try {
+      return await task;
+    } finally {
+      this.pending.delete(key);
+    }
   }
   async document(
     generation: string,
