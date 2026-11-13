@@ -39,6 +39,12 @@ bytes. During the 10M build its partial directory reached about 116 MB after
 the explicit common/rare split; shrinking vocabulary by dropping words is not
 used. The new directory's full-scale footprint still requires measurement.
 
+The completed stemmed 1M generation contains 2,539,780 terms, with one million
+bundled and 1,539,780 remote. Its bundled directory and routing occupy 14,836,106
+bytes. Local directory regrouping preserves every decoded term's counts, bounds
+and addresses and all cold routing; it permits cache/granularity experiments
+without another corpus build or Worker deployment.
+
 CTF3 term frequency/score packets are contiguous, independently addressable
 streams. They contain packed document IDs and frequencies, exact float64
 body/title BM25 contributions, and a separate numeric document-package handle

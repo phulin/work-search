@@ -1,5 +1,5 @@
 import { expect, it, vi } from "vitest";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
@@ -30,6 +30,7 @@ it("prepares immutable ranges and packages once, replays offline, and rejects da
     group = concat(packages),
     groupKey = digest(group) + "/plan-0.bin",
     root = {
+      count: 2,
       generation: "a".repeat(64),
       objects: [
         {
@@ -53,10 +54,19 @@ it("prepares immutable ranges and packages once, replays offline, and rejects da
       start = Number(headers.get("x-offset") ?? 0),
       length = Number(headers.get("x-length") ?? data.length),
       selectedKey = whole ? groupKey : key;
+    const checksums = Buffer.alloc(8);
+    packages.forEach((p, i) => checksums.writeUInt32LE(crc32(p), i * 4));
     return new Response(data.slice(start, start + length), {
       headers: {
         "x-generation": selectedKey.split("/")[0],
         "x-sha256": digest(data),
+        ...(whole
+          ? {
+              "x-package-first": "0",
+              "x-package-end": "2",
+              "x-package-crc32": checksums.toString("base64"),
+            }
+          : {}),
       },
     });
   });
@@ -84,6 +94,9 @@ it("prepares immutable ranges and packages once, replays offline, and rejects da
     expect((await pkg.display()).id).toBe("d1");
     expect([...pkg.tokens(0)]).toEqual([2, 1, 2]);
     expect(fetches).toBe(2);
+    await expect(stat(dir + "/objects/" + groupKey)).rejects.toMatchObject({
+      code: "ENOENT",
+    });
     const offline = new LocalObjects(root, dir);
     expect(await offline.read(key, 0, PAGE)).toEqual(
       Buffer.from(pages.subarray(0, PAGE)),

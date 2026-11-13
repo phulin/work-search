@@ -36,12 +36,16 @@ scenario statistics, not a comparison to the earlier 1M runs or a useful P99
 estimate for adoption. Raw results and the source oracle are in
 `results/columnar/stem-1000-*`.
 
-The stemmed 1M build is running natively on the existing constructor Worker.
-It produced 2,539,780 terms; the common-term directory and cold routing occupy
-about 14 MB. Its independent 160-contract source oracle completed all one million
-documents and is retained as `native-stem-1m-independent-oracle.json.gz`.
-Document packages and publication remain in progress. The common/rare split and
-planner still require complete 1M serving correctness, latency and memory work.
+The stemmed 1M build completed and published from the existing constructor Worker
+on November 13. It produced 2,539,780 terms: 1,000,000 bundled and 1,539,780 in R2.
+The common-term directory and cold routing occupy 14,836,106 bytes; serving
+packets occupy 22,303,302,047 bytes and document packages 19,982,980,418 bytes.
+The document locator directory occupies 2,702,168 bytes. Generation is
+`e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56`.
+Its independent 160-contract source oracle completed all one million documents
+and is retained as `native-stem-1m-independent-oracle.json.gz`.
+The common/rare split and planner still require complete 1M serving correctness,
+latency and memory work; build completion does not establish those properties.
 Repository checks pass: 233 tests across 63 files, TypeScript checking and
 formatting. Worker tests require local networking for their workerd instances;
 they timed out inside the restricted sandbox and passed with local networking.
@@ -64,6 +68,16 @@ independent bounded application and shared caches. Complete engine responses
 include metadata, query-relevant snippets and JSON serialization; reported local
 process CPU and modeled wall time are separate. This excludes client HTTP latency
 and does not claim native Worker CPU or opaque R2 backend cache behavior.
+Document preparation uses exact package ranges with the existing per-document
+checksum metadata, rather than downloading a whole package group for one result.
+The optional full-index mirror still downloads and validates complete objects.
+
+Directory grouping can also change locally without rebuilding postings or
+deploying: `bench/columnar/repack-directory.ts` preserves all cold routing and
+posting/package addresses, and checks a canonical hash of every decoded bundled
+term before and after regrouping. A 256-term-group variant took 5.54 seconds
+including validation and occupied 16,215,022 bytes versus 14,836,106 for the
+1,024-term default. This is a format experiment, not a measured serving win.
 
 A harness validation used the existing unstemmed 1M generation: five broad
 contracts under memory reuse, plus five selective contracts under memory reuse,
@@ -77,6 +91,16 @@ transfer. These are harness assumptions, not measured Cloudflare defaults. This
 small validation establishes the local loop, not crossover thresholds or a speedup.
 See `results/columnar/local-1m-{replay-validation.json,*.json.gz}` and the README
 for commands and model parameters.
+
+The new stemmed 1M generation also passed small pilots exercising complete term
+reads, candidate-document reads, block fallback and cold-term lookup: 110 correct
+complete responses, 50 forced-plan unsupported outcomes and zero errors across
+the base and 256-term directory layouts. These narrow pilots do not establish
+planner thresholds. Few-hit phrases still expose substantial block work without
+the new generation's pair accelerators: `"because of the pip"` visited 605
+candidates and decoded about 375,000 postings. Pair acceleration and broad
+positional rejection remain measured work, not solved by the directory split.
+Raw observations and counts are `local-stem-1m-{*.json.gz,pilots.json}`.
 
 ## Latest measured iterations
 

@@ -63,6 +63,8 @@ are included. Each compared plan has independent application and shared caches.
 yarn node --import tsx bench/columnar/verify-corpus.ts work/columnar-corpus-1m.jsonl.gz
 # Optional: retain every serving object locally, rather than only queried ranges.
 yarn node --import tsx bench/columnar/mirror-index.ts work/cws-1m
+# Regroup bundled metadata without rebuilding postings or deploying.
+yarn node --import tsx bench/columnar/repack-directory.ts work/cws-1m work/cws-1m-g256 256
 # Prepare the query data once, then iterate without deployments or credentials.
 yarn node --import tsx bench/columnar/simulate.ts work/cws-1m work/oracle-1m.json --prepare-only
 CWS_R2_MS=20 CWS_SHARED_MS=2 CWS_REPEATS=3 yarn node --import tsx bench/columnar/simulate.ts work/cws-1m work/oracle-1m.json

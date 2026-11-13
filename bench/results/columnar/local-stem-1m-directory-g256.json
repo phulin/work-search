@@ -1,0 +1,14 @@
+{
+  "kind": "Local directory regrouping; exact metadata and all posting/package addresses retained",
+  "sourceGeneration": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+  "generation": "e74142659f225fbd7e8a46d0c48fd6f945b3789e9758cb143e19dce6e9f33645",
+  "documents": 1000000,
+  "analysis": "nfkc-lower-porter2-v1",
+  "groupSize": 256,
+  "bundledTerms": 1000000,
+  "terms": 2539780,
+  "originalDirectoryBytes": 14836106,
+  "directoryBytes": 16215022,
+  "decodedMetadataSha256": "18c5ba0a8b0153efc21c07e5435ad2473754c4ee497ea634aeeeda2ab7bee304",
+  "elapsedMs": 5539.863208000001
+}

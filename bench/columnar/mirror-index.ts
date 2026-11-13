@@ -53,8 +53,8 @@ await Promise.all(
       const job = jobs[next++];
       if (!job) return;
       const [key, document] = job;
+      await source.mirror(key);
       if (document) await source.packageMetadata(key);
-      else await source.mirror(key);
       completed++;
       if (completed % 100 === 0)
         console.log(

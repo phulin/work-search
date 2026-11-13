@@ -1,0 +1,55 @@
+{
+  "kind": "Small local harness validation; no live latency or useful tail estimate",
+  "notes": [
+    "Forced plans may be unsupported; automatic plans preserve complete coverage.",
+    "Directory variants were not interleaved and do not establish a serving speedup.",
+    "The complete 160-contract validation remains separate from these pilots."
+  ],
+  "results": [
+    {
+      "file": "local-stem-1m-sparse-base.json.gz",
+      "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+      "contracts": 2,
+      "attempts": 40,
+      "correct": 20,
+      "unsupported": 20,
+      "errors": 0
+    },
+    {
+      "file": "local-stem-1m-anchor-base.json.gz",
+      "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+      "contracts": 2,
+      "attempts": 40,
+      "correct": 30,
+      "unsupported": 10,
+      "errors": 0
+    },
+    {
+      "file": "local-stem-1m-complete-base.json.gz",
+      "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+      "contracts": 1,
+      "attempts": 20,
+      "correct": 15,
+      "unsupported": 5,
+      "errors": 0
+    },
+    {
+      "file": "local-stem-1m-anchor-g256.json.gz",
+      "generation": "e74142659f225fbd7e8a46d0c48fd6f945b3789e9758cb143e19dce6e9f33645",
+      "contracts": 2,
+      "attempts": 40,
+      "correct": 30,
+      "unsupported": 10,
+      "errors": 0
+    },
+    {
+      "file": "local-stem-1m-complete-g256.json.gz",
+      "generation": "e74142659f225fbd7e8a46d0c48fd6f945b3789e9758cb143e19dce6e9f33645",
+      "contracts": 1,
+      "attempts": 20,
+      "correct": 15,
+      "unsupported": 5,
+      "errors": 0
+    }
+  ]
+}

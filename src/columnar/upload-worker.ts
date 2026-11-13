@@ -59,6 +59,9 @@ export default {
               "x-sha256": old.customMetadata?.sha256 ?? "",
               "x-generation": old.customMetadata?.generation ?? "",
               "x-page-crc32": old.customMetadata?.crc32 ?? "",
+              "x-package-first": old.customMetadata?.packageFirst ?? "",
+              "x-package-end": old.customMetadata?.packageEnd ?? "",
+              "x-package-crc32": old.customMetadata?.packageCrc32 ?? "",
             }
           : undefined,
       });
@@ -81,6 +84,9 @@ export default {
           "x-generation": generation,
           "x-sha256": old.customMetadata?.sha256 ?? "",
           "x-page-crc32": old.customMetadata?.crc32 ?? "",
+          "x-package-first": old.customMetadata?.packageFirst ?? "",
+          "x-package-end": old.customMetadata?.packageEnd ?? "",
+          "x-package-crc32": old.customMetadata?.packageCrc32 ?? "",
         },
       });
     }

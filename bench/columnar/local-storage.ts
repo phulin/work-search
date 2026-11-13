@@ -75,6 +75,32 @@ export class LocalObjects implements Source {
               createHash("sha256").update(data).digest("hex") !== expected
             )
               throw Error("Local immutable digest mismatch");
+            const encoded = response.headers.get("x-package-crc32");
+            if (encoded) {
+              const first = Number(response.headers.get("x-package-first")),
+                end = Number(response.headers.get("x-package-end")),
+                checksums = Buffer.from(encoded, "base64");
+              if (
+                !Number.isInteger(first) ||
+                !Number.isInteger(end) ||
+                first < 0 ||
+                end <= first ||
+                end > this.root.count ||
+                checksums.length !== (end - first) * 4
+              )
+                throw Error("Invalid prepared package checksum table");
+              const metadata = {
+                first,
+                checksums: Array.from({ length: end - first }, (_, i) =>
+                  checksums.readUInt32LE(i * 4),
+                ),
+              };
+              this.metadata.set(key, metadata);
+              await this.save(
+                this.path(key) + ".json",
+                JSON.stringify(metadata),
+              );
+            }
             this.downloads++;
             this.downloadedBytes += data.length;
             return data;
@@ -229,12 +255,52 @@ export class LocalObjects implements Source {
   ) {
     if (!range)
       throw Error("Local replay requires direct grouped package locators");
+    if (
+      ![range.offset, range.length, range.doc, range.first].every(
+        Number.isSafeInteger,
+      ) ||
+      range.offset < 0 ||
+      range.length < 64 ||
+      range.length > 32 * 1048576 ||
+      range.first < 0 ||
+      range.doc < range.first ||
+      range.doc >= this.root.count
+    )
+      throw Error("Invalid local package range");
+    const path = `${this.dir}/ranges/${key}/${range.offset}-${range.length}.bin`;
+    let data: Uint8Array | undefined,
+      downloaded = false;
+    try {
+      data = await this.range(this.path(key), range.offset, range.length);
+    } catch (e: any) {
+      if (e.code !== "ENOENT") throw e;
+    }
+    if (!data) {
+      try {
+        data = await readFile(path);
+      } catch (e: any) {
+        if (e.code !== "ENOENT") throw e;
+      }
+    }
+    if (!data) {
+      data = await this.download(key, range.offset, range.length);
+      downloaded = true;
+      if (!this.metadata.has(key))
+        throw Error("Package range response has no checksum metadata");
+    }
     const metadata = await this.packageMetadata(key),
       checksum = metadata.checksums[range.doc - metadata.first];
     if (metadata.first !== range.first || checksum === undefined)
       throw Error("Local document group mismatch");
+    if (data.length !== range.length)
+      throw Error("Truncated local document range");
+    if (downloaded) {
+      if (crc32(data) !== checksum)
+        throw Error("Prepared document checksum mismatch");
+      await this.save(path, data);
+    }
     return {
-      data: await this.range(this.path(key), range.offset, range.length),
+      data,
       checksum,
     };
   }
