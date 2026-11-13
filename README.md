@@ -2,8 +2,9 @@
 
 Exact Boolean, phrase, proximity, and ranked search for Cloudflare Workers and R2.
 The replacement execution engine is in `src/columnar`. It uses independently
-addressed numeric streams, hierarchical corpus-wide term plans, conservative
-block-max pruning, and lazy positional verification. Metadata and query-relevant
+addressed numeric streams and a complete bundled term directory. Complete term
+packets and anchor/document packages are the primary paths; hierarchical
+block-max pruning handles larger queries. Metadata and query-relevant
 snippets are included in complete responses. No Containers, Durable Objects,
 external serving database, or external search service is required.
 
@@ -62,12 +63,21 @@ output directory after changing construction code or source. Source generations
 and checksums prevent mixed inputs; the completed layout determines the serving
 generation and cache identity. The frozen benchmark control remains separate.
 Ingestion, intermediate merges, final term ranges, posting construction, and
-4,096-document output ranges run as independent jobs. Intermediate merges use
+128-document package ranges run as independent jobs. Intermediate merges use
 multiple balanced levels; the final term dictionary remains corpus-wide.
 One builder Worker handles concurrent invocations; `CWS_BUILD_CONCURRENCY` controls
-the number of outstanding requests, up to 128. Cloudflare distributes invocations
-across isolates. A bounded queue serializes construction buffers within each
+the number of outstanding requests, up to 128. The packet coordinator reduces
+its window when admission is busy. Cloudflare may distribute invocations across
+isolates. A bounded queue serializes construction buffers within each
 isolate. Each job uses bounded buffers and overlapping R2 I/O.
+
+The native pipeline now emits the full bundled directory, complete term packets
+and self-contained document packages. To convert existing native sorted output
+without repeating ingestion and merges:
+
+```sh
+yarn node --import tsx scripts/build-packets-in-workers.ts work/old-native-build work/new-packets packets-v1
+```
 
 Check account script count, resource errors, CPU/memory analytics and R2 operations
 occasionally during large builds:

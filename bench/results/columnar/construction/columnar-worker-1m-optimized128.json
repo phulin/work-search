@@ -1,0 +1,159 @@
+{
+  "manifest": {
+    "build": "corpus-1m-single-v2",
+    "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+    "coordinatorHash": "8e81e463786333a12d38f005bef57fd48a1d704e066a410cfd6255a8c155e452",
+    "coordinatorFormat": "parallel-build-v2",
+    "sourceHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+    "sourceDocuments": 10032254,
+    "count": 1000000,
+    "terms": 2812380,
+    "bodyTokens": 1494537623,
+    "titleTokens": 4973510,
+    "generation": "d989bc2cecfffc447970f61a9347328a5c5f0adcffbd801791594ba966615e77",
+    "objects": 11517,
+    "bytes": 43332783170,
+    "startedAt": "2026-11-13T03:41:34.210Z",
+    "finishedAt": "2026-11-13T04:01:14.705Z",
+    "construction": "Cloudflare Workers and R2",
+    "workers": [
+      "https://work-search-cws-build-0.phulin.workers.dev"
+    ],
+    "concurrency": 128,
+    "reusedConstruction": {
+      "directory": "work/columnar-worker-1m-parallel128",
+      "code": "b6fb800c1370362c269b77c1ed8c8e398d07750d13cf8bfa3c3b1395093353d5",
+      "startedAt": "2026-11-13T02:47:11.590Z",
+      "reused": [
+        "ingestion",
+        "merges",
+        "postings",
+        "routing"
+      ],
+      "note": "Completed immutable scoring output reused. This run measures replacement document output and publication, not a fresh full build."
+    },
+    "planningWidth": 128,
+    "postingsJobs": 565,
+    "documentJobs": 245
+  },
+  "completeMs": 1180495,
+  "buildMs": 1144611.9519042969,
+  "phases": [
+    {
+      "path": "/ingest",
+      "tasks": 0,
+      "elapsedMs": 0,
+      "clientMs": 0,
+      "workerWallMs": 0,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 0,
+      "stageBytes": 0
+    },
+    {
+      "path": "/merge",
+      "tasks": 0,
+      "elapsedMs": 0,
+      "clientMs": 0,
+      "workerWallMs": 0,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 0,
+      "stageBytes": 0
+    },
+    {
+      "path": "/postings",
+      "tasks": 0,
+      "elapsedMs": 0,
+      "clientMs": 0,
+      "workerWallMs": 0,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 0,
+      "stageBytes": 0
+    },
+    {
+      "path": "/routing",
+      "tasks": 0,
+      "elapsedMs": 0,
+      "clientMs": 0,
+      "workerWallMs": 0,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 0,
+      "stageBytes": 0
+    },
+    {
+      "path": "/vocabulary",
+      "tasks": 1188,
+      "elapsedMs": 775524.9519042969,
+      "clientMs": 66995187.48939598,
+      "workerWallMs": 17636267,
+      "sampledNativeCpu": {
+        "n": 56,
+        "sumMs": 289014,
+        "p50": 4735,
+        "p95": 8731,
+        "max": 12574
+      },
+      "sourceRequests": 23990,
+      "sourceBytes": 4137870553,
+      "dictionaryRequests": 1388624,
+      "dictionaryBytes": 72210431246,
+      "stageRequests": 2376,
+      "stageBytes": 526619098
+    },
+    {
+      "path": "/documents",
+      "tasks": 1953,
+      "elapsedMs": 368858.2502441406,
+      "clientMs": 32170543.42238498,
+      "workerWallMs": 9767962,
+      "sourceRequests": 26074,
+      "sourceBytes": 4349753010,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 7172,
+      "stageBytes": 20547660842
+    },
+    {
+      "path": "/verify",
+      "tasks": 45,
+      "elapsedMs": 26340.666748046875,
+      "clientMs": 536805.9204199999,
+      "workerWallMs": 274938,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 11562,
+      "stageBytes": 201660300
+    },
+    {
+      "path": "/publish",
+      "tasks": 1,
+      "elapsedMs": 2303.172119140625,
+      "clientMs": 2303.1722079999745,
+      "workerWallMs": 2184,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 46,
+      "stageBytes": 4496639
+    }
+  ],
+  "limitations": [
+    "Build time excludes deployment and final publication checks.",
+    "Source, stage, and dictionary bytes count transfers, including repeated reads.",
+    "Successful live execution establishes that the sampled tasks were admitted; native peak or retained memory is not available here."
+  ]
+}

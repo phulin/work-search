@@ -1,0 +1,5157 @@
+{
+  "manifest": {
+    "name": "work-search-cws-near",
+    "generation": "4a0b7ba7595e3ef800c68c46a54eeab32f2625601f5f7d2ff010948e47a127b6",
+    "corpusHash": "efdc4d8ef7a26ee02bea3765379d9affec373af61ea8384efca304581db182eb",
+    "documents": 1000,
+    "repeats": 3,
+    "seed": 20261113,
+    "condition": "memory-reuse",
+    "startedAt": "2026-11-13T04:58:32.941Z",
+    "clientRegion": "local-New-England",
+    "responseCaching": false
+  },
+  "caveats": [
+    "Complete-response timings include metadata and snippets. Unsupported strategies are not correctness failures.",
+    "Pilot percentiles are conditional on this scenario mix, not production traffic. Small samples do not establish P99 or a universal crossover.",
+    "Paired groups exclude missing/unsupported strategies and ambiguous duplicates. Transfer sizes describe packed streams, not general-purpose compression."
+  ],
+  "requests": 444,
+  "pairedComparisons": 111,
+  "pairedPlans": {
+    "complete-terms": {
+      "attempts": 111,
+      "unsupported": 0,
+      "errors": 0,
+      "completeMs": {
+        "n": 111,
+        "p50": 79.8570830000026,
+        "p95": 298.10970799999996,
+        "p99": 566.5066669999997,
+        "max": 586.6826670000003
+      },
+      "workerMs": {
+        "n": 111,
+        "p50": 13,
+        "p95": 150,
+        "p99": 240,
+        "max": 436
+      },
+      "cpuMs": {
+        "n": 108,
+        "p50": 12,
+        "p95": 46,
+        "p99": 66,
+        "max": 88
+      },
+      "candidates": {
+        "n": 111,
+        "p50": 18,
+        "p95": 365,
+        "p99": 410,
+        "max": 410
+      },
+      "originGets": {
+        "n": 111,
+        "p50": 0,
+        "p95": 4,
+        "p99": 12,
+        "max": 18
+      },
+      "sharedGets": {
+        "n": 111,
+        "p50": 5,
+        "p95": 22,
+        "p99": 29,
+        "max": 91
+      },
+      "metadataMs": {
+        "n": 111,
+        "p50": 3,
+        "p95": 70,
+        "p99": 117,
+        "max": 336
+      },
+      "resultOriginGets": {
+        "n": 111,
+        "p50": 0,
+        "p95": 1,
+        "p99": 11,
+        "max": 16
+      },
+      "resultSharedGets": {
+        "n": 0
+      },
+      "coalescedExtraBytes": {
+        "n": 111,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      }
+    },
+    "documents": {
+      "attempts": 111,
+      "unsupported": 0,
+      "errors": 0,
+      "completeMs": {
+        "n": 111,
+        "p50": 120.24712500000169,
+        "p95": 1610.214583,
+        "p99": 2790.212167000005,
+        "max": 4220.683291000001
+      },
+      "workerMs": {
+        "n": 111,
+        "p50": 48,
+        "p95": 1166,
+        "p99": 2676,
+        "max": 4097
+      },
+      "cpuMs": {
+        "n": 111,
+        "p50": 20,
+        "p95": 124,
+        "p99": 184,
+        "max": 190
+      },
+      "candidates": {
+        "n": 111,
+        "p50": 35,
+        "p95": 396,
+        "p99": 410,
+        "max": 410
+      },
+      "originGets": {
+        "n": 111,
+        "p50": 0,
+        "p95": 52,
+        "p99": 114,
+        "max": 142
+      },
+      "sharedGets": {
+        "n": 111,
+        "p50": 19,
+        "p95": 263,
+        "p99": 320,
+        "max": 336
+      },
+      "metadataMs": {
+        "n": 111,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "resultOriginGets": {
+        "n": 111,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "resultSharedGets": {
+        "n": 0
+      },
+      "coalescedExtraBytes": {
+        "n": 111,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      }
+    }
+  },
+  "plans": {
+    "complete-terms": {
+      "attempts": 222,
+      "unsupported": 0,
+      "errors": 0,
+      "completeMs": {
+        "n": 222,
+        "p50": 78.84662500000559,
+        "p95": 267.8032919999996,
+        "p99": 466.70566699999995,
+        "max": 586.6826670000003
+      },
+      "workerMs": {
+        "n": 222,
+        "p50": 10,
+        "p95": 139,
+        "p99": 250,
+        "max": 436
+      },
+      "cpuMs": {
+        "n": 218,
+        "p50": 13,
+        "p95": 46,
+        "p99": 88,
+        "max": 111
+      },
+      "candidates": {
+        "n": 222,
+        "p50": 30,
+        "p95": 986,
+        "p99": 1000,
+        "max": 1000
+      },
+      "originGets": {
+        "n": 222,
+        "p50": 0,
+        "p95": 6,
+        "p99": 12,
+        "max": 18
+      },
+      "sharedGets": {
+        "n": 222,
+        "p50": 6,
+        "p95": 23,
+        "p99": 28,
+        "max": 91
+      },
+      "metadataMs": {
+        "n": 222,
+        "p50": 3,
+        "p95": 75,
+        "p99": 129,
+        "max": 336
+      },
+      "resultOriginGets": {
+        "n": 222,
+        "p50": 0,
+        "p95": 3,
+        "p99": 10,
+        "max": 16
+      },
+      "resultSharedGets": {
+        "n": 0
+      },
+      "coalescedExtraBytes": {
+        "n": 222,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      }
+    },
+    "documents": {
+      "attempts": 222,
+      "unsupported": 99,
+      "errors": 0,
+      "completeMs": {
+        "n": 123,
+        "p50": 120.24712500000169,
+        "p95": 1610.214583,
+        "p99": 2790.212167000005,
+        "max": 4220.683291000001
+      },
+      "workerMs": {
+        "n": 123,
+        "p50": 48,
+        "p95": 1166,
+        "p99": 2676,
+        "max": 4097
+      },
+      "cpuMs": {
+        "n": 123,
+        "p50": 20,
+        "p95": 122,
+        "p99": 184,
+        "max": 190
+      },
+      "candidates": {
+        "n": 123,
+        "p50": 35,
+        "p95": 179,
+        "p99": 410,
+        "max": 410
+      },
+      "originGets": {
+        "n": 123,
+        "p50": 0,
+        "p95": 52,
+        "p99": 114,
+        "max": 142
+      },
+      "sharedGets": {
+        "n": 123,
+        "p50": 19,
+        "p95": 180,
+        "p99": 320,
+        "max": 336
+      },
+      "metadataMs": {
+        "n": 123,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "resultOriginGets": {
+        "n": 123,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "resultSharedGets": {
+        "n": 0
+      },
+      "coalescedExtraBytes": {
+        "n": 123,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      }
+    }
+  },
+  "classes": [
+    {
+      "kind": "heldout-adversarial",
+      "plans": {
+        "complete-terms": {
+          "attempts": 48,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 48,
+            "p50": 80.24533299999894,
+            "p95": 405.8501660000002,
+            "p99": 466.70566699999995,
+            "max": 466.70566699999995
+          },
+          "workerMs": {
+            "n": 48,
+            "p50": 9,
+            "p95": 163,
+            "p99": 250,
+            "max": 250
+          },
+          "cpuMs": {
+            "n": 48,
+            "p50": 17,
+            "p95": 56,
+            "p99": 111,
+            "max": 111
+          },
+          "candidates": {
+            "n": 48,
+            "p50": 165,
+            "p95": 1000,
+            "p99": 1000,
+            "max": 1000
+          },
+          "originGets": {
+            "n": 48,
+            "p50": 0,
+            "p95": 8,
+            "p99": 12,
+            "max": 12
+          },
+          "sharedGets": {
+            "n": 48,
+            "p50": 8,
+            "p95": 26,
+            "p99": 28,
+            "max": 28
+          },
+          "metadataMs": {
+            "n": 48,
+            "p50": 4,
+            "p95": 70,
+            "p99": 159,
+            "max": 159
+          },
+          "resultOriginGets": {
+            "n": 48,
+            "p50": 0,
+            "p95": 5,
+            "p99": 10,
+            "max": 10
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 48,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 48,
+          "unsupported": 33,
+          "errors": 0,
+          "completeMs": {
+            "n": 15,
+            "p50": 101.23833400000149,
+            "p95": 605.3990830000002,
+            "p99": 605.3990830000002,
+            "max": 605.3990830000002
+          },
+          "workerMs": {
+            "n": 15,
+            "p50": 35,
+            "p95": 443,
+            "p99": 443,
+            "max": 443
+          },
+          "cpuMs": {
+            "n": 15,
+            "p50": 21,
+            "p95": 96,
+            "p99": 96,
+            "max": 96
+          },
+          "candidates": {
+            "n": 15,
+            "p50": 35,
+            "p95": 146,
+            "p99": 146,
+            "max": 146
+          },
+          "originGets": {
+            "n": 15,
+            "p50": 0,
+            "p95": 11,
+            "p99": 11,
+            "max": 11
+          },
+          "sharedGets": {
+            "n": 15,
+            "p50": 15,
+            "p95": 147,
+            "p99": 147,
+            "max": 147
+          },
+          "metadataMs": {
+            "n": 15,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 15,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 15,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "plain",
+      "plans": {
+        "complete-terms": {
+          "attempts": 24,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 24,
+            "p50": 73.26104200000191,
+            "p95": 566.5066669999997,
+            "p99": 586.6826670000003,
+            "max": 586.6826670000003
+          },
+          "workerMs": {
+            "n": 24,
+            "p50": 12,
+            "p95": 240,
+            "p99": 436,
+            "max": 436
+          },
+          "cpuMs": {
+            "n": 23,
+            "p50": 12,
+            "p95": 65,
+            "p99": 88,
+            "max": 88
+          },
+          "candidates": {
+            "n": 24,
+            "p50": 2,
+            "p95": 38,
+            "p99": 38,
+            "max": 38
+          },
+          "originGets": {
+            "n": 24,
+            "p50": 0,
+            "p95": 12,
+            "p99": 18,
+            "max": 18
+          },
+          "sharedGets": {
+            "n": 24,
+            "p50": 3,
+            "p95": 22,
+            "p99": 22,
+            "max": 22
+          },
+          "metadataMs": {
+            "n": 24,
+            "p50": 5,
+            "p95": 115,
+            "p99": 336,
+            "max": 336
+          },
+          "resultOriginGets": {
+            "n": 24,
+            "p50": 0,
+            "p95": 11,
+            "p99": 16,
+            "max": 16
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 24,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 24,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 21,
+            "p50": 121.82687499999884,
+            "p95": 985.2834170000006,
+            "p99": 1610.214583,
+            "max": 1610.214583
+          },
+          "workerMs": {
+            "n": 21,
+            "p50": 54,
+            "p95": 825,
+            "p99": 1166,
+            "max": 1166
+          },
+          "cpuMs": {
+            "n": 21,
+            "p50": 16,
+            "p95": 59,
+            "p99": 87,
+            "max": 87
+          },
+          "candidates": {
+            "n": 21,
+            "p50": 38,
+            "p95": 68,
+            "p99": 68,
+            "max": 68
+          },
+          "originGets": {
+            "n": 21,
+            "p50": 0,
+            "p95": 27,
+            "p99": 53,
+            "max": 53
+          },
+          "sharedGets": {
+            "n": 21,
+            "p50": 13,
+            "p95": 67,
+            "p99": 69,
+            "max": 69
+          },
+          "metadataMs": {
+            "n": 21,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 21,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 21,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "plain-common",
+      "plans": {
+        "complete-terms": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 78.84662500000559,
+            "p95": 257.5902500000002,
+            "p99": 257.5902500000002,
+            "max": 257.5902500000002
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 4,
+            "p95": 140,
+            "p99": 140,
+            "max": 140
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 17,
+            "p95": 39,
+            "p99": 39,
+            "max": 39
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 30,
+            "p95": 35,
+            "p99": 35,
+            "max": 35
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 9,
+            "p95": 22,
+            "p99": 22,
+            "max": 22
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 4,
+            "p95": 14,
+            "p99": 14,
+            "max": 14
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 106.53387500000099,
+            "p95": 2772.5576250000004,
+            "p99": 2772.5576250000004,
+            "max": 2772.5576250000004
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 40,
+            "p95": 2629,
+            "p99": 2629,
+            "max": 2629
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 19,
+            "p95": 184,
+            "p99": 184,
+            "max": 184
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 35,
+            "p95": 146,
+            "p99": 146,
+            "max": 146
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 142,
+            "p99": 142,
+            "max": 142
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 25,
+            "p95": 147,
+            "p99": 147,
+            "max": 147
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "empty-control",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 53.45354199999565,
+            "p95": 53.98124999999982,
+            "p99": 53.98124999999982,
+            "max": 53.98124999999982
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 1,
+            "p95": 6,
+            "p99": 6,
+            "max": 6
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "phrase",
+      "plans": {
+        "complete-terms": {
+          "attempts": 27,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 27,
+            "p50": 66.59275000000343,
+            "p95": 298.10970799999996,
+            "p99": 348.56775000000016,
+            "max": 348.56775000000016
+          },
+          "workerMs": {
+            "n": 27,
+            "p50": 9,
+            "p95": 138,
+            "p99": 186,
+            "max": 186
+          },
+          "cpuMs": {
+            "n": 26,
+            "p50": 7,
+            "p95": 32,
+            "p99": 42,
+            "max": 42
+          },
+          "candidates": {
+            "n": 27,
+            "p50": 1,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "originGets": {
+            "n": 27,
+            "p50": 0,
+            "p95": 4,
+            "p99": 4,
+            "max": 4
+          },
+          "sharedGets": {
+            "n": 27,
+            "p50": 4,
+            "p95": 9,
+            "p99": 10,
+            "max": 10
+          },
+          "metadataMs": {
+            "n": 27,
+            "p50": 0,
+            "p95": 21,
+            "p99": 37,
+            "max": 37
+          },
+          "resultOriginGets": {
+            "n": 27,
+            "p50": 0,
+            "p95": 0,
+            "p99": 1,
+            "max": 1
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 27,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 27,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 24,
+            "p50": 72.90687500000058,
+            "p95": 517.6757089999992,
+            "p99": 699.2999170000039,
+            "max": 699.2999170000039
+          },
+          "workerMs": {
+            "n": 24,
+            "p50": 15,
+            "p95": 411,
+            "p99": 529,
+            "max": 529
+          },
+          "cpuMs": {
+            "n": 24,
+            "p50": 9,
+            "p95": 65,
+            "p99": 96,
+            "max": 96
+          },
+          "candidates": {
+            "n": 24,
+            "p50": 4,
+            "p95": 75,
+            "p99": 75,
+            "max": 75
+          },
+          "originGets": {
+            "n": 24,
+            "p50": 0,
+            "p95": 8,
+            "p99": 16,
+            "max": 16
+          },
+          "sharedGets": {
+            "n": 24,
+            "p50": 5,
+            "p95": 56,
+            "p99": 75,
+            "max": 75
+          },
+          "metadataMs": {
+            "n": 24,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 24,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 24,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "boolean",
+      "plans": {
+        "complete-terms": {
+          "attempts": 30,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 30,
+            "p50": 94.18862499999523,
+            "p95": 239.2599999999984,
+            "p99": 441.86020799999824,
+            "max": 441.86020799999824
+          },
+          "workerMs": {
+            "n": 30,
+            "p50": 21,
+            "p95": 146,
+            "p99": 160,
+            "max": 160
+          },
+          "cpuMs": {
+            "n": 29,
+            "p50": 18,
+            "p95": 32,
+            "p99": 33,
+            "max": 33
+          },
+          "candidates": {
+            "n": 30,
+            "p50": 222,
+            "p95": 945,
+            "p99": 945,
+            "max": 945
+          },
+          "originGets": {
+            "n": 30,
+            "p50": 0,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "sharedGets": {
+            "n": 30,
+            "p50": 14,
+            "p95": 22,
+            "p99": 23,
+            "max": 23
+          },
+          "metadataMs": {
+            "n": 30,
+            "p50": 7,
+            "p95": 107,
+            "p99": 117,
+            "max": 117
+          },
+          "resultOriginGets": {
+            "n": 30,
+            "p50": 0,
+            "p95": 6,
+            "p99": 7,
+            "max": 7
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 30,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 30,
+          "unsupported": 15,
+          "errors": 0,
+          "completeMs": {
+            "n": 15,
+            "p50": 591.7550839999967,
+            "p95": 4220.683291000001,
+            "p99": 4220.683291000001,
+            "max": 4220.683291000001
+          },
+          "workerMs": {
+            "n": 15,
+            "p50": 375,
+            "p95": 4097,
+            "p99": 4097,
+            "max": 4097
+          },
+          "cpuMs": {
+            "n": 15,
+            "p50": 69,
+            "p95": 190,
+            "p99": 190,
+            "max": 190
+          },
+          "candidates": {
+            "n": 15,
+            "p50": 165,
+            "p95": 410,
+            "p99": 410,
+            "max": 410
+          },
+          "originGets": {
+            "n": 15,
+            "p50": 0,
+            "p95": 114,
+            "p99": 114,
+            "max": 114
+          },
+          "sharedGets": {
+            "n": 15,
+            "p50": 144,
+            "p95": 336,
+            "p99": 336,
+            "max": 336
+          },
+          "metadataMs": {
+            "n": 15,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 15,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 15,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "proximity",
+      "plans": {
+        "complete-terms": {
+          "attempts": 33,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 33,
+            "p50": 75.10329099999944,
+            "p95": 196.27087499999834,
+            "p99": 218.35295900000347,
+            "max": 218.35295900000347
+          },
+          "workerMs": {
+            "n": 33,
+            "p50": 11,
+            "p95": 105,
+            "p99": 139,
+            "max": 139
+          },
+          "cpuMs": {
+            "n": 32,
+            "p50": 10,
+            "p95": 45,
+            "p99": 48,
+            "max": 48
+          },
+          "candidates": {
+            "n": 33,
+            "p50": 39,
+            "p95": 986,
+            "p99": 986,
+            "max": 986
+          },
+          "originGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 3,
+            "p99": 6,
+            "max": 6
+          },
+          "sharedGets": {
+            "n": 33,
+            "p50": 4,
+            "p95": 24,
+            "p99": 24,
+            "max": 24
+          },
+          "metadataMs": {
+            "n": 33,
+            "p50": 0,
+            "p95": 70,
+            "p99": 97,
+            "max": 97
+          },
+          "resultOriginGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 1,
+            "p99": 6,
+            "max": 6
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 33,
+          "unsupported": 12,
+          "errors": 0,
+          "completeMs": {
+            "n": 21,
+            "p50": 127.91466700000456,
+            "p95": 391.2302920000002,
+            "p99": 2529.3421660000004,
+            "max": 2529.3421660000004
+          },
+          "workerMs": {
+            "n": 21,
+            "p50": 52,
+            "p95": 268,
+            "p99": 2124,
+            "max": 2124
+          },
+          "cpuMs": {
+            "n": 21,
+            "p50": 32,
+            "p95": 81,
+            "p99": 174,
+            "max": 174
+          },
+          "candidates": {
+            "n": 21,
+            "p50": 49,
+            "p95": 179,
+            "p99": 179,
+            "max": 179
+          },
+          "originGets": {
+            "n": 21,
+            "p50": 0,
+            "p95": 3,
+            "p99": 109,
+            "max": 109
+          },
+          "sharedGets": {
+            "n": 21,
+            "p50": 36,
+            "p95": 154,
+            "p99": 180,
+            "max": 180
+          },
+          "metadataMs": {
+            "n": 21,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 21,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 21,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "proximity-body",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 60.57166699999652,
+            "p95": 126.30674999999974,
+            "p99": 126.30674999999974,
+            "max": 126.30674999999974
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 10,
+            "p95": 53,
+            "p99": 53,
+            "max": 53
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 2,
+            "p95": 22,
+            "p99": 22,
+            "max": 22
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 39,
+            "p95": 39,
+            "p99": 39,
+            "max": 39
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 3,
+            "p99": 3,
+            "max": 3
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 2,
+            "p95": 4,
+            "p99": 4,
+            "max": 4
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 240.23383399999875,
+            "p95": 2079.2632090000006,
+            "p99": 2079.2632090000006,
+            "max": 2079.2632090000006
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 131,
+            "p95": 1864,
+            "p99": 1864,
+            "max": 1864
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 64,
+            "p95": 106,
+            "p99": 106,
+            "max": 106
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 139,
+            "p95": 139,
+            "p99": 139,
+            "max": 139
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 56,
+            "p99": 56,
+            "max": 56
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 92,
+            "p95": 139,
+            "p99": 139,
+            "max": 139
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "boost-20",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 67.8159999999989,
+            "p95": 164.64166699999987,
+            "p99": 164.64166699999987,
+            "max": 164.64166699999987
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 88,
+            "p99": 88,
+            "max": 88
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 13,
+            "p95": 19,
+            "p99": 19,
+            "max": 19
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 899,
+            "p95": 899,
+            "p99": 899,
+            "max": 899
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 11,
+            "p99": 11,
+            "max": 11
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 82,
+            "p99": 82,
+            "max": 82
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "broad-stress",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 117.01637499999924,
+            "p95": 123.98845799999981,
+            "p99": 123.98845799999981,
+            "max": 123.98845799999981
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 30,
+            "p95": 54,
+            "p99": 54,
+            "max": 54
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 26,
+            "p95": 31,
+            "p99": 31,
+            "max": 31
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 899,
+            "p95": 899,
+            "p99": 899,
+            "max": 899
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 18,
+            "p95": 19,
+            "p99": 19,
+            "max": 19
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 9,
+            "p95": 19,
+            "p99": 19,
+            "max": 19
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "large-page",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 128.26537500000268,
+            "p95": 163.26645799999824,
+            "p99": 163.26645799999824,
+            "max": 163.26645799999824
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 18,
+            "p95": 35,
+            "p99": 35,
+            "max": 35
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 46,
+            "p95": 66,
+            "p99": 66,
+            "max": 66
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 146,
+            "p95": 146,
+            "p99": 146,
+            "max": 146
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 29,
+            "p95": 91,
+            "p99": 91,
+            "max": 91
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 18,
+            "p95": 31,
+            "p99": 31,
+            "max": 31
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 382.689750000005,
+            "p95": 438.03637499999604,
+            "p99": 438.03637499999604,
+            "max": 438.03637499999604
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 173,
+            "p95": 194,
+            "p99": 194,
+            "max": 194
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 106,
+            "p95": 124,
+            "p99": 124,
+            "max": 124
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 146,
+            "p95": 146,
+            "p99": 146,
+            "max": 146
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 109,
+            "p95": 141,
+            "p99": 141,
+            "max": 141
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "phrase-rare",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 64.27745899999718,
+            "p95": 285.43316699999923,
+            "p99": 285.43316699999923,
+            "max": 285.43316699999923
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 13,
+            "p95": 150,
+            "p99": 150,
+            "max": 150
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 4,
+            "p95": 46,
+            "p99": 46,
+            "max": 46
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 1,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 6,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 4,
+            "p95": 70,
+            "p99": 70,
+            "max": 70
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 59.39712499998859,
+            "p95": 72.61741600000096,
+            "p99": 72.61741600000096,
+            "max": 72.61741600000096
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 9,
+            "p95": 14,
+            "p99": 14,
+            "max": 14
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 6,
+            "p95": 6,
+            "p99": 6,
+            "max": 6
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 1,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 2,
+            "p95": 2,
+            "p99": 2,
+            "max": 2
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "mode-or",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 87.77070900000399,
+            "p95": 106.10920799999803,
+            "p99": 106.10920799999803,
+            "max": 106.10920799999803
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 10,
+            "p95": 13,
+            "p99": 13,
+            "max": 13
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 22,
+            "p95": 23,
+            "p99": 23,
+            "max": 23
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 658,
+            "p95": 658,
+            "p99": 658,
+            "max": 658
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 17,
+            "p95": 19,
+            "p99": 19,
+            "max": 19
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 10,
+            "p95": 13,
+            "p99": 13,
+            "max": 13
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "phrase-title",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 65.06870800000615,
+            "p95": 73.91975000000093,
+            "p99": 73.91975000000093,
+            "max": 73.91975000000093
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 7,
+            "p95": 9,
+            "p99": 9,
+            "max": 9
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 7,
+            "p95": 12,
+            "p99": 12,
+            "max": 12
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 6,
+            "p95": 8,
+            "p99": 8,
+            "max": 8
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 56.58820800000103,
+            "p95": 73.82491700000173,
+            "p99": 73.82491700000173,
+            "max": 73.82491700000173
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 5,
+            "p95": 13,
+            "p99": 13,
+            "max": 13
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 3,
+            "p95": 8,
+            "p99": 8,
+            "max": 8
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 1,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "tie-title-zero",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 51.99066599999787,
+            "p95": 84.5515000000014,
+            "p99": 84.5515000000014,
+            "max": 84.5515000000014
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 1,
+            "p95": 2,
+            "p99": 2,
+            "max": 2
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "common-phrase-body",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 132.94287500000064,
+            "p95": 208.57787500000268,
+            "p99": 208.57787500000268,
+            "max": 208.57787500000268
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 44,
+            "p95": 135,
+            "p99": 135,
+            "max": 135
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 23,
+            "p95": 33,
+            "p99": 33,
+            "max": 33
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 976,
+            "p95": 976,
+            "p99": 976,
+            "max": 976
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 4,
+            "p99": 4,
+            "max": 4
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 20,
+            "p95": 25,
+            "p99": 25,
+            "max": 25
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 10,
+            "p95": 79,
+            "p99": 79,
+            "max": 79
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 2,
+            "p99": 2,
+            "max": 2
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "field-body",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 80.64870800000062,
+            "p95": 92.43587499999558,
+            "p99": 92.43587499999558,
+            "max": 92.43587499999558
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 10,
+            "p95": 19,
+            "p99": 19,
+            "max": 19
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 16,
+            "p95": 23,
+            "p99": 23,
+            "max": 23
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 899,
+            "p95": 899,
+            "p99": 899,
+            "max": 899
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 9,
+            "p95": 21,
+            "p99": 21,
+            "max": 21
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 3,
+            "p95": 10,
+            "p99": 10,
+            "max": 10
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "boolean-not",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 79.8570830000026,
+            "p95": 167.02500000000146,
+            "p99": 167.02500000000146,
+            "max": 167.02500000000146
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 29,
+            "p95": 98,
+            "p99": 98,
+            "max": 98
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 6,
+            "p95": 16,
+            "p99": 16,
+            "max": 16
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 2,
+            "p95": 3,
+            "p99": 3,
+            "max": 3
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 63.150875000006636,
+            "p95": 116.74612500000512,
+            "p99": 116.74612500000512,
+            "max": 116.74612500000512
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 13,
+            "p95": 56,
+            "p99": 56,
+            "max": 56
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 5,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 2,
+            "p95": 2,
+            "p99": 2,
+            "max": 2
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 3,
+            "p95": 3,
+            "p99": 3,
+            "max": 3
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "field-title",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 53.69241600000532,
+            "p95": 73.57191700000112,
+            "p99": 73.57191700000112,
+            "max": 73.57191700000112
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 1,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "case-name",
+      "plans": {
+        "complete-terms": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 53.886249999995925,
+            "p95": 65.69687500000146,
+            "p99": 65.69687500000146,
+            "max": 65.69687500000146
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 1,
+            "p95": 5,
+            "p99": 5,
+            "max": 5
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 6,
+          "unsupported": 6,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "plain-selective",
+      "plans": {
+        "complete-terms": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 69.98554200000217,
+            "p95": 104.68158399999811,
+            "p99": 104.68158399999811,
+            "max": 104.68158399999811
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 9,
+            "p95": 32,
+            "p99": 32,
+            "max": 32
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 6,
+            "p95": 21,
+            "p99": 21,
+            "max": 21
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 1,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 2,
+            "p95": 3,
+            "p99": 3,
+            "max": 3
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 8,
+            "p99": 8,
+            "max": 8
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 61.38179200000013,
+            "p95": 123.56216600000334,
+            "p99": 123.56216600000334,
+            "max": 123.56216600000334
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 9,
+            "p95": 68,
+            "p99": 68,
+            "max": 68
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 5,
+            "p95": 9,
+            "p99": 9,
+            "max": 9
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 2,
+            "p95": 4,
+            "p99": 4,
+            "max": 4
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 3,
+            "p95": 4,
+            "p99": 4,
+            "max": 4
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      }
+    },
+    {
+      "kind": "boost-arbitrary",
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 84.45337499999732,
+            "p95": 88.54900000000634,
+            "p99": 88.54900000000634,
+            "max": 88.54900000000634
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 3,
+            "p95": 5,
+            "p99": 5,
+            "max": 5
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 20,
+            "p95": 24,
+            "p99": 24,
+            "max": 24
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 899,
+            "p95": 899,
+            "p99": 899,
+            "max": 899
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 8,
+            "p95": 10,
+            "p99": 10,
+            "max": 10
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 3,
+            "p95": 5,
+            "p99": 5,
+            "max": 5
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 3,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      }
+    }
+  ],
+  "byCandidates": [
+    {
+      "lower": 0,
+      "upper": 1,
+      "pairs": 0,
+      "plans": {
+        "complete-terms": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        },
+        "documents": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      },
+      "firstPlanWins": 0
+    },
+    {
+      "lower": 1,
+      "upper": 2,
+      "pairs": 3,
+      "plans": {
+        "complete-terms": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 64.27745899999718,
+            "p95": 285.43316699999923,
+            "p99": 285.43316699999923,
+            "max": 285.43316699999923
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 13,
+            "p95": 150,
+            "p99": 150,
+            "max": 150
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 4,
+            "p95": 46,
+            "p99": 46,
+            "max": 46
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 1,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 6,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 4,
+            "p95": 70,
+            "p99": 70,
+            "max": 70
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 3,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 3,
+            "p50": 59.39712499998859,
+            "p95": 72.61741600000096,
+            "p99": 72.61741600000096,
+            "max": 72.61741600000096
+          },
+          "workerMs": {
+            "n": 3,
+            "p50": 9,
+            "p95": 14,
+            "p99": 14,
+            "max": 14
+          },
+          "cpuMs": {
+            "n": 3,
+            "p50": 6,
+            "p95": 6,
+            "p99": 6,
+            "max": 6
+          },
+          "candidates": {
+            "n": 3,
+            "p50": 1,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "originGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "sharedGets": {
+            "n": 3,
+            "p50": 2,
+            "p95": 2,
+            "p99": 2,
+            "max": 2
+          },
+          "metadataMs": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 3,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 0
+    },
+    {
+      "lower": 2,
+      "upper": 6,
+      "pairs": 33,
+      "plans": {
+        "complete-terms": {
+          "attempts": 33,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 33,
+            "p50": 73.82866600000125,
+            "p95": 348.56775000000016,
+            "p99": 586.6826670000003,
+            "max": 586.6826670000003
+          },
+          "workerMs": {
+            "n": 33,
+            "p50": 12,
+            "p95": 138,
+            "p99": 240,
+            "max": 240
+          },
+          "cpuMs": {
+            "n": 32,
+            "p50": 7,
+            "p95": 42,
+            "p99": 65,
+            "max": 65
+          },
+          "candidates": {
+            "n": 33,
+            "p50": 1,
+            "p95": 5,
+            "p99": 5,
+            "max": 5
+          },
+          "originGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 3,
+            "p99": 4,
+            "max": 4
+          },
+          "sharedGets": {
+            "n": 33,
+            "p50": 3,
+            "p95": 7,
+            "p99": 8,
+            "max": 8
+          },
+          "metadataMs": {
+            "n": 33,
+            "p50": 0,
+            "p95": 37,
+            "p99": 103,
+            "max": 103
+          },
+          "resultOriginGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 33,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 33,
+            "p50": 62.59050000000025,
+            "p95": 169.3725000000013,
+            "p99": 267.92204200000015,
+            "max": 267.92204200000015
+          },
+          "workerMs": {
+            "n": 33,
+            "p50": 8,
+            "p95": 102,
+            "p99": 123,
+            "max": 123
+          },
+          "cpuMs": {
+            "n": 33,
+            "p50": 6,
+            "p95": 18,
+            "p99": 27,
+            "max": 27
+          },
+          "candidates": {
+            "n": 33,
+            "p50": 4,
+            "p95": 5,
+            "p99": 5,
+            "max": 5
+          },
+          "originGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 2,
+            "p99": 4,
+            "max": 4
+          },
+          "sharedGets": {
+            "n": 33,
+            "p50": 3,
+            "p95": 5,
+            "p99": 5,
+            "max": 5
+          },
+          "metadataMs": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 8
+    },
+    {
+      "lower": 6,
+      "upper": 17,
+      "pairs": 6,
+      "plans": {
+        "complete-terms": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 61.333792000004905,
+            "p95": 128.40374999999767,
+            "p99": 128.40374999999767,
+            "max": 128.40374999999767
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 6,
+            "p95": 56,
+            "p99": 56,
+            "max": 56
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 4,
+            "p95": 23,
+            "p99": 23,
+            "max": 23
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 1,
+            "p95": 6,
+            "p99": 6,
+            "max": 6
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 2,
+            "p99": 2,
+            "max": 2
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 2,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 4,
+            "p99": 4,
+            "max": 4
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 67.48445899999933,
+            "p95": 108.46612499999901,
+            "p99": 108.46612499999901,
+            "max": 108.46612499999901
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 15,
+            "p95": 52,
+            "p99": 52,
+            "max": 52
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 6,
+            "p95": 16,
+            "p99": 16,
+            "max": 16
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 15,
+            "p95": 15,
+            "p99": 15,
+            "max": 15
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 9,
+            "p95": 13,
+            "p99": 13,
+            "max": 13
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 3
+    },
+    {
+      "lower": 17,
+      "upper": 65,
+      "pairs": 33,
+      "plans": {
+        "complete-terms": {
+          "attempts": 33,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 33,
+            "p50": 75.10329099999944,
+            "p95": 441.86020799999824,
+            "p99": 566.5066669999997,
+            "max": 566.5066669999997
+          },
+          "workerMs": {
+            "n": 33,
+            "p50": 13,
+            "p95": 157,
+            "p99": 436,
+            "max": 436
+          },
+          "cpuMs": {
+            "n": 33,
+            "p50": 11,
+            "p95": 34,
+            "p99": 88,
+            "max": 88
+          },
+          "candidates": {
+            "n": 33,
+            "p50": 27,
+            "p95": 54,
+            "p99": 54,
+            "max": 54
+          },
+          "originGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 12,
+            "p99": 18,
+            "max": 18
+          },
+          "sharedGets": {
+            "n": 33,
+            "p50": 7,
+            "p95": 22,
+            "p99": 24,
+            "max": 24
+          },
+          "metadataMs": {
+            "n": 33,
+            "p50": 4,
+            "p95": 115,
+            "p99": 336,
+            "max": 336
+          },
+          "resultOriginGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 11,
+            "p99": 16,
+            "max": 16
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 33,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 33,
+            "p50": 123.3762080000015,
+            "p95": 985.2834170000006,
+            "p99": 1123.4744580000006,
+            "max": 1123.4744580000006
+          },
+          "workerMs": {
+            "n": 33,
+            "p50": 48,
+            "p95": 825,
+            "p99": 1011,
+            "max": 1011
+          },
+          "cpuMs": {
+            "n": 33,
+            "p50": 23,
+            "p95": 61,
+            "p99": 65,
+            "max": 65
+          },
+          "candidates": {
+            "n": 33,
+            "p50": 38,
+            "p95": 54,
+            "p99": 54,
+            "max": 54
+          },
+          "originGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 20,
+            "p99": 46,
+            "max": 46
+          },
+          "sharedGets": {
+            "n": 33,
+            "p50": 27,
+            "p95": 50,
+            "p99": 54,
+            "max": 54
+          },
+          "metadataMs": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 30
+    },
+    {
+      "lower": 65,
+      "upper": 257,
+      "pairs": 30,
+      "plans": {
+        "complete-terms": {
+          "attempts": 30,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 30,
+            "p50": 86.97245800000383,
+            "p95": 261.3885829999999,
+            "p99": 414.74916699999994,
+            "max": 414.74916699999994
+          },
+          "workerMs": {
+            "n": 30,
+            "p50": 11,
+            "p95": 140,
+            "p99": 186,
+            "max": 186
+          },
+          "cpuMs": {
+            "n": 29,
+            "p50": 18,
+            "p95": 49,
+            "p99": 66,
+            "max": 66
+          },
+          "candidates": {
+            "n": 30,
+            "p50": 49,
+            "p95": 164,
+            "p99": 164,
+            "max": 164
+          },
+          "originGets": {
+            "n": 30,
+            "p50": 0,
+            "p95": 2,
+            "p99": 4,
+            "max": 4
+          },
+          "sharedGets": {
+            "n": 30,
+            "p50": 16,
+            "p95": 29,
+            "p99": 91,
+            "max": 91
+          },
+          "metadataMs": {
+            "n": 30,
+            "p50": 5,
+            "p95": 18,
+            "p99": 31,
+            "max": 31
+          },
+          "resultOriginGets": {
+            "n": 30,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 30,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 30,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 30,
+            "p50": 261.65525000000343,
+            "p95": 2529.3421660000004,
+            "p99": 2772.5576250000004,
+            "max": 2772.5576250000004
+          },
+          "workerMs": {
+            "n": 30,
+            "p50": 139,
+            "p95": 2124,
+            "p99": 2629,
+            "max": 2629
+          },
+          "cpuMs": {
+            "n": 30,
+            "p50": 56,
+            "p95": 174,
+            "p99": 184,
+            "max": 184
+          },
+          "candidates": {
+            "n": 30,
+            "p50": 146,
+            "p95": 179,
+            "p99": 179,
+            "max": 179
+          },
+          "originGets": {
+            "n": 30,
+            "p50": 0,
+            "p95": 109,
+            "p99": 142,
+            "max": 142
+          },
+          "sharedGets": {
+            "n": 30,
+            "p50": 75,
+            "p95": 158,
+            "p99": 180,
+            "max": 180
+          },
+          "metadataMs": {
+            "n": 30,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 30,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 30,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 27
+    },
+    {
+      "lower": 257,
+      "upper": 513,
+      "pairs": 6,
+      "plans": {
+        "complete-terms": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 103.55241599999863,
+            "p95": 239.2599999999984,
+            "p99": 239.2599999999984,
+            "max": 239.2599999999984
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 21,
+            "p95": 160,
+            "p99": 160,
+            "max": 160
+          },
+          "cpuMs": {
+            "n": 5,
+            "p50": 28,
+            "p95": 30,
+            "p99": 30,
+            "max": 30
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 365,
+            "p95": 410,
+            "p99": 410,
+            "max": 410
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 7,
+            "p99": 7,
+            "max": 7
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 14,
+            "p95": 20,
+            "p99": 20,
+            "max": 20
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 15,
+            "p95": 117,
+            "p99": 117,
+            "max": 117
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 6,
+            "p99": 6,
+            "max": 6
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 611.5483749999985,
+            "p95": 4220.683291000001,
+            "p99": 4220.683291000001,
+            "max": 4220.683291000001
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 438,
+            "p95": 4097,
+            "p99": 4097,
+            "max": 4097
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 122,
+            "p95": 190,
+            "p99": 190,
+            "max": 190
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 396,
+            "p95": 410,
+            "p99": 410,
+            "max": 410
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 114,
+            "p99": 114,
+            "max": 114
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 274,
+            "p95": 336,
+            "p99": 336,
+            "max": 336
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 6
+    },
+    {
+      "lower": 513,
+      "upper": "unbounded",
+      "pairs": 0,
+      "plans": {
+        "complete-terms": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        },
+        "documents": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      },
+      "firstPlanWins": 0
+    }
+  ],
+  "byCompleteTermBytes": [
+    {
+      "lower": 0,
+      "upper": 1024,
+      "pairs": 6,
+      "plans": {
+        "complete-terms": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 64.90595899999607,
+            "p95": 586.6826670000003,
+            "p99": 586.6826670000003,
+            "max": 586.6826670000003
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 10,
+            "p95": 240,
+            "p99": 240,
+            "max": 240
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 5,
+            "p95": 65,
+            "p99": 65,
+            "max": 65
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 3,
+            "p99": 3,
+            "max": 3
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 1,
+            "p95": 3,
+            "p99": 3,
+            "max": 3
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 103,
+            "p99": 103,
+            "max": 103
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 1,
+            "p99": 1,
+            "max": 1
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 6,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 6,
+            "p50": 55.06158399999549,
+            "p95": 133.6420420000004,
+            "p99": 133.6420420000004,
+            "max": 133.6420420000004
+          },
+          "workerMs": {
+            "n": 6,
+            "p50": 7,
+            "p95": 63,
+            "p99": 63,
+            "max": 63
+          },
+          "cpuMs": {
+            "n": 6,
+            "p50": 4,
+            "p95": 9,
+            "p99": 9,
+            "max": 9
+          },
+          "candidates": {
+            "n": 6,
+            "p50": 2,
+            "p95": 3,
+            "p99": 3,
+            "max": 3
+          },
+          "originGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 2,
+            "p99": 2,
+            "max": 2
+          },
+          "sharedGets": {
+            "n": 6,
+            "p50": 2,
+            "p95": 4,
+            "p99": 4,
+            "max": 4
+          },
+          "metadataMs": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 6,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 1
+    },
+    {
+      "lower": 1024,
+      "upper": 16384,
+      "pairs": 54,
+      "plans": {
+        "complete-terms": {
+          "attempts": 54,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 54,
+            "p50": 78.84662500000559,
+            "p95": 348.56775000000016,
+            "p99": 566.5066669999997,
+            "max": 566.5066669999997
+          },
+          "workerMs": {
+            "n": 54,
+            "p50": 12,
+            "p95": 140,
+            "p99": 436,
+            "max": 436
+          },
+          "cpuMs": {
+            "n": 53,
+            "p50": 10,
+            "p95": 49,
+            "p99": 88,
+            "max": 88
+          },
+          "candidates": {
+            "n": 54,
+            "p50": 2,
+            "p95": 146,
+            "p99": 146,
+            "max": 146
+          },
+          "originGets": {
+            "n": 54,
+            "p50": 0,
+            "p95": 3,
+            "p99": 18,
+            "max": 18
+          },
+          "sharedGets": {
+            "n": 54,
+            "p50": 4,
+            "p95": 22,
+            "p99": 91,
+            "max": 91
+          },
+          "metadataMs": {
+            "n": 54,
+            "p50": 2,
+            "p95": 37,
+            "p99": 336,
+            "max": 336
+          },
+          "resultOriginGets": {
+            "n": 54,
+            "p50": 0,
+            "p95": 1,
+            "p99": 16,
+            "max": 16
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 54,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 54,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 54,
+            "p50": 103.46179100000154,
+            "p95": 1123.4744580000006,
+            "p99": 2772.5576250000004,
+            "max": 2772.5576250000004
+          },
+          "workerMs": {
+            "n": 54,
+            "p50": 34,
+            "p95": 1011,
+            "p99": 2629,
+            "max": 2629
+          },
+          "cpuMs": {
+            "n": 54,
+            "p50": 12,
+            "p95": 106,
+            "p99": 184,
+            "max": 184
+          },
+          "candidates": {
+            "n": 54,
+            "p50": 15,
+            "p95": 146,
+            "p99": 146,
+            "max": 146
+          },
+          "originGets": {
+            "n": 54,
+            "p50": 0,
+            "p95": 46,
+            "p99": 142,
+            "max": 142
+          },
+          "sharedGets": {
+            "n": 54,
+            "p50": 9,
+            "p95": 131,
+            "p99": 147,
+            "max": 147
+          },
+          "metadataMs": {
+            "n": 54,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 54,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 54,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 31
+    },
+    {
+      "lower": 16384,
+      "upper": 65536,
+      "pairs": 33,
+      "plans": {
+        "complete-terms": {
+          "attempts": 33,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 33,
+            "p50": 86.97245800000383,
+            "p95": 247.6743750000005,
+            "p99": 441.86020799999824,
+            "max": 441.86020799999824
+          },
+          "workerMs": {
+            "n": 33,
+            "p50": 15,
+            "p95": 157,
+            "p99": 160,
+            "max": 160
+          },
+          "cpuMs": {
+            "n": 32,
+            "p50": 17,
+            "p95": 34,
+            "p99": 45,
+            "max": 45
+          },
+          "candidates": {
+            "n": 33,
+            "p50": 49,
+            "p95": 410,
+            "p99": 410,
+            "max": 410
+          },
+          "originGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 7,
+            "p99": 12,
+            "max": 12
+          },
+          "sharedGets": {
+            "n": 33,
+            "p50": 14,
+            "p95": 24,
+            "p99": 24,
+            "max": 24
+          },
+          "metadataMs": {
+            "n": 33,
+            "p50": 6,
+            "p95": 115,
+            "p99": 117,
+            "max": 117
+          },
+          "resultOriginGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 6,
+            "p99": 11,
+            "max": 11
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 33,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 33,
+            "p50": 249.56820800000423,
+            "p95": 2790.212167000005,
+            "p99": 4220.683291000001,
+            "max": 4220.683291000001
+          },
+          "workerMs": {
+            "n": 33,
+            "p50": 124,
+            "p95": 2676,
+            "p99": 4097,
+            "max": 4097
+          },
+          "cpuMs": {
+            "n": 33,
+            "p50": 41,
+            "p95": 174,
+            "p99": 190,
+            "max": 190
+          },
+          "candidates": {
+            "n": 33,
+            "p50": 54,
+            "p95": 410,
+            "p99": 410,
+            "max": 410
+          },
+          "originGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 109,
+            "p99": 114,
+            "max": 114
+          },
+          "sharedGets": {
+            "n": 33,
+            "p50": 39,
+            "p95": 320,
+            "p99": 336,
+            "max": 336
+          },
+          "metadataMs": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 33,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 28
+    },
+    {
+      "lower": 65536,
+      "upper": 262144,
+      "pairs": 18,
+      "plans": {
+        "complete-terms": {
+          "attempts": 18,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 18,
+            "p50": 65.81729199999972,
+            "p95": 261.3885829999999,
+            "p99": 261.3885829999999,
+            "max": 261.3885829999999
+          },
+          "workerMs": {
+            "n": 18,
+            "p50": 8,
+            "p95": 186,
+            "p99": 186,
+            "max": 186
+          },
+          "cpuMs": {
+            "n": 17,
+            "p50": 8,
+            "p95": 42,
+            "p99": 42,
+            "max": 42
+          },
+          "candidates": {
+            "n": 18,
+            "p50": 5,
+            "p95": 140,
+            "p99": 140,
+            "max": 140
+          },
+          "originGets": {
+            "n": 18,
+            "p50": 0,
+            "p95": 4,
+            "p99": 4,
+            "max": 4
+          },
+          "sharedGets": {
+            "n": 18,
+            "p50": 5,
+            "p95": 23,
+            "p99": 23,
+            "max": 23
+          },
+          "metadataMs": {
+            "n": 18,
+            "p50": 0,
+            "p95": 16,
+            "p99": 16,
+            "max": 16
+          },
+          "resultOriginGets": {
+            "n": 18,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 18,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        },
+        "documents": {
+          "attempts": 18,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 18,
+            "p50": 89.51800000000367,
+            "p95": 699.2999170000039,
+            "p99": 699.2999170000039,
+            "max": 699.2999170000039
+          },
+          "workerMs": {
+            "n": 18,
+            "p50": 18,
+            "p95": 529,
+            "p99": 529,
+            "max": 529
+          },
+          "cpuMs": {
+            "n": 18,
+            "p50": 15,
+            "p95": 96,
+            "p99": 96,
+            "max": 96
+          },
+          "candidates": {
+            "n": 18,
+            "p50": 19,
+            "p95": 146,
+            "p99": 146,
+            "max": 146
+          },
+          "originGets": {
+            "n": 18,
+            "p50": 0,
+            "p95": 8,
+            "p99": 8,
+            "max": 8
+          },
+          "sharedGets": {
+            "n": 18,
+            "p50": 5,
+            "p95": 147,
+            "p99": 147,
+            "max": 147
+          },
+          "metadataMs": {
+            "n": 18,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultOriginGets": {
+            "n": 18,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 18,
+            "p50": 0,
+            "p95": 0,
+            "p99": 0,
+            "max": 0
+          }
+        }
+      },
+      "firstPlanWins": 14
+    },
+    {
+      "lower": 262144,
+      "upper": 1048576,
+      "pairs": 0,
+      "plans": {
+        "complete-terms": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        },
+        "documents": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      },
+      "firstPlanWins": 0
+    },
+    {
+      "lower": 1048576,
+      "upper": 4194304,
+      "pairs": 0,
+      "plans": {
+        "complete-terms": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        },
+        "documents": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      },
+      "firstPlanWins": 0
+    },
+    {
+      "lower": 4194304,
+      "upper": 8388609,
+      "pairs": 0,
+      "plans": {
+        "complete-terms": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        },
+        "documents": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      },
+      "firstPlanWins": 0
+    },
+    {
+      "lower": 8388609,
+      "upper": "unbounded",
+      "pairs": 0,
+      "plans": {
+        "complete-terms": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        },
+        "documents": {
+          "attempts": 0,
+          "unsupported": 0,
+          "errors": 0,
+          "completeMs": {
+            "n": 0
+          },
+          "workerMs": {
+            "n": 0
+          },
+          "cpuMs": {
+            "n": 0
+          },
+          "candidates": {
+            "n": 0
+          },
+          "originGets": {
+            "n": 0
+          },
+          "sharedGets": {
+            "n": 0
+          },
+          "metadataMs": {
+            "n": 0
+          },
+          "resultOriginGets": {
+            "n": 0
+          },
+          "resultSharedGets": {
+            "n": 0
+          },
+          "coalescedExtraBytes": {
+            "n": 0
+          }
+        }
+      },
+      "firstPlanWins": 0
+    }
+  ]
+}

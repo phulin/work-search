@@ -45,10 +45,13 @@ const rows: unknown[] = [],
                     telemetry = JSON.parse(message).construction ?? telemetry;
                   } catch {}
                 }
-            if (event.event?.request?.url)
+            if (event.event?.request?.url || telemetry)
               rows.push({
                 name,
-                path: new URL(event.event.request.url).pathname,
+                path: event.event?.request?.url
+                  ? new URL(event.event.request.url).pathname
+                  : telemetry?.operation,
+                invocation: event.event?.request ? "http" : "queue",
                 cpuMs: event.cpuTime,
                 wallMs: event.wallTime,
                 outcome: event.outcome,

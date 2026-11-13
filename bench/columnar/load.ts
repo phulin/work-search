@@ -67,7 +67,11 @@ for (const name of variants) {
   health[name] = await r.json();
   if (
     externalScenarios &&
-    health[name].generation !== externalScenarios.generation
+    health[name].generation !== externalScenarios.generation &&
+    !(
+      health[name].corpusHash === externalScenarios.corpusHash &&
+      health[name].documents === externalScenarios.count
+    )
   )
     throw Error("Scenario generation mismatch " + name);
   if (externalScenarios)

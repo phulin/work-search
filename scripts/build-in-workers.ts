@@ -6,15 +6,12 @@ import {
   appendFile,
 } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { spawn } from "node:child_process";
 import { benchmarkToken } from "../bench/columnar/token.js";
 import type { Root, Ref } from "../src/columnar/format.js";
 import { planMerges } from "./construction-merge-plan.js";
 import { vocabularyRoot } from "./construction-vocabulary-root.js";
-import {
-  generationFor,
-  VERIFY_OBJECTS,
-  type Run,
-} from "../src/columnar/construction/runs.js";
+import { type Run } from "../src/columnar/construction/runs.js";
 import {
   OBJECT_GROUP,
   type Routing,
@@ -484,103 +481,58 @@ await pool<any>(state.vocabularies, async (job, i, worker) => {
   }
   console.log("R2 vocabulary range", i + 1, "/", state.vocabularies.length);
 });
-if (!state.documents.length)
-  for (let first = 0; first < count; first += 4096)
-    state.documents.push({
-      group: nextGroup + state.documents.length,
-      range: { first, end: Math.min(count, first + 4096) },
-      objects: [],
-      step: 0,
-    });
-await pool<any>(state.documents, async (job, i, worker) => {
-  while (!job.done) {
-    const next = job.next ?? job.range.first,
-      vocabulary = state.vocabularies[Math.floor(next / 1024)].segments.find(
-        (s: any) => s.first <= next && next < s.end,
-      );
-    if (!vocabulary) throw Error("Missing completed document vocabulary");
-    const task = `documents-${i}-${job.step}`,
-      o = await call(worker, "/documents", {
-        task,
-        documentRoot: { generation: root.generation, count },
-        vocabularyRef: vocabulary.ref,
-        range: job.range,
-        objectBase: job.group * OBJECT_GROUP + job.objects.length,
-        stateTask: job.previous,
-        compact: true,
-      });
-    job.previous = task;
-    job.step++;
-    job.objects.push(...o.objects);
-    job.done = o.done;
-    job.next = o.state.next;
-    if (job.done) job.documents = o.state.documents;
-    await save();
-  }
-  console.log("R2 document range", i + 1, "/", state.documents.length);
-});
-allJobs.push(...state.documents);
-Object.assign(root, objectDirectory(allJobs));
-root.documents = state.documents.flatMap((j: any) => j.documents);
-root.generation = await generationFor(root);
+// Sorted posting streams and range vocabularies feed the serving format
+// directly. Do not construct the retired display/forward-object layout first.
 await save(true);
-await writeFile(out + "/root.json", JSON.stringify(root));
-if (!state.finalRootRef) {
-  state.finalRootRef = await call(0, "/stage", {
-    task: "complete-root",
-    value: root,
-  });
-  await save();
-}
-state.verifications ??= Array.from(
-  { length: Math.ceil(root.objects.length / VERIFY_OBJECTS) },
-  (_, i) => ({ first: i * VERIFY_OBJECTS, task: `verify-${i}`, done: false }),
+const packetDir = out + "/packets",
+  packetBuild =
+    build.slice(0, 48) +
+    "-packets-" +
+    createHash("sha256").update(build).digest("hex").slice(0, 12);
+await new Promise<void>((ok, no) => {
+  const p = spawn(
+    "yarn",
+    [
+      "node",
+      "--import",
+      "tsx",
+      "scripts/build-packets-in-workers.ts",
+      out,
+      packetDir,
+      packetBuild,
+      "--scoring-root",
+    ],
+    { stdio: "inherit", env: process.env },
+  );
+  p.once("error", no);
+  p.once("exit", (c) =>
+    c === 0 ? ok() : no(Error("Packet construction failed " + c)),
+  );
+});
+for (const name of ["root.json", "directory.bin", "documents.bin"])
+  await writeFile(out + "/" + name, await readFile(packetDir + "/" + name));
+const packetManifest = JSON.parse(
+  await readFile(packetDir + "/manifest.json", "utf8"),
 );
-await pool<any>(state.verifications, async (job, _i, worker) => {
-  if (job.done) return;
-  await call(worker, "/verify", {
-    task: job.task,
-    rootRef: state.finalRootRef,
-    first: job.first,
-  });
-  job.done = true;
-  await save();
-});
-await call(0, "/publish", {
-  task: "publish-" + root.generation,
-  rootRef: state.finalRootRef,
-  verifications: state.verifications.map((j: any) => j.task),
-});
-await save(true);
 await writeFile(
   out + "/manifest.json",
   JSON.stringify(
     {
-      build,
-      code: state.code,
-      coordinatorHash,
-      coordinatorFormat: state.format,
-      sourceHash,
-      sourceDocuments: sourceRoot.documents,
-      count,
-      terms: state.terms,
-      bodyTokens: run.bodyTokens,
-      titleTokens: run.titleTokens,
-      generation: root.generation,
-      objects: root.objects.length,
-      bytes: root.objects.reduce((n, o) => n + o.size, 0),
+      ...packetManifest,
+      sourceBuild: build,
       startedAt: state.startedAt,
-      finishedAt: new Date().toISOString(),
+      packetStageStartedAt: packetManifest.startedAt,
+      reused:
+        state.reusedConstruction ??
+        "Fresh native source ingestion, sorted merges, postings, vocabularies and serving packets",
+      coordinatorHash,
+      sourceDocuments: sourceRoot.documents,
       construction: "Cloudflare Workers and R2",
-      workers: urls,
-      concurrency: width,
-      reusedConstruction: state.reusedConstruction,
       planningWidth: width,
       postingsJobs: state.postings.length,
-      documentJobs: state.documents.length,
     },
     null,
     2,
   ),
 );
-console.log("Parallel Worker/R2 build complete", root.generation);
+console.log("Native packet build complete", packetManifest.generation);

@@ -1,4 +1,5 @@
-// Upload transport only. R2 stores raw immutable pages; search never inflates them.
+import { verifyPackageCoverage } from "./construction/coverage.js";
+// Deployment transport and bounded publication checks; never a serving dependency.
 export default {
   async fetch(
     request: Request,
@@ -7,6 +8,15 @@ export default {
     if (request.headers.get("authorization") !== `Bearer ${env.UPLOAD_TOKEN}`)
       return new Response("Not found", { status: 404 });
     const key = decodeURIComponent(new URL(request.url).pathname.slice(1));
+    if (key === "__verify-packages" && request.method === "POST") {
+      try {
+        return Response.json(
+          await verifyPackageCoverage(env.INDEX, await request.json()),
+        );
+      } catch (error) {
+        return Response.json({ error: String(error) }, { status: 400 });
+      }
+    }
     if (!/^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64})\.bin$/.test(key))
       return new Response("Invalid key", { status: 400 });
     const generation = key.split("/")[0],

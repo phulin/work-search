@@ -40,6 +40,38 @@ export class BuildStore {
   requests = 0;
   bytes = 0;
   constructor(readonly bucket: R2Bucket) {}
+  async putNamed(
+    generation: string,
+    name: string,
+    bytes: Uint8Array,
+  ): Promise<Chunk> {
+    if (!/^[a-f0-9]{64}$/.test(generation) || !/^plan-\d+\.bin$/.test(name))
+      throw Error("Invalid immutable package key");
+    const sha256 = await digest(bytes),
+      key = `${generation}/${name}`;
+    this.requests++;
+    this.bytes += bytes.length;
+    const written = await this.bucket.put(
+      key,
+      bytes as ArrayBufferView<ArrayBuffer>,
+      {
+        sha256,
+        onlyIf: { etagDoesNotMatch: "*" },
+        customMetadata: { generation, sha256 },
+      },
+    );
+    if (!written) {
+      this.requests++;
+      const old = await this.bucket.head(key);
+      if (
+        old?.size !== bytes.length ||
+        old.customMetadata?.sha256 !== sha256 ||
+        old.customMetadata?.generation !== generation
+      )
+        throw Error("Immutable package already has different bytes");
+    }
+    return { key, size: bytes.length, sha256 };
+  }
   async put(bytes: Uint8Array, name?: string): Promise<Chunk> {
     const sha256 = await digest(bytes),
       key = `${sha256}/${name ?? `stage-${sha256}.bin`}`;

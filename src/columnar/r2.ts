@@ -4,6 +4,61 @@ import { PAGE } from "./format.js";
  * need not bundle every page checksum or add a remote discovery request. */
 export class ColumnarR2 implements Source {
   constructor(readonly bucket: R2Bucket) {}
+  async readWhole(
+    key: string,
+    range?: { offset: number; length: number; doc: number; first: number },
+  ) {
+    if (!/^[a-f0-9]{64}\/plan-\d+\.bin$/.test(key))
+      throw Error("Invalid package key");
+    if (
+      range &&
+      (!Number.isInteger(range.offset) ||
+        range.offset < 0 ||
+        !Number.isInteger(range.length) ||
+        range.length < 64 ||
+        range.length > 32 * 1048576)
+    )
+      throw Error("Invalid package range");
+    const object = await this.bucket.get(
+      key,
+      range
+        ? { range: { offset: range.offset, length: range.length } }
+        : undefined,
+    );
+    if (!object || object.customMetadata?.generation !== key.split("/")[0])
+      throw Error("Document package generation mismatch");
+    if (!range && object.size > 32 * 1048576)
+      throw Error("Oversized document package");
+    const sha256 = object.customMetadata.sha256;
+    if (!sha256 || !/^[a-f0-9]{64}$/.test(sha256))
+      throw Error("Missing document package digest");
+    const data = new Uint8Array(await object.arrayBuffer());
+    if (range) {
+      if (sha256 !== key.split("/")[0])
+        throw Error("Document group digest mismatch");
+      const first = Number(object.customMetadata.packageFirst),
+        end = Number(object.customMetadata.packageEnd),
+        raw = atob(object.customMetadata.packageCrc32 ?? ""),
+        at = (range.doc - first) * 4;
+      if (
+        first !== range.first ||
+        range.doc < first ||
+        range.doc >= end ||
+        raw.length !== (end - first) * 4 ||
+        data.length !== range.length
+      )
+        throw Error("Invalid grouped document identity");
+      const checksum =
+        (raw.charCodeAt(at) |
+          (raw.charCodeAt(at + 1) << 8) |
+          (raw.charCodeAt(at + 2) << 16) |
+          (raw.charCodeAt(at + 3) << 24)) >>>
+        0;
+      return { data, checksum };
+    }
+    if (data.length !== object.size) throw Error("Truncated document package");
+    return { data, sha256 };
+  }
   async readPage(
     key: string,
     offset: number,

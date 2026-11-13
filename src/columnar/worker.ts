@@ -1,5 +1,7 @@
 import { ColumnarIndex, type Options } from "./search.js";
-import { Memory, Reader, type SharedPages } from "./storage.js";
+import { Memory, Reader, Lru, type SharedPages } from "./storage.js";
+import { TermDirectory } from "./term-directory.js";
+import { DocumentDirectory } from "./document-directory.js";
 import { ColumnarR2 } from "./r2.js";
 import { QuerySyntaxError } from "../query/parser.js";
 import { QueryResourceError } from "../query/evaluate.js";
@@ -15,14 +17,36 @@ export function createColumnarWorker(
   root: Root,
   pairs?: PairRoot,
   heads?: { root: HeadRoot; data: Uint8Array },
+  directoryData?: Uint8Array,
+  documentDirectoryData?: Uint8Array,
 ) {
   if (pairs && pairs.baseGeneration !== root.generation)
     throw Error("Pair generation mismatch");
-  const index = new ColumnarIndex(
+  if (
+    !!root.directory !== !!directoryData ||
+    (root.directory && root.directory.bytes !== directoryData!.length)
+  )
+    throw Error("Bundled directory mismatch");
+  if (
+    !!root.documentPackages?.locators !== !!documentDirectoryData ||
+    (documentDirectoryData &&
+      documentDirectoryData.length !== root.documentPackages!.locators!.bytes)
+  )
+    throw Error("Bundled document directory mismatch");
+  const directory = directoryData
+      ? new TermDirectory(directoryData, root.count)
+      : undefined,
+    index = new ColumnarIndex(
       root,
       heads ? new Heads(heads.root, heads.data, root) : undefined,
+      directory,
+      undefined,
+      documentDirectoryData
+        ? new DocumentDirectory(documentDirectoryData)
+        : undefined,
     ),
     memory = new Memory();
+  if (directoryData) memory.pages = new Lru(12 * 1048576);
   let isolate: string | undefined,
     sequence = 0;
   return {
@@ -37,6 +61,8 @@ export function createColumnarWorker(
           format: root.format,
           generation: root.generation,
           documents: root.count,
+          corpusHash: root.corpusHash,
+          directoryBytes: root.directory?.bytes,
           isolate,
           sequence,
           cacheNamespace: env.CACHE_NAMESPACE ?? "default",
@@ -150,7 +176,10 @@ export function createColumnarWorker(
         memory.activeQueries++;
         const execute = async () => {
           // Serialized with admission: reset occurs in the request that executes search.
-          if (authorized && input.resetMemory) memory.clear();
+          if (authorized && input.resetMemory) {
+            memory.clear();
+            directory?.clear();
+          }
           const admitted = performance.now(),
             reader = new Reader(
               root,

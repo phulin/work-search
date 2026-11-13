@@ -1,4 +1,5 @@
 import { crc32 } from "../format/codec.js";
+import { DocumentPackage } from "./document-package.js";
 import {
   PAGE,
   type Ref,
@@ -76,6 +77,10 @@ export class Memory {
   }
 }
 export interface Source {
+  readWhole?(
+    key: string,
+    range?: { offset: number; length: number; doc: number; first: number },
+  ): Promise<{ data: Uint8Array; sha256?: string; checksum?: number }>;
   read(key: string, offset: number, length: number): Promise<Uint8Array>;
   readPage?(
     key: string,
@@ -102,18 +107,27 @@ export class Reader {
     decodedBytes: 0,
     repeatedDecodedBytes: 0,
     positionIntegers: 0,
+    forwardIntegers: 0,
     postings: 0,
     candidates: 0,
     skippedRanges: 0,
     metadataMs: 0,
+    resultRequests: 0,
+    resultBytes: 0,
+    resultSharedGets: 0,
+    resultMemoryHits: 0,
+    candidatePackageBytes: 0,
     inflatedBytes: 0,
     repeatedInflatedBytes: 0,
     activeBufferBytes: 0,
     peakActiveBufferBytes: 0,
     peakPendingSharedBytes: 0,
+    coalescedReads: 0,
+    coalescedExtraBytes: 0,
   };
   seenDecoded = new Set<number>();
   seenInflated = new Set<number>();
+  seenPackageSections = new Set<string>();
   constructor(
     readonly root: Pick<Root, "generation" | "objects" | "objectIds">,
     readonly source: Source,
@@ -232,6 +246,274 @@ export class Reader {
     this.stats.stages++;
     return Promise.all(refs.map((r) => this.read(r)));
   }
+  /** A packet is a transfer unit, independent of the 256-KiB cache pages.
+   * Fetch a contiguous miss span once, validate each page, and populate the
+   * ordinary page cache. Cached pages inside that span may be read again to
+   * avoid another GET. Their extra bytes are reported separately. */
+  async packet(ref: Ref): Promise<Uint8Array> {
+    const key = "packet:" + this.key(ref),
+      pending = this.pending.get(key);
+    if (pending) {
+      this.stats.deduplicated++;
+      return pending;
+    }
+    const task = this.readPacket(ref);
+    this.pending.set(key, task);
+    try {
+      return await task;
+    } finally {
+      this.pending.delete(key);
+    }
+  }
+  private async readPacket(ref: Ref): Promise<Uint8Array> {
+    const [object, offset, length] = ref,
+      descriptor = objectAt(this.root, object);
+    if (
+      !descriptor ||
+      offset < 0 ||
+      length < 1 ||
+      offset + length > descriptor.size
+    )
+      throw Error("Invalid packet reference");
+    if (!descriptor.checksums || length > 8 * 1048576) return this.read(ref);
+    const first = Math.floor(offset / PAGE),
+      last = Math.floor((offset + length - 1) / PAGE),
+      indices = Array.from({ length: last - first + 1 }, (_, i) => first + i),
+      key = (page: number) =>
+        `${this.root.generation}/${this.namespace}/${object}/${page}`;
+    const pages = await Promise.all(
+      indices.map(async (page) => {
+        const k = key(page),
+          hit = this.memory.pages.get(k);
+        if (hit) {
+          this.stats.memoryHits++;
+          return hit;
+        }
+        const pending = this.pending.get(k);
+        if (pending) {
+          this.stats.deduplicated++;
+          return pending;
+        }
+        if (this.shared) {
+          this.stats.sharedGets++;
+          const data = await this.io.run(() => this.shared!.get(k));
+          if (data) {
+            this.memory.pages.set(k, data, data.length);
+            return data;
+          }
+        }
+        return undefined;
+      }),
+    );
+    const missing = indices.filter((_, i) => !pages[i]);
+    if (missing.length) {
+      const from = missing[0],
+        to = missing.at(-1)!,
+        start = from * PAGE,
+        bytes = Math.min(descriptor.size, (to + 1) * PAGE) - start;
+      this.stats.coalescedReads++;
+      this.stats.requests++;
+      this.stats.bytes += bytes;
+      this.stats.coalescedExtraBytes += indices.reduce(
+        (n, p, i) =>
+          n + (p >= from && p <= to && pages[i] ? pages[i]!.length : 0),
+        0,
+      );
+      const task = this.io.run(async () => {
+        const data = await this.source.read(
+          descriptor.key ?? `${this.root.generation}/${descriptor.name}`,
+          start,
+          bytes,
+        );
+        if (data.length !== bytes) throw Error("Truncated packet range");
+        const result: Uint8Array[] = [];
+        for (let page = from; page <= to; page++) {
+          const raw = data.subarray(
+            (page - from) * PAGE,
+            Math.min(data.length, (page - from + 1) * PAGE),
+          );
+          if (crc32(raw) !== descriptor.checksums![page])
+            throw Error("Immutable packet checksum mismatch");
+          // Each page owns its storage: evicting one page must not retain an
+          // entire multi-megabyte range through another page's subarray.
+          const owned = Uint8Array.from(raw),
+            k = key(page);
+          result.push(owned);
+          this.memory.pages.set(k, owned, owned.length);
+          if (this.shared) {
+            while (this.sharedWriteBytes >= 2 * 1048576)
+              await Promise.race(this.sharedWrites);
+            this.stats.sharedPuts++;
+            this.sharedWriteBytes += owned.length;
+            this.stats.peakPendingSharedBytes = Math.max(
+              this.stats.peakPendingSharedBytes,
+              this.sharedWriteBytes,
+            );
+            const write = this.shared
+              .put(k, owned)
+              .catch(() => {})
+              .finally(() => {
+                this.sharedWriteBytes -= owned.length;
+                this.sharedWrites.delete(write);
+              });
+            this.sharedWrites.add(write);
+            this.defer(write);
+          }
+        }
+        return result;
+      });
+      for (let page = from; page <= to; page++) {
+        const p = task.then((data) => data[page - from]);
+        void p.catch(() => {});
+        this.pending.set(key(page), p);
+      }
+      try {
+        const fetched = await task;
+        for (let page = from; page <= to; page++)
+          pages[page - first] = fetched[page - from];
+      } finally {
+        for (let page = from; page <= to; page++)
+          this.pending.delete(key(page));
+      }
+    }
+    const data = pages.length === 1 ? pages[0]! : concat(pages as Uint8Array[]);
+    return data.subarray(offset % PAGE, (offset % PAGE) + length);
+  }
+  async packets(refs: Ref[]) {
+    this.stats.stages++;
+    const groups: { ref: Ref; entries: { ref: Ref; index: number }[] }[] = [];
+    for (const entry of refs
+      .map((ref, index) => ({ ref, index }))
+      .sort((a, b) => a.ref[0] - b.ref[0] || a.ref[1] - b.ref[1])) {
+      const group = groups.at(-1),
+        end = entry.ref[1] + entry.ref[2];
+      if (
+        group &&
+        group.ref[0] === entry.ref[0] &&
+        entry.ref[1] <= group.ref[1] + group.ref[2] + PAGE &&
+        Math.max(group.ref[1] + group.ref[2], end) - group.ref[1] <= 8 * 1048576
+      ) {
+        group.ref[2] =
+          Math.max(group.ref[1] + group.ref[2], end) - group.ref[1];
+        group.entries.push(entry);
+      } else groups.push({ ref: [...entry.ref], entries: [entry] });
+    }
+    const result: Uint8Array[] = new Array(refs.length);
+    await Promise.all(
+      groups.map(async (group) => {
+        const data = await this.packet(group.ref);
+        for (const { ref, index } of group.entries)
+          result[index] = data.subarray(
+            ref[1] - group.ref[1],
+            ref[1] - group.ref[1] + ref[2],
+          );
+      }),
+    );
+    return result;
+  }
+  async document(
+    generation: string,
+    doc: number,
+    locator?: { key: string; offset: number; length: number; first: number },
+  ) {
+    if (
+      !Number.isInteger(doc) ||
+      doc < 0 ||
+      !/^[a-f0-9]{64}$/.test(generation) ||
+      !this.source.readWhole
+    )
+      throw Error("Invalid document package source");
+    const address = locator?.key ?? `${generation}/plan-${doc}.bin`,
+      key = `${this.root.generation}/${this.namespace}/whole/${generation}/${doc}`;
+    const decoded = (raw: Uint8Array) =>
+      new DocumentPackage(raw, doc, (kind, section, n) => {
+        const id = `${address}:${doc}:${kind}:${section}`;
+        if (kind === "tokens") this.stats.forwardIntegers += n;
+        else if (kind === "decoded") {
+          this.stats.decodedBytes += n;
+          if (this.seenPackageSections.has(id))
+            this.stats.repeatedDecodedBytes += n;
+        } else {
+          this.stats.inflatedBytes += n;
+          if (this.seenPackageSections.has(id))
+            this.stats.repeatedInflatedBytes += n;
+        }
+        this.seenPackageSections.add(id);
+      });
+    let bytes = this.memory.pages.get(key);
+    if (bytes) {
+      this.stats.memoryHits++;
+      return decoded(bytes);
+    }
+    const old = this.pending.get(key);
+    if (old) {
+      this.stats.deduplicated++;
+      return decoded(await old);
+    }
+    const task = this.io.run(async () => {
+      if (this.shared) {
+        this.stats.sharedGets++;
+        const data = await this.shared.get(key);
+        if (data) {
+          this.memory.pages.set(key, data, data.length);
+          return data;
+        }
+      }
+      const result = await this.source.readWhole!(
+        address,
+        locator ? { ...locator, doc } : undefined,
+      );
+      this.stats.requests++;
+      this.stats.bytes += result.data.length;
+      const digest = result.sha256
+        ? [
+            ...new Uint8Array(
+              await crypto.subtle.digest(
+                "SHA-256",
+                result.data as BufferSource,
+              ),
+            ),
+          ]
+            .map((n) => n.toString(16).padStart(2, "0"))
+            .join("")
+        : undefined;
+      if (
+        result.sha256
+          ? digest !== result.sha256
+          : result.checksum === undefined ||
+            crc32(result.data) !== result.checksum
+      )
+        throw Error("Document package digest mismatch");
+      this.memory.pages.set(key, result.data, result.data.length);
+      if (this.shared && result.data.length <= 2 * 1048576) {
+        while (this.sharedWriteBytes >= 2 * 1048576)
+          await Promise.race(this.sharedWrites);
+        this.stats.sharedPuts++;
+        this.sharedWriteBytes += result.data.length;
+        this.stats.peakPendingSharedBytes = Math.max(
+          this.stats.peakPendingSharedBytes,
+          this.sharedWriteBytes,
+        );
+        const write = this.shared
+          .put(key, result.data)
+          .catch(() => {})
+          .finally(() => {
+            this.sharedWriteBytes -= result.data.length;
+            this.sharedWrites.delete(write);
+          });
+        this.sharedWrites.add(write);
+        this.defer(write);
+      }
+      return result.data;
+    });
+    this.pending.set(key, task);
+    try {
+      bytes = await task;
+      return decoded(bytes);
+    } finally {
+      this.pending.delete(key);
+    }
+  }
   async load<T>(
     ref: Ref,
     decode: (data: Uint8Array) => T,
@@ -249,8 +531,9 @@ export class Reader {
     data: Uint8Array,
     decode: (b: Uint8Array) => T,
     charge = data.length * 2,
+    tag = "",
   ): T {
-    const key = this.key(ref),
+    const key = tag + this.key(ref),
       old = this.memory.decoded.get(key) as T | undefined;
     if (old) return old;
     this.stats.decodedBytes += data.length;

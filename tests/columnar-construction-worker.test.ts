@@ -6,9 +6,20 @@ import { spawnSync } from "node:child_process";
 import { Miniflare } from "miniflare";
 import "../scripts/workerd-runtime.js";
 import { gzipSync } from "node:zlib";
+import {
+  assembleTermDirectory,
+  TermDirectory,
+} from "../src/columnar/term-directory.js";
 import { crc32 } from "../src/format/codec.js";
 import { u32 } from "../src/columnar/format.js";
 import { generationFor } from "../src/columnar/construction/runs.js";
+import { DocumentPackage } from "../src/columnar/document-package.js";
+import {
+  encodeDocumentDirectory,
+  DocumentDirectory,
+} from "../src/columnar/document-directory.js";
+import { ColumnarR2 } from "../src/columnar/r2.js";
+import { Reader } from "../src/columnar/storage.js";
 it("builds and searches from actual Worker R2 bindings, survives retry and refuses changed task inputs", async () => {
   const dir = await mkdtemp(join(tmpdir(), "cws-construction-"));
   let mf: Miniflare | undefined;
@@ -16,20 +27,20 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
     const generation = "a".repeat(64),
       sourceRoot = {
         format: "R2-source-v1",
-        documents: 12,
+        documents: 256,
         parts: [
           {
             part: 0,
             generation,
             first: 0,
-            count: 12,
+            count: 256,
             inputSha256: "b".repeat(64),
           },
         ],
       };
     await writeFile(
       dir + "/entry.ts",
-      `import {createConstructionWorker} from ${JSON.stringify(resolve("src/columnar/construction/worker.ts"))};import {ColumnarIndex} from ${JSON.stringify(resolve("src/columnar/search.ts"))};import {Reader} from ${JSON.stringify(resolve("src/columnar/storage.ts"))};import {ColumnarR2} from ${JSON.stringify(resolve("src/columnar/r2.ts"))};const worker=createConstructionWorker(${JSON.stringify(sourceRoot)} as any,'test-code');export default {async fetch(request,env){if(new URL(request.url).pathname==='/test-search'){const {root,q}=await request.json();return Response.json(await new ColumnarIndex(root).search(q,new Reader(root,new ColumnarR2(env.INDEX))));}return worker.fetch(request,env);}};`,
+      `import uploadWorker from ${JSON.stringify(resolve("src/columnar/upload-worker.ts"))};import {createConstructionWorker} from ${JSON.stringify(resolve("src/columnar/construction/worker.ts"))};import {TermDirectory} from ${JSON.stringify(resolve("src/columnar/term-directory.ts"))};import {ColumnarIndex} from ${JSON.stringify(resolve("src/columnar/search.ts"))};import {Reader} from ${JSON.stringify(resolve("src/columnar/storage.ts"))};import {ColumnarR2} from ${JSON.stringify(resolve("src/columnar/r2.ts"))};const worker=createConstructionWorker(${JSON.stringify(sourceRoot)} as any,'test-code');export default {async fetch(request,env){if(new URL(request.url).pathname==='/__verify-packages')return uploadWorker.fetch(request,{...env,UPLOAD_TOKEN:'test'});if(new URL(request.url).pathname==='/test-search'){const {root,q,directory,options}=await request.json();return Response.json(await new ColumnarIndex(root,undefined,directory?new TermDirectory(Uint8Array.from(directory),root.count):undefined).search(q,new Reader(root,new ColumnarR2(env.INDEX)),options));}return worker.fetch(request,env);}};`,
     );
     await writeFile(
       dir + "/wrangler.json",
@@ -63,7 +74,7 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
     });
     const bucket = await mf.getR2Bucket("INDEX"),
       pointers: number[] = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 256; i++) {
       const content = gzipSync(
           i === 7 ? "a ".repeat(600) + "rare alpha beta" : "alpha gap beta",
         ),
@@ -109,27 +120,31 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
       expect(response.status, JSON.stringify(body)).toBe(expected);
       return body;
     };
-    const first = await call("/ingest", { first: 0, count: 6, task: "retry" }),
-      second = await call("/ingest", { first: 0, count: 6, task: "retry" });
+    const first = await call("/ingest", {
+        first: 0,
+        count: 128,
+        task: "retry",
+      }),
+      second = await call("/ingest", { first: 0, count: 128, task: "retry" });
     expect(second.output).toEqual(first.output);
     expect(second.reused).toBe(true);
     const concurrent = await Promise.all(
-      Array.from({ length: 8 }, (_, i) =>
+      Array.from({ length: 4 }, (_, i) =>
         call("/ingest", { first: i, count: 1 }),
       ),
     );
     expect(concurrent.every((r) => r.output.count === 1)).toBe(true);
     expect(concurrent.some((r) => r.telemetry.queueMs > 0)).toBe(true);
-    await call("/ingest", { first: 1, count: 6, task: "retry" }, 500);
-    const other = await call("/ingest", { first: 6, count: 6 }),
+    await call("/ingest", { first: 1, count: 128, task: "retry" }, 500);
+    const other = await call("/ingest", { first: 128, count: 128 }),
       a = first.output,
       b = other.output,
       merged = await call("/merge", { runs: [a, b] });
     expect(merged.output.state.done).toBe(true);
     const run = {
         first: 0,
-        next: 12,
-        count: 12,
+        next: 256,
+        count: 256,
         bodyTokens: a.bodyTokens + b.bodyTokens,
         titleTokens: a.titleTokens + b.titleTokens,
         chunks: merged.output.chunks,
@@ -138,9 +153,9 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
         format: "CWS1",
         generation: "c".repeat(64),
         corpusHash: "b".repeat(64),
-        count: 12,
-        avgBody: run.bodyTokens / 12,
-        avgTitle: run.titleTokens / 12,
+        count: 256,
+        avgBody: run.bodyTokens / 256,
+        avgTitle: run.titleTokens / 256,
         documents: [[0, 0, 0]],
         objects: [],
         hot: {},
@@ -183,6 +198,173 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
       first: 0,
       count: root.count,
     });
+    const packageGeneration = "d".repeat(64),
+      packageInput = {
+        rootRef: staged.output,
+        vocabularyRef: vocabulary.output.vocabulary,
+        generation: packageGeneration,
+        first: 0,
+        count: root.count,
+      };
+    const packageTask = "packages-first",
+      packaged = await call("/package-documents", {
+        ...packageInput,
+        task: packageTask,
+      });
+    expect(packaged.output.end).toBe(root.count);
+    await call("/package-documents", packageInput);
+    const packageObject = await bucket.get(`${packageGeneration}/plan-7.bin`);
+    expect(packageObject?.customMetadata?.generation).toBe(packageGeneration);
+    const packet = new DocumentPackage(
+      new Uint8Array(await packageObject!.arrayBuffer()),
+      7,
+    );
+    expect((await packet.display()).id).toBe("d7");
+    expect(await packet.snippet(new Set(), 600)).toContain("rare alpha beta");
+    const groups = [];
+    for (let first = 0; first < 256; first += 128) {
+      const group = await call("/grouped-documents", {
+        ...packageInput,
+        first,
+        count: 128,
+      });
+      expect(group.output.end).toBe(first + 128);
+      expect(group.writesAndMergeReads).toBeLessThan(10);
+      groups.push({
+        ...group.output.group,
+        offsets: Uint8Array.from(
+          Buffer.from(group.output.group.offsets, "base64"),
+        ),
+      });
+    }
+    const docDirectory = new DocumentDirectory(
+        encodeDocumentDirectory(groups, 256),
+      ),
+      groupReader = new Reader(root, new ColumnarR2(bucket as any));
+    for (const doc of [0, 7, 127, 128, 255]) {
+      const grouped = await groupReader.document(
+        packageGeneration,
+        doc,
+        docDirectory.lookup(doc),
+      );
+      expect((await grouped.display()).id).toBe(`d${doc}`);
+      if (doc === 7)
+        expect(await grouped.snippet(new Set(), 600)).toContain(
+          "rare alpha beta",
+        );
+    }
+    expect(groupReader.stats.requests).toBe(5);
+    const packetRoot = {
+      ...root,
+      objects: [] as any[],
+      documents: [],
+      hot: {},
+      dictionaries: [],
+      documentPackages: {
+        generation: packageGeneration,
+        count: 256,
+        averageBytes: packaged.output.bytes / 256,
+        bytes: packaged.output.bytes,
+      },
+    };
+    let packetTerms: any, packetPrevious: string | undefined;
+    const directoryBlocks = [];
+    do {
+      const current = "packets-" + task;
+      packetTerms = await call("/packet-terms", {
+        task: current,
+        rootRef: staged.output,
+        fences: root.dictionaries,
+        objectBase: packetRoot.objects.length,
+        stateTask: packetPrevious,
+        byteBudget: 1,
+      });
+      packetRoot.objects.push(...packetTerms.output.objects);
+      for (const block of packetTerms.output.blocks) {
+        const obj = await bucket.get(block.ref.key);
+        expect(obj).not.toBeNull();
+        directoryBlocks.push({
+          ...block,
+          data: new Uint8Array(await obj!.arrayBuffer()),
+        });
+      }
+      packetPrevious = current;
+    } while (!packetTerms.output.state.done);
+    const directory = assembleTermDirectory(directoryBlocks),
+      bundled = new TermDirectory(directory, root.count),
+      words = await bundled.lookup(["alpha", "beta", "rare", "court"]);
+    expect(words.get("alpha")!.bodyOccurrences).toBe(256);
+    expect(words.get("rare")!.df).toBe(1);
+    packetRoot.generation = await generationFor(packetRoot);
+    const coverage = await call("/__verify-packages", {
+      task: "coverage-0",
+      generation: packageGeneration,
+      tasks: [packageTask],
+    });
+    expect(coverage.documents).toBe(root.count);
+    await call(
+      "/__verify-packages",
+      {
+        task: "coverage-bad",
+        generation: packageGeneration,
+        tasks: [packageTask, packageTask],
+      },
+      400,
+    );
+    await call(
+      "/__verify-packages",
+      {
+        task: "coverage-bad",
+        generation: "e".repeat(64),
+        tasks: [packageTask],
+      },
+      400,
+    );
+    const packetVerifications = [];
+    for (let first = 0; first < packetRoot.objects.length; first += 256) {
+      const task = "packet-verify-" + first;
+      await call("/verify", { task, root: packetRoot, first });
+      packetVerifications.push(task);
+    }
+    await call(
+      "/publish",
+      {
+        root: packetRoot,
+        verifications: packetVerifications,
+        packageVerifications: ["coverage-bad"],
+      },
+      500,
+    );
+    await call("/publish", {
+      root: packetRoot,
+      verifications: packetVerifications,
+      packageVerifications: ["coverage-0"],
+    });
+    for (const q of [
+      '"alpha beta"',
+      "rare",
+      "alpha NOT rare",
+      'NOT "alpha beta"',
+      "court OR rare",
+    ]) {
+      const result = await call("/test-search", {
+        root: packetRoot,
+        directory: [...directory],
+        q,
+        options: { exactTotal: true },
+      });
+      const expected =
+        q === '"alpha beta"' || q === "rare"
+          ? 1
+          : q === "court OR rare"
+            ? 256
+            : 255;
+      expect(result.total, q).toBe(expected);
+      if (q === '"alpha beta"') {
+        expect(result.results[0].id).toBe("d7");
+        expect(result.results[0].snippet).toContain("alpha beta");
+      }
+    }
     let documents: any;
     previous = undefined;
     do {

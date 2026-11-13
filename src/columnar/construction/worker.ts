@@ -11,8 +11,12 @@ import {
 } from "./runs.js";
 import { finishPostings, combineRouting } from "./finish.js";
 import { finishDocuments } from "./documents.js";
+import { finishPackageDocuments } from "./package-documents.js";
+import { createDocumentGroupHandler } from "./document-groups.js";
+import { finishPacketTerms } from "./packet-terms.js";
 import { buildVocabulary, readVocabulary } from "./vocabulary.js";
 export function createConstructionWorker(root: SourceRoot, code: string) {
+  const groups = createDocumentGroupHandler(root, code);
   let isolate: string | undefined,
     pending = 0,
     tail = Promise.resolve();
@@ -23,6 +27,11 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
     ) {
       isolate ??= crypto.randomUUID();
       const url = new URL(request.url);
+      if (
+        url.pathname === "/group-health" ||
+        url.pathname === "/grouped-documents"
+      )
+        return groups.fetch(request, env);
       if (
         request.headers.get("authorization") !== `Bearer ${env.INTERNAL_TOKEN}`
       )
@@ -37,7 +46,7 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
         });
       if (request.method !== "POST")
         return new Response("Method not allowed", { status: 405 });
-      if (pending >= 32)
+      if (pending >= 4)
         return new Response("Construction capacity busy", {
           status: 503,
           headers: { "retry-after": "1" },
@@ -151,6 +160,8 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
             "/merge",
             "/postings",
             "/documents",
+            "/package-documents",
+            "/packet-terms",
             "/vocabulary",
             "/publish",
             "/verify",
@@ -259,6 +270,36 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
             };
             const publish = async () => {
               await validateRoot();
+              if (input.root.documentPackages) {
+                let next = 0,
+                  bytes = 0;
+                if (!Array.isArray(input.packageVerifications))
+                  throw Error("Publication requires document package coverage");
+                for (const task of input.packageVerifications) {
+                  if (!/^[a-z0-9-]{1,80}$/.test(task))
+                    throw Error("Invalid package verification");
+                  const object = await env.INDEX.get(
+                    `cws-build/${input.build}/${task}.json`,
+                  );
+                  if (!object) throw Error("Missing document package receipt");
+                  const receipt = (await object.json<any>()).result.output;
+                  if (
+                    receipt.generation !==
+                      input.root.documentPackages.generation ||
+                    receipt.first !== next ||
+                    receipt.end <= next ||
+                    receipt.documents !== receipt.end - next
+                  )
+                    throw Error("Document package coverage mismatch");
+                  next = receipt.end;
+                  bytes += receipt.bytes;
+                }
+                if (
+                  next !== input.root.count ||
+                  bytes !== input.root.documentPackages.bytes
+                )
+                  throw Error("Incomplete document package coverage");
+              }
               const tasks = input.verifications as string[];
               if (
                 !Array.isArray(tasks) ||
@@ -331,27 +372,49 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
                           ? await verifyRange()
                           : url.pathname === "/publish"
                             ? await publish()
-                            : url.pathname === "/vocabulary"
-                              ? await buildVocabulary(
-                                  source,
+                            : url.pathname === "/packet-terms"
+                              ? await finishPacketTerms(
                                   store,
                                   input.root,
-                                  input.first,
-                                  input.count,
-                                )
-                              : await finishDocuments(
-                                  source,
-                                  store,
-                                  input.documentRoot,
-                                  await readVocabulary(
-                                    store,
-                                    input.vocabularyRef,
-                                  ),
+                                  input.fences,
                                   input.objectBase,
                                   input.state,
-                                  input.tokenBudget ?? 1048576,
-                                  input.range,
-                                );
+                                  input.byteBudget,
+                                )
+                              : url.pathname === "/package-documents"
+                                ? await finishPackageDocuments(
+                                    source,
+                                    store,
+                                    input.root,
+                                    await readVocabulary(
+                                      store,
+                                      input.vocabularyRef,
+                                    ),
+                                    input.generation,
+                                    input.first,
+                                    input.count,
+                                  )
+                                : url.pathname === "/vocabulary"
+                                  ? await buildVocabulary(
+                                      source,
+                                      store,
+                                      input.root,
+                                      input.first,
+                                      input.count,
+                                    )
+                                  : await finishDocuments(
+                                      source,
+                                      store,
+                                      input.documentRoot,
+                                      await readVocabulary(
+                                        store,
+                                        input.vocabularyRef,
+                                      ),
+                                      input.objectBase,
+                                      input.state,
+                                      input.tokenBudget ?? 1048576,
+                                      input.range,
+                                    );
             result = {
               output,
               writesAndMergeReads: store.requests,

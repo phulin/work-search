@@ -8,6 +8,81 @@ The public demo is unchanged. The archived control is commit
 
 ## Representation
 
+### Current packet format
+
+The replacement's primary plans are complete term reads and candidate-document
+reads. Hierarchical block retrieval is their bounded fallback. The existing CWS1
+numeric block kernel is reused inside the new packets; the older serving layout
+is retained separately as the same-corpus benchmark control.
+
+`directory.bin` bundles every word, DF, body/title occurrence counts, complete
+frequency and position stream references, and a block-tree root. CTD2 front-codes
+UTF-8 vocabulary in independently gzip-compressed 128-term groups. Binary restart
+keys permit lookup without constructing all vocabulary strings or term objects.
+Only queried groups enter a bounded 2 MiB decoded cache. Exact occurrence counts
+come from posting frequencies. Tiny leaf bounds use a conservative BM25 maximum;
+larger roots retain float64 maxima. The actual 1M packet directory contains
+2,812,380 terms in 33,402,940 bytes. The earlier 25,440,253-byte metadata diagnostic
+had placeholder occurrence counts and is superseded by that measurement.
+
+CTF3 frequency packets contain document-ordered packed blocks, unchanged float64
+field scores, and a separate numeric document-package handle column. Position
+streams are independently addressed. Large terms use a bounded sequence of
+contiguous parts and retain their block hierarchy. A packet GET can span multiple
+256 KiB cache pages; adjacent ranges may coalesce across a page-sized gap into
+an at-most-8 MiB transfer. Every fetched page is validated and cached separately.
+No posting packet uses general-purpose decompression.
+
+CDP2 document packages have separately decoded whole-document frequency/length
+statistics, numeric body/title token IDs, compressed metadata, a passage index,
+and compressed text passages. A document handle directly determines its immutable
+R2 key. Candidate verification and exact BM25 scoring need no display inflation.
+Winning packages supply metadata and a query-relevant passage without another
+remote discovery stage. Result retrieval uses packages for all three plans.
+Physical document groups collect at most 128 independently readable CDP2 packages
+into one immutable object. A bundled CDD1 directory stores a 32-byte object digest
+per group plus packed package offsets. Given a document handle, it yields the
+exact key, byte offset and length before any remote read. One range GET returns
+the candidate package; the same response carries its generation and CRC metadata.
+Groups reduce construction PUTs without fetching neighboring documents at serving
+time. The 1,000-document pilot's address directory occupied 2,656 bytes.
+
+The initial planner estimates transfer bytes, occurrences, candidate packages,
+GET batches and dependent phases. It can intersect cheap mandatory word lists in
+its first phase. It never truncates candidates: unexpected candidate counts or
+package bytes cause a complete fallback. Initial budgets are 8 MiB transfer,
+24 MiB estimated execution memory, and 512 candidate packages. These are strategy
+budgets, not matching limits, and still require 1M crossover calibration. Complete
+term execution preserves the full AST, score accumulation order, negative
+positional predicates, exact totals and search-after ties.
+
+Packet deployments initially reserve 12 MiB for immutable page/package bytes,
+4 MiB for decoded columns, and 2 MiB for decoded term-directory groups; bundled
+directory bytes and active query buffers are additional memory. Package inflation,
+forward integers, positional integers, coalescing, and winner retrieval are counted
+separately. Native invocation-memory quantiles do not establish peak or retained
+memory. The authenticated forced-plan route lives only in the benchmark entry
+point, outside the production planner.
+
+Native packet construction streams source block trees with bounded continuations;
+it never flattens a common term's complete tree. Document jobs use range vocabularies
+and archived source partitions, with one grouped immutable write per bounded
+document range. One builder deployment handles concurrent invocations. The
+coordinator backs off on admission rejections. Package publication reduces ordered
+write acknowledgements in groups before checking full generation coverage.
+
+CPP2 selected-pair packets retain occurrence positions and one token on each side.
+The document executor can intersect mandatory pairs from one phrase, reject
+nonmatches using context, and omit word-position decoding for phrases entirely
+covered by the pair evidence. Several contexts can jointly cover a longer phrase.
+Missing pairs and uncovered neighborhoods remain unknown. The evidence callback
+also preserves Boolean negation and proximity span composition. Exhaustive tests
+exercise this integration; corpus-scale native pair construction and live pair
+measurements are still outstanding. The earlier CWP1 experiment does not establish
+those requirements at 1M or 10M.
+
+### Earlier block-layout control
+
 CWS1 has one corpus-wide term dictionary. The bundled root contains statistics,
 the 256 highest-DF term roots, dictionary fences, document locator directory,
 and object manifests. Dictionary fences themselves form a 256-way hierarchy,

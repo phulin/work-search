@@ -254,6 +254,11 @@ export function positionalMatcher(
     field: number,
   ) => ArrayLike<number> | undefined,
   limits: { spans?: number; scratchSpans?: number; checks?: number } = {},
+  phraseEvidence?: (
+    words: string[],
+    doc: number,
+    field: number,
+  ) => ArrayLike<number> | undefined,
 ) {
   let document = 0,
     epoch = 0,
@@ -339,6 +344,20 @@ export function positionalMatcher(
       truthValue = false;
     const spanEpoch = [-1, -1];
     function phraseMatch(f: number, out?: SpanBuffer) {
+      // Undefined means unknown. An empty exact occurrence list proves absence,
+      // including underneath NOT; partial accelerator matches cannot prove it.
+      const evidence =
+        node.kind === "phrase"
+          ? phraseEvidence?.(node.terms, document, f)
+          : undefined;
+      if (evidence !== undefined) {
+        if (out)
+          for (let i = 0; i < evidence.length; i++) {
+            tick();
+            out.add(evidence[i], evidence[i] + phrase!.length - 1);
+          }
+        return evidence.length > 0;
+      }
       const arrays = phraseLists![f],
         p = pointers![f];
       let anchor = 0;

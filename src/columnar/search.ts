@@ -1,3 +1,12 @@
+import { Heap } from "./top-k.js";
+import type { DocumentDirectory } from "./document-directory.js";
+import type { TermDirectory, DirectoryTerm } from "./term-directory.js";
+import {
+  executePackets,
+  packageResult,
+  type CandidatePackages,
+} from "./packet-execution.js";
+import { renderResults } from "./render.js";
 import {
   parse,
   queryTerms,
@@ -35,53 +44,8 @@ export interface Options {
   snippets?: boolean;
   exactTotal?: boolean;
 }
-interface Hit {
-  doc: number;
-  score: number;
-  branch?: Branch;
-  row: number;
-  first?: number;
-  titleOnly?: boolean;
-}
-const better = (a: Hit, b: Hit) =>
-  a.score > b.score || (a.score === b.score && a.doc < b.doc);
 const triAnd = (a: number, b: number) =>
   a === 0 || b === 0 ? 0 : a === 1 && b === 1 ? 1 : 2;
-class Heap {
-  values: Hit[] = [];
-  constructor(readonly k: number) {}
-  get threshold() {
-    return this.values.length === this.k ? this.values[0] : undefined;
-  }
-  accepts(doc: number, score: number) {
-    const t = this.threshold;
-    return !t || score > t.score || (score === t.score && doc < t.doc);
-  }
-  add(h: Hit) {
-    const a = this.values;
-    if (!this.accepts(h.doc, h.score)) return;
-    if (a.length < this.k) {
-      a.push(h);
-      let i = a.length - 1;
-      while (i) {
-        const p = (i - 1) >>> 1;
-        if (!better(a[p], a[i])) break;
-        [a[i], a[p]] = [a[p], a[i]];
-        i = p;
-      }
-    } else {
-      a[0] = h;
-      let i = 0;
-      while (i * 2 + 1 < a.length) {
-        let c = i * 2 + 1;
-        if (c + 1 < a.length && better(a[c], a[c + 1])) c++;
-        if (!better(a[i], a[c])) break;
-        [a[i], a[c]] = [a[c], a[i]];
-        i = c;
-      }
-    }
-  }
-}
 /** Three-valued predicate: 0=false, 1=true, 2=unknown. Negated positional
  * conditions cannot be decided from frequencies, including double negation. */
 export function coarse(ast: Node, present: (term: string) => number): number {
@@ -189,12 +153,21 @@ export class ColumnarIndex {
   constructor(
     readonly root: Root,
     readonly heads?: Heads,
+    readonly directory?: TermDirectory,
+    readonly packages?: CandidatePackages,
+    readonly documentDirectory?: DocumentDirectory,
   ) {
     if (
       root.format !== "CWS1" ||
       !/^[a-f0-9]{64}$/.test(root.generation) ||
       !root.count ||
-      root.documents.length !== Math.ceil(root.count / 4096) ||
+      (documentDirectory && documentDirectory.count !== root.count) ||
+      (!root.documentPackages &&
+        root.documents.length !== Math.ceil(root.count / 4096)) ||
+      (root.documentPackages &&
+        (!/^[a-f0-9]{64}$/.test(root.documentPackages.generation) ||
+          root.documentPackages.count !== root.count ||
+          root.documentPackages.averageBytes <= 0)) ||
       (root.objectIds &&
         (root.objectIds.length !== root.objects.length ||
           root.objectIds.some(
@@ -213,6 +186,8 @@ export class ColumnarIndex {
     routing: Pick<Root, "hot" | "dictionaries" | "dictionaryHeight"> = this
       .root,
   ) {
+    if (routing === this.root && this.directory)
+      return this.directory.lookup(names);
     return this.dictionary(names, reader, routing);
   }
   async dictionary<T>(
@@ -230,7 +205,7 @@ export class ColumnarIndex {
     options: Options = {},
     pairs?: { root: PairRoot; reader: Reader },
   ) {
-    if (this.heads) {
+    if (this.heads && !this.directory) {
       const ast = parse(q, options.mode),
         started = performance.now();
       if (ast.kind === "term") {
@@ -238,6 +213,7 @@ export class ColumnarIndex {
         if (results)
           return {
             results,
+            total: undefined,
             generation: this.root.generation,
             diagnostics: {
               ...reader.stats,
@@ -262,6 +238,19 @@ export class ColumnarIndex {
       boost = options.titleBoost ?? 2,
       field = options.field ?? "all",
       heap = new Heap(limit);
+    const packages =
+      this.packages ??
+      (this.root.documentPackages
+        ? {
+            averageBytes: this.root.documentPackages.averageBytes,
+            load: (doc: number) =>
+              reader.document(
+                this.root.documentPackages!.generation,
+                doc,
+                this.documentDirectory?.lookup(doc),
+              ),
+          }
+        : undefined);
     if (
       !Number.isInteger(limit) ||
       limit < 1 ||
@@ -280,6 +269,17 @@ export class ColumnarIndex {
         options.after.doc >= this.root.count)
     )
       throw Error("Invalid search cursor");
+    if (this.directory) {
+      const result = await executePackets(
+        ast,
+        terms as Map<string, DirectoryTerm>,
+        this.root,
+        reader,
+        options,
+        packages,
+      );
+      if (result) return result;
+    }
     const scoring = names
         .map((n, i) => (positive.has(n) ? i : -1))
         .filter((i) => i >= 0),
@@ -766,67 +766,25 @@ export class ColumnarIndex {
     const ranked = heap.values.sort(
         (a, b) => b.score - a.score || a.doc - b.doc,
       ),
-      displayStart = performance.now();
-    const locators = await reader.many(
-      ranked.map((h) =>
-        h.branch?.locators[2]
-          ? h.branch.locators
-          : this.root.documents[Math.floor(h.doc / 4096)],
-      ),
-    );
-    const results = await Promise.all(
-      ranked.map(async (h, i) => {
-        const v = view(locators[i]),
-          p = (h.branch?.locators[2] ? h.row : h.doc % 4096) * 36,
-          recordRef = refAt(v, p),
-          forwardRef = refAt(v, p + 12);
-        let snippetRef = refAt(v, p + 24);
-        if (options.snippets !== false && h.first !== undefined) {
-          const directory = view(await reader.read(forwardRef)),
-            frame = Math.floor(h.first / 256);
-          if ((frame + 1) * 32 > directory.byteLength)
-            throw Error("Invalid forward frame");
-          snippetRef = refAt(directory, frame * 32 + 20);
-        }
-        const [record, passage] = await Promise.all([
-          reader.json(recordRef),
-          options.snippets !== false && !h.titleOnly
-            ? reader.json(snippetRef)
-            : undefined,
-        ]);
-        let snippet: string | undefined;
-        if (options.snippets !== false && h.titleOnly)
-          snippet = String(record.title ?? "").slice(0, 400);
-        if (passage) {
-          let at = h.first === undefined ? -1 : h.first - passage.first;
-          if (at < 0 || at >= passage.starts.length) {
-            const ts = new Set(queryTerms(ast, true));
-            const m =
-              passage.text
-                .normalize("NFKC")
-                .toLowerCase()
-                .match(/[\p{L}\p{N}]+/gu) ?? [];
-            at = m.findIndex((t: string) => ts.has(t));
-          }
-          const from = at >= 0 ? Math.max(0, passage.starts[at] - 160) : 0,
-            end = at >= 0 ? passage.ends[at] + 240 : 400;
-          snippet =
-            (passage.first || from ? "…" : "") +
-            passage.text.slice(from, end).trim() +
-            (end < passage.text.length ? "…" : "");
-        }
-        return {
-          id: record.id,
-          doc: h.doc,
-          score: h.score,
-          ...(options.metadata !== false
-            ? { title: record.title, metadata: record.metadata }
-            : {}),
-          ...(snippet !== undefined ? { snippet } : {}),
-        };
-      }),
-    );
-    reader.stats.metadataMs = performance.now() - displayStart;
+      display = performance.now(),
+      resultRequests = reader.stats.requests,
+      resultBytes = reader.stats.bytes,
+      positiveIds = new Set([...positive].map((n) => terms.get(n)!.id)),
+      results = packages
+        ? await Promise.all(
+            ranked.map(async (h) =>
+              packageResult(
+                await packages.load(h.doc),
+                h,
+                positiveIds,
+                options,
+              ),
+            ),
+          )
+        : await renderResults(this.root, reader, ranked, options, ast);
+    reader.stats.metadataMs = performance.now() - display;
+    reader.stats.resultRequests = reader.stats.requests - resultRequests;
+    reader.stats.resultBytes = reader.stats.bytes - resultBytes;
     return {
       results,
       ...(options.exactTotal ? { total } : {}),

@@ -114,6 +114,25 @@ const sourceDir = resolve(`work/columnar-deploy/${name}-source`);
 for (const dir of ["columnar", "query", "format", "storage"])
   await cp(`src/${dir}`, `${sourceDir}/src/${dir}`, { recursive: true });
 await writeFile(sourceDir + "/root.json", JSON.stringify(root));
+if (root.directory) {
+  const data = await readFile(out + "/directory.bin");
+  if (
+    data.length !== root.directory.bytes ||
+    createHash("sha256").update(data).digest("hex") !== root.directory.sha256
+  )
+    throw Error("Bundled directory identity mismatch");
+  await writeFile(sourceDir + "/directory.bin", data);
+}
+if (root.documentPackages?.locators) {
+  const data = await readFile(out + "/documents.bin"),
+    d = root.documentPackages.locators;
+  if (
+    data.length !== d.bytes ||
+    createHash("sha256").update(data).digest("hex") !== d.sha256
+  )
+    throw Error("Bundled document directory identity mismatch");
+  await writeFile(sourceDir + "/documents.bin", data);
+}
 if (pairs)
   await writeFile(sourceDir + "/pairs-root.json", JSON.stringify(pairs));
 if (heads) {
@@ -297,9 +316,27 @@ if (process.argv.includes("--publish-only")) {
 }
 const entry = resolve(`work/columnar-deploy/${name}.ts`),
   config = resolve(`work/columnar-deploy/${name}.json`);
+const packetBenchmark = process.argv.includes("--packet-benchmark");
+const documentImport = root.documentPackages?.locators
+    ? `import documents from ${JSON.stringify(sourceDir + "/documents.bin")};`
+    : "",
+  documentArgument = root.documentPackages?.locators
+    ? "new Uint8Array(documents)"
+    : "undefined";
+if (packetBenchmark) {
+  if (!root.directory || !root.documentPackages)
+    throw Error("Packet benchmark requires a complete packet generation");
+  await mkdir(sourceDir + "/bench/columnar", { recursive: true });
+  await cp(
+    "bench/columnar/packet-worker.ts",
+    sourceDir + "/bench/columnar/packet-worker.ts",
+  );
+}
 await writeFile(
   entry,
-  `import root from ${JSON.stringify(sourceDir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(sourceDir + "/pairs-root.json")};` : ""}${heads ? `import heads from ${JSON.stringify(sourceDir + "/heads-root.json")};import data from ${JSON.stringify(sourceDir + "/heads.bin")};` : ""}import {createColumnarWorker} from ${JSON.stringify(sourceDir + "/src/columnar/worker.ts")};export default createColumnarWorker(root as any,${pairs ? "pairs as any" : "undefined"}${heads ? ",{root:heads as any,data:new Uint8Array(data)}" : ""});`,
+  packetBenchmark
+    ? `${documentImport}import root from ${JSON.stringify(sourceDir + "/root.json")};import directory from ${JSON.stringify(sourceDir + "/directory.bin")};import {createPacketBenchmarkWorker} from ${JSON.stringify(sourceDir + "/bench/columnar/packet-worker.ts")};export default createPacketBenchmarkWorker(root as any,new Uint8Array(directory),${documentArgument});`
+    : `${documentImport}import root from ${JSON.stringify(sourceDir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(sourceDir + "/pairs-root.json")};` : ""}${heads ? `import heads from ${JSON.stringify(sourceDir + "/heads-root.json")};import data from ${JSON.stringify(sourceDir + "/heads.bin")};` : ""}${root.directory ? `import directory from ${JSON.stringify(sourceDir + "/directory.bin")};` : ""}import {createColumnarWorker} from ${JSON.stringify(sourceDir + "/src/columnar/worker.ts")};export default createColumnarWorker(root as any,${pairs ? "pairs as any" : "undefined"},${heads ? "{root:heads as any,data:new Uint8Array(data)}" : "undefined"},${root.directory ? "new Uint8Array(directory)" : "undefined"},${documentArgument});`,
 );
 await writeFile(
   config,
@@ -308,6 +345,7 @@ await writeFile(
       name,
       main: entry,
       compatibility_date: "2026-11-01",
+      rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
       account_id: "8f088d4bd190caf693cc42bb8311fd7d",
       workers_dev: true,
       placement: { region: "aws:us-east-1" },

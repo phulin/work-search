@@ -8,6 +8,7 @@ import { Reader } from "../../src/columnar/storage.js";
 import { OfflineObjects } from "../../src/columnar/offline.js";
 import { exhaustive } from "./exhaustive.js";
 import { benchmarkToken } from "./token.js";
+import { TermDirectory } from "../../src/columnar/term-directory.js";
 import { demoWorkload } from "../demo-workload.js";
 import { globalQueries } from "../global-workload.js";
 const [dir, input, out] = process.argv.slice(2);
@@ -63,7 +64,13 @@ const names = [
     token: await benchmarkToken(),
   }),
   source = objects.source,
-  terms = await new ColumnarIndex(root).terms(names, new Reader(root, source));
+  terms = await new ColumnarIndex(
+    root,
+    undefined,
+    root.directory
+      ? new TermDirectory(await readFile(dir + "/directory.bin"), root.count)
+      : undefined,
+  ).terms(names, new Reader(root, source));
 await objects.close();
 const idf = names.map((t) =>
     Math.log(

@@ -20,7 +20,7 @@ if (
 await mkdir(out, { recursive: true });
 await writeFile(
   out + "/entry.ts",
-  `import root from ${JSON.stringify(dir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(dir + "/pairs-root.json")};` : ""}${heads ? `import heads from ${JSON.stringify(dir + "/heads-root.json")};import data from ${JSON.stringify(dir + "/heads.bin")};` : ""}import{createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};export default createColumnarWorker(root as any,${pairs ? "pairs as any" : "undefined"}${heads ? ",{root:heads as any,data:new Uint8Array(data)}" : ""});`,
+  `${root.documentPackages?.locators ? `import documents from ${JSON.stringify(dir + "/documents.bin")};` : ""}import root from ${JSON.stringify(dir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(dir + "/pairs-root.json")};` : ""}${heads ? `import heads from ${JSON.stringify(dir + "/heads-root.json")};import data from ${JSON.stringify(dir + "/heads.bin")};` : ""}${root.directory ? `import directory from ${JSON.stringify(dir + "/directory.bin")};` : ""}import{createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};export default createColumnarWorker(root as any,${pairs ? "pairs as any" : "undefined"},${heads ? "{root:heads as any,data:new Uint8Array(data)}" : "undefined"},${root.directory ? "new Uint8Array(directory)" : "undefined"},${root.documentPackages?.locators ? "new Uint8Array(documents)" : "undefined"});`,
 );
 await new Promise<void>((ok, no) => {
   const child = spawn(

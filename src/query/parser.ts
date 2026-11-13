@@ -252,13 +252,17 @@ export function needsUniverse(n: Node): boolean {
 }
 
 /** Only terms whose occurrence locations are actually used by the expression. */
-export function positionalTerms(ast: Node): Set<string> {
+export function positionalTerms(
+  ast: Node,
+  knownPhrase?: (words: string[]) => boolean,
+): Set<string> {
   const terms = new Set<string>();
   function visit(n: Node, spans = false) {
     if (n.kind === "term") {
       if (spans) terms.add(n.term);
-    } else if (n.kind === "phrase") for (const t of n.terms) terms.add(t);
-    else if (n.kind === "near") {
+    } else if (n.kind === "phrase") {
+      if (!knownPhrase?.(n.terms)) for (const t of n.terms) terms.add(t);
+    } else if (n.kind === "near") {
       visit(n.left, true);
       visit(n.right, true);
     } else if (n.kind === "not") visit(n.child, false);

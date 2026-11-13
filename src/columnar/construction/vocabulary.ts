@@ -131,7 +131,7 @@ export async function readVocabulary(
         e.length !== 2 ||
         typeof e[0] !== "string" ||
         !Number.isInteger(e[1]) ||
-        e[1] < 1 ||
+        e[1] < 0 ||
         e[1] > 0xffffffff,
     )
   )

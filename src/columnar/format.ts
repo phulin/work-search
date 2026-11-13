@@ -19,6 +19,13 @@ export interface Term {
   df: number;
   tree: Branch;
 }
+export interface PositionalPair {
+  a: number;
+  b: number;
+  df: number;
+  occurrences: number;
+  ref: Ref;
+}
 export interface Root {
   format: "CWS1";
   generation: string;
@@ -40,6 +47,15 @@ export interface Root {
   // Sorted logical IDs let parallel producers assign disjoint ID ranges without
   // sparse manifest arrays or a reference-relocation pass.
   objectIds?: number[];
+  directory?: { sha256: string; bytes: number; terms: number };
+  positionalPairs?: Record<string, PositionalPair>;
+  documentPackages?: {
+    generation: string;
+    count: number;
+    averageBytes: number;
+    bytes: number;
+    locators?: { sha256: string; bytes: number; groups: number };
+  };
 }
 export interface PairRoot extends Pick<
   Root,

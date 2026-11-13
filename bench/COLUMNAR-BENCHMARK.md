@@ -5,6 +5,80 @@ adoption** while the scale, startup, load and native memory gates below remain.
 The public demo has not changed. This ledger distinguishes completed measurements
 from work still running.
 
+## Packet-path work, November 13
+
+The native 1M block-layout generation `d989bc2c…` completed and is deployed on
+`work-search-cws-worker-built`. Its independent oracle scanned all 1,000,000
+documents and verified global statistics and query DFs. A 76-request live pilot
+had no correctness errors: complete-response P50/P95/P99 were 1,097/6,047/26,238 ms,
+and joined native CPU was 480/3,220/15,900 ms. With only 76 samples, P99 is the
+observed maximum, not a stable tail estimate. The worst all-common-word phrase
+decoded 202,779,676 position integers despite making zero R2 reads. This engine
+is the same-corpus control for the packet replacement, not an adoption candidate.
+
+The new packet/package path has completed a native 1,000-document build and live
+independent validation. Generation `4a0b7ba7…` has 29,017 terms, a 398,748-byte full
+directory, 25,428,688 bytes of frequency/position/block objects, and 14,987,553 bytes
+of document packages. This conversion reused sorted native postings and range
+vocabularies; its 226.9-second build is not a fresh end-to-end construction time.
+Sequential per-document writes dominated that pilot. Subsequent construction
+overlaps four writes and splits document ranges across invocations.
+
+The first 76-request live packet pilot passed every scenario and warmup. Client
+P50/P95/P99 were 75/142/369 ms, with native CPU 10/40/73 ms. These 1,000-document
+numbers must not be compared with the 1M control as a speedup. Raw results and
+CPU observations are under `results/columnar/packets-1000-pilot*`.
+
+A randomized three-repeat forced-plan pilot issued 444 requests on the same 1,000
+documents. There were no correctness errors; 99 document-plan requests were
+explicitly unsupported by its strategy budget. Among 111 unambiguous paired
+comparisons, complete terms had client P50/P95 80/298 ms and candidate packages
+120/1,610 ms. Joined CPU medians were 12/20 ms. Candidate packages often won with
+one to five candidates, but opening dozens or hundreds commonly lost even with
+zero origin reads. Shared-cache operations and repeated decode/verification work
+remained costs. Three repeats cannot establish a universal byte/candidate crossover
+or reliable P99. See `packets-1000-crossover-summary.json` and the raw responses.
+
+An interleaved same-deployment ablation compared multiple mandatory word anchors
+with a single anchor. Both plans supported 123 of 222 requests and passed all
+correctness checks. Multiple anchors had P50/P95/P99 89/366/643 ms versus
+103/417/858 ms for one anchor; native CPU medians were 14/21 ms. This is a small
+pilot with an evolving shared cache, not a final planner calibration. The packet
+report separates workload classes and bins paired results by candidate count and
+packed term-stream bytes.
+
+Construction instrumentation subsequently attributed most document-job wall time
+to R2 PUT waits: native CPU P50 was 750 ms while wall P50 was 12,393 ms (34 sampled
+jobs). A grouped physical layout removed per-document PUTs while retaining direct
+one-range candidate reads. Eight 1,000-document pilot jobs took 861–1,661 ms each;
+the native conversion and publication took 21.2 seconds, reusing its term packets.
+Its 2,656-byte bundled offset directory addresses all 1,000 packages. All 76 live
+complete-response scenarios passed, with client P50/P95/P99 78/127/311 ms and native
+CPU 11/35/73 ms. These warmed, noninterleaved pilot numbers do not establish a
+serving speedup over the individual-object layout. Raw data is in
+`packets-1000-grouped-pilot*`.
+
+The 1M grouped packet conversion is running natively on the single builder deployment.
+Its initial 128-request burst hit application admission limits and stopped after
+exhausting retries. Completed immutable jobs were retained; the resumed coordinator
+uses adaptive concurrency and jittered backoff. No serving speedup is claimed
+until that generation passes the same independent 1M oracle and live comparisons.
+Its completed term directory is 33,402,940 bytes for all 2,812,380 words, including
+actual occurrence counts and direct stream references. The individual-PUT
+document phase was stopped after the grouped pilot passed live correctness;
+its term objects are reused. The latest usage check reported no Worker resource
+errors and construction invocation-memory P99 of 50,286,160 bytes. Earlier
+construction phases reached about 95 MiB. Neither is a peak-memory measurement.
+
+A rejected Cloudflare Queues dispatcher used the same Worker, not a Worker pool.
+Of 1,024 dispatched jobs, 966 exhausted retries on the application capacity gate;
+only 5,048 documents were produced. Completion-message counts initially concealed
+those failures. The queue was drained and deleted, its source removed from the
+normal path, and the original constructor restored. Successful immutable outputs
+remained valid. Raw receipts and backlog metrics are retained in
+`construction/queue-rejected`. This trial does not prove that Queues generally
+cannot scale construction; it failed to improve this implementation.
+
 ## Comparison setup
 
 The checkout began at `dd08b3c943362af8a3d404ed5cb6bc28d402b914`. The frozen control

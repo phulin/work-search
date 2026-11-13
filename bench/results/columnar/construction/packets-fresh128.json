@@ -1,0 +1,28 @@
+{
+  "format": "term-packets-and-document-packages",
+  "build": "packets-fresh128-v1-packets-1a9873ec3fa1",
+  "code": "7611fceb44ea7a3736441e8067cd74d80e1d1a24e240b95012bd107864c368bc",
+  "sourceGeneration": "db2eed711aeead5879a5235f03db6d54f1a1569d4a33e52c3bb7916c0075b748",
+  "generation": "80d0c6e17cfbe34ab9c76154b40bd8a3b0094033b0e82168fd05efd00fd2f4ec",
+  "documents": 128,
+  "terms": 9076,
+  "bodyOccurrences": 146254,
+  "titleOccurrences": 435,
+  "directoryBytes": 114986,
+  "packetBytes": 3798952,
+  "documentBytes": 1755600,
+  "startedAt": "2026-11-13T05:23:49.914Z",
+  "finishedAt": "2026-11-13T05:24:38.496Z",
+  "reused": "Fresh native source ingestion, sorted merges, postings, vocabularies and serving packets",
+  "workers": [
+    "https://work-search-cws-build-0.phulin.workers.dev"
+  ],
+  "concurrency": 4,
+  "sourceBuild": "packets-fresh128-v1",
+  "packetStageStartedAt": "2026-11-13T05:24:04.724Z",
+  "coordinatorHash": "292a6d0c0583871bd6db63c5280b8dcc8045ec0b7f36e7e670c629525f466953",
+  "sourceDocuments": 10032254,
+  "construction": "Cloudflare Workers and R2",
+  "planningWidth": 4,
+  "postingsJobs": 1
+}
