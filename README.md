@@ -150,6 +150,20 @@ exhaustive oracle, local CPU/allocation/memory profiles, and native profile capt
 tools are in `scripts/columnar-*` and `bench/columnar`. Generated corpora, sort
 databases, runtime snapshots, and credentials remain under ignored `work/` paths.
 
+Independent source validation can also run in parallel on the constructor Worker,
+without downloading corpus text to the coordinator. It tokenizes archived source,
+uses an independent exhaustive AST evaluator, merges exact range top-K results,
+and verifies query DFs and global field statistics:
+
+```sh
+yarn node --import tsx bench/columnar/deploy-oracle.ts
+CWS_ORACLE_WORKERS=32 yarn node --import tsx bench/columnar/oracle-in-workers.ts work/new-paired regression work/oracle.json
+```
+
+The current deployment helper preserves running constructor handlers during the
+full-corpus migration. The validator resumes local receipts after interruption.
+Pass a JSON array of query contracts instead of `regression` for held-out cases.
+
 ## Validation and historical controls
 
 ```sh

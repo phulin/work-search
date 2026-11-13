@@ -1,0 +1,12 @@
+{
+  "referencePath": "work/columnar-bench/oracle-worker-1m.json",
+  "candidatePath": "work/columnar-bench/oracle-native-1m.json",
+  "documents": 1000000,
+  "contracts": 76,
+  "scores": 1397,
+  "identitiesAndDisplayMetadataIdentical": true,
+  "crossRuntimeRelativeTolerance": 1e-11,
+  "maxRelativeScoreDifference": 3.5659991536947955e-16,
+  "independentDfVerified": true,
+  "independentGlobalStatsVerified": true
+}

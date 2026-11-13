@@ -183,6 +183,19 @@ per input and at most two pending output writes. A live replay produced identica
 output bytes; later large merges still took 152–211 seconds on different inputs,
 so these observations do not establish an I/O-overlap speedup.
 
+Source validation now runs as bounded parallel jobs on that same constructor
+Worker. A 1,000-document pilot matched all 76 contracts against the independent
+Node scan. The complete 1M validation then finished in 604 seconds at 16 concurrent
+requests, while construction was also running. All 1,397 returned scores/identities
+and display records matched the established 1M oracle; maximum relative score
+difference was 3.57e-16, within the existing cross-runtime tolerance. Independently
+counted DFs and field-token totals agreed. This is a correctness result, not a
+controlled validation-throughput comparison. Raw results, receipts and comparison
+checks are in `results/columnar/oracles`. The 217-test suite passed before the
+subsequent telemetry-only startup instrumentation; focused Worker tests also pass.
+The historical 100k control Worker has been deleted after its comparison campaigns;
+the frozen source revision, construction commands and results remain separate.
+
 A rejected Cloudflare Queues dispatcher used the same Worker, not a Worker pool.
 Of 1,024 dispatched jobs, 966 exhausted retries on the application capacity gate;
 only 5,048 documents were produced. Completion-message counts initially concealed

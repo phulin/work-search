@@ -1,0 +1,10 @@
+{
+  "referencePath": "work/columnar-bench/oracle-native-pilot-reference.json",
+  "candidatePath": "work/columnar-bench/oracle-native-pilot.json",
+  "documents": 1000,
+  "contracts": 76,
+  "scores": 851,
+  "identitiesAndDisplayMetadataIdentical": true,
+  "crossRuntimeRelativeTolerance": 1e-11,
+  "maxRelativeScoreDifference": 2.2106028084748691e-16
+}

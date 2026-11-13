@@ -19,12 +19,17 @@ it("preserves sorted chunks when overlapping writes complete out of order and pr
   let serial = 0,
     active = 0,
     peak = 0;
+  let releaseFirst!: () => void;
+  const firstWrite = new Promise<void>((resolve) => {
+    releaseFirst = resolve;
+  });
   store.put = async (bytes: Uint8Array) => {
     const id = serial++;
     peak = Math.max(peak, ++active);
-    await new Promise((resolve) => setTimeout(resolve, id === 0 ? 20 : 1));
+    if (id === 0) await firstWrite;
     objects.set(String(id), bytes.slice());
     completed.push(id);
+    if (id === 1) releaseFirst();
     active--;
     return { key: String(id), size: bytes.length, sha256: String(id) };
   };
