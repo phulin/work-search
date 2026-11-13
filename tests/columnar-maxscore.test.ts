@@ -121,6 +121,11 @@ it("matches independent exhaustive ranks across lazy blocks, false positional le
         "rare /3 common",
         'common NOT "rare common"',
         '(rare OR common) AND NOT "rare common"',
+        '(rare OR "common filler") AND NOT "rare common"',
+        "(rare OR common) AND NOT gap",
+        '(rare NOT gap) OR (common NOT "rare common")',
+        'NOT NOT "rare common"',
+        '(rare OR common) OR NOT "gap filler"',
         '"rare common" OR filler',
         'NOT "rare common"',
       ];

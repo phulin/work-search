@@ -41,12 +41,8 @@ import type { Heads } from "./heads.js";
 import { planPairAnchor } from "./pair-evidence.js";
 import { readPairAnchor } from "./pair-execution.js";
 import { ScoreBatch } from "./score-batch.js";
-import {
-  essentialTerms,
-  cellBounds,
-  outward,
-  deferScoreFetch,
-} from "./maxscore.js";
+import { selectCandidates, scoreCandidates, pruneCells } from "./score-scan.js";
+import { essentialTerms, cellBounds, deferScoreFetch } from "./maxscore.js";
 import { lookupRemotePairs } from "./pair-lookup.js";
 import {
   planMembershipAnchor,
@@ -92,30 +88,41 @@ export function coarse(ast: Node, present: (term: string) => number): number {
 function compileCoarse(
   ast: Node,
   index: Map<string, number>,
-  present: (j: number, d: number) => number,
+  batches: ScoreBatch[],
+  loaded: Uint8Array,
+  field: "all" | "body" | "title",
 ): (d: number) => number {
   if (ast.kind === "empty") return () => 0;
   if (ast.kind === "all") return () => 1;
   if (ast.kind === "term") {
     const j = index.get(ast.term)!;
-    return (d) => present(j, d);
+    if (!loaded[j]) return () => 2;
+    const b = batches[j],
+      handles = b.handle;
+    if (field === "all") return (d) => (handles[d] ? 1 : 0);
+    const frequencies = field === "body" ? b.body : b.title;
+    return (d) => (handles[d] && frequencies[handles[d] - 1] ? 1 : 0);
   }
   if (ast.kind === "phrase") {
-    const js = ast.terms.map((t) => index.get(t)!);
+    const terms = ast.terms.map((t) => ({ kind: "term" as const, term: t }));
+    const predicates = terms.map((t) =>
+      compileCoarse(t, index, batches, loaded, field),
+    );
     return (d) => {
-      for (let i = 0; i < js.length; i++) if (!present(js[i], d)) return 0;
+      for (let i = 0; i < predicates.length; i++)
+        if (!predicates[i](d)) return 0;
       return 2;
     };
   }
   if (ast.kind === "not") {
-    const c = compileCoarse(ast.child, index, present);
+    const c = compileCoarse(ast.child, index, batches, loaded, field);
     return (d) => {
       const a = c(d);
       return a === 2 ? 2 : 1 - a;
     };
   }
-  const left = compileCoarse(ast.left, index, present),
-    right = compileCoarse(ast.right, index, present);
+  const left = compileCoarse(ast.left, index, batches, loaded, field),
+    right = compileCoarse(ast.right, index, batches, loaded, field);
   if (ast.kind === "or")
     return (d) => {
       const a = left(d);
@@ -803,31 +810,9 @@ export class ColumnarIndex {
           }
         }
       }
-      if (!options.exactTotal && heap.threshold) {
-        const threshold = heap.threshold;
-        for (let cell = 0; cell < cells.length; cell++) {
-          const from = lo + cell * 128,
-            to = Math.min(hi, from + 128);
-          let bound = 0;
-          for (const j of scoring) {
-            let b = 0,
-              t = 0;
-            for (const x of blocks[j])
-              if (x.last >= from && x.first < to) {
-                b = Math.max(b, x.b);
-                t = Math.max(t, x.t);
-              }
-            bound +=
-              (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0);
-          }
-          bound *= 1 + Number.EPSILON * 32;
-          if (
-            bound < threshold.score ||
-            (bound === threshold.score && from > threshold.doc)
-          )
-            cells[cell] = 0;
-        }
-      }
+      const localBounds = cellBounds(blocks, lo, size, field, boost);
+      if (!options.exactTotal && heap.threshold)
+        pruneCells(cells, localBounds, scoring, lo, heap.threshold);
       if (loadedMembership || pairCandidates || heap.threshold) {
         for (let j = 0; j < blocks.length; j++)
           blocks[j] = blocks[j].filter((b) => {
@@ -840,8 +825,7 @@ export class ColumnarIndex {
             return false;
           });
       }
-      const localBounds = cellBounds(blocks, lo, size, field, boost),
-        essential = essentialTerms(
+      const essential = essentialTerms(
           blocks,
           bounds,
           scoring,
@@ -867,13 +851,6 @@ export class ColumnarIndex {
         reader.stats.scoreBlocksDecoded++;
         reader.observeDecoded(blocks[j][k].score, raw.length);
       };
-      const present = (j: number, d: number) => {
-        if (!loaded[j]) return 2;
-        const c = columns[j],
-          r = c.handle[d];
-        return r && (field === "all" || c[field][r - 1]) ? 1 : 0;
-      };
-      const predicate = compileCoarse(ast, nameIndex, present);
       const allRefs = blocks.flatMap((bs) => bs.map((b) => b.score)),
         lazyFetch = deferScoreFetch(blocks, essential, size, (ref) =>
           reader.resident(ref),
@@ -898,32 +875,24 @@ export class ColumnarIndex {
         loaded[j] = 1;
         columns[j] = scoreBatches[j].columns();
       }
-      for (let d = 0; d < size; d++) {
-        if (
-          !cells[d >>> 7] ||
-          (candidateMask && !candidateMask[d]) ||
-          predicate(d) === 0
-        )
-          continue;
-        if (essential && heap.threshold) {
-          let bound = 0;
-          for (const j of scoring)
-            bound += loaded[j]
-              ? (field !== "title" ? columns[j].b[d] : 0) +
-                (field !== "body" ? boost * columns[j].t[d] : 0)
-              : localBounds[j][d >>> 7];
-          const rounded = outward(bound, scoring.length),
-            threshold = heap.threshold;
-          if (
-            rounded < threshold.score ||
-            (rounded === threshold.score && lo + d > threshold.doc)
-          ) {
-            reader.stats.partialScoreRejected++;
-            continue;
-          }
-        }
-        candidates[nc++] = lo + d;
-      }
+      const selected = selectCandidates(
+        lo,
+        size,
+        cells,
+        candidateMask,
+        compileCoarse(ast, nameIndex, scoreBatches, loaded, field),
+        scoreBatches,
+        scoring,
+        essential,
+        loaded,
+        localBounds,
+        field !== "title",
+        field !== "body" ? boost : 0,
+        essential ? heap.threshold : undefined,
+        candidates,
+      );
+      nc = selected.count;
+      reader.stats.partialScoreRejected += selected.rejected;
       // Candidates are sorted numeric IDs. Select each deferred block once by
       // interval overlap, then fetch the union in one coalesced parallel wave.
       const deferred: number[][] = blocks.map((bs, j) =>
@@ -949,29 +918,21 @@ export class ColumnarIndex {
           loaded[j] = 1;
           columns[j] = scoreBatches[j].columns();
         }
-      let kept = 0;
-      for (let i = 0; i < nc; i++) {
-        const doc = candidates[i],
-          d = doc - lo;
-        if (predicate(d) === 0) continue;
-        reader.stats.candidates++;
-        let score = 0;
-        // Preserve the original summation order and float64 contributions.
-        for (const j of scoring)
-          score +=
-            (field !== "title" ? columns[j].b[d] : 0) +
-            (field !== "body" ? boost * columns[j].t[d] : 0);
-        if (
-          options.after &&
-          (score > options.after.score ||
-            (score === options.after.score && doc <= options.after.doc))
-        )
-          continue;
-        if (!options.exactTotal && !heap.accepts(doc, score)) continue;
-        candidates[kept] = doc;
-        values[kept++] = score;
-      }
-      nc = kept;
+      const scored = scoreCandidates(
+        lo,
+        nc,
+        compileCoarse(ast, nameIndex, scoreBatches, loaded, field),
+        scoreBatches,
+        scoring,
+        field !== "title",
+        field !== "body" ? boost : 0,
+        options.after,
+        options.exactTotal ? undefined : heap.threshold,
+        candidates,
+        values,
+      );
+      nc = scored.count;
+      reader.stats.candidates += scored.visited;
       const positionData = new Map<string, Uint8Array>();
       // Very sparse phrases use compact forward IDs. Broad phrases/proximity
       // retain the buffered positional path and avoid per-document forward I/O.

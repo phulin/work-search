@@ -116,15 +116,23 @@ const source = new LocalObjects(
   },
   sharedCacheMiB = Number(process.env.CWS_SHARED_CACHE_MIB ?? 256);
 source.namedDirectory = process.env.CWS_PAIR_INDEX;
-const ControlIndex: typeof ColumnarIndex = process.env.CWS_CONTROL_SOURCE
-  ? (
-      await import(
-        pathToFileURL(
-          resolve(process.env.CWS_CONTROL_SOURCE, "src/columnar/search.ts"),
-        ).href
+const controlModule = (name: string) =>
+  import(
+    pathToFileURL(
+      resolve(process.env.CWS_CONTROL_SOURCE!, "src/columnar/" + name + ".ts"),
+    ).href
+  );
+const [controlSearch, controlStorage, controlDirectory, controlDocuments] =
+  process.env.CWS_CONTROL_SOURCE
+    ? await Promise.all(
+        ["search", "storage", "term-directory", "document-directory"].map(
+          controlModule,
+        ),
       )
-    ).ColumnarIndex
-  : ColumnarIndex;
+    : [];
+// Older instrumented controls intentionally use today's Reader counters. The
+// untouched CPU control freezes the entire runtime explicitly.
+const freezeRuntime = process.env.CWS_CONTROL_RUNTIME === "frozen";
 const runtimes = new Map(
   plans.map((plan) => {
     const setting = /^(?:auto|control)-N(\d+)-M(\d+)$/.exec(plan),
@@ -139,10 +147,27 @@ const runtimes = new Map(
           : undefined;
     if (setting && !membership)
       throw Error("Pair settings require CWS_PAIR_INDEX");
-    const memory = new Memory(),
-      directory = new TermDirectory(raw, root.count),
-      documents = new DocumentDirectory(documentRaw),
-      index = new (plan.startsWith("control-") ? ControlIndex : ColumnarIndex)(
+    const frozen = plan.startsWith("control-") && !!controlSearch,
+      Store: typeof import("../../src/columnar/storage.js") =
+        frozen && freezeRuntime
+          ? controlStorage
+          : ({ Reader, Memory, Lru } as any),
+      ReaderClass = Store.Reader,
+      Index: typeof ColumnarIndex = frozen
+        ? controlSearch.ColumnarIndex
+        : ColumnarIndex,
+      Directory: typeof TermDirectory =
+        frozen && freezeRuntime
+          ? controlDirectory.TermDirectory
+          : TermDirectory,
+      Documents: typeof DocumentDirectory =
+        frozen && freezeRuntime
+          ? controlDocuments.DocumentDirectory
+          : DocumentDirectory,
+      memory = new Store.Memory(),
+      directory = new Directory(raw, root.count),
+      documents = new Documents(documentRaw),
+      index = new Index(
         root,
         undefined,
         directory,
@@ -158,12 +183,12 @@ const runtimes = new Map(
         documents,
       ),
       io = new SimulatedIO(source, model, sharedCacheMiB);
-    memory.pages = new Lru(12 * 1048576);
+    memory.pages = new Store.Lru(12 * 1048576);
     // Benchmark-only bypass of packet-plan selection, with identical addresses.
     blockIndex.terms = (names, reader) => directory.lookup(names, reader);
     return [
       plan,
-      { memory, directory, documents, index, blockIndex, io },
+      { memory, directory, documents, index, blockIndex, io, ReaderClass },
     ] as const;
   }),
 );
@@ -187,10 +212,10 @@ async function query(
   prepare: boolean,
   namespace: string,
 ) {
-  const { memory, directory, documents, index, blockIndex, io } =
+  const { memory, directory, documents, index, blockIndex, io, ReaderClass } =
     runtimes.get(plan)!;
   const deferred: Promise<unknown>[] = [],
-    reader = new Reader(
+    reader = new ReaderClass(
       root,
       prepare ? source : io.source,
       memory,
@@ -317,6 +342,19 @@ async function query(
     wallMs,
     localProcessCpuMs: (usage.user + usage.system) / 1000,
     responseBytes: body.length,
+    // Outside the timed response: verify exact score bits, rendering and totals
+    // across independently frozen runtimes as well as the source oracle.
+    resultSha256: result
+      ? createHash("sha256")
+          .update(
+            JSON.stringify(
+              Object.fromEntries(
+                Object.entries(result).filter(([k]) => k !== "diagnostics"),
+              ),
+            ),
+          )
+          .digest("hex")
+      : undefined,
     modeledIO: Object.fromEntries(
       Object.entries(io.calls).map(([key, value]) => [
         key,
@@ -415,6 +453,7 @@ const manifest = {
   startedAt: new Date().toISOString(),
   implementationSha256,
   controlSource: process.env.CWS_CONTROL_SOURCE,
+  controlRuntime: freezeRuntime ? "frozen" : "current-reader-instrumentation",
 };
 await mkdir("work/columnar-bench", { recursive: true });
 const save = () =>

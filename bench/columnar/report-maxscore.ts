@@ -7,7 +7,7 @@ import {
 } from "node:fs/promises";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { createHash } from "node:crypto";
-const [prefix, out] = process.argv.slice(2);
+const [prefix, out, controlFile] = process.argv.slice(2);
 if (!prefix || !out) throw Error("Usage: report-maxscore.ts PREFIX OUTPUT");
 const runs = [];
 for (const name of (await readdir("work/columnar-bench"))
@@ -114,6 +114,12 @@ for (const condition of [
           ];
         }),
       );
+    if (
+      matching.some((r: any) => r.resultSha256) &&
+      (matching.some((r: any) => !r.resultSha256) ||
+        new Set(matching.map((r: any) => r.resultSha256)).size !== 1)
+    )
+      throw Error("Exact complete-response mismatch: " + condition + ":" + q);
     summaries.push({ condition, q, options, kind: matching[0].kind, variants });
   }
 }
@@ -128,15 +134,18 @@ await writeFile(out + "/contracts.json.gz", gzipSync(contracts));
 for (const r of runs)
   await copyFile("work/columnar-bench/" + r.name, out + "/" + r.name);
 await copyFile(
-  "work/maxscore-control-b322b8b/instrumentation.json",
-  out + "/control-instrumentation.json",
+  controlFile ?? "work/maxscore-control-b322b8b/instrumentation.json",
+  out + (controlFile ? "/control.json" : "/control-instrumentation.json"),
 );
 const result = {
   kind: "Local 1M simulated I/O; not live Cloudflare",
   requests: runs.reduce((n, r) => n + r.rows.length, 0),
   manifests: runs.map(({ name, manifest }) => ({ name, manifest })),
   notes: [
-    "Control b322b8b: counter-only annotations wrap the original many()/prefetch() calls; matching, decode order, fetch order and scheduling are unchanged.",
+    controlFile
+      ? "Untouched frozen control: " +
+        (await readFile(controlFile, "utf8")).trim()
+      : "Control b322b8b: counter-only annotations wrap the original many()/prefetch() calls; matching, decode order, fetch order and scheduling are unchanged.",
     "Score metrics cover numeric window execution and its lookahead, excluding complete-term/document-package alternatives and pre-window selective anchors. Blocks fetched counts unique logical blocks requested, including prefetch; physical range coalescing can transfer extra bytes, reported separately. Decoded blocks/postings count actual work, including repetitions.",
     "Score fetch waves count nonempty score-read or prefetch calls; score I/O waves count those calls that performed shared-cache or origin operations. Neither includes term-tree/position/result stages. These are sequential score phases, not total request GET counts.",
     "Two independently randomized sessions per cache condition, isolated per-version bounded caches, complete responses, no response cache. Bundled roots remain resident; host filesystem cache is not controlled.",
