@@ -315,7 +315,7 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
         ).output,
       );
     const combined = await call("/merge-pair-statistics", { runs: statistics }),
-      statsObject = await bucket.get(combined.output.data.key),
+      statsObject = await bucket.get(combined.output.chunks[0].key),
       stats = new PairStatistics(
         new Uint8Array(await statsObject!.arrayBuffer()),
       ),

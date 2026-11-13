@@ -4,6 +4,8 @@ import {
   encodeDocumentPackage,
 } from "../src/columnar/document-package.js";
 import { tokenize } from "../src/query/tokenize.js";
+import { Reader, Memory } from "../src/columnar/storage.js";
+import { crc32 } from "../src/format/codec.js";
 it("finishes a document from one independently sectioned package, preserving exact statistics, Unicode and relevant snippets", async () => {
   const doc = {
       doc: 123,
@@ -61,4 +63,71 @@ it("finishes a document from one independently sectioned package, preserving exa
   );
   expect(await empty.snippet(new Set())).toBe("");
   expect(empty.frequencies().ids.length).toBe(0);
+});
+it("reuses validated large result packages from shared cache after clearing application memory", async () => {
+  const random = new Uint8Array(3 * 1048576);
+  let seed = 79;
+  for (let i = 0; i < random.length; i++) {
+    seed ^= seed << 13;
+    seed ^= seed >>> 17;
+    seed ^= seed << 5;
+    random[i] = seed & 255;
+  }
+  const metadata = { payload: Buffer.from(random).toString("base64") },
+    data = await encodeDocumentPackage(
+      { doc: 7, id: "large", body: "alpha beta", metadata },
+      new Map([
+        ["alpha", 1],
+        ["beta", 2],
+      ]),
+    ),
+    generation = "a".repeat(64),
+    memory = new Memory(),
+    cache = new Map<string, Uint8Array>(),
+    pending: Promise<unknown>[] = [];
+  expect(data.length).toBeGreaterThan(2 * 1048576);
+  let reads = 0;
+  const source = {
+      async read() {
+        throw Error("Unexpected discovery read");
+      },
+      async readWhole() {
+        reads++;
+        return { data, checksum: crc32(data) };
+      },
+    },
+    shared = {
+      async get(key: string) {
+        return cache.get(key);
+      },
+      async put(key: string, bytes: Uint8Array) {
+        cache.set(key, bytes);
+      },
+    },
+    first = new Reader(
+      { generation, objects: [] },
+      source,
+      memory,
+      shared,
+      "test",
+      (p) => pending.push(p),
+    );
+  expect(
+    (await (await first.document(generation, 7)).display()).metadata,
+  ).toEqual(metadata);
+  await Promise.all(pending);
+  memory.clear();
+  const repeated = new Reader(
+    { generation, objects: [] },
+    source,
+    memory,
+    shared,
+    "test",
+  );
+  expect(
+    await (await repeated.document(generation, 7)).snippet(new Set([2])),
+  ).toContain("beta");
+  expect(repeated.stats.requests).toBe(0);
+  expect(repeated.stats.sharedGets).toBe(1);
+  expect(reads).toBe(1);
 });

@@ -22,16 +22,19 @@ export function createPacketBenchmarkWorker(
   data: Uint8Array,
   documentData?: Uint8Array,
 ) {
-  const normal = createColumnarWorker(
+  const documents = documentData
+      ? new DocumentDirectory(documentData)
+      : undefined,
+    directory = new TermDirectory(data, root.count),
+    memory = new Memory(),
+    normal = createColumnarWorker(
       root,
       undefined,
       undefined,
       data,
       documentData,
-    ),
-    documents = documentData ? new DocumentDirectory(documentData) : undefined,
-    directory = new TermDirectory(data, root.count),
-    memory = new Memory();
+      { memory, directory, documents },
+    );
   memory.pages = new Lru(12 * 1048576);
   let isolate: string | undefined;
   return {
@@ -97,6 +100,15 @@ export function createPacketBenchmarkWorker(
       const requestId =
           url.searchParams.get("requestId") ?? crypto.randomUUID(),
         started = performance.now();
+      if (memory.activeQueries >= 2)
+        return Response.json(
+          { error: "Search capacity busy", requestId, isolate },
+          {
+            status: 503,
+            headers: { "retry-after": "1", "cache-control": "no-store" },
+          },
+        );
+      memory.activeQueries++;
       try {
         const preferred = url.pathname.split("/").at(-1);
         if (
@@ -117,7 +129,7 @@ export function createPacketBenchmarkWorker(
           shared: SharedPages = {
             async get(key) {
               const r = await (caches as any).default.match(
-                `${url.origin}/__packet_benchmark/${key}`,
+                `${url.origin}/__cws/${key}`,
               );
               return r?.headers.get("x-cws-validated") === key
                 ? new Uint8Array(await r.arrayBuffer())
@@ -125,7 +137,7 @@ export function createPacketBenchmarkWorker(
             },
             async put(key, bytes) {
               await (caches as any).default.put(
-                `${url.origin}/__packet_benchmark/${key}`,
+                `${url.origin}/__cws/${key}`,
                 new Response(bytes as BodyInit, {
                   headers: {
                     "cache-control": "public,max-age=31536000,immutable",
@@ -152,6 +164,8 @@ export function createPacketBenchmarkWorker(
                 documents?.lookup(doc),
               ),
           };
+        if (input.pageTransfers === true)
+          reader.packet = (ref) => reader.read(ref);
         let chosen: "complete-terms" | "documents" | PacketPlan =
           preferred === "documents-single-anchor" ? "documents" : preferred;
         if (preferred === "documents-single-anchor") {
@@ -215,6 +229,8 @@ export function createPacketBenchmarkWorker(
           { error: String(error), requestId, isolate },
           { status: 500 },
         );
+      } finally {
+        memory.activeQueries--;
       }
     },
   };

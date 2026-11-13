@@ -4,16 +4,16 @@ import { gunzipSync } from "node:zlib";
 import { decodeDirectoryBlock } from "../src/columnar/term-directory.js";
 import { view } from "../src/columnar/format.js";
 const [dir, sourceRoot] = process.argv.slice(2),
-  limit = Number(process.argv[4] ?? 1024);
+  limit = Number(process.argv[4] ?? 65536);
 if (
   !dir ||
   !sourceRoot ||
   !Number.isInteger(limit) ||
   limit < 1 ||
-  limit > 1024
+  limit > 65536
 )
   throw Error(
-    "Usage: select-pair-vocabulary.ts PACKET_DIR SOURCE_ROOT [MAX_TERMS<=1024]",
+    "Usage: select-pair-vocabulary.ts PACKET_DIR SOURCE_ROOT [MAX_TERMS<=65536]",
   );
 const bytes = await readFile(dir + "/directory.bin"),
   data = view(bytes),

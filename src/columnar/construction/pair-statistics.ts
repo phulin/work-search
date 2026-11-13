@@ -17,7 +17,7 @@ export class PairStatistics {
     this.end = this.data.getUint32(12, true);
     if (this.end <= this.first)
       throw Error("Invalid statistics document range");
-    if (this.count > 1048576 || bytes.length !== 16 + this.count * 16)
+    if (bytes.length !== 16 + this.count * 16)
       throw Error("Invalid pair statistics count");
     for (let i = 0; i < this.count; i++)
       if (
@@ -39,7 +39,7 @@ export class PairStatistics {
     return this.data.getFloat64(24 + row * 16, true);
   }
 }
-function output(rows: number, first: number, end: number) {
+export function statisticsOutput(rows: number, first: number, end: number) {
   const bytes = new Uint8Array(16 + rows * 16),
     data = view(bytes);
   data.setUint32(0, 0x31535043, true);
@@ -65,8 +65,8 @@ function output(rows: number, first: number, end: number) {
     },
   };
 }
-/** One immutable physical document group is one statistics job. Display sections
- * stay compressed. The dense rank table is bounded by 1,024 corpus-selected IDs. */
+/** Sort numeric occurrence keys per document, then merge document counts.
+ * Memory follows actual occurrences, never the square of the vocabulary. */
 export function documentGroupPairStatistics(
   bytes: Uint8Array,
   offsets: Uint32Array,
@@ -75,7 +75,7 @@ export function documentGroupPairStatistics(
 ) {
   if (
     !termIds.length ||
-    termIds.length > 1024 ||
+    termIds.length > 65536 ||
     new Set(termIds).size !== termIds.length ||
     offsets.length < 2 ||
     offsets[0] !== 0 ||
@@ -83,55 +83,58 @@ export function documentGroupPairStatistics(
   )
     throw Error("Invalid pair statistics input");
   const ranks = new Map(termIds.map((id, i) => [id, i])),
-    width = termIds.length,
-    df = new Uint32Array(width * width),
-    occurrences = new Float64Array(df.length),
-    stamp = new Uint32Array(df.length),
-    keys = new Uint32Array(df.length);
-  let count = 0;
+    width = termIds.length;
+  let runs: PairStatistics[] = [];
   for (let row = 0; row + 1 < offsets.length; row++) {
     const pkg = new DocumentPackage(
       bytes.subarray(offsets[row], offsets[row + 1]),
       first + row,
     );
-    for (let field = 0; field < 2; field++) {
-      const tokens = pkg.tokens(field);
+    const fields = [pkg.tokens(0), pkg.tokens(1)],
+      keys = new Uint32Array(fields[0].length + fields[1].length);
+    let count = 0;
+    for (const tokens of fields) {
       let a = tokens.length ? ranks.get(tokens[0]) : undefined;
       for (let p = 1; p < tokens.length; p++) {
         const b = ranks.get(tokens[p]);
         if (a !== undefined && b !== undefined) {
-          const key = a * width + b;
-          if (!df[key]) keys[count++] = key;
-          if (stamp[key] !== row + 1) {
-            stamp[key] = row + 1;
-            df[key]++;
-          }
-          occurrences[key]++;
+          keys[count++] = a * width + b;
         }
         a = b;
       }
     }
+    const sorted = keys.subarray(0, count);
+    sorted.sort();
+    let unique = 0;
+    for (let i = 0; i < count; i++)
+      if (!i || sorted[i] !== sorted[i - 1]) unique++;
+    const result = statisticsOutput(unique, first + row, first + row + 1);
+    let out = 0;
+    for (let i = 0; i < count;) {
+      let end = i + 1;
+      while (end < count && sorted[end] === sorted[i]) end++;
+      result.put(out++, sorted[i], 1, end - i);
+      i = end;
+    }
+    runs.push(new PairStatistics(result.finish(out)));
   }
-  const sorted = keys.subarray(0, count);
-  sorted.sort();
-  const result = output(count, first, first + offsets.length - 1);
-  for (let i = 0; i < count; i++)
-    result.put(i, sorted[i], df[sorted[i]], occurrences[sorted[i]]);
-  return result.finish(count);
+  while (runs.length > 1) {
+    const next: PairStatistics[] = [];
+    for (let i = 0; i < runs.length; i += 4)
+      next.push(new PairStatistics(mergePairStatistics(runs.slice(i, i + 4))));
+    runs = next;
+  }
+  return runs[0].bytes;
 }
-/** Four-way fan-in bounds input buffers even when all 1,024² pairs occur.
- * Multiple merge levels replace a single unbounded all-run aggregation. */
+/** Small local merges. Corpus-wide merges stream bounded physical chunks. */
 export function mergePairStatistics(inputs: PairStatistics[]) {
   if (!inputs.length || inputs.length > 4)
     throw Error("Pair statistics merge requires 1–4 runs");
   if (inputs.some((s, i) => i > 0 && s.first !== inputs[i - 1].end))
     throw Error("Pair statistics coverage gap or overlap");
   const cursors = new Uint32Array(inputs.length),
-    result = output(
-      Math.min(
-        1048576,
-        inputs.reduce((n, s) => n + s.count, 0),
-      ),
+    result = statisticsOutput(
+      inputs.reduce((n, s) => n + s.count, 0),
       inputs[0].first,
       inputs.at(-1)!.end,
     );

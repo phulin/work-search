@@ -5,12 +5,16 @@ import { gzipSync } from "node:zlib";
 import { Miniflare } from "miniflare";
 import "../../scripts/workerd-runtime.js";
 import { FileStorage } from "../../src/storage/filesystem.js";
+import { profileStorage } from "./profile-storage.js";
+import { benchmarkToken } from "./token.js";
 const variant = process.argv[2] ?? "v1",
   dir =
     process.env.CWS_DIR ??
     (variant === "v1" ? "work/columnar-100k" : "work/columnar-100k-lanes"),
   out = resolve("work/columnar-profile/" + variant);
 await mkdir(out, { recursive: true });
+const base = JSON.parse(await readFile(dir + "/root.json", "utf8")),
+  packet = !!base.directory;
 const runtime =
   variant === "v1"
     ? "work/columnar-deploy/work-search-cws-v1-source/src/columnar/worker.ts"
@@ -25,7 +29,7 @@ const pairPath =
 const heads = process.env.CWS_HEADS === "1";
 await writeFile(
   out + "/entry.ts",
-  `import root from ${JSON.stringify(resolve(dir + "/root.json"))};import {createColumnarWorker}from ${JSON.stringify(resolve(runtime))};${pairPath ? `import pairs from ${JSON.stringify(resolve(pairPath))};` : ""}${heads ? `import hr from ${JSON.stringify(resolve(dir + "/heads-root.json"))};import hd from ${JSON.stringify(resolve(dir + "/heads.bin"))};` : ""}const worker=createColumnarWorker(root,${pairPath ? "pairs" : "undefined"}${heads ? ",{root:hr,data:new Uint8Array(hd)}" : ""});export default{fetch(request,env,ctx){return worker.fetch(request,{...env,INDEX:{async get(key,options){const r=await env.FILES.fetch('http://files/'+key,{headers:{offset:String(options.range.offset),length:String(options.range.length)}});if(!r.ok)throw Error('File '+r.status);return{customMetadata:{generation:key.split('/')[0]},arrayBuffer:()=>r.arrayBuffer()};}}},ctx);}};`,
+  `import root from ${JSON.stringify(resolve(dir + "/root.json"))};import {createColumnarWorker}from ${JSON.stringify(resolve(runtime))};${pairPath ? `import pairs from ${JSON.stringify(resolve(pairPath))};` : ""}${heads ? `import hr from ${JSON.stringify(resolve(dir + "/heads-root.json"))};import hd from ${JSON.stringify(resolve(dir + "/heads.bin"))};` : ""}${packet ? `import td from ${JSON.stringify(resolve(dir + "/directory.bin"))};import dd from ${JSON.stringify(resolve(dir + "/documents.bin"))};` : ""}const worker=createColumnarWorker(root,${pairPath ? "pairs" : "undefined"},${heads ? "{root:hr,data:new Uint8Array(hd)}" : "undefined"}${packet ? ",new Uint8Array(td),new Uint8Array(dd)" : ""});export default{fetch(request,env,ctx){return worker.fetch(request,{...env,INDEX:{async get(key,options){const r=await env.FILES.fetch('http://files/'+key,{headers:{offset:String(options.range.offset),length:String(options.range.length)}});if(!r.ok)throw Error('File '+r.status);return{customMetadata:JSON.parse(r.headers.get('x-cws-meta')||JSON.stringify({generation:key.split('/')[0]})),arrayBuffer:()=>r.arrayBuffer()};}}},ctx);}};`,
 );
 await writeFile(
   out + "/wrangler.json",
@@ -51,7 +55,13 @@ const dry = spawnSync(
 if (dry.status) throw Error(dry.stdout + dry.stderr);
 const disk = new FileStorage(dir + "/packs"),
   pairDisk = new FileStorage(dir + "/pairs/packs"),
-  base = JSON.parse(await readFile(dir + "/root.json", "utf8"));
+  packetSource = packet
+    ? await profileStorage(
+        base,
+        process.env.CWS_PROFILE_DATA ?? out + "/data",
+        await benchmarkToken(),
+      )
+    : undefined;
 const mf = new Miniflare({
   compatibilityDate: "2026-11-01",
   compatibilityFlags: ["nodejs_compat"],
@@ -63,6 +73,7 @@ const mf = new Miniflare({
   bindings: { INTERNAL_TOKEN: "profile", PAGE_CACHE: "1" },
   serviceBindings: {
     FILES: async (request: Request) => {
+      if (packetSource) return packetSource(request);
       const key = new URL(request.url).pathname.slice(1),
         offset = Number(request.headers.get("offset")),
         length = Number(request.headers.get("length"));
@@ -76,15 +87,17 @@ const mf = new Miniflare({
     },
   },
 });
-const queries = [
-  "summary judgment",
-  '"clear and convincing evidence"',
-  "motion /5 ten",
-  "subject /5 matter jurisdiction",
-  "(any OR oral) AND because",
-  "court",
-  '"on that advice appellant"',
-];
+const queries: string[] = process.env.CWS_PROFILE_QUERIES
+  ? JSON.parse(process.env.CWS_PROFILE_QUERIES)
+  : [
+      "summary judgment",
+      '"clear and convincing evidence"',
+      "motion /5 ten",
+      "subject /5 matter jurisdiction",
+      "(any OR oral) AND because",
+      "court",
+      '"on that advice appellant"',
+    ];
 let socket: WebSocket | undefined;
 const rows: any[] = [],
   memory: any[] = [];

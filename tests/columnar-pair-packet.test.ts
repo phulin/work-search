@@ -4,6 +4,7 @@ import {
   PairPacket,
   intersectPairDocuments,
   type PairRow,
+  pairPacketByteBound,
 } from "../src/columnar/pair-packet.js";
 it("pair context exactly proves short phrases, repeated terms and field boundaries against exhaustive tokens", () => {
   let seed = 71;
@@ -58,6 +59,30 @@ it("pair context exactly proves short phrases, repeated terms and field boundari
           expect(pair.phrase(row, field, words, anchor).certain).toBe(true);
         if (expected.length) expect([...filter]).toContain(doc);
       }),
+    );
+  }
+});
+it("bounds sparse singleton and repeated two-field packet sizes even at full integer widths", () => {
+  for (let mode = 0; mode < 12; mode++) {
+    const rows: PairRow[] = Array.from({ length: 97 }, (_, doc) => {
+      const field = (n: number) =>
+        Array.from({ length: n }, (_, p) => ({
+          position: p * 30000000,
+          previous: 0xfffffffe - p,
+          next: p * 40000000,
+        }));
+      return {
+        doc: doc * 40000000,
+        body: field(1 + (doc % (mode + 1))),
+        title: field(doc % 3 === 0 ? mode : 0),
+      };
+    });
+    const occurrences = rows.reduce(
+      (n, r) => n + r.body.length + r.title.length,
+      0,
+    );
+    expect(encodePairPacket(1, 2, rows).length).toBeLessThanOrEqual(
+      pairPacketByteBound(rows.length, occurrences),
     );
   }
 });

@@ -334,7 +334,14 @@ export function packetPlan(
     packages &&
     preferred !== "complete-terms" &&
     pair &&
-    ((pair.df <= 512 && pairBytes <= 8 * 1048576) || pair.covered) &&
+    ((pair.df <= 512 && pairBytes <= 8 * 1048576) ||
+      pair.covered ||
+      // A short context scan can shrink a loose DF upper bound dramatically.
+      // Decide whether candidate packages fit after exact context rejection;
+      // otherwise retain the same evidence in the block fallback.
+      ((!completeFits || preferred === "documents") &&
+        pair.words.length > 2 &&
+        pair.bytes * 4 <= frequencyBytes + positionBytes)) &&
     (!completeFits || preferred === "documents" || pairCost < termCost) &&
     (pairBytes < documentBytes + selected.bytes ||
       (pair.covered && (candidateCount > 512 || documentBytes > 8 * 1048576)))
@@ -519,11 +526,12 @@ export async function executePackets(
       if (candidateBytes > 8 * 1048576) return;
       reader.stats.peakActiveBufferBytes = Math.max(
         reader.stats.peakActiveBufferBytes,
-        [...new Set([...batch, ...packageHits.values()])].reduce(
-          (n, pkg) =>
-            n + pkg.bytes.length + 4 * (pkg.bodyLength + pkg.titleLength),
-          0,
-        ),
+        reader.stats.anchorBufferBytes +
+          [...new Set([...batch, ...packageHits.values()])].reduce(
+            (n, pkg) =>
+              n + pkg.bytes.length + 4 * (pkg.bodyLength + pkg.titleLength),
+            0,
+          ),
       );
       for (let i = 0; i < batch.length; i++) {
         const pkg = batch[i],

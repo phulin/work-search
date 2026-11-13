@@ -79,7 +79,7 @@ P50/P95/P99(max) was 904/4,307/18,847 ms; joined native CPU was 380/1,958/11,808
 The earlier same-corpus control pilot was 1,097/6,047/26,238 ms. These pilots were
 not interleaved and do not establish a stable speedup or P99. A failed production
 sampling attempt overlapped only the early warmup, ending before measurement.
-The all-common-word zero-hit phrase remains an unacceptable 18.8-second case.
+The all-common-word few-hit phrase remained an unacceptable 18.8-second case.
 
 A controlled four-arrivals/second pilot completed 152/152 correct responses with
 no HTTP errors: P50/P95/P99 939/4,722/20,040 ms, maximum 21,664 ms. Client launch
@@ -93,26 +93,54 @@ Complete reads supported 69/222 requests, candidate packages 3/222; the remainin
 strategies exceeded their budgets and explicitly returned unsupported. Only three
 paired comparisons were available. This workload cannot calibrate the primary-plan
 crossover. A separate 120-query workload now samples vocabulary DF bands and adds
-intersections, sparse phrases and proximity; independent source validation is running.
+intersections, sparse phrases and proximity. Its complete source scan verified
+all query DFs and corpus statistics. A 720-request three-repeat comparison passed
+all supported responses and provided 90 paired comparisons. Candidate packages
+generally won at 1–16 candidates, were mixed at 17–64, and lost 25/27 comparisons
+at 65–256 and all 9 at 257–512. Only 30 distinct contracts supported both paths.
+The automatic planner chose the lower pilot-median strategy for 28/30 contracts;
+the two disagreements were 7 ms and 43 ms, insufficient evidence for a new fixed
+cutoff. Automatic serving passed all 120 held-out contracts at P50/P95
+192/2,862 ms; the broad cases still use the block fallback.
 Winner retrieval dominated some complete-read cases: its observed origin GET
 P95 was 20 and maximum 100, with metadata time up to 1,114 ms. These classes and
 raw counters remain separate in `packets-1m-crossover-summary.json`.
 
+A randomized fresh-namespace range-transfer ablation issued 720 requests, with 198 supported comparisons and no correctness errors. Complete contiguous reads had P50/P95 433/817 ms versus 517/904 ms for 256 KiB page-at-a-time transfers. Median origin GETs fell from 30 to 20; result retrieval itself contributed 19. Each request reset application memory inside the search invocation and used a new shared-cache namespace; opaque R2 backend caches were not controlled. See `packets-1m-transfer-cold*`.
+
+A subsequent randomized interleaved comparison completed 1,000 requests per engine across two sessions at four total arrivals/second. The packet replacement returned all checked answers correctly, without HTTP errors, at P50/P95/P99 736/3,709/5,663 ms; the same-corpus block control recorded 889/4,765/23,127 ms and two admission 503s. Joined CPU was 340/1,637/2,446 ms versus 417/2,267/12,933 ms. These are conditional scenario percentiles; class results and query/session-block bootstrap intervals remain separate in `packets-1m-interleaved-summary.json`. The 1,000 observations per engine are still below the finalist sample target. A separate 304-request in-request cache-reset run with existing shared pages passed all answers at 722/3,653/5,647 ms.
+
 Native positional/context pair construction completed on 1,000 documents in
 17.7 seconds, producing 4,096 selected pairs, 183,102 occurrences and 6,599,560 bytes.
 Its two numeric-token passes and four-way merges never parse display JSON.
-The 1M pair pass is running. Initial coverage is limited to adjacent combinations
-of the 1,024 highest-DF words; useful rare-content pairs and a remote pair dictionary
-remain outstanding. Pair evidence now also restricts block fallback ranges and
+The 1M pair pass completed with 213 pairs, 1,555,162 occurrences and 58,088,252
+bytes. Its final occurrence/merge phase took 17.7 minutes, reusing the completed
+corpus statistics. A tighter proved size bound replaced a wasteful bound that
+selected only 190 pairs. All 76 measured responses and warmups passed the oracle:
+P50/P95/P99(max) 667/3,551/5,357 ms, native CPU 271/1,542/2,201 ms. The earlier
+18.8-second few-hit phrase fell to 416 ms and 26,881 position integers, from
+202,779,676. These remain noninterleaved pilots, not a final traffic comparison.
+The measured generation covers adjacent combinations of the 1,024 highest-DF words. A new sparse, streamed statistics pass over 65,536 corpus-selected words is building; its serving benefit remains unmeasured. Selected descriptors currently fit in the bundle; a remote pair dictionary has not been implemented. Pair evidence now also restricts block fallback ranges and
 eliminates ordinary word-position decoding where context proves a phrase; reference
-tests cover scores, fields, negatives and matching snippets. Native captures still
+tests cover scores, fields, negatives and matching snippets. Cheap context reads
+can now precede the candidate-package budget decision; failed estimates preserve
+the same evidence in block retrieval. A 2,151,197-byte winning package exposed the
+application's old 2 MiB shared-entry cap, causing a repeated R2 read. The cap is
+now 4 MiB, with write backpressure and a regression test. The follow-up 76-request pilot passed all answers. The same few-hit phrase used eight candidate packages and took 113 ms, with zero R2 reads and 676 decoded pair positions. Aggregate P50/P95/max was 685/4,688/6,657 ms, worse than the preceding session; the slow unaccelerated phrases retained the same work counts, so these noninterleaved runs do not establish an overall gain. Native captures still
 returned HTTP 404/code 10393 despite a sustained active search invocation.
 
 Fresh grouped construction of 128 documents took 22.0 seconds from source through
 publication, with no reused scoring output. The actual group containing the longest
 known document in the 1M corpus also completed: 128 documents, 567,448 tokens,
 7,448,709 package bytes and 2,571 ms native wall time. Receipts are under
-`results/columnar/construction`. All 208 repository tests pass.
+`results/columnar/construction`. All 213 repository tests pass, including the large-package shared-cache regression, sparse streamed pair statistics, and numeric batch corruption checks.
+
+The private benchmark and normal routes initially retained separate caches.
+They now share one page/decoded/directory budget and one admission counter.
+Earlier mixed-route invocation-memory P99 reached 125,915,490 bytes; the subsequent
+corrected sample was 117,784,940 bytes. These cover different workloads and do not
+establish a controlled memory reduction or a peak. Full available-corpus native
+construction has started for 10,032,254 documents, using one Worker and R2.
 
 A rejected Cloudflare Queues dispatcher used the same Worker, not a Worker pool.
 Of 1,024 dispatched jobs, 966 exhausted retries on the application capacity gate;

@@ -87,8 +87,10 @@ yarn node --import tsx scripts/build-pairs-in-workers.ts work/new-packets work/n
 yarn deploy work/new-paired work-search-cws-r2-1m --deploy-only
 ```
 
-This initial pair pass counts all adjacent combinations of 1,024 high-DF words
-and chooses at most 4,096 positional/context packets from corpus statistics.
+The pair pass counts observed adjacent combinations of up to 65,536 high-DF words
+using sorted sparse numeric runs, and chooses at most 4,096 positional/context
+packets from corpus statistics. Global statistics merge through bounded 512 KiB
+chunks rather than a vocabulary-squared table.
 Pairs outside that vocabulary remain unknown and use exact ordinary verification.
 Full pair-vocabulary coverage and a remote pair dictionary remain outstanding.
 

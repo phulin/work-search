@@ -1,4 +1,22 @@
 import { concat, pack, unpack, u32, view, lower } from "./format.js";
+/** A multi-occurrence field adds 48 bytes of column headers. Every such field
+ * requires an occurrence beyond the document's first, with at most two fields
+ * per document. Doc IDs, index rows and integers use worst-case 32-bit widths. */
+export function pairPacketByteBound(documents: number, occurrences: number) {
+  if (
+    !Number.isSafeInteger(documents) ||
+    documents < 1 ||
+    !Number.isSafeInteger(occurrences) ||
+    occurrences < documents
+  )
+    throw Error("Invalid pair size counts");
+  return (
+    64 +
+    28 * documents +
+    12 * occurrences +
+    48 * Math.min(2 * documents, occurrences - documents)
+  );
+}
 export interface PairOccurrence {
   position: number;
   previous?: number;

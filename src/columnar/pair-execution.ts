@@ -6,6 +6,11 @@ import {
 } from "./pair-evidence.js";
 import type { PositionalPair } from "./format.js";
 import type { Reader } from "./storage.js";
+export interface PairAnchorEvidence {
+  candidates: Uint32Array;
+  evidence: ReturnType<typeof pairPhraseEvidence>;
+  covered: (words: string[]) => boolean;
+}
 
 /** The same exact pair evidence leads candidate packages or limits block ranges.
  * An uncovered context stays unknown and requires ordinary positional matching. */
@@ -16,6 +21,14 @@ export async function readPairAnchor(
   field: "all" | "body" | "title",
   reader: Reader,
 ) {
+  const key =
+    descriptors.map((p) => reader.key(p.ref)).join("/") +
+    ":" +
+    field +
+    ":" +
+    words.map((w) => ids.get(w)).join(".");
+  const old = reader.anchors.get(key);
+  if (old) return old;
   const raw = await reader.packets(descriptors.map((p) => p.ref)),
     packets = raw.map((bytes, i) => {
       const d = descriptors[i],
@@ -49,9 +62,19 @@ export async function readPairAnchor(
       })
     )
       accepted[count++] = doc;
-  return {
+  const result = {
     candidates: accepted.subarray(0, count),
     evidence,
     covered: (words: string[]) => pairPhraseCovered(map, ids, words),
   };
+  reader.anchors.set(key, result);
+  reader.stats.anchorBufferBytes +=
+    raw.reduce((n, b) => n + b.length, 0) +
+    accepted.byteLength +
+    packets.reduce((n, p) => n + p.docs.byteLength * 1.5, 0);
+  reader.stats.peakActiveBufferBytes = Math.max(
+    reader.stats.peakActiveBufferBytes,
+    reader.stats.anchorBufferBytes,
+  );
+  return result;
 }

@@ -131,7 +131,7 @@ export async function documentGroupPairRuns(
   const width = selection.terms.length;
   if (
     !width ||
-    width > 1024 ||
+    width > 65536 ||
     selection.pairs.length > 4096 ||
     offsets.length < 2 ||
     offsets[0] !== 0 ||

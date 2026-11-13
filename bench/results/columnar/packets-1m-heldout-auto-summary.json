@@ -1,0 +1,1466 @@
+{
+  "label": "packets-1m-heldout-auto",
+  "manifest": {
+    "finishedAt": "2026-11-13T07:32:00.796Z",
+    "label": "packets-1m-heldout-auto",
+    "condition": "memory-reuse",
+    "warmup": false,
+    "countPerVariant": 120,
+    "totalRate": 2,
+    "clientConcurrencyLimit": 4,
+    "sessions": 1,
+    "seed": 20261112,
+    "queries": [
+      {
+        "q": "douglasone",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "2ffe55b32c7aa4c37b4e6c5de8fb16e0d6cdda5a8c44c0a02c5cfea0928bd5a6"
+      },
+      {
+        "q": "douglasone AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "f216cdb5129845bf69f7fa796f6e5c07e31db704aac112cd78dbb44f37e15303"
+      },
+      {
+        "q": "douglasone AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "184b51084bb94bc24d789fe06bf196137bde54e7c7f59aa23a2550d7abc5c440"
+      },
+      {
+        "q": "douglasone /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"douglasone of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "lowelce",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "e2d3bb12631a3603f1bc0950526427e64417fd72a82fd418c3fe0feb398d24a2"
+      },
+      {
+        "q": "lowelce AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "fa0bddbeabf44db71b566435515c74b209bb15d8dfd397558bc54d6ecfd116d2"
+      },
+      {
+        "q": "lowelce AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "lowelce /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"lowelce of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "abrahamyan",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "d9df137eef846c96e9090b5ad182bb1e6d4be0ac996a77ad2008ff4caf1a7e94"
+      },
+      {
+        "q": "abrahamyan AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "54fe8fde50c042fd0258298dfb26c98cefaefc6feadc80ca5886cce3f5d474e0"
+      },
+      {
+        "q": "abrahamyan AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "c0abbea49c5386b86f06737130e423f6e1bf4c96c87db12528565e1cf5f548e3"
+      },
+      {
+        "q": "abrahamyan /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"abrahamyan of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "mazzocone",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "ce3228ed6f5507bdf7d0e91d13bfccd340d0f207096103df23b664c85e241ada"
+      },
+      {
+        "q": "mazzocone AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "6cd369f736d07cff42cbd444fef020bbcbafedcf39622c72f8a71f676b2769e9"
+      },
+      {
+        "q": "mazzocone AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "93c6225be4bfde2b433375db6c7dd1bb0aae5358a819ab16890b0e8cb95a7f92"
+      },
+      {
+        "q": "mazzocone /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"mazzocone of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "askania",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "06a610e780492b0aa7b61b4cbf685be079f69a9e09d6b9bbd6b8e77962191b8c"
+      },
+      {
+        "q": "askania AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "4803b0ec92ebbec41b1cfd653e76b419d9beeb70958d64f4f713f7a22ef5f0e9"
+      },
+      {
+        "q": "askania AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "askania /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"askania of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "briganttihughes",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "f1f38f8fd6bc91a06f3925525be399ad233bbe8ba939fec8b209d2bc9f3df5b4"
+      },
+      {
+        "q": "briganttihughes AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "fb93cb96f2face9511d4617d35ae8e280d6cf559c4369e6f133e6841361cf6eb"
+      },
+      {
+        "q": "briganttihughes AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "084f38c8030dce2aa0830cd052e8c07ae3ff6836af99b8a168b75421b8df3d36"
+      },
+      {
+        "q": "briganttihughes /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"briganttihughes of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "merhige",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "75ec3431c5b2b269db4ff0ace29d36982ed18518a99eed4d11792d0f64aebbb7"
+      },
+      {
+        "q": "merhige AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "648c5878f0a11ce9c61e6f13440931259bbe822c291cf244e1e9c9ee84f0186d"
+      },
+      {
+        "q": "merhige AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "08b02f569f73aa721176bea1c8b383b1ba860db5750b4de14508ef91736bc27e"
+      },
+      {
+        "q": "merhige /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"merhige of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "df01402f8e717fc1e856910ae414fc196bf06680c9f350e0d5007c87895df8d7"
+      },
+      {
+        "q": "loches",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "a64f26224f5d098b24326fc99d9da94bb808d7f0014a0ccee2142d5333d2d545"
+      },
+      {
+        "q": "loches AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "cc12109acde08a15db8f245749132694a56bc5a95b4d4ffea50c187207eac868"
+      },
+      {
+        "q": "loches AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "aae25f165e4683f061fe749630f2fbaf8b5676d08466fb23dd97516cf144f1e8"
+      },
+      {
+        "q": "loches /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"loches of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "159793a5ca3b7a56da34c77a9ed3d689cab83251aa30597d82f4960878380484"
+      },
+      {
+        "q": "degraffenreid",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "26c4ba9220e68da021f6cb266392ea3c5416bb090517e628601e4a45aab8610b"
+      },
+      {
+        "q": "degraffenreid AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "ccc431e7d538c99ccf9d828148ed407e35260164d16b6f9b4a7121d03a9cb0a5"
+      },
+      {
+        "q": "degraffenreid AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "9c1df7521357ee4eb460fb8f982630ccd9bb39a5cf6a1fd134dd0389d41b84e4"
+      },
+      {
+        "q": "degraffenreid /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"degraffenreid of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "63bf221e77fce33f537f9da8def6ebe07b90abfb7a9b5a24218ca2db53174f0f"
+      },
+      {
+        "q": "eclipse",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "304beb2baa538428fcf8dd4aa28cb3b2ff666e5cd0006018812db4d2bc0a73fd"
+      },
+      {
+        "q": "eclipse AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "e70a34f9bfd4c671608102d7b943e6de59657ac51e4acef9d8b564bde3bc70e5"
+      },
+      {
+        "q": "eclipse AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "8fad97266804b074ae44400ea1fe9c32b9c779522db5331ba09683a201e535cb"
+      },
+      {
+        "q": "eclipse /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "5781c8285c0a37c6d33e79a0130dfcd73397beb9a635ca68805da459085f7710"
+      },
+      {
+        "q": "\"eclipse of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4b84e86ffc35e297403ba66e988b7a1de0547361f38ff85d04555bd07c8899b8"
+      },
+      {
+        "q": "sowell",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "96c21af9c66734c00b18e1af4336a03f52332efbf96c7f36ba4e134d58d82f99"
+      },
+      {
+        "q": "sowell AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "88de31f9952962f771b2654dbe04f8adf88b825c145543118fdb3edca044de3f"
+      },
+      {
+        "q": "sowell AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "93eb8d845def4c30acd25d1db11538675fe3672eba1feb0ef6d1a68676be5fe9"
+      },
+      {
+        "q": "sowell /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "6d4af9a7a06b13fbe8245d933803d80086f16c3c5eb73710b8b06ff28b0562a4"
+      },
+      {
+        "q": "\"sowell of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "da48e3af8139039551bb5b46f6ea42532fd516a6ba8734894f7dd04a152ab871"
+      },
+      {
+        "q": "homologation",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "c19e88a72429cee7b3b3688b899e0c0627e6132fd2384649756b3f20c471e643"
+      },
+      {
+        "q": "homologation AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "66bbd6bbe298686d4c87237686289c2e0835597b98d9bee7c07acbb9e0fa958b"
+      },
+      {
+        "q": "homologation AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "aee6c4b4eb63bfbf87aeb0e5e47792cb29c3e43d03806d9cbd100c3045fbdf69"
+      },
+      {
+        "q": "homologation /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"homologation of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "ae068a29ad996ec266a748f431b51b803aaee11cc128331b0fab426f3b483852"
+      },
+      {
+        "q": "ormsby",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "3f751cb4df0ab6074de735ba1248896c747a0b91dc6e479ebcfec9d8863bae67"
+      },
+      {
+        "q": "ormsby AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "0cc972154c7e88af2a7977ad4843a1d332c9952e293631d66dc8df547649b8a3"
+      },
+      {
+        "q": "ormsby AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "de0080f170b9271ed408237e503eb918cd650327baabafba1d141fb835641998"
+      },
+      {
+        "q": "ormsby /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "dc67592efae8eeabc8bfc11505932ee169204c7c2d53960f5e80fc358a75b2aa"
+      },
+      {
+        "q": "\"ormsby of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "slated",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "22569d52b67006fdef30db1c8076f42641441c2bac09974e953500207c5df509"
+      },
+      {
+        "q": "slated AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "b81df949cefa3be962d2187929bcf4576eeb9c8445202c51d3eec96605eb61d6"
+      },
+      {
+        "q": "slated AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "4b69b14c6cfa4e6dba2e3e703e8ca5f3f98a067c73c7977917dbcbd1cdec98ee"
+      },
+      {
+        "q": "slated /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "cac72104a66d25592a6e6fd1c9e0efbd8d3b808380ac05bc592fe64dab25af17"
+      },
+      {
+        "q": "\"slated of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "callaway",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "8df28dac970ed6da78a14a37fe279720976e749667dcb9da2c0f42e0b597dbf7"
+      },
+      {
+        "q": "callaway AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "33fed5b29183fad0184902ba670ca0f278a0cc38b489e10b988a281da2a2566e"
+      },
+      {
+        "q": "callaway AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "bf816034a56828b0e75b3c5fd918bfea884da1406dbf18e034064b174f6f05f6"
+      },
+      {
+        "q": "callaway /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "9e6aa83c4b302a9e22c4c14b726682a09a3b02f82752b3a0f6028d8127562c70"
+      },
+      {
+        "q": "\"callaway of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "2cd06ecd81fa5723d72e40684dbc272d367ee1bd52bfc6b2485f7288ef4c7025"
+      },
+      {
+        "q": "knowlton",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "d7619a6bde41c8d4b824abaf8dcfe11760b9546307112713d65816cc811ecff0"
+      },
+      {
+        "q": "knowlton AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "f421e3963ef058be4d304d1bba0fdde759c7971a1e31b674d22ede46fd5a4dca"
+      },
+      {
+        "q": "knowlton AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "2583591add8e1ccda90e83e0314396fa5a727c167ea70097e30003dfba43fe0e"
+      },
+      {
+        "q": "knowlton /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "3952c53f39fdeb8651c910f3ffd03dd714a90d50d6fc72bb11f07f1ccdf9a48e"
+      },
+      {
+        "q": "\"knowlton of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "9883ab864764d017d3746104954697fdc49fb98c1721a8c23407099d4a1c3dc9"
+      },
+      {
+        "q": "hoover",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "ff796939d9cda70303bc23968c2a03aab110779b2ff4ed0571f6845df5a2b8d6"
+      },
+      {
+        "q": "hoover AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "f7eecc1a1f1ad2859c3e35fcdd29455c04e9671639515d5af60037a9c7c842a3"
+      },
+      {
+        "q": "hoover AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "2889962b06216721755398633cb8afb3db05601d2bf89a69daea237b939c053e"
+      },
+      {
+        "q": "hoover /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "3c0037690b6f2286a69cb2434d04e1a409f12cf8c617e379d15352b43b7293f8"
+      },
+      {
+        "q": "\"hoover of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "8445be300c99bf122ad291aad1c88460759eb5ad8f4d59c24209bdb78e17f73b"
+      },
+      {
+        "q": "accessed",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "f4ed5b5aabe51b01285138a2513293879ad6e87200293b636e374d2b9d5c504d"
+      },
+      {
+        "q": "accessed AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "a0bbb41a1853be8a0c2bcd9a9f444c1b2b2d8121e86c1a17cfc1d3bdc9ba242b"
+      },
+      {
+        "q": "accessed AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "4e411371255c985d5220228edf91d0c70b8d0cd8f755b0779199d8fe18d7463d"
+      },
+      {
+        "q": "accessed /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "5299e1c49172dfd2abb4458a51e55a131297a51c1572e9002d8424a89457cd53"
+      },
+      {
+        "q": "\"accessed of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "hampshire",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "b163e7766eefbed5c294408aebad03e0a2ea73ea77c380002f6d61c751b177de"
+      },
+      {
+        "q": "hampshire AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "0419ea4ff0b127faf0bf6a2441443cd1033747d54ea67ffb5780d627ea6b23cf"
+      },
+      {
+        "q": "hampshire AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "fd9452c477f516c7197c12bdea3463d2689eacf149be9ba3905c94cef1356f81"
+      },
+      {
+        "q": "hampshire /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "d93ae7e6201d2b7a1cd9cd526718ea121582d92330dd0047b68fb6499ae1df0f"
+      },
+      {
+        "q": "\"hampshire of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "c7f7c02a49ecfb5ae492d2e64d512c1fcb0a0c585f806fecfeab11cc56683475"
+      },
+      {
+        "q": "match",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "e119c43cf97403fd6f8ee0a0d7ce0cadc0017b083cbf0a11b0335b1d252b7f37"
+      },
+      {
+        "q": "match AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "cae30862c80cf5caca26ffc3b7c2c73886c973b53daf9b2bd633d27375f7a481"
+      },
+      {
+        "q": "match AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "3cde84eb597197b7b82939eb5980ac5fc4c280220d14e018a367cb53a03c5558"
+      },
+      {
+        "q": "match /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "3af6e4ab65b04ac0ebff7b9bc5332d8c7b26a4b76ae6f330f00756f13eb28d7b"
+      },
+      {
+        "q": "\"match of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "a677f8681652b2e2fdc49fe146c5216b91f46582d2e1a3bc46f438807a29983a"
+      },
+      {
+        "q": "definition",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "3a94da5ff67206f4ba2b474a9923f80ef923e7f69e5e548f58eceb7172e30bb2"
+      },
+      {
+        "q": "definition AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "23fad69558259d419911b521ef88dde475ba3f6d8300cb0dd474b5dc8a6d0609"
+      },
+      {
+        "q": "definition AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "1a0dd1790a219b08572887f46aa536955384095d2b02d9278c12c3999ea5d5a2"
+      },
+      {
+        "q": "definition /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "842911c82f89a2a281855ce34fcc49e90d05482210d2e87b1cbeb3b8a3f7bca5"
+      },
+      {
+        "q": "\"definition of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "0479f936e71ccdfcfbb4b7803b326c523b5d97815c685b47041cf47a237cce89"
+      },
+      {
+        "q": "violate",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "ccf5dc7f362c96374f0211e2ca157a274449040716cd4e3f0e45966cf3162300"
+      },
+      {
+        "q": "violate AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "739c03c9bc5dc25e02991dab5cd2607716d145b645235bb5d0bc0ff43af6fb8c"
+      },
+      {
+        "q": "violate AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "7e911c17fd602fbb4bef9353d07f7e562ca1caf0e33716d7dd65b3852ab82d2d"
+      },
+      {
+        "q": "violate /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "2feabae412b4f557ede87ff5f4088d4867f2d0e52bd5daafa982fb0a6d25681d"
+      },
+      {
+        "q": "\"violate of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "d38e50f9ae5982c1580511326077a1e3725fe84625c521f17b3f8cb29b1173d1"
+      },
+      {
+        "q": "obtain",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "40bb94ac1cb25502a59fe6b13cd0fcfa846933cb33367b27c0d55f8aec4480a7"
+      },
+      {
+        "q": "obtain AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "daf0e457989d598b424b8cd0e3d299a214373944ca43f999fb475e0e60042aa6"
+      },
+      {
+        "q": "obtain AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "b2666fa6ddfbc1d0c1b78ae4c6b867fe20f442cb7198199d4f9ba89a8c09959f"
+      },
+      {
+        "q": "obtain /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "58c95a548d01dc6554be94b8988ddb288a125b70dbdf15319e90eeb9120763c1"
+      },
+      {
+        "q": "\"obtain of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "b177b877203affe9c22ec80bbcbf49fb22d7b29dc3f299060e8b1e8d7605acd8"
+      },
+      {
+        "q": "treatment",
+        "kind": "packet-frequency",
+        "options": {},
+        "oracleSha256": "fe33cd4e79b01bbccbfb9aa41fbebfa0b490bd8d20637fcfaf8b43ae6e46789f"
+      },
+      {
+        "q": "treatment AND court",
+        "kind": "packet-common-intersection",
+        "options": {},
+        "oracleSha256": "28b858d29771ba271fd635257fa859e8dfee608688e65bccce5140f1c87eae4b"
+      },
+      {
+        "q": "treatment AND summary",
+        "kind": "packet-term-intersection",
+        "options": {},
+        "oracleSha256": "3fd44df7ee2fe3fdde03f84a198c5f2c9dadd41318d128bc3af1bf3e9b2d97aa"
+      },
+      {
+        "q": "treatment /5 summary",
+        "kind": "packet-proximity",
+        "options": {},
+        "oracleSha256": "e1b530693fd3657609330bab3d345d7a84e63c289f58c4fd5ae6eda5d7bac097"
+      },
+      {
+        "q": "\"treatment of\"",
+        "kind": "packet-sparse-phrase",
+        "options": {},
+        "oracleSha256": "d0b2862e7e065858c9ea319aa4b17c7fd125b1e660f2e03e5a04472a5ff64d7f"
+      }
+    ],
+    "health": {
+      "work-search-cws-near": {
+        "format": "CWS1",
+        "generation": "c6ddc6f53e5acc7ba3520ad36b64dfbcd9d191f03f86daae2e43d5cbbe1c5b02",
+        "documents": 1000000,
+        "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+        "directoryBytes": 33402940,
+        "isolate": "ba828f01-4844-40a0-9d24-380671d99866",
+        "sequence": 1,
+        "cacheNamespace": "work-search-cws-near",
+        "pageBytes": 262144
+      }
+    },
+    "clientRegion": "local-New-England",
+    "node": "v26.7.0",
+    "startedAt": "2026-11-13T07:31:00.878Z",
+    "harnessSha256": "e1529a704a95b0934064bad87038e40716c6264109088fa818a83a4f9b5ebef5",
+    "responseCaching": false,
+    "resolvedCursors": {}
+  },
+  "rawSha256": "03f9c762f05cb3d5fcdc3b7cdaa7cf00ceb4d9e57321ed7422f28eeb7ddc5559",
+  "groups": [
+    {
+      "name": "work-search-cws-near",
+      "kind": "all-scenarios",
+      "attempts": 120,
+      "successes": 120,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 120,
+        "p50": 191.9412500000035,
+        "p95": 2862.416167000001,
+        "p99": 3816.723708999998,
+        "max": 7077.245416999998
+      },
+      "clientAllOutcomesMs": {
+        "n": 120,
+        "p50": 191.9412500000035,
+        "p95": 2862.416167000001,
+        "p99": 3816.723708999998,
+        "max": 7077.245416999998
+      },
+      "clientIncludingQueueMs": {
+        "n": 120,
+        "p50": 191.8645419999957,
+        "p95": 2862.552708999998,
+        "p99": 3818.0852499999964,
+        "max": 7077.616709000002
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 120,
+        "p50": [
+          140.95020800000202,
+          320.1009170000034
+        ],
+        "p95": [
+          1794.3251249999958,
+          3807.7880000000023
+        ],
+        "p99": [
+          2883.221958000002,
+          7077.245416999998
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 120,
+        "p50": 1.4523339999941527,
+        "p95": 2.422500000000582,
+        "p99": 2.671667000002344,
+        "max": 72.24429199999577
+      },
+      "sampledCpuMs": {
+        "n": 120,
+        "p50": 64,
+        "p95": 923,
+        "p99": 1368,
+        "max": 3138
+      },
+      "sampledWorkerWallMs": {
+        "n": 120,
+        "p50": 106,
+        "p95": 2688,
+        "p99": 3774,
+        "max": 7032
+      },
+      "tailJoined": 120,
+      "workerReportedWallMs": {
+        "n": 120,
+        "p50": 38,
+        "p95": 2293,
+        "p99": 3473,
+        "max": 6230
+      },
+      "metadataMs": {
+        "n": 120,
+        "p50": 11,
+        "p95": 144,
+        "p99": 371,
+        "max": 490
+      },
+      "activeBufferBytes": {
+        "n": 120,
+        "p50": 90144,
+        "p95": 1128409,
+        "p99": 1497244,
+        "max": 1809293
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 20,
+      "completionThroughputPerSec": 2.0035802420149817,
+      "totals": {
+        "requests": 281,
+        "bytes": 23081959,
+        "sharedGets": 10294,
+        "sharedPuts": 281,
+        "memoryHits": 134966,
+        "deduplicated": 25446,
+        "stages": 11756,
+        "postings": 16127491,
+        "candidates": 828408,
+        "positionIntegers": 19473488,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 5644092,
+        "resultRequests": 224,
+        "resultBytes": 9524687,
+        "resultSharedGets": 1314,
+        "resultMemoryHits": 2,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 376189928,
+        "repeatedDecodedBytes": 4886316,
+        "inflatedBytes": 6777088,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "packet-term-intersection",
+      "attempts": 24,
+      "successes": 24,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 24,
+        "p50": 174.47833300000002,
+        "p95": 787.8522920000005,
+        "p99": 1201.5779999999995,
+        "max": 1201.5779999999995
+      },
+      "clientAllOutcomesMs": {
+        "n": 24,
+        "p50": 174.47833300000002,
+        "p95": 787.8522920000005,
+        "p99": 1201.5779999999995,
+        "max": 1201.5779999999995
+      },
+      "clientIncludingQueueMs": {
+        "n": 24,
+        "p50": 181.56712499999412,
+        "p95": 789.9910840000002,
+        "p99": 1201.8251250000003,
+        "max": 1201.8251250000003
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 24,
+        "p50": [
+          113.84991599999921,
+          241.90099999999984
+        ],
+        "p95": [
+          531.0007079999996,
+          1201.5779999999995
+        ],
+        "p99": [
+          589.8570000000004,
+          1201.5779999999995
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 24,
+        "p50": 1.6027090000025055,
+        "p95": 2.5064170000005106,
+        "p99": 72.24429199999577,
+        "max": 72.24429199999577
+      },
+      "sampledCpuMs": {
+        "n": 24,
+        "p50": 64,
+        "p95": 129,
+        "p99": 143,
+        "max": 143
+      },
+      "sampledWorkerWallMs": {
+        "n": 24,
+        "p50": 92,
+        "p95": 196,
+        "p99": 209,
+        "max": 209
+      },
+      "tailJoined": 24,
+      "workerReportedWallMs": {
+        "n": 24,
+        "p50": 32,
+        "p95": 82,
+        "p99": 99,
+        "max": 99
+      },
+      "metadataMs": {
+        "n": 24,
+        "p50": 13,
+        "p95": 26,
+        "p99": 72,
+        "max": 72
+      },
+      "activeBufferBytes": {
+        "n": 24,
+        "p50": 0,
+        "p95": 139907,
+        "p99": 858132,
+        "max": 858132
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 16,
+      "completionThroughputPerSec": 0.41659574303260527,
+      "totals": {
+        "requests": 0,
+        "bytes": 0,
+        "sharedGets": 593,
+        "sharedPuts": 0,
+        "memoryHits": 56,
+        "deduplicated": 0,
+        "stages": 36,
+        "postings": 2669183,
+        "candidates": 82647,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 1026868,
+        "resultRequests": 0,
+        "resultBytes": 0,
+        "resultSharedGets": 334,
+        "resultMemoryHits": 1,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 63775424,
+        "repeatedDecodedBytes": 0,
+        "inflatedBytes": 1712826,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "packet-frequency",
+      "attempts": 24,
+      "successes": 24,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 24,
+        "p50": 97.0669999999991,
+        "p95": 570.094,
+        "p99": 1162.9467919999952,
+        "max": 1162.9467919999952
+      },
+      "clientAllOutcomesMs": {
+        "n": 24,
+        "p50": 97.0669999999991,
+        "p95": 570.094,
+        "p99": 1162.9467919999952,
+        "max": 1162.9467919999952
+      },
+      "clientIncludingQueueMs": {
+        "n": 24,
+        "p50": 99.06770899999538,
+        "p95": 571.2111250000003,
+        "p99": 1163.6929170000003,
+        "max": 1163.6929170000003
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 24,
+        "p50": [
+          94.05995900000562,
+          107.94508399999904
+        ],
+        "p95": [
+          160.77033399999345,
+          1162.9467919999952
+        ],
+        "p99": [
+          282.99974999999995,
+          1162.9467919999952
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 24,
+        "p50": 1.357916999993904,
+        "p95": 2.4181250000001455,
+        "p99": 2.422500000000582,
+        "max": 2.422500000000582
+      },
+      "sampledCpuMs": {
+        "n": 24,
+        "p50": 25,
+        "p95": 74,
+        "p99": 175,
+        "max": 175
+      },
+      "sampledWorkerWallMs": {
+        "n": 24,
+        "p50": 48,
+        "p95": 223,
+        "p99": 264,
+        "max": 264
+      },
+      "tailJoined": 24,
+      "workerReportedWallMs": {
+        "n": 24,
+        "p50": 18,
+        "p95": 51,
+        "p99": 210,
+        "max": 210
+      },
+      "metadataMs": {
+        "n": 24,
+        "p50": 12,
+        "p95": 21,
+        "p99": 22,
+        "max": 22
+      },
+      "activeBufferBytes": {
+        "n": 24,
+        "p50": 0,
+        "p95": 0,
+        "p99": 0,
+        "max": 0
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 14,
+      "completionThroughputPerSec": 0.4062961789204976,
+      "totals": {
+        "requests": 0,
+        "bytes": 0,
+        "sharedGets": 458,
+        "sharedPuts": 0,
+        "memoryHits": 0,
+        "deduplicated": 0,
+        "stages": 24,
+        "postings": 301625,
+        "candidates": 301625,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 732547,
+        "resultRequests": 0,
+        "resultBytes": 0,
+        "resultSharedGets": 410,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 9648976,
+        "repeatedDecodedBytes": 0,
+        "inflatedBytes": 1712532,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "packet-common-intersection",
+      "attempts": 24,
+      "successes": 24,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 24,
+        "p50": 740.7928749999992,
+        "p95": 1477.1802080000016,
+        "p99": 1504.5702909999964,
+        "max": 1504.5702909999964
+      },
+      "clientAllOutcomesMs": {
+        "n": 24,
+        "p50": 740.7928749999992,
+        "p95": 1477.1802080000016,
+        "p99": 1504.5702909999964,
+        "max": 1504.5702909999964
+      },
+      "clientIncludingQueueMs": {
+        "n": 24,
+        "p50": 740.7728749999951,
+        "p95": 1479.2715419999986,
+        "p99": 1506.6602500000008,
+        "max": 1506.6602500000008
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 24,
+        "p50": [
+          491.5772909999996,
+          881.3186249999999
+        ],
+        "p95": [
+          1209.7171249999992,
+          1504.5702909999964
+        ],
+        "p99": [
+          1429.0999170000002,
+          1504.5702909999964
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 24,
+        "p50": 1.4065839999984746,
+        "p95": 2.6049999999995634,
+        "p99": 2.671667000002344,
+        "max": 2.671667000002344
+      },
+      "sampledCpuMs": {
+        "n": 24,
+        "p50": 287,
+        "p95": 652,
+        "p99": 908,
+        "max": 908
+      },
+      "sampledWorkerWallMs": {
+        "n": 24,
+        "p50": 696,
+        "p95": 1437,
+        "p99": 1465,
+        "max": 1465
+      },
+      "tailJoined": 24,
+      "workerReportedWallMs": {
+        "n": 24,
+        "p50": 419,
+        "p95": 942,
+        "p99": 986,
+        "max": 986
+      },
+      "metadataMs": {
+        "n": 24,
+        "p50": 17,
+        "p95": 96,
+        "p99": 120,
+        "max": 120
+      },
+      "activeBufferBytes": {
+        "n": 24,
+        "p50": 291328,
+        "p95": 1497244,
+        "p99": 1809293,
+        "max": 1809293
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 14,
+      "completionThroughputPerSec": 0.44811799740413943,
+      "totals": {
+        "requests": 39,
+        "bytes": 2028536,
+        "sharedGets": 2564,
+        "sharedPuts": 39,
+        "memoryHits": 44730,
+        "deduplicated": 4966,
+        "stages": 3040,
+        "postings": 4518256,
+        "candidates": 140314,
+        "positionIntegers": 0,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 813484,
+        "resultRequests": 32,
+        "resultBytes": 871504,
+        "resultSharedGets": 280,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 94970156,
+        "repeatedDecodedBytes": 1806708,
+        "inflatedBytes": 1752899,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "packet-proximity",
+      "attempts": 24,
+      "successes": 24,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 24,
+        "p50": 151.3847079999996,
+        "p95": 1430.5005420000016,
+        "p99": 2384.976666999999,
+        "max": 2384.976666999999
+      },
+      "clientAllOutcomesMs": {
+        "n": 24,
+        "p50": 151.3847079999996,
+        "p95": 1430.5005420000016,
+        "p99": 2384.976666999999,
+        "max": 2384.976666999999
+      },
+      "clientIncludingQueueMs": {
+        "n": 24,
+        "p50": 152.07545899999968,
+        "p95": 1431.5472919999957,
+        "p99": 2387.549417000002,
+        "max": 2387.549417000002
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 24,
+        "p50": [
+          111.90833300000304,
+          202.63629199999923
+        ],
+        "p95": [
+          789.4085829999967,
+          2384.976666999999
+        ],
+        "p99": [
+          1039.6214579999996,
+          2384.976666999999
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 24,
+        "p50": 1.4523339999941527,
+        "p95": 2.4713339999943855,
+        "p99": 2.572250000001077,
+        "max": 2.572250000001077
+      },
+      "sampledCpuMs": {
+        "n": 24,
+        "p50": 58,
+        "p95": 923,
+        "p99": 962,
+        "max": 962
+      },
+      "sampledWorkerWallMs": {
+        "n": 24,
+        "p50": 102,
+        "p95": 1389,
+        "p99": 2343,
+        "max": 2343
+      },
+      "tailJoined": 24,
+      "workerReportedWallMs": {
+        "n": 24,
+        "p50": 40,
+        "p95": 847,
+        "p99": 1754,
+        "max": 1754
+      },
+      "metadataMs": {
+        "n": 24,
+        "p50": 6,
+        "p95": 266,
+        "p99": 371,
+        "max": 371
+      },
+      "activeBufferBytes": {
+        "n": 24,
+        "p50": 40131,
+        "p95": 324720,
+        "p99": 858132,
+        "max": 858132
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 13,
+      "completionThroughputPerSec": 0.4293781636796164,
+      "totals": {
+        "requests": 101,
+        "bytes": 6537083,
+        "sharedGets": 740,
+        "sharedPuts": 101,
+        "memoryHits": 23721,
+        "deduplicated": 666,
+        "stages": 2800,
+        "postings": 2866160,
+        "candidates": 82651,
+        "positionIntegers": 252910,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 242927,
+        "resultRequests": 88,
+        "resultBytes": 3233843,
+        "resultSharedGets": 136,
+        "resultMemoryHits": 1,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 56559568,
+        "repeatedDecodedBytes": 1309380,
+        "inflatedBytes": 668409,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-near",
+      "kind": "packet-sparse-phrase",
+      "attempts": 24,
+      "successes": 24,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 24,
+        "p50": 1773.770832999995,
+        "p95": 3816.723708999998,
+        "p99": 7077.245416999998,
+        "max": 7077.245416999998
+      },
+      "clientAllOutcomesMs": {
+        "n": 24,
+        "p50": 1773.770832999995,
+        "p95": 3816.723708999998,
+        "p99": 7077.245416999998,
+        "max": 7077.245416999998
+      },
+      "clientIncludingQueueMs": {
+        "n": 24,
+        "p50": 1775.301999999996,
+        "p95": 3818.0852499999964,
+        "p99": 7077.616709000002,
+        "max": 7077.616709000002
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 24,
+        "p50": [
+          357.619666999999,
+          2727.2079589999994
+        ],
+        "p95": [
+          2956.4340410000004,
+          7077.245416999998
+        ],
+        "p99": [
+          3600.4662499999977,
+          7077.245416999998
+        ],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 24,
+        "p50": 1.0389169999980368,
+        "p95": 2.277208999999857,
+        "p99": 2.3219589999989694,
+        "max": 2.3219589999989694
+      },
+      "sampledCpuMs": {
+        "n": 24,
+        "p50": 395,
+        "p95": 1368,
+        "p99": 3138,
+        "max": 3138
+      },
+      "sampledWorkerWallMs": {
+        "n": 24,
+        "p50": 1725,
+        "p95": 3774,
+        "p99": 7032,
+        "max": 7032
+      },
+      "tailJoined": 24,
+      "workerReportedWallMs": {
+        "n": 24,
+        "p50": 1361,
+        "p95": 3473,
+        "p99": 6230,
+        "max": 6230
+      },
+      "metadataMs": {
+        "n": 24,
+        "p50": 0,
+        "p95": 174,
+        "p99": 490,
+        "max": 490
+      },
+      "activeBufferBytes": {
+        "n": 24,
+        "p50": 651808,
+        "p95": 1132106,
+        "p99": 1379262,
+        "max": 1379262
+      },
+      "observedColos": [
+        "BOS"
+      ],
+      "observedIsolates": 13,
+      "completionThroughputPerSec": 0.4889117778928859,
+      "totals": {
+        "requests": 141,
+        "bytes": 14516340,
+        "sharedGets": 5939,
+        "sharedPuts": 141,
+        "memoryHits": 66459,
+        "deduplicated": 19814,
+        "stages": 5856,
+        "postings": 5772267,
+        "candidates": 221171,
+        "positionIntegers": 19220578,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 2828266,
+        "resultRequests": 104,
+        "resultBytes": 5419340,
+        "resultSharedGets": 154,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 151235804,
+        "repeatedDecodedBytes": 1770228,
+        "inflatedBytes": 930422,
+        "repeatedInflatedBytes": 0
+      }
+    }
+  ]
+}

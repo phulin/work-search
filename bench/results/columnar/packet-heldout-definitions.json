@@ -1,0 +1,722 @@
+[
+  {
+    "q": "douglasone",
+    "kind": "packet-frequency",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "douglasone AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "douglasone AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "douglasone /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "\"douglasone of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "lowelce",
+    "kind": "packet-frequency",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "lowelce AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "lowelce AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "lowelce /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "\"lowelce of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 1,
+    "anchorDf": 1
+  },
+  {
+    "q": "abrahamyan",
+    "kind": "packet-frequency",
+    "dfBin": 4,
+    "anchorDf": 5
+  },
+  {
+    "q": "abrahamyan AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 4,
+    "anchorDf": 5
+  },
+  {
+    "q": "abrahamyan AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 4,
+    "anchorDf": 5
+  },
+  {
+    "q": "abrahamyan /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 4,
+    "anchorDf": 5
+  },
+  {
+    "q": "\"abrahamyan of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 4,
+    "anchorDf": 5
+  },
+  {
+    "q": "mazzocone",
+    "kind": "packet-frequency",
+    "dfBin": 4,
+    "anchorDf": 7
+  },
+  {
+    "q": "mazzocone AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 4,
+    "anchorDf": 7
+  },
+  {
+    "q": "mazzocone AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 4,
+    "anchorDf": 7
+  },
+  {
+    "q": "mazzocone /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 4,
+    "anchorDf": 7
+  },
+  {
+    "q": "\"mazzocone of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 4,
+    "anchorDf": 7
+  },
+  {
+    "q": "askania",
+    "kind": "packet-frequency",
+    "dfBin": 16,
+    "anchorDf": 17
+  },
+  {
+    "q": "askania AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 16,
+    "anchorDf": 17
+  },
+  {
+    "q": "askania AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 16,
+    "anchorDf": 17
+  },
+  {
+    "q": "askania /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 16,
+    "anchorDf": 17
+  },
+  {
+    "q": "\"askania of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 16,
+    "anchorDf": 17
+  },
+  {
+    "q": "briganttihughes",
+    "kind": "packet-frequency",
+    "dfBin": 16,
+    "anchorDf": 19
+  },
+  {
+    "q": "briganttihughes AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 16,
+    "anchorDf": 19
+  },
+  {
+    "q": "briganttihughes AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 16,
+    "anchorDf": 19
+  },
+  {
+    "q": "briganttihughes /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 16,
+    "anchorDf": 19
+  },
+  {
+    "q": "\"briganttihughes of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 16,
+    "anchorDf": 19
+  },
+  {
+    "q": "merhige",
+    "kind": "packet-frequency",
+    "dfBin": 64,
+    "anchorDf": 120
+  },
+  {
+    "q": "merhige AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 64,
+    "anchorDf": 120
+  },
+  {
+    "q": "merhige AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 64,
+    "anchorDf": 120
+  },
+  {
+    "q": "merhige /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 64,
+    "anchorDf": 120
+  },
+  {
+    "q": "\"merhige of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 64,
+    "anchorDf": 120
+  },
+  {
+    "q": "loches",
+    "kind": "packet-frequency",
+    "dfBin": 64,
+    "anchorDf": 96
+  },
+  {
+    "q": "loches AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 64,
+    "anchorDf": 96
+  },
+  {
+    "q": "loches AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 64,
+    "anchorDf": 96
+  },
+  {
+    "q": "loches /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 64,
+    "anchorDf": 96
+  },
+  {
+    "q": "\"loches of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 64,
+    "anchorDf": 96
+  },
+  {
+    "q": "degraffenreid",
+    "kind": "packet-frequency",
+    "dfBin": 128,
+    "anchorDf": 139
+  },
+  {
+    "q": "degraffenreid AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 128,
+    "anchorDf": 139
+  },
+  {
+    "q": "degraffenreid AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 128,
+    "anchorDf": 139
+  },
+  {
+    "q": "degraffenreid /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 128,
+    "anchorDf": 139
+  },
+  {
+    "q": "\"degraffenreid of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 128,
+    "anchorDf": 139
+  },
+  {
+    "q": "eclipse",
+    "kind": "packet-frequency",
+    "dfBin": 128,
+    "anchorDf": 252
+  },
+  {
+    "q": "eclipse AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 128,
+    "anchorDf": 252
+  },
+  {
+    "q": "eclipse AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 128,
+    "anchorDf": 252
+  },
+  {
+    "q": "eclipse /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 128,
+    "anchorDf": 252
+  },
+  {
+    "q": "\"eclipse of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 128,
+    "anchorDf": 252
+  },
+  {
+    "q": "sowell",
+    "kind": "packet-frequency",
+    "dfBin": 256,
+    "anchorDf": 269
+  },
+  {
+    "q": "sowell AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 256,
+    "anchorDf": 269
+  },
+  {
+    "q": "sowell AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 256,
+    "anchorDf": 269
+  },
+  {
+    "q": "sowell /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 256,
+    "anchorDf": 269
+  },
+  {
+    "q": "\"sowell of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 256,
+    "anchorDf": 269
+  },
+  {
+    "q": "homologation",
+    "kind": "packet-frequency",
+    "dfBin": 256,
+    "anchorDf": 394
+  },
+  {
+    "q": "homologation AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 256,
+    "anchorDf": 394
+  },
+  {
+    "q": "homologation AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 256,
+    "anchorDf": 394
+  },
+  {
+    "q": "homologation /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 256,
+    "anchorDf": 394
+  },
+  {
+    "q": "\"homologation of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 256,
+    "anchorDf": 394
+  },
+  {
+    "q": "ormsby",
+    "kind": "packet-frequency",
+    "dfBin": 400,
+    "anchorDf": 401
+  },
+  {
+    "q": "ormsby AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 400,
+    "anchorDf": 401
+  },
+  {
+    "q": "ormsby AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 400,
+    "anchorDf": 401
+  },
+  {
+    "q": "ormsby /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 400,
+    "anchorDf": 401
+  },
+  {
+    "q": "\"ormsby of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 400,
+    "anchorDf": 401
+  },
+  {
+    "q": "slated",
+    "kind": "packet-frequency",
+    "dfBin": 400,
+    "anchorDf": 490
+  },
+  {
+    "q": "slated AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 400,
+    "anchorDf": 490
+  },
+  {
+    "q": "slated AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 400,
+    "anchorDf": 490
+  },
+  {
+    "q": "slated /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 400,
+    "anchorDf": 490
+  },
+  {
+    "q": "\"slated of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 400,
+    "anchorDf": 490
+  },
+  {
+    "q": "callaway",
+    "kind": "packet-frequency",
+    "dfBin": 512,
+    "anchorDf": 971
+  },
+  {
+    "q": "callaway AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 512,
+    "anchorDf": 971
+  },
+  {
+    "q": "callaway AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 512,
+    "anchorDf": 971
+  },
+  {
+    "q": "callaway /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 512,
+    "anchorDf": 971
+  },
+  {
+    "q": "\"callaway of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 512,
+    "anchorDf": 971
+  },
+  {
+    "q": "knowlton",
+    "kind": "packet-frequency",
+    "dfBin": 512,
+    "anchorDf": 548
+  },
+  {
+    "q": "knowlton AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 512,
+    "anchorDf": 548
+  },
+  {
+    "q": "knowlton AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 512,
+    "anchorDf": 548
+  },
+  {
+    "q": "knowlton /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 512,
+    "anchorDf": 548
+  },
+  {
+    "q": "\"knowlton of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 512,
+    "anchorDf": 548
+  },
+  {
+    "q": "hoover",
+    "kind": "packet-frequency",
+    "dfBin": 1024,
+    "anchorDf": 2164
+  },
+  {
+    "q": "hoover AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 1024,
+    "anchorDf": 2164
+  },
+  {
+    "q": "hoover AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 1024,
+    "anchorDf": 2164
+  },
+  {
+    "q": "hoover /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 1024,
+    "anchorDf": 2164
+  },
+  {
+    "q": "\"hoover of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 1024,
+    "anchorDf": 2164
+  },
+  {
+    "q": "accessed",
+    "kind": "packet-frequency",
+    "dfBin": 1024,
+    "anchorDf": 2526
+  },
+  {
+    "q": "accessed AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 1024,
+    "anchorDf": 2526
+  },
+  {
+    "q": "accessed AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 1024,
+    "anchorDf": 2526
+  },
+  {
+    "q": "accessed /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 1024,
+    "anchorDf": 2526
+  },
+  {
+    "q": "\"accessed of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 1024,
+    "anchorDf": 2526
+  },
+  {
+    "q": "hampshire",
+    "kind": "packet-frequency",
+    "dfBin": 4096,
+    "anchorDf": 5850
+  },
+  {
+    "q": "hampshire AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 4096,
+    "anchorDf": 5850
+  },
+  {
+    "q": "hampshire AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 4096,
+    "anchorDf": 5850
+  },
+  {
+    "q": "hampshire /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 4096,
+    "anchorDf": 5850
+  },
+  {
+    "q": "\"hampshire of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 4096,
+    "anchorDf": 5850
+  },
+  {
+    "q": "match",
+    "kind": "packet-frequency",
+    "dfBin": 4096,
+    "anchorDf": 5827
+  },
+  {
+    "q": "match AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 4096,
+    "anchorDf": 5827
+  },
+  {
+    "q": "match AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 4096,
+    "anchorDf": 5827
+  },
+  {
+    "q": "match /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 4096,
+    "anchorDf": 5827
+  },
+  {
+    "q": "\"match of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 4096,
+    "anchorDf": 5827
+  },
+  {
+    "q": "definition",
+    "kind": "packet-frequency",
+    "dfBin": 16384,
+    "anchorDf": 59037
+  },
+  {
+    "q": "definition AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 16384,
+    "anchorDf": 59037
+  },
+  {
+    "q": "definition AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 16384,
+    "anchorDf": 59037
+  },
+  {
+    "q": "definition /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 16384,
+    "anchorDf": 59037
+  },
+  {
+    "q": "\"definition of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 16384,
+    "anchorDf": 59037
+  },
+  {
+    "q": "violate",
+    "kind": "packet-frequency",
+    "dfBin": 16384,
+    "anchorDf": 45863
+  },
+  {
+    "q": "violate AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 16384,
+    "anchorDf": 45863
+  },
+  {
+    "q": "violate AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 16384,
+    "anchorDf": 45863
+  },
+  {
+    "q": "violate /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 16384,
+    "anchorDf": 45863
+  },
+  {
+    "q": "\"violate of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 16384,
+    "anchorDf": 45863
+  },
+  {
+    "q": "obtain",
+    "kind": "packet-frequency",
+    "dfBin": 65536,
+    "anchorDf": 106790
+  },
+  {
+    "q": "obtain AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 65536,
+    "anchorDf": 106790
+  },
+  {
+    "q": "obtain AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 65536,
+    "anchorDf": 106790
+  },
+  {
+    "q": "obtain /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 65536,
+    "anchorDf": 106790
+  },
+  {
+    "q": "\"obtain of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 65536,
+    "anchorDf": 106790
+  },
+  {
+    "q": "treatment",
+    "kind": "packet-frequency",
+    "dfBin": 65536,
+    "anchorDf": 69838
+  },
+  {
+    "q": "treatment AND court",
+    "kind": "packet-common-intersection",
+    "dfBin": 65536,
+    "anchorDf": 69838
+  },
+  {
+    "q": "treatment AND summary",
+    "kind": "packet-term-intersection",
+    "dfBin": 65536,
+    "anchorDf": 69838
+  },
+  {
+    "q": "treatment /5 summary",
+    "kind": "packet-proximity",
+    "dfBin": 65536,
+    "anchorDf": 69838
+  },
+  {
+    "q": "\"treatment of\"",
+    "kind": "packet-sparse-phrase",
+    "dfBin": 65536,
+    "anchorDf": 69838
+  }
+]

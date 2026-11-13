@@ -11,6 +11,7 @@ import { benchmarkToken } from "../bench/columnar/token.js";
 import type { Root, Ref } from "../src/columnar/format.js";
 import { planMerges } from "./construction-merge-plan.js";
 import { vocabularyRoot } from "./construction-vocabulary-root.js";
+import { constructionHTTP } from "./construction-http.js";
 import { type Run } from "../src/columnar/construction/runs.js";
 import {
   OBJECT_GROUP,
@@ -107,21 +108,20 @@ function save(force = false) {
   });
   return saving;
 }
+const post = constructionHTTP(width);
 async function call(worker: number, path: string, input: any) {
   const url = urls[worker % urls.length];
-  for (let retry = 0; ; retry++)
+  for (let retry = 0; ; retry++) {
+    let busy = false;
     try {
       const started = performance.now(),
-        response = await fetch(url + path, {
-          method: "POST",
-          headers: {
-            authorization: `Bearer ${token}`,
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({ build, ...input }),
-          signal: AbortSignal.timeout(240000),
-        }),
+        response = await post(
+          url + path,
+          token,
+          JSON.stringify({ build, ...input }),
+        ),
         text = await response.text();
+      busy = response.status === 503 && text.includes("capacity busy");
       if (!response.ok)
         throw Error(`${path} ${response.status}: ${text.slice(0, 1000)}`);
       const result = JSON.parse(text),
@@ -161,12 +161,17 @@ async function call(worker: number, path: string, input: any) {
           error: String(e),
         }) + "\n",
       );
-      if (retry === 6) throw e;
+      if (retry >= (busy ? 60 : 6)) throw e;
       console.log("Retry", url, path, String(e));
       await new Promise((r) =>
-        setTimeout(r, Math.min(10000, 500 * 2 ** retry)),
+        setTimeout(
+          r,
+          (busy ? 500 : Math.min(10000, 500 * 2 ** retry)) *
+            (0.75 + Math.random() * 0.5),
+        ),
       );
     }
+  }
 }
 async function pool<T>(
   jobs: T[],

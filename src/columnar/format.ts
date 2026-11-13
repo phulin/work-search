@@ -148,31 +148,53 @@ export function pack(a: ArrayLike<number>, delta = false) {
 export function unpack(data: Uint8Array): Uint32Array<ArrayBuffer> {
   const v = view(data);
   if (data.length < 12) throw Error("Truncated integer block");
-  const n = v.getUint32(0, true),
-    width = v.getUint8(8),
-    delta = v.getUint8(9);
+  if (
+    v.getUint8(8) > 32 ||
+    v.getUint8(9) > 1 ||
+    data.length !==
+      12 + Math.ceil((v.getUint32(0, true) * v.getUint8(8)) / 32) * 4
+  )
+    throw Error("Invalid integer block");
+  const out = new Uint32Array(v.getUint32(0, true));
+  unpackColumn(v, 0, data.length, out);
+  return out;
+}
+/** Decode a physical column directly into query-owned numeric workspace. */
+export function unpackColumn(
+  v: DataView,
+  from: number,
+  length: number,
+  out: Uint32Array,
+  destination = 0,
+) {
+  if (length < 12 || from < 0 || from + length > v.byteLength)
+    throw Error("Truncated integer block");
+  const n = v.getUint32(from, true),
+    width = v.getUint8(from + 8),
+    delta = v.getUint8(from + 9);
   if (
     width > 32 ||
     delta > 1 ||
-    data.length !== 12 + Math.ceil((n * width) / 32) * 4
+    length !== 12 + Math.ceil((n * width) / 32) * 4 ||
+    destination < 0 ||
+    destination + n > out.length
   )
     throw Error("Invalid integer block");
-  const out = new Uint32Array(n),
-    mask = width === 32 ? 0xffffffff : 2 ** width - 1;
-  let previous = v.getUint32(4, true);
+  const mask = width === 32 ? 0xffffffff : 2 ** width - 1;
+  let previous = v.getUint32(from + 4, true);
   for (let i = 0; i < n; i++) {
     const bit = i * width,
-      at = 12 + (bit >>> 5) * 4,
+      at = from + 12 + (bit >>> 5) * 4,
       shift = bit & 31;
     let x = width ? v.getUint32(at, true) >>> shift : 0;
     if (shift + width > 32) x |= v.getUint32(at + 4, true) << (32 - shift);
     x = (x & mask) >>> 0;
     if (delta && previous + x > 0xffffffff)
       throw Error("Packed integer overflow");
-    out[i] = delta ? previous + x : x;
-    previous = out[i];
+    out[destination + i] = delta ? previous + x : x;
+    previous = out[destination + i];
   }
-  return out;
+  return n;
 }
 export function encodeBranches(a: Branch[]) {
   const out = new Uint8Array(a.length * 72),

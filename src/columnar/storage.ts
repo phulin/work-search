@@ -120,7 +120,7 @@ export class Reader {
     candidatePackageBytes: 0,
     inflatedBytes: 0,
     repeatedInflatedBytes: 0,
-    activeBufferBytes: 0,
+    anchorBufferBytes: 0,
     peakActiveBufferBytes: 0,
     peakPendingSharedBytes: 0,
     coalescedReads: 0,
@@ -130,6 +130,7 @@ export class Reader {
   seenInflated = new Set<number>();
   seenPackageSections = new Set<string>();
   pairDecoded = new Map<string, Uint8Array>();
+  anchors = new Map<string, import("./pair-execution.js").PairAnchorEvidence>();
   constructor(
     readonly root: Pick<Root, "generation" | "objects" | "objectIds">,
     readonly source: Source,
@@ -487,7 +488,7 @@ export class Reader {
       )
         throw Error("Document package digest mismatch");
       this.memory.pages.set(key, result.data, result.data.length);
-      if (this.shared && result.data.length <= 2 * 1048576) {
+      if (this.shared && result.data.length <= 4 * 1048576) {
         while (this.sharedWriteBytes >= 2 * 1048576)
           await Promise.race(this.sharedWrites);
         this.stats.sharedPuts++;
@@ -538,14 +539,16 @@ export class Reader {
     const key = tag + this.key(ref),
       old = this.memory.decoded.get(key) as T | undefined;
     if (old) return old;
-    this.stats.decodedBytes += data.length;
-    const address = ref[0] * 64 * 1048576 + ref[1];
-    if (this.seenDecoded.has(address))
-      this.stats.repeatedDecodedBytes += data.length;
-    this.seenDecoded.add(address);
+    this.observeDecoded(ref, data.length);
     const value = decode(data);
     this.memory.decoded.set(key, value, charge);
     return value;
+  }
+  observeDecoded(ref: Ref, bytes: number) {
+    this.stats.decodedBytes += bytes;
+    const address = ref[0] * 64 * 1048576 + ref[1];
+    if (this.seenDecoded.has(address)) this.stats.repeatedDecodedBytes += bytes;
+    this.seenDecoded.add(address);
   }
   async branches(ref: Ref) {
     return this.load(ref, decodeBranches, ref[2] * 4);

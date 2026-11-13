@@ -124,13 +124,14 @@ for (const label of labels) {
     byCandidates: buckets(
       [1, 2, 6, 17, 65, 257, 513, Infinity],
       (g) =>
-        g.find((r) => r.plan === "documents")?.diagnostics.candidates ??
-        g[0].diagnostics.candidates,
+        g.find((r) => (r.strategy ?? r.plan) === "documents")?.diagnostics
+          .candidates ?? g[0].diagnostics.candidates,
     ),
     byCompleteTermBytes: buckets(
       [1024, 16384, 65536, 262144, 1048576, 4194304, 8388609, Infinity],
       (g) => {
-        const d = g.find((r) => r.plan === "complete-terms")?.diagnostics.plan;
+        const d = g.find((r) => (r.strategy ?? r.plan) === "complete-terms")
+          ?.diagnostics.plan;
         return d ? d.frequencyBytes + d.positionBytes : NaN;
       },
     ),

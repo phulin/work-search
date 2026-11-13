@@ -19,6 +19,11 @@ export function createColumnarWorker(
   heads?: { root: HeadRoot; data: Uint8Array },
   directoryData?: Uint8Array,
   documentDirectoryData?: Uint8Array,
+  runtime?: {
+    memory: Memory;
+    directory: TermDirectory;
+    documents?: DocumentDirectory;
+  },
 ) {
   if (pairs && pairs.baseGeneration !== root.generation)
     throw Error("Pair generation mismatch");
@@ -33,19 +38,22 @@ export function createColumnarWorker(
       documentDirectoryData.length !== root.documentPackages!.locators!.bytes)
   )
     throw Error("Bundled document directory mismatch");
-  const directory = directoryData
-      ? new TermDirectory(directoryData, root.count)
-      : undefined,
+  const directory =
+      runtime?.directory ??
+      (directoryData
+        ? new TermDirectory(directoryData, root.count)
+        : undefined),
     index = new ColumnarIndex(
       root,
       heads ? new Heads(heads.root, heads.data, root) : undefined,
       directory,
       undefined,
-      documentDirectoryData
-        ? new DocumentDirectory(documentDirectoryData)
-        : undefined,
+      runtime?.documents ??
+        (documentDirectoryData
+          ? new DocumentDirectory(documentDirectoryData)
+          : undefined),
     ),
-    memory = new Memory();
+    memory = runtime?.memory ?? new Memory();
   if (directoryData) memory.pages = new Lru(12 * 1048576);
   let isolate: string | undefined,
     sequence = 0;
@@ -115,6 +123,7 @@ export function createColumnarWorker(
           after: input.after,
           metadata: input.metadata !== false && input.metadata !== "false",
           snippets: input.snippets !== false && input.snippets !== "false",
+          exactTotal: input.exactTotal === true || input.exactTotal === "true",
         };
         if (
           !Number.isInteger(options.limit) ||
@@ -235,6 +244,7 @@ export function createColumnarWorker(
           {
             results: result.results,
             generation: result.generation,
+            ...(options.exactTotal ? { total: result.total } : {}),
             ...(authorized
               ? {
                   diagnostics: result.diagnostics,

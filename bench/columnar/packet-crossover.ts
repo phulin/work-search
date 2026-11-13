@@ -7,6 +7,7 @@ const name = process.env.CWS_VARIANTS ?? "work-search-cws-near",
   scenarios = JSON.parse(await readFile(process.env.CWS_SCENARIOS!, "utf8")),
   repeats = Number(process.env.CWS_REPEATS ?? 3),
   plans = (process.env.CWS_PLANS ?? "complete-terms,documents").split(","),
+  readModes = (process.env.CWS_READ_MODES ?? "coalesced").split(","),
   token = await benchmarkToken(),
   rows: any[] = [],
   health = (await fetch(`https://${name}.phulin.workers.dev/health`).then((r) =>
@@ -43,6 +44,8 @@ const manifest = {
   startedAt: new Date().toISOString(),
   clientRegion: "local-New-England",
   responseCaching: false,
+  plans,
+  readModes,
 };
 const save = () =>
   writeFile(
@@ -53,12 +56,18 @@ for (let repeat = 0; repeat < repeats; repeat++) {
   for (const scenario of shuffle<any>(
     scenarios.scenarios.filter((s: any) => !s.options?.after),
   )) {
-    for (const plan of shuffle(plans)) {
+    for (const { plan, readMode } of shuffle(
+      plans.flatMap((plan) =>
+        readModes.map((readMode) => ({ plan, readMode })),
+      ),
+    )) {
       const requestId = randomUUID(),
         started = performance.now();
       let row: any = {
         name,
-        plan,
+        plan: readModes.length > 1 ? `${plan}:${readMode}` : plan,
+        strategy: plan,
+        readMode,
         q: scenario.q,
         kind: scenario.kind,
         options: scenario.options,
@@ -78,6 +87,11 @@ for (let repeat = 0; repeat < repeats; repeat++) {
                 q: scenario.q,
                 ...scenario.options,
                 resetMemory: manifest.condition !== "memory-reuse",
+                cacheNamespace:
+                  manifest.condition === "fresh-namespace"
+                    ? "transfer-" + requestId
+                    : undefined,
+                pageTransfers: readMode === "pages",
               }),
               signal: AbortSignal.timeout(120000),
             },
@@ -135,7 +149,7 @@ const quantiles = (a: number[]) => {
 };
 console.log(
   Object.fromEntries(
-    plans.map((plan) => {
+    [...new Set(rows.map((r) => r.plan))].map((plan) => {
       const all = rows.filter((r) => r.plan === plan);
       return [
         plan,

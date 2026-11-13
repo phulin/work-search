@@ -4,6 +4,8 @@ import type { TermDirectory, DirectoryTerm } from "./term-directory.js";
 import {
   executePackets,
   packageResult,
+  packetPlan,
+  type PacketPlan,
   type CandidatePackages,
 } from "./packet-execution.js";
 import { renderResults } from "./render.js";
@@ -36,6 +38,7 @@ import { verifyForward, type PairBatch } from "./forward.js";
 import type { Heads } from "./heads.js";
 import { planPairAnchor } from "./pair-evidence.js";
 import { readPairAnchor } from "./pair-execution.js";
+import { ScoreBatch } from "./score-batch.js";
 export interface Options {
   mode?: "and" | "or";
   limit?: number;
@@ -271,7 +274,15 @@ export class ColumnarIndex {
         options.after.doc >= this.root.count)
     )
       throw Error("Invalid search cursor");
+    let planned: PacketPlan | undefined;
     if (this.directory) {
+      planned = packetPlan(
+        ast,
+        terms as Map<string, DirectoryTerm>,
+        this.root,
+        options,
+        packages,
+      );
       const result = await executePackets(
         ast,
         terms as Map<string, DirectoryTerm>,
@@ -279,6 +290,7 @@ export class ColumnarIndex {
         reader,
         options,
         packages,
+        planned,
       );
       if (result) return result;
     }
@@ -434,6 +446,9 @@ export class ColumnarIndex {
         (_, i) => i,
       );
     let total = 0;
+    const scoreBatches = names.map(() => new ScoreBatch(BAND)),
+      candidateBuffer = new Uint32Array(BAND),
+      scoreBuffer = new Float64Array(BAND);
     for (const band of bands) {
       const lo = band * BAND,
         hi = Math.min(this.root.count, lo + BAND),
@@ -518,42 +533,19 @@ export class ColumnarIndex {
           });
       }
       reader.stats.stages++;
-      const data = await Promise.all(
-        blocks.flatMap((bs) =>
-          bs.map((b) => reader.load(b.score, decodeScores)),
-        ),
+      const data = await reader.many(
+        blocks.flatMap((bs) => bs.map((b) => b.score)),
       );
       let p = 0;
-      const columns = blocks.map((bs) => {
-        const decoded = bs.map(() => data[p++]);
-        const length = decoded.reduce((s, d) => s + d.docs.length, 0),
-          docs = new Uint32Array(length),
-          body = new Uint32Array(length),
-          title = new Uint32Array(length),
-          handle = new Uint32Array(size),
-          blockIndex = new Uint32Array(length),
-          blockRow = new Uint8Array(length),
-          b = new Float64Array(size),
-          t = new Float64Array(size);
-        let start = 0;
-        decoded.forEach((s, j) => {
-          reader.stats.postings += s.docs.length;
-          docs.set(s.docs, start);
-          body.set(s.body, start);
-          title.set(s.title, start);
-          for (let r = 0; r < s.docs.length; r++) {
-            const d = s.docs[r];
-            blockIndex[start + r] = j;
-            blockRow[start + r] = r;
-            if (d >= lo && d < hi) {
-              handle[d - lo] = start + r + 1;
-              b[d - lo] = s.b.getFloat64(r * 8, true);
-              t[d - lo] = s.t.getFloat64(r * 8, true);
-            }
-          }
-          start += s.docs.length;
-        });
-        return { docs, body, title, handle, blockIndex, blockRow, b, t };
+      const columns = blocks.map((bs, term) => {
+        const batch = scoreBatches[term];
+        batch.reset(lo, size);
+        for (let j = 0; j < bs.length; j++) {
+          const raw = data[p++];
+          reader.stats.postings += batch.append(raw, j);
+          reader.observeDecoded(bs[j].score, raw.length);
+        }
+        return batch.columns();
       });
       const nameIndex = new Map(names.map((n, i) => [n, i])),
         present = (j: number, d: number) => {
@@ -562,8 +554,8 @@ export class ColumnarIndex {
           return r && (field === "all" || c[field][r - 1]) ? 1 : 0;
         };
       const predicate = compileCoarse(ast, nameIndex, present);
-      const candidates = new Uint32Array(size),
-        values = new Float64Array(size);
+      const candidates = candidateBuffer,
+        values = scoreBuffer;
       let nc = 0;
       for (let d = 0; d < size; d++) {
         if (!cells[d >>> 7]) continue;
@@ -773,25 +765,14 @@ export class ColumnarIndex {
         });
       }
       const active =
-        columns.reduce(
-          (s, c) =>
-            s +
-            c.docs.byteLength +
-            c.body.byteLength +
-            c.title.byteLength +
-            c.handle.byteLength +
-            c.blockIndex.byteLength +
-            c.blockRow.byteLength +
-            c.b.byteLength +
-            c.t.byteLength,
-          0,
-        ) +
+        scoreBatches.reduce((s, batch) => s + batch.bytes, 0) +
+        data.reduce((s, raw) => s + raw.length, 0) +
         candidates.byteLength +
         values.byteLength +
         [...positionData.values()].reduce((s, b) => s + b.length, 0);
       reader.stats.peakActiveBufferBytes = Math.max(
         reader.stats.peakActiveBufferBytes,
-        active,
+        active + reader.stats.anchorBufferBytes,
       );
     }
     const ranked = heap.values.sort(
@@ -833,11 +814,22 @@ export class ColumnarIndex {
               used: !!pairAnchor,
             }
           : undefined,
-        executor: pairAnchor
-          ? "positional-pair"
-          : anchor && anchor.df < this.root.count / 16
-            ? "selective"
-            : "block-max-maxscore",
+        plan: planned
+          ? {
+              ...planned,
+              kind: "blocks",
+              fallbackFrom:
+                planned.kind !== "blocks" ? planned.kind : undefined,
+            }
+          : undefined,
+        positionalPairCandidates: context?.candidates.length,
+        executor: context
+          ? "pair-blocks"
+          : pairAnchor
+            ? "positional-pair"
+            : anchor && anchor.df < this.root.count / 16
+              ? "selective"
+              : "block-max-maxscore",
         wallMs: performance.now() - started,
         retainedPageBytes: reader.memory.pages.bytes,
         retainedDecodedBytes: reader.memory.decoded.bytes,

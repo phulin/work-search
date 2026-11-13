@@ -2,9 +2,13 @@ import { BuildStore, type Chunk } from "./runs.js";
 import { unpack, type PositionalPair } from "../format.js";
 import {
   documentGroupPairStatistics,
-  mergePairStatistics,
   PairStatistics,
 } from "./pair-statistics.js";
+import {
+  storePairStatistics,
+  mergePairStatisticsRuns,
+  type PairStatisticsRun,
+} from "./pair-statistics-runs.js";
 import {
   documentGroupPairRuns,
   pairRunEntries,
@@ -13,12 +17,6 @@ import {
 } from "./pair-occurrences.js";
 import { ObjectStore, PackedWriter } from "./finish.js";
 import { PairPacket } from "../pair-packet.js";
-export interface PairStatisticsRun {
-  first: number;
-  end: number;
-  vocabulary: string;
-  data: Chunk;
-}
 export async function pairStatisticsJob(
   store: BuildStore,
   input: {
@@ -53,43 +51,17 @@ export async function pairStatisticsJob(
       g.first,
       vocabulary.terms.map((t: any) => t.id),
     );
-  return {
-    first: g.first,
-    end: g.end,
-    vocabulary: input.vocabularyRef.sha256,
-    data: await store.put(data),
-  };
+  return storePairStatistics(
+    store,
+    new PairStatistics(data),
+    input.vocabularyRef.sha256,
+  );
 }
 export async function mergePairStatisticsJob(
   store: BuildStore,
   input: { runs: PairStatisticsRun[] },
 ) {
-  if (
-    !Array.isArray(input.runs) ||
-    !input.runs.length ||
-    input.runs.length > 4 ||
-    input.runs.some(
-      (r, i) =>
-        r.vocabulary !== input.runs[0].vocabulary ||
-        (i > 0 && r.first !== input.runs[i - 1].end),
-    )
-  )
-    throw Error("Invalid pair statistics merge coverage");
-  const inputs = await Promise.all(
-      input.runs.map(async (r) => {
-        const stats = new PairStatistics(await store.get(r.data));
-        if (stats.first !== r.first || stats.end !== r.end)
-          throw Error("Pair statistics receipt mismatch");
-        return stats;
-      }),
-    ),
-    bytes = mergePairStatistics(inputs);
-  return {
-    first: inputs[0].first,
-    end: inputs.at(-1)!.end,
-    vocabulary: input.runs[0].vocabulary,
-    data: await store.put(bytes),
-  };
+  return mergePairStatisticsRuns(store, input.runs);
 }
 export async function pairOccurrencesJob(
   store: BuildStore,

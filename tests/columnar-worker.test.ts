@@ -101,9 +101,19 @@ it.each(["bundled", "metadata"])(
       const first = await call({
         q: '"clear and convincing evidence"',
         resetMemory: true,
+        exactTotal: true,
       });
       expect(first.status).toBe(200);
       expect(first.body.results).toHaveLength(20);
+      expect(first.body.total).toBe(400);
+      const negative = await call({
+        q: 'clear AND NOT "clear and"',
+        exactTotal: true,
+        limit: 2,
+      });
+      expect(negative.status).toBe(200);
+      expect(negative.body.total).toBe(200);
+      expect(negative.body.results).toHaveLength(2);
       expect(
         first.body.results.every((r: any) =>
           r.snippet.includes("clear and convincing evidence"),

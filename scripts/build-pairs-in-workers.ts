@@ -17,9 +17,55 @@ import {
 } from "../src/columnar/construction/runs.js";
 import { OBJECT_GROUP } from "../src/columnar/construction/finish.js";
 import type { Root } from "../src/columnar/format.js";
+import { pairPacketByteBound } from "../src/columnar/pair-packet.js";
+type SelectedPair = {
+  key: number;
+  a: number;
+  b: number;
+  df: number;
+  occurrences: number;
+  cost: number;
+  utility: number;
+};
+// Accelerator selection is bounded independently of corpus pair vocabulary.
+// Search completeness never depends on whether an accelerator is selected.
+class SelectionHeap {
+  rows: SelectedPair[] = [];
+  worse(a: SelectedPair, b: SelectedPair) {
+    return a.utility < b.utility || (a.utility === b.utility && a.key > b.key);
+  }
+  add(row: SelectedPair) {
+    const a = this.rows;
+    if (a.length === 65536) {
+      if (!this.worse(a[0], row)) return;
+      a[0] = row;
+      let i = 0;
+      for (;;) {
+        let j = i * 2 + 1;
+        if (j >= a.length) break;
+        if (j + 1 < a.length && this.worse(a[j + 1], a[j])) j++;
+        if (!this.worse(a[j], a[i])) break;
+        [a[i], a[j]] = [a[j], a[i]];
+        i = j;
+      }
+    } else {
+      a.push(row);
+      let i = a.length - 1;
+      while (i) {
+        const j = (i - 1) >>> 1;
+        if (!this.worse(a[i], a[j])) break;
+        [a[i], a[j]] = [a[j], a[i]];
+        i = j;
+      }
+    }
+  }
+}
 
 const [base, out, build] = process.argv.slice(2),
-  budget = Number(process.argv[5] ?? 64) * 1048576,
+  budget =
+    Number(process.argv[5]?.startsWith("--") ? 64 : (process.argv[5] ?? 64)) *
+    1048576,
+  reuseAt = process.argv.indexOf("--reuse-statistics"),
   width = Number(process.env.CWS_BUILD_CONCURRENCY ?? 8),
   url =
     process.env.CWS_BUILD_URL ??
@@ -41,7 +87,7 @@ if (
   );
 const root: Root = JSON.parse(await readFile(base + "/root.json", "utf8")),
   packages = JSON.parse(await readFile(base + "/build.json", "utf8")),
-  health = (await fetch(url + "/health", {
+  health = (await fetch(url + (process.env.CWS_PAIR_HEALTH ?? "/health"), {
     headers: { authorization: `Bearer ${token}` },
   }).then((r) => r.json())) as any;
 if (
@@ -74,6 +120,28 @@ if (
     "Pair construction source or code changed; use a new output/build",
   );
 const post = constructionHTTP(width);
+if (reuseAt >= 0 && !state.statistics.length) {
+  const previous = JSON.parse(
+    await readFile(process.argv[reuseAt + 1] + "/build.json", "utf8"),
+  );
+  if (
+    previous.code !== health.code ||
+    previous.sourceGeneration !== root.generation ||
+    !previous.selection
+  )
+    throw Error(
+      "Statistics reuse requires matching, completed corpus statistics",
+    );
+  state.vocabulary = previous.vocabulary;
+  state.vocabularyRef = previous.vocabularyRef;
+  state.statistics = previous.statistics;
+  state.levels = Object.fromEntries(
+    Object.entries(previous.levels).filter(([key]) =>
+      key.startsWith("statistics-"),
+    ),
+  );
+  state.reusedStatisticsBuild = previous.build;
+}
 let saving = Promise.resolve(),
   lastSaved = -Infinity;
 function save(force = false) {
@@ -152,7 +220,7 @@ if (!state.vocabulary) {
         "scripts/select-pair-vocabulary.ts",
         base,
         base + "/root.json",
-        "1024",
+        "65536",
       ],
       { stdio: "inherit" },
     );
@@ -212,54 +280,65 @@ const statistics = await merge("statistics", state.statistics);
 if (!state.selection) {
   if (statistics.first !== 0 || statistics.end !== root.count)
     throw Error("Incomplete pair statistics corpus");
-  const response = await fetch(`${uploader}/${statistics.data.key}`, {
-    headers: { authorization: `Bearer ${token}` },
-  });
-  if (!response.ok) throw Error("Pair statistics download failed");
-  const statisticsBytes = new Uint8Array(await response.arrayBuffer());
-  if (
-    statisticsBytes.length !== statistics.data.size ||
-    createHash("sha256").update(statisticsBytes).digest("hex") !==
-      statistics.data.sha256
-  )
-    throw Error("Pair statistics content mismatch");
-  const stats = new PairStatistics(statisticsBytes),
-    terms = state.vocabulary.terms,
+  const terms = state.vocabulary.terms,
     width = terms.length,
-    ranked = [];
-  for (let i = 0; i < stats.count; i++) {
-    const key = stats.key(i),
-      a = terms[Math.floor(key / width)],
-      b = terms[key % width],
-      df = stats.df(i),
-      occurrences = stats.occurrences(i),
-      anchor = Math.min(a.df, b.df),
-      cost = 64 + 128 * df + 12 * occurrences;
-    if (
-      anchor < Math.min(1024, root.count / 8) ||
-      df * 2 >= anchor ||
-      cost > 2 * 1048576
-    )
-      continue;
-    const saved =
-      (anchor - df) * root.avgBody +
-      Math.max(
-        0,
-        Math.min(
-          a.bodyOccurrences + a.titleOccurrences,
-          b.bodyOccurrences + b.titleOccurrences,
-        ) - occurrences,
-      );
-    ranked.push({
-      key,
-      a: a.id,
-      b: b.id,
-      df,
-      occurrences,
-      cost,
-      utility: (saved * occurrences) / cost,
+    heap = new SelectionHeap();
+  let lastKey = -1;
+  for (const chunk of statistics.chunks) {
+    const response = await fetch(`${uploader}/${chunk.key}`, {
+      headers: { authorization: `Bearer ${token}` },
     });
+    if (!response.ok) throw Error("Pair statistics download failed");
+    const statisticsBytes = new Uint8Array(await response.arrayBuffer());
+    if (
+      statisticsBytes.length !== chunk.size ||
+      createHash("sha256").update(statisticsBytes).digest("hex") !==
+        chunk.sha256
+    )
+      throw Error("Pair statistics content mismatch");
+    const stats = new PairStatistics(statisticsBytes);
+    if (
+      stats.first !== 0 ||
+      stats.end !== root.count ||
+      (stats.count && stats.key(0) <= lastKey)
+    )
+      throw Error("Pair statistics stream coverage/order mismatch");
+    for (let i = 0; i < stats.count; i++) {
+      const key = stats.key(i),
+        a = terms[Math.floor(key / width)],
+        b = terms[key % width],
+        df = stats.df(i),
+        occurrences = stats.occurrences(i),
+        anchor = Math.min(a.df, b.df),
+        cost = pairPacketByteBound(df, occurrences);
+      if (
+        anchor < Math.min(1024, root.count / 8) ||
+        df * 2 >= anchor ||
+        cost > 2 * 1048576
+      )
+        continue;
+      const saved =
+        (anchor - df) * root.avgBody +
+        Math.max(
+          0,
+          Math.min(
+            a.bodyOccurrences + a.titleOccurrences,
+            b.bodyOccurrences + b.titleOccurrences,
+          ) - occurrences,
+        );
+      heap.add({
+        key,
+        a: a.id,
+        b: b.id,
+        df,
+        occurrences,
+        cost,
+        utility: (saved * occurrences) / cost,
+      });
+    }
+    if (stats.count) lastKey = stats.key(stats.count - 1);
   }
+  const ranked = heap.rows;
   ranked.sort((a, b) => b.utility - a.utility || a.key - b.key);
   const pairs = [];
   let bytes = 0;
@@ -278,7 +357,7 @@ if (!state.selection) {
     budget,
     estimatedBytes: bytes,
     selection:
-      "Corpus occurrence-weighted avoided verification work per conservative packet byte; no query inputs",
+      "Up to 4096 corpus pairs from the highest 65536 occurrence-weighted avoided-verification utilities per conservative packet byte; no query inputs",
   };
   await writeFile(out + "/selection.json", JSON.stringify(state.selection));
   state.selectionRef = await call("/stage", "selection", {
@@ -376,6 +455,7 @@ await writeFile(
       coverage: pairs.coverage,
       workers: [url],
       concurrency: width,
+      reusedStatisticsBuild: state.reusedStatisticsBuild,
     },
     null,
     2,
