@@ -4,6 +4,10 @@ This experiment uses the existing stemmed 1M generation. The 10M build remains
 stopped. All membership encodings are sorted document-ID lists; there are no
 bitmap representations. Common-word presence uses the same list encoding.
 
+The [planner follow-up](PLANNER-REGRESSIONS.md) keeps this pair/context format
+unchanged and addresses optional-read decisions. Context-budget experiments are
+outside that round's scope.
+
 Construction reads compact token IDs from the verified local document packages,
 separately for body and title. The first scan materialized 1,497,515,111 adjacent
 pair occurrences in 435 seconds, including vocabulary loading. It retains the

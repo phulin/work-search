@@ -267,7 +267,7 @@ function anchorsFor(
   }
   return { anchors, candidates: Math.ceil(candidates), bytes };
 }
-export function packetPlan(
+function basePacketPlan(
   ast: Node,
   terms: Map<string, DirectoryTerm>,
   root: Root,
@@ -412,6 +412,46 @@ export function packetPlan(
     expectedDocumentBytes: documentBytes,
     gets: 0,
     dependentStages: 0,
+  };
+}
+/** Select the continuation by its remaining cost. Loading a filter does not
+ * force a different executor; every selected candidate remains covered. */
+export function packetPlan(
+  ast: Node,
+  terms: Map<string, DirectoryTerm>,
+  root: Root,
+  options: Options,
+  packages?: CandidatePackages,
+  preferred?: "complete-terms" | "documents",
+): PacketPlan {
+  const base = basePacketPlan(ast, terms, root, options, packages, preferred),
+    pair = packages?.membership;
+  if (!pair || !packages || preferred === "complete-terms" || pair.count > 512)
+    return base;
+  if (
+    base.kind === "documents" &&
+    !base.pairAnchors &&
+    base.expectedCandidates <= pair.count
+  )
+    return base;
+  let bytes = 0;
+  for (const doc of pair.values())
+    bytes += packages.byteLength?.(doc) ?? packages.averageBytes;
+  if (bytes > 8 * 1048576) return base;
+  const candidateCost = bytes / 262144 + Math.ceil(pair.count / 6) * 2,
+    completeCost =
+      (base.frequencyBytes + base.positionBytes) / 262144 +
+      Math.ceil(terms.size / 6) * 2;
+  if (base.kind === "complete-terms" && candidateCost >= completeCost)
+    return base;
+  return {
+    ...base,
+    kind: "documents",
+    expectedCandidates: pair.count,
+    expectedDocumentBytes: bytes,
+    gets: pair.count,
+    dependentStages: 2,
+    membershipAnchor: pair,
   };
 }
 export async function packageResult(
@@ -711,6 +751,8 @@ export async function executePackets(
         positions ? direct : undefined,
       );
     for (const doc of candidates) {
+      if (packages?.membership && !packages.membership.has(doc)) continue;
+      if (packages?.presenceFilter && !packages.presenceFilter(doc)) continue;
       reader.stats.candidates++;
       let score = 0,
         body = false;

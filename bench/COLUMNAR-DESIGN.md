@@ -20,6 +20,12 @@ The 6.5 MB router stays bundled and packet payloads stay remote. N/M common-anch
 exclusions are planner settings; they never remove matching or scoring data.
 These new pair packets have not yet been deployed to Workers.
 
+The [planner follow-up](PLANNER-REGRESSIONS.md) chooses optional pair and
+common-word reads against the ordinary term/document/block alternative before
+starting I/O. Selected pairs prove their endpoint words, avoiding redundant
+presence reads. Necessary initial reads start together, and loading membership
+does not force a different executor. The pair/context format remains unchanged.
+
 ## Binary layout
 
 CTD3 bundles metadata for at most one million high-DF terms and a compact direct

@@ -19,10 +19,148 @@ import { Reader } from "../src/columnar/storage.js";
 import {
   lookupMembershipAnchor,
   membershipAnchor,
+  planMembershipAnchor,
+  planCommonPresence,
 } from "../src/columnar/membership-anchor.js";
 import { parse } from "../src/query/parser.js";
 import { pairObjectKey } from "../src/columnar/pair-router.js";
 import { u32 } from "../src/columnar/format.js";
+it("compares optional membership work with the existing plan before reading, retaining sparse all-common anchors", () => {
+  const router = new PairRouter(
+      encodePairRouter(
+        {
+          generation: "f".repeat(64),
+          baseGeneration: "b".repeat(64),
+          documents: 1000000,
+          targetBytes: 131072,
+          contextBytes: 8192,
+          namespaces: [],
+          roots: [-1],
+          commonWords: [
+            { word: "of", id: 1, df: 918416 },
+            { word: "the", id: 2, df: 899105 },
+            { word: "and", id: 3, df: 878577 },
+            { word: "an", id: 4, df: 703385 },
+          ],
+        },
+        [],
+        [
+          {
+            namespace: 0,
+            bits: 0,
+            prefix: 0,
+            bytes: 131072,
+            crc32: 1,
+            pairs: 100,
+          },
+        ],
+        encodePairMembershipPacket([
+          { a: "burden", b: "of", data: u32([106450, 106450, 1, 101788, 553]) },
+          { a: "ranked", b: "tail", data: u32([44593, 44593, 0, 45000, 2000]) },
+          { a: "the", b: "an", data: u32([304, 304, 0, 700, 0]) },
+          { a: "an", b: "of", data: u32([216, 215, 1, 504, 0]) },
+        ]),
+      ),
+    ),
+    settings = { router, N: 100, M: 1000 },
+    words = new Map([
+      ["burden", { df: 155090 }],
+      ["of", { df: 918416 }],
+      ["prove", { df: 188056 }],
+      ["the", { df: 899105 }],
+      ["an", { df: 703385 }],
+    ]),
+    base = {
+      kind: "blocks" as const,
+      frequencyBytes: 28207300,
+      positionBytes: 98301112,
+      expectedCandidates: 155090,
+    };
+  expect(
+    planMembershipAnchor(
+      parse('"burden of prove"'),
+      settings,
+      words,
+      20000,
+      "body",
+      base,
+    ),
+  ).toBeUndefined();
+  expect(
+    planMembershipAnchor(parse('"the an of"'), settings, words, 20000, "all", {
+      ...base,
+      frequencyBytes: 56356668,
+      positionBytes: 252913700,
+      expectedCandidates: 703385,
+    })?.pairs,
+  ).toHaveLength(2);
+  expect(
+    planMembershipAnchor(parse('"the an of"'), settings, words, 20000, "all", {
+      ...base,
+      kind: "complete-terms",
+      frequencyBytes: 1000,
+      positionBytes: 1000,
+    }),
+  ).toBeUndefined();
+});
+it("skips presence already proved by a pair and presence that cannot repay its read", () => {
+  const router = new PairRouter(
+      encodePairRouter(
+        {
+          generation: "f".repeat(64),
+          baseGeneration: "b".repeat(64),
+          documents: 1000000,
+          targetBytes: 131072,
+          contextBytes: 8192,
+          namespaces: [],
+          roots: [NO_PAIR_PARTITION],
+          commonWords: [{ word: "common", id: 1, df: 100000 }],
+        },
+        [],
+        [],
+        encodePairMembershipPacket([]),
+      ),
+    ),
+    settings = {
+      router,
+      N: 100,
+      M: 1000,
+      presence: {
+        generation: router.metadata.generation,
+        entries: [{ bytes: 100000, crc32: 1 }],
+      },
+    },
+    required = new Set(["common", "selective"]),
+    base = {
+      kind: "documents" as const,
+      frequencyBytes: 1000,
+      positionBytes: 0,
+      expectedCandidates: 100,
+    };
+  expect(
+    planCommonPresence(required, settings, new Set(), base, 20000, false),
+  ).toEqual([0]);
+  expect(
+    planCommonPresence(
+      required,
+      settings,
+      new Set(["common"]),
+      base,
+      20000,
+      false,
+    ),
+  ).toEqual([]);
+  expect(
+    planCommonPresence(
+      required,
+      settings,
+      new Set(),
+      { ...base, kind: "complete-terms" },
+      20000,
+      false,
+    ),
+  ).toEqual([]);
+});
 
 it("preserves exact membership at every density using only sorted restartable lists", () => {
   for (const docs of [

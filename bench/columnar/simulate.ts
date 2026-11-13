@@ -17,6 +17,8 @@ import { LocalObjects } from "./local-storage.js";
 import { SimulatedIO } from "./latency-model.js";
 import { benchmarkToken } from "./token.js";
 import { PairRouter } from "../../src/columnar/pair-router.js";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 async function implementationDigest() {
   const hash = createHash("sha256");
   async function visit(path: string) {
@@ -62,7 +64,7 @@ if (
   plans.some(
     (p) =>
       !["auto", "complete-terms", "documents", "blocks"].includes(p) &&
-      !/^auto-N\d+-M\d+$/.test(p),
+      !/^(auto|control)-N\d+-M\d+$/.test(p),
   )
 )
   throw Error(
@@ -110,13 +112,22 @@ const source = new LocalObjects(
     r2MiBPerSecond: Number(process.env.CWS_R2_MIBPS ?? 100),
     sharedMiBPerSecond: Number(process.env.CWS_SHARED_MIBPS ?? 1000),
     jitterMs: Number(process.env.CWS_R2_JITTER_MS ?? 0),
-    seed: 20261113,
+    seed: Number(process.env.CWS_SEED ?? 20261113),
   },
   sharedCacheMiB = Number(process.env.CWS_SHARED_CACHE_MIB ?? 256);
 source.namedDirectory = process.env.CWS_PAIR_INDEX;
+const ControlIndex: typeof ColumnarIndex = process.env.CWS_CONTROL_SOURCE
+  ? (
+      await import(
+        pathToFileURL(
+          resolve(process.env.CWS_CONTROL_SOURCE, "src/columnar/search.ts"),
+        ).href
+      )
+    ).ColumnarIndex
+  : ColumnarIndex;
 const runtimes = new Map(
   plans.map((plan) => {
-    const setting = /^auto-N(\d+)-M(\d+)$/.exec(plan),
+    const setting = /^(?:auto|control)-N(\d+)-M(\d+)$/.exec(plan),
       membership =
         setting && pairRaw
           ? {
@@ -131,7 +142,7 @@ const runtimes = new Map(
     const memory = new Memory(),
       directory = new TermDirectory(raw, root.count),
       documents = new DocumentDirectory(documentRaw),
-      index = new ColumnarIndex(
+      index = new (plan.startsWith("control-") ? ControlIndex : ColumnarIndex)(
         root,
         undefined,
         directory,
@@ -207,7 +218,11 @@ async function query(
       ),
   };
   let result;
-  if (plan === "auto" || plan.startsWith("auto-N"))
+  if (
+    plan === "auto" ||
+    plan.startsWith("auto-N") ||
+    plan.startsWith("control-N")
+  )
     result = await index.search(scenario.q, reader, options);
   else {
     const original = parse(
@@ -359,7 +374,7 @@ for (const scenario of selected)
   }
 reset();
 for (const runtime of runtimes.values()) runtime.io.delaysEnabled = true;
-let seed = 20261113;
+let seed = model.seed;
 const random = () => {
   seed ^= seed << 13;
   seed ^= seed >>> 17;
@@ -374,6 +389,7 @@ const manifest = {
   documents: root.count,
   format: root.format,
   model,
+  comparisonSeed: model.seed,
   sharedCacheMiB,
   cacheIsolation:
     "Independent application and shared caches per plan; common immutable disk backing",
@@ -398,6 +414,7 @@ const manifest = {
     "Production execution and bounded cache population without artificial delays; all modeled delays enabled for measured responses",
   startedAt: new Date().toISOString(),
   implementationSha256,
+  controlSource: process.env.CWS_CONTROL_SOURCE,
 };
 await mkdir("work/columnar-bench", { recursive: true });
 const save = () =>

@@ -20,7 +20,15 @@ export class SimulatedIO {
   readonly sharedBytes: Lru<Uint8Array>;
   readonly source: Source;
   readonly shared: SharedPages;
-  calls = { r2: 0, sharedGet: 0, sharedPut: 0, requestedServiceMs: 0 };
+  calls = {
+    r2: 0,
+    sharedGet: 0,
+    sharedPut: 0,
+    r2Bytes: 0,
+    sharedGetBytes: 0,
+    sharedPutBytes: 0,
+    requestedServiceMs: 0,
+  };
   constructor(
     base: Source,
     readonly model: LatencyModel,
@@ -41,18 +49,21 @@ export class SimulatedIO {
       readNamed: base.readNamed
         ? async (key, bytes) => {
             this.calls.r2++;
+            this.calls.r2Bytes += bytes;
             await this.pause("r2", bytes);
             return base.readNamed!(key, bytes);
           }
         : undefined,
       read: async (key, offset, length) => {
         this.calls.r2++;
+        this.calls.r2Bytes += length;
         await this.pause("r2", length);
         return base.read(key, offset, length);
       },
       readPage: base.readPage
         ? async (key, offset, length, sha) => {
             this.calls.r2++;
+            this.calls.r2Bytes += length;
             await this.pause("r2", length);
             return base.readPage!(key, offset, length, sha);
           }
@@ -61,7 +72,9 @@ export class SimulatedIO {
         ? async (key, range) => {
             this.calls.r2++;
             await this.pause("r2", range?.length ?? 0);
-            return base.readWhole!(key, range);
+            const result = await base.readWhole!(key, range);
+            this.calls.r2Bytes += result.data.length;
+            return result;
           }
         : undefined,
     };
@@ -69,11 +82,13 @@ export class SimulatedIO {
       get: async (key) => {
         this.calls.sharedGet++;
         const data = this.sharedBytes.get(key);
+        this.calls.sharedGetBytes += data?.length ?? 0;
         await this.pause("shared", data?.length ?? 0);
         return data ? Uint8Array.from(data) : undefined;
       },
       put: async (key, value) => {
         this.calls.sharedPut++;
+        this.calls.sharedPutBytes += value.length;
         await this.pause("shared", value.length);
         this.sharedBytes.set(key, Uint8Array.from(value), value.length);
       },

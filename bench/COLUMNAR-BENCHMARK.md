@@ -7,6 +7,11 @@ from work still running.
 
 ## Current experiment scope and analysis change
 
+The [planner regression follow-up](PLANNER-REGRESSIONS.md) keeps N=100/M=1,000
+and the same pair/context bytes. It compares optional reads with the existing
+term/document/block plan before I/O, removes the post-read executor override,
+and measures randomized local comparisons under three cache conditions.
+
 The latest [complete-pair experiment](COMPLETE-PAIR-EXPERIMENT.md) has finished
 the nine-setting local N/M grid (600 correct measured responses), two measured
 execution corrections, a three-setting follow-up (400 correct responses), and

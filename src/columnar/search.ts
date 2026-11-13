@@ -1,4 +1,5 @@
 import { Heap } from "./top-k.js";
+import { intersectCursors } from "./numeric-cursor.js";
 import { tokenizerFor } from "../query/analysis.js";
 import type { DocumentDirectory } from "./document-directory.js";
 import type { TermDirectory, DirectoryTerm } from "./term-directory.js";
@@ -42,7 +43,9 @@ import { readPairAnchor } from "./pair-execution.js";
 import { ScoreBatch } from "./score-batch.js";
 import { lookupRemotePairs } from "./pair-lookup.js";
 import {
-  lookupMembershipAnchor,
+  planMembershipAnchor,
+  readMembershipAnchor,
+  planCommonPresence,
   membershipAnchor,
   commonWordExclusions,
   loadCommonPresence,
@@ -261,6 +264,76 @@ export class ColumnarIndex {
         this.membership && this.directory
           ? await this.directory.lookupBundled(requested)
           : undefined,
+      excludedWords = this.membership
+        ? commonWordExclusions(this.membership)
+        : undefined,
+      basePackages =
+        this.packages ??
+        (this.root.documentPackages
+          ? {
+              averageBytes: this.root.documentPackages.averageBytes,
+              byteLength: this.documentDirectory
+                ? (doc: number) => this.documentDirectory!.lookup(doc).length
+                : undefined,
+              load: (doc: number) =>
+                reader.document(
+                  this.root.documentPackages!.generation,
+                  doc,
+                  this.documentDirectory?.lookup(doc),
+                ),
+            }
+          : undefined),
+      preliminary =
+        bundled && requested.every((name) => bundled.has(name))
+          ? packetPlan(
+              original,
+              bundled,
+              this.root,
+              options,
+              basePackages ? { ...basePackages, excludedWords } : undefined,
+            )
+          : undefined,
+      membershipRead = this.membership
+        ? planMembershipAnchor(
+            original,
+            this.membership,
+            bundled,
+            basePackages?.averageBytes,
+            options.field,
+            preliminary,
+            options.exactTotal,
+          )
+        : undefined,
+      provedWords = new Set(
+        membershipRead?.pairs.flatMap((pair) => [pair.a, pair.b]) ?? [],
+      ),
+      filterAlternative =
+        preliminary && membershipRead
+          ? {
+              ...preliminary,
+              expectedCandidates: Math.min(
+                preliminary.expectedCandidates,
+                membershipRead.expectedCandidates,
+              ),
+              kind:
+                membershipRead.expectedCandidates <= 512 &&
+                membershipRead.expectedCandidates *
+                  (basePackages?.averageBytes ?? Infinity) <=
+                  8 * 1048576
+                  ? ("documents" as const)
+                  : preliminary.kind,
+            }
+          : preliminary,
+      presenceRanks = this.membership
+        ? planCommonPresence(
+            mandatory(original),
+            this.membership,
+            provedWords,
+            filterAlternative,
+            basePackages?.averageBytes ?? 16384,
+            options.exactTotal ?? false,
+          )
+        : [],
       termRequest = bundled
         ? this.terms(
             requested.filter((name) => !bundled.has(name)),
@@ -272,18 +345,11 @@ export class ColumnarIndex {
         : this.terms(requested, reader),
       [terms, selection, presence] = await Promise.all([
         termRequest,
-        this.membership
-          ? lookupMembershipAnchor(
-              original,
-              reader,
-              this.membership,
-              bundled,
-              this.root.documentPackages?.averageBytes,
-              options.field,
-            )
+        membershipRead && this.membership
+          ? readMembershipAnchor(membershipRead, reader, this.membership)
           : undefined,
         this.membership
-          ? loadCommonPresence(mandatory(original), reader, this.membership)
+          ? loadCommonPresence(presenceRanks, reader, this.membership)
           : [],
       ]),
       ast = simplify(original, (t) => terms.has(t)),
@@ -295,6 +361,11 @@ export class ColumnarIndex {
       boost = options.titleBoost ?? 2,
       field = options.field ?? "all",
       heap = new Heap(limit);
+    reader.stats.optionalReadAlternative = preliminary?.kind ?? "cold-metadata";
+    reader.stats.plannedPairPackets = membershipRead?.pairs.length ?? 0;
+    reader.stats.plannedPresenceLists = presenceRanks.length;
+    reader.stats.estimatedPairCandidates =
+      membershipRead?.expectedCandidates ?? 0;
     const loadedMembership = selection
       ? membershipAnchor(
           selection,
@@ -302,25 +373,6 @@ export class ColumnarIndex {
           field,
         )
       : undefined;
-    const excludedWords = this.membership
-      ? commonWordExclusions(this.membership)
-      : undefined;
-    const basePackages =
-      this.packages ??
-      (this.root.documentPackages
-        ? {
-            averageBytes: this.root.documentPackages.averageBytes,
-            byteLength: this.documentDirectory
-              ? (doc: number) => this.documentDirectory!.lookup(doc).length
-              : undefined,
-            load: (doc: number) =>
-              reader.document(
-                this.root.documentPackages!.generation,
-                doc,
-                this.documentDirectory?.lookup(doc),
-              ),
-          }
-        : undefined);
     const presenceFilter = presence.length
       ? (doc: number) => {
           for (let i = 0; i < presence.length; i++)
@@ -379,25 +431,6 @@ export class ColumnarIndex {
           options,
           packages,
         );
-      if (
-        loadedMembership &&
-        !(
-          planned.kind === "documents" &&
-          !planned.pairAnchors &&
-          planned.expectedCandidates < loadedMembership.count
-        )
-      )
-        planned = {
-          ...planned,
-          kind:
-            loadedMembership.count <= 512 &&
-            loadedMembership.count * (packages?.averageBytes ?? Infinity) <=
-              8 * 1048576
-              ? "documents"
-              : "blocks",
-          expectedCandidates: loadedMembership.count,
-          membershipAnchor: loadedMembership,
-        };
       const result = await executePackets(
         ast,
         terms as Map<string, DirectoryTerm>,
@@ -582,6 +615,16 @@ export class ColumnarIndex {
     let window: Branch[][][] = [];
     const membershipCursor = loadedMembership?.cursor();
     let membershipDoc = membershipCursor?.next() ?? Infinity;
+    // Sparse candidates should probe restart blocks directly. A sequential
+    // presence scan earns its cost only when candidate coverage is broad.
+    const probePresence =
+      (pairCandidates?.length ?? loadedMembership?.count ?? this.root.count) <
+      this.root.count / 16;
+    const presenceCursor =
+      presence.length && !probePresence
+        ? intersectCursors(presence.map((record) => record.cursor(field)))
+        : undefined;
+    let presenceDoc = presenceCursor?.next() ?? Infinity;
     for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
       const band = bands[bandIndex];
       // Broad numeric scans amortize physical GETs over four nearby bands.
@@ -704,11 +747,26 @@ export class ColumnarIndex {
         }
       }
       if (presenceFilter) {
-        candidateMask ??= new Uint8Array(size).fill(1);
-        cells.fill(0);
-        for (let d = 0; d < size; d++)
-          if (candidateMask[d] && presenceFilter(lo + d)) cells[d >>> 7] = 1;
-          else candidateMask[d] = 0;
+        if (probePresence) {
+          candidateMask ??= new Uint8Array(size).fill(1);
+          cells.fill(0);
+          for (let d = 0; d < size; d++)
+            if (candidateMask[d] && presenceFilter(lo + d)) cells[d >>> 7] = 1;
+            else candidateMask[d] = 0;
+        } else {
+          const previousMask = candidateMask;
+          candidateMask = new Uint8Array(size);
+          cells.fill(0);
+          while (presenceDoc < lo) presenceDoc = presenceCursor!.next();
+          while (presenceDoc < hi) {
+            const d = presenceDoc - lo;
+            if (!previousMask || previousMask[d]) {
+              candidateMask[d] = 1;
+              cells[d >>> 7] = 1;
+            }
+            presenceDoc = presenceCursor!.next();
+          }
+        }
       }
       if (!options.exactTotal && heap.threshold) {
         const threshold = heap.threshold;

@@ -9,6 +9,7 @@ import {
 import { PairMembershipPacket, PairMembership } from "./pair-membership.js";
 import { PairRouter, pairObjectKey } from "./pair-router.js";
 import type { PairPacket } from "./pair-packet.js";
+import { intersectCursors, unionCursors } from "./numeric-cursor.js";
 
 export interface MembershipSettings {
   router: PairRouter;
@@ -19,38 +20,128 @@ export interface MembershipSettings {
     entries: { bytes: number; crc32: number }[];
   };
 }
-export async function loadCommonPresence(
+export interface FilterAlternative {
+  kind: "complete-terms" | "documents" | "blocks";
+  frequencyBytes: number;
+  positionBytes: number;
+  expectedCandidates: number;
+}
+export interface PairReadPlan {
+  words: string[];
+  pairs: { a: string; b: string; df: number; bytes: number }[];
+  absent: boolean;
+  expectedCandidates: number;
+  readWork: number;
+  savedWork: number;
+}
+const cellCoverage = (count: number, documents: number) =>
+  -Math.expm1((-128 * count) / documents);
+/** Work estimates select reads; they never reject a matching document. */
+function savedWork(
+  alternative: FilterAlternative,
+  candidates: number,
+  documents: number,
+  documentBytes: number,
+  exactTotal: boolean,
+) {
+  const before = alternative.expectedCandidates,
+    after = Math.min(before, candidates);
+  if (!before) return 0;
+  if (alternative.kind === "documents") return (before - after) * documentBytes;
+  if (alternative.kind === "complete-terms") return 0;
+  return (
+    alternative.frequencyBytes *
+      Math.max(
+        0,
+        cellCoverage(before, documents) - cellCoverage(after, documents),
+      ) +
+    alternative.positionBytes *
+      (exactTotal ? 1 : 1 / 128) *
+      (1 - after / before)
+  );
+}
+export function commonWordExclusions(settings: MembershipSettings) {
+  return new Set(
+    settings.router.metadata.commonWords
+      .slice(0, settings.N)
+      .map((w) => w.word),
+  );
+}
+/** All dictionary/presence decisions are made locally before any optional I/O. */
+export function planCommonPresence(
   required: Set<string>,
+  settings: MembershipSettings,
+  proved: ReadonlySet<string>,
+  alternative: FilterAlternative | undefined,
+  documentBytes: number,
+  exactTotal: boolean,
+) {
+  if (
+    !settings.presence ||
+    !alternative ||
+    alternative.kind === "complete-terms"
+  )
+    return [];
+  const excluded = commonWordExclusions(settings);
+  if (required.size < 2 || ![...required].some((w) => !excluded.has(w)))
+    return [];
+  return settings.router.metadata.commonWords
+    .slice(0, settings.N)
+    .map((word, rank) => ({ ...word, rank }))
+    .filter((w) => required.has(w.word) && !proved.has(w.word))
+    .map((w) => {
+      const bytes = settings.presence!.entries[w.rank]?.bytes ?? Infinity,
+        candidates =
+          (alternative.expectedCandidates * w.df) /
+          settings.router.metadata.documents,
+        decode = Math.min(w.df, alternative.expectedCandidates * 128) * 4,
+        gain =
+          savedWork(
+            alternative,
+            candidates,
+            settings.router.metadata.documents,
+            documentBytes,
+            exactTotal,
+          ) -
+          bytes -
+          decode -
+          262144;
+      return { ...w, gain };
+    })
+    .filter((w) => w.gain > 0)
+    .sort((a, b) => b.gain - a.gain)
+    .slice(0, 2)
+    .map((w) => w.rank);
+}
+export async function loadCommonPresence(
+  ranks: readonly number[],
   reader: Reader,
   settings: MembershipSettings,
 ) {
   const presence = settings.presence;
-  if (!presence) return [];
-  const excluded = commonWordExclusions(settings);
-  if (required.size < 2 || ![...required].some((word) => !excluded.has(word)))
-    return [];
+  if (!presence || !ranks.length) return [];
   if (presence.generation !== settings.router.metadata.generation)
     throw Error("Common presence generation mismatch");
-  const selected = settings.router.metadata.commonWords
-    .slice(0, settings.N)
-    .map((word, rank) => ({ ...word, rank }))
-    .filter(
-      (word) =>
-        required.has(word.word) &&
-        word.df < settings.router.metadata.documents * 0.95,
-    )
-    .sort((a, b) => a.df - b.df)
-    .slice(0, 2);
   return Promise.all(
-    selected.map(async (word) => {
-      const entry = presence.entries[word.rank];
-      if (!entry) throw Error("Missing common presence locator");
+    ranks.map(async (rank) => {
+      const word = settings.router.metadata.commonWords[rank],
+        entry = presence.entries[rank];
+      if (!word || !entry) throw Error("Missing common presence locator");
       const raw = await reader.named(
-          `${presence.generation}/presence-${word.rank}.bin`,
+          `${presence.generation}/presence-${rank}.bin`,
           entry.bytes,
           entry.crc32,
         ),
-        record = new PairMembership(raw, settings.router.metadata.documents);
+        record = new PairMembership(
+          raw,
+          settings.router.metadata.documents,
+          undefined,
+          (_field, _block, n, bytes) => {
+            reader.stats.commonPresenceIntegers += n;
+            reader.stats.commonPresenceDecodedBytes += bytes;
+            reader.stats.decodedBytes += bytes;
+          },
+        );
       if (record.a !== word.id || record.b !== word.id || record.df !== word.df)
         throw Error("Common presence identity mismatch");
       return record;
@@ -70,15 +161,136 @@ export interface MembershipAnchor {
   evidence: ReturnType<typeof pairPhraseEvidence>;
   covered: (words: string[]) => boolean;
 }
-export function commonWordExclusions(settings: MembershipSettings) {
-  return new Set(
-    settings.router.metadata.commonWords
-      .slice(0, settings.N)
-      .map((w) => w.word),
-  );
+export function planMembershipAnchor(
+  ast: Node,
+  settings: MembershipSettings,
+  wordStats?: ReadonlyMap<string, { df: number }>,
+  candidateBytes = 16384,
+  field: "all" | "body" | "title" = "all",
+  alternative?: FilterAlternative,
+  exactTotal = false,
+): PairReadPlan | undefined {
+  const { router, M } = settings,
+    documents = router.metadata.documents,
+    excluded = commonWordExclusions(settings),
+    choices: PairReadPlan[] = [];
+  for (const words of mandatoryPhrases(ast).values()) {
+    const all = words.slice(1).map((b, at) => {
+      const a = words[at],
+        stats = router.statistics(a, b),
+        leaf = router.route(a, b),
+        wordDf = Math.min(
+          wordStats?.get(a)?.df ?? documents,
+          wordStats?.get(b)?.df ?? documents,
+        );
+      return {
+        a,
+        b,
+        at,
+        stats,
+        leaf,
+        df: stats
+          ? field === "body"
+            ? stats.bodyDf
+            : field === "title"
+              ? stats.titleDf
+              : stats.df
+          : Math.max(
+              1,
+              Math.ceil(Math.min(router.unknownDfEstimate(), wordDf / 2)),
+            ),
+        bytes: leaf?.bytes ?? 0,
+        excluded: stats !== undefined && stats.rank >= 0 && stats.rank < M,
+      };
+    });
+    if (all.some((p) => !p.leaf || (p.stats && p.df === 0)))
+      return {
+        words,
+        pairs: [],
+        absent: true,
+        expectedCandidates: 0,
+        readWork: 0,
+        savedWork: Infinity,
+      };
+    // Cold metadata is fetched in the same initial wave. Avoid speculating on
+    // optional filters until a comparable bundled alternative is available.
+    if (!alternative && wordStats) continue;
+    const ordinary = all.filter((p) => !p.excluded),
+      usable = ordinary.length
+        ? ordinary
+        : words.every((w) => excluded.has(w))
+          ? all
+          : [];
+    const unique = usable
+      .filter(
+        (p, i) => usable.findIndex((q) => p.a === q.a && p.b === q.b) === i,
+      )
+      .sort((a, b) => a.df - b.df || a.bytes - b.bytes || a.at - b.at);
+    if (!unique.length) continue;
+    const estimate = (pairs: typeof unique) => {
+      let count = pairs[0].df;
+      for (const p of pairs.slice(1)) {
+        const lead = pairs[0],
+          shared = [lead.a, lead.b].find((w) => w === p.a || w === p.b),
+          denominator = shared
+            ? (wordStats?.get(shared)?.df ?? documents)
+            : documents;
+        count = Math.min(
+          count,
+          p.df,
+          Math.ceil((count * p.df) / Math.max(1, denominator)),
+        );
+      }
+      const requests = new Map(
+        pairs.map((p) => [
+          pairObjectKey(router.metadata.generation, p.leaf!),
+          p.bytes,
+        ]),
+      );
+      const readWork =
+        [...requests.values()].reduce((n, b) => n + b, 0) +
+        pairs.reduce((n, p) => n + p.df * 4, 0) +
+        1048576;
+      const gain = alternative
+        ? savedWork(alternative, count, documents, candidateBytes, exactTotal)
+        : Infinity;
+      return {
+        words,
+        pairs,
+        absent: false,
+        expectedCandidates: count,
+        readWork,
+        savedWork: gain,
+      };
+    };
+    let choice = estimate(unique.slice(0, 1));
+    // Evaluate ordinary pair intersections together, before starting either GET.
+    for (const second of unique.slice(1)) {
+      const next = estimate([unique[0], second]);
+      if (
+        next.savedWork - next.readWork > choice.savedWork - choice.readWork ||
+        !alternative
+      )
+        choice = next;
+    }
+    if (alternative && choice.savedWork <= choice.readWork) continue;
+    // An excluded pair may filter a worthwhile ordinary anchor, without
+    // becoming the primary candidate generator itself.
+    if (choice.pairs.length === 1 && ordinary.length) {
+      for (const second of all.filter((p) => p.excluded)) {
+        const next = estimate([unique[0], second]);
+        if (next.savedWork - next.readWork > choice.savedWork - choice.readWork)
+          choice = next;
+      }
+    }
+    choices.push(choice);
+  }
+  return choices.sort(
+    (a, b) =>
+      b.savedWork - b.readWork - (a.savedWork - a.readWork) ||
+      a.expectedCandidates - b.expectedCandidates,
+  )[0];
 }
-/** Select at most two pair packets entirely from bundled information. All pair
- * reads start together; unknown statistics never trigger serial discovery. */
 export async function lookupMembershipAnchor(
   ast: Node,
   reader: Reader,
@@ -86,115 +298,23 @@ export async function lookupMembershipAnchor(
   wordStats?: ReadonlyMap<string, { df: number }>,
   candidateBytes = 16384,
   field: "all" | "body" | "title" = "all",
-): Promise<MembershipSelection | undefined> {
-  const { router, N, M } = settings,
-    excluded = commonWordExclusions(settings),
-    choices: {
-      words: string[];
-      pairs: {
-        a: string;
-        b: string;
-        df: number;
-        known: boolean;
-        bytes: number;
-        at: number;
-      }[];
-      cost: number;
-    }[] = [];
-  for (const words of mandatoryPhrases(ast).values()) {
-    // Exclusion affects anchor preference, not authoritative rejection. A
-    // mandatory phrase cannot match a field with no occurrence of one pair.
-    if (
-      words.slice(1).some((b, i) => {
-        const stats = router.statistics(words[i], b);
-        return (
-          stats &&
-          (field === "all"
-            ? stats.df
-            : field === "body"
-              ? stats.bodyDf
-              : stats.titleDf) === 0
-        );
-      })
-    )
-      return { words, records: [], absent: true };
-    const all = words.slice(1).map((b, i) => {
-      const a = words[i],
-        s = router.statistics(a, b);
-      return {
-        a,
-        b,
-        at: i,
-        df: s?.df ?? Infinity,
-        known: !!s,
-        bytes: s?.bytes ?? router.metadata.targetBytes,
-        excluded: s !== undefined && s.rank >= 0 && s.rank < M,
-      };
-    });
-    const ordinary = all.filter((p) => !p.excluded),
-      pairs = ordinary.length
-        ? ordinary
-        : words.every((w) => excluded.has(w))
-          ? all
-          : [];
-    pairs.sort(
-      (a, b) =>
-        a.df - b.df ||
-        a.bytes - b.bytes ||
-        Number(a.known) - Number(b.known) ||
-        Math.min(words.length, b.at + 3) -
-          Math.max(0, b.at - 1) -
-          (Math.min(words.length, a.at + 3) - Math.max(0, a.at - 1)) ||
-        a.at - b.at,
-    );
-    if (!pairs.length) continue;
-    const selected = [pairs[0]];
-    if (!pairs[0].known || pairs[0].df > 32) {
-      const other = pairs
-        .filter(
-          (p) =>
-            p !== pairs[0] &&
-            !p.known &&
-            (p.a !== pairs[0].a || p.b !== pairs[0].b),
-        )
-        .sort(
-          (a, b) =>
-            Math.abs(b.at - pairs[0].at) - Math.abs(a.at - pairs[0].at) ||
-            a.at - b.at,
-        )[0];
-      if (other) selected.push(other);
-    }
-    if (selected.length === 1 && ordinary.length) {
-      const lead = selected[0],
-        estimated = Number.isFinite(lead.df)
-          ? lead.df
-          : Math.min(
-              wordStats?.get(lead.a)?.df ?? router.metadata.documents,
-              wordStats?.get(lead.b)?.df ?? router.metadata.documents,
-            ),
-        filter = all
-          .filter((p) => p.excluded && p.df < router.metadata.documents * 0.95)
-          .sort((a, b) => a.df - b.df || a.bytes - b.bytes)[0];
-      if (
-        filter &&
-        estimated *
-          (1 - filter.df / router.metadata.documents) *
-          candidateBytes >
-          Math.max(router.metadata.targetBytes, filter.bytes) * 4
-      )
-        selected.push(filter);
-    }
-    choices.push({
-      words,
-      pairs: selected,
-      cost: pairs[0].known ? pairs[0].df : router.metadata.documents / 8,
-    });
-  }
-  choices.sort((a, b) => a.cost - b.cost);
-  const choice = choices[0];
-  if (!choice) return;
-  if (choice.pairs.some((pair) => !router.route(pair.a, pair.b)))
-    return { words: choice.words, records: [], absent: true };
+) {
+  const plan = planMembershipAnchor(
+    ast,
+    settings,
+    wordStats,
+    candidateBytes,
+    field,
+  );
+  return plan ? readMembershipAnchor(plan, reader, settings) : undefined;
+}
+export async function readMembershipAnchor(
+  choice: PairReadPlan,
+  reader: Reader,
+  settings: MembershipSettings,
+): Promise<MembershipSelection> {
+  const { router } = settings;
+  if (choice.absent) return { words: choice.words, records: [], absent: true };
   const requests = new Map<string, Promise<PairMembershipPacket>>();
   for (const pair of choice.pairs) {
     const leaf = router.route(pair.a, pair.b);
@@ -296,18 +416,27 @@ export function membershipAnchor(
   };
   function cursor() {
     if (direct) return direct.cursor(field);
-    const base =
-      selection.absent || !records.length
-        ? undefined
-        : records[0].cursor(field);
-    return {
-      next: () => {
-        if (!base) return Infinity;
-        for (let doc = base.next(); doc !== Infinity; doc = base.next())
-          if (has(doc)) return doc;
-        return Infinity;
-      },
+    if (selection.absent || !records.length) return { next: () => Infinity };
+    const perField = (f: 0 | 1) => {
+      const base = intersectCursors(
+        records.map((r) => (f ? r.title : r.body).cursor()),
+      );
+      if (!packets.size) return base;
+      return {
+        next: () => {
+          for (let doc = base.next(); doc !== Infinity; doc = base.next()) {
+            const exact = evidence(selection.words, doc, f);
+            if (exact === undefined || exact.length) return doc;
+          }
+          return Infinity;
+        },
+      };
     };
+    return field === "body"
+      ? perField(0)
+      : field === "title"
+        ? perField(1)
+        : unionCursors(perField(0), perField(1));
   }
   function* values() {
     const c = cursor();

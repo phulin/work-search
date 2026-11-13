@@ -128,6 +128,50 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
       }),
       control = new ColumnarIndex(before);
     const executors = new Set<string>();
+    const broadFilter = {
+        count: root.count,
+        *values(): Generator<number> {
+          throw Error("Broad filter must not force package materialization");
+        },
+        has: () => true,
+        cursor: () => ({ next: () => Infinity }),
+        evidence: () => undefined,
+        covered: () => false,
+      },
+      selectiveAst = parse("rare"),
+      selectiveReader = new Reader(root, objects.source),
+      selectiveTerms = await directory.lookup(
+        queryTerms(selectiveAst),
+        selectiveReader,
+      );
+    expect(
+      packetPlan(
+        selectiveAst,
+        selectiveTerms,
+        root,
+        {},
+        {
+          averageBytes: 500,
+          load: async (doc) => new DocumentPackage(packages.get(doc)!, doc),
+          membership: broadFilter,
+        },
+      ).kind,
+    ).toBe("complete-terms");
+    const unigramPlan = packetPlan(
+      selectiveAst,
+      selectiveTerms,
+      root,
+      {},
+      {
+        averageBytes: 500,
+        load: async (doc) => new DocumentPackage(packages.get(doc)!, doc),
+        membership: { ...broadFilter, count: 512 },
+      },
+      "documents",
+    );
+    expect(unigramPlan.kind).toBe("documents");
+    expect(unigramPlan.anchor).toBe("rare");
+    expect(unigramPlan.membershipAnchor).toBeUndefined();
     // A selective anchor can lead to unusually long documents. Direct package
     // lengths must reject an over-budget transfer before fetching any package.
     const longQuery = parse('"rare alpha"'),

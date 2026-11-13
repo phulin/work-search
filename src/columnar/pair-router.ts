@@ -72,6 +72,7 @@ export class PairRouter {
   private leaves: DataView;
   private common: PairMembershipPacket;
   private namespaces: Map<string, number>;
+  private tailDf?: number;
   constructor(readonly bytes: Uint8Array) {
     const v = view(bytes);
     if (bytes.length < 20 || v.getUint32(0, true) !== 0x31525043)
@@ -150,6 +151,21 @@ export class PairRouter {
       bytes: v.getUint32(12, true),
       rank: v.getUint32(16, true) - 1,
     };
+  }
+  /** Corpus-derived prior for pairs outside the ranked hot table. This is a
+   * planning estimate, never a matching or pruning bound. No wire-format change. */
+  unknownDfEstimate() {
+    if (this.tailDf !== undefined) return this.tailDf;
+    const data = view(this.common.bytes);
+    let df = this.metadata.documents;
+    for (let i = 0; i < this.common.count; i++) {
+      const at = data.getUint32(24 + i * 16, true),
+        n = data.getUint32(28 + i * 16, true);
+      if (n !== 20) throw Error("Invalid bundled pair statistics");
+      if (data.getUint32(at + 16, true))
+        df = Math.min(df, data.getUint32(at, true));
+    }
+    return (this.tailDf = df);
   }
   wordRank(word: string) {
     return this.metadata.commonWords.findIndex((w) => w.word === word);
