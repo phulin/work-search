@@ -3,7 +3,6 @@ import { createWriteStream } from "node:fs";
 import { mkdir, rename, writeFile, readFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { once } from "node:events";
-import { Readable } from "node:stream";
 import { createHash } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { parse } from "csv-parse";
@@ -26,38 +25,11 @@ const stdout = output === "-",
   out = stdout ? process.stdout : createWriteStream(output + ".tmp"),
   hash = createHash("sha256"),
   start = performance.now();
-const remote = process.env.CWS_SNAPSHOT_URL,
-  child = spawn("bzip2", remote ? ["-dc"] : ["-dc", snapshot], {
-    stdio: [remote ? "pipe" : "ignore", "pipe", "inherit"],
+const child = spawn("bzip2", ["-dc", snapshot], {
+    stdio: ["ignore", "pipe", "inherit"],
   }),
   csv = parse({ columns: true, escape: "\\", max_record_size: 128 * 1048576 });
-child.stdout!.pipe(csv);
-let sourceFinished: Promise<void> | undefined;
-if (remote) {
-  if (remote !== state.url)
-    throw Error("Snapshot URL must match pinned provenance");
-  const response = await fetch(remote, { headers: { "if-match": state.etag } });
-  if (
-    !response.ok ||
-    response.headers.get("etag") !== state.etag ||
-    Number(response.headers.get("content-length")) !== state.size
-  )
-    throw Error("Remote snapshot identity mismatch");
-  const stream = Readable.fromWeb(response.body as any);
-  let received = 0;
-  stream.on("data", (b: Buffer) => {
-    received += b.length;
-  });
-  stream.pipe(child.stdin!);
-  sourceFinished = new Promise<void>((ok, no) => {
-    stream.once("error", no);
-    stream.once("end", () =>
-      received === state.size ? ok() : no(Error("Truncated remote snapshot")),
-    );
-  });
-  sourceFinished.catch((e) => csv.destroy(e));
-  child.stdin!.on("error", () => stream.destroy());
-}
+child.stdout.pipe(csv);
 const stop = () => {
   child.kill("SIGTERM");
   csv.destroy(Error("Corpus extraction interrupted"));
@@ -157,7 +129,6 @@ try {
       );
     if (count === limit) break;
   }
-  if (count < limit && remote) await sourceFinished;
   out.end();
   await once(out, "finish");
   if (!stdout) await rename(output + ".tmp", output);

@@ -111,8 +111,8 @@ Exact bundled certificates took about 51 seconds and occupy about 6.07 MB.
 A fresh 1,000-document remote-spill build passed 96 live query/field comparisons
 including metadata and snippet presence, using CRC metadata returned with R2
 range reads. Its temporary R2 streams were successfully deleted. The full official
-snapshot is now being constructed through that bounded path; CI is being prepared
-to avoid local upload bandwidth dominating the build. Actual 1M and largest-corpus
+snapshot is now being constructed through that bounded path; An attempted CI build failed and was removed; construction continues locally.
+Its separate credential and temporary metadata copies were removed. Actual 1M and largest-corpus
 live performance are pending and are not inferred from 100k.
 
 191 repository tests pass, including independent exhaustive small corpora,

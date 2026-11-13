@@ -48,9 +48,8 @@ yarn columnar:heads work/cws-1m
 Accelerators read the published format independently of builder staging files.
 The default builder reclaims consumed staging data. For corpora larger than local
 disk, set `CWS_OFFLINE_STORE` to the authenticated uploader; construction spills
-checksummed temporary streams to R2 with bounded upload backpressure. The CI
-workflow `.github/workflows/columnar-scale.yml` pins the official source ETag,
-metadata hash, toolchain, and exact builder source.
+checksummed temporary streams to R2 with bounded upload backpressure. The local full-build command pins the official source snapshot and exact builder
+source; it does not depend on a CI service.
 
 ## Isolated deployment and comparison
 
