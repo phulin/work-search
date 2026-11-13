@@ -41,6 +41,12 @@ import type { Heads } from "./heads.js";
 import { planPairAnchor } from "./pair-evidence.js";
 import { readPairAnchor } from "./pair-execution.js";
 import { ScoreBatch } from "./score-batch.js";
+import {
+  essentialTerms,
+  cellBounds,
+  outward,
+  deferScoreFetch,
+} from "./maxscore.js";
 import { lookupRemotePairs } from "./pair-lookup.js";
 import {
   planMembershipAnchor,
@@ -456,7 +462,9 @@ export class ColumnarIndex {
       pairBatch: PairBatch | undefined,
       pairOffset = 0,
       context: Awaited<ReturnType<typeof readPairAnchor>> | undefined;
-    const BAND = 4096;
+    // Four document-directory windows per numeric batch amortize the two score
+    // phases without adding another remote stage per 4096 documents.
+    const BAND = 16384;
     if (loadedMembership) {
       wantedPositions.clear();
       for (const name of positionalTerms(ast, loadedMembership.covered))
@@ -609,6 +617,8 @@ export class ColumnarIndex {
         (_, i) => i,
       );
     let total = 0;
+    const nameIndex = new Map(names.map((n, i) => [n, i])),
+      requiredIndices = [...required].map((name) => nameIndex.get(name)!);
     const scoreBatches = names.map(() => new ScoreBatch(BAND)),
       candidateBuffer = new Uint32Array(BAND),
       scoreBuffer = new Float64Array(BAND);
@@ -673,14 +683,39 @@ export class ColumnarIndex {
               (upper === heap.threshold.score && first > heap.threshold.doc))
           )
             return [];
-          return bs.flatMap((blocks) => blocks.map((block) => block.score));
+          const perTermBounds = bs.map((blocks) => {
+              let b = 0,
+                t = 0;
+              for (const block of blocks) {
+                b = Math.max(b, block.b);
+                t = Math.max(t, block.t);
+              }
+              return (
+                (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0)
+              );
+            }),
+            essential = essentialTerms(
+              bs,
+              perTermBounds,
+              scoring,
+              requiredIndices,
+              BAND,
+              heap.threshold?.score,
+              options.exactTotal ?? false,
+            );
+          const lazy = deferScoreFetch(bs, essential, BAND, (ref) =>
+            reader.resident(ref),
+          );
+          return (lazy ? essential!.flatMap((j) => bs[j]) : bs.flat()).map(
+            (block) => block.score,
+          );
         });
         const footprint = reader.packetFootprint(refs);
         if (footprint <= 2 * 1048576) {
           const before = reader.stats.bytes;
           reader.stats.prefetchWindows++;
           reader.stats.prefetchTransferBytes += footprint;
-          await reader.prefetch(refs);
+          await reader.prefetchScores(refs);
           reader.stats.prefetchOriginBytes += reader.stats.bytes - before;
         }
       }
@@ -805,59 +840,127 @@ export class ColumnarIndex {
             return false;
           });
       }
-      reader.stats.stages++;
-      const data = await reader.many(
-        blocks.flatMap((bs) => bs.map((b) => b.score)),
+      const localBounds = cellBounds(blocks, lo, size, field, boost),
+        essential = essentialTerms(
+          blocks,
+          bounds,
+          scoring,
+          requiredIndices,
+          size,
+          heap.threshold?.score,
+          options.exactTotal ?? false,
+        ),
+        loaded = new Uint8Array(names.length),
+        initial = essential ?? names.map((_, j) => j),
+        columns = scoreBatches.map((batch) => {
+          batch.reset(lo, size);
+          return batch.columns();
+        }),
+        candidates = candidateBuffer,
+        values = scoreBuffer;
+      let nc = 0,
+        fetchedBytes = 0;
+      const append = (j: number, k: number, raw: Uint8Array) => {
+        const n = scoreBatches[j].append(raw, k);
+        reader.stats.postings += n;
+        reader.stats.scorePostingsDecoded += n;
+        reader.stats.scoreBlocksDecoded++;
+        reader.observeDecoded(blocks[j][k].score, raw.length);
+      };
+      const present = (j: number, d: number) => {
+        if (!loaded[j]) return 2;
+        const c = columns[j],
+          r = c.handle[d];
+        return r && (field === "all" || c[field][r - 1]) ? 1 : 0;
+      };
+      const predicate = compileCoarse(ast, nameIndex, present);
+      const allRefs = blocks.flatMap((bs) => bs.map((b) => b.score)),
+        lazyFetch = deferScoreFetch(blocks, essential, size, (ref) =>
+          reader.resident(ref),
+        );
+      if (essential) reader.stats.lazyScoreWindows++;
+      else reader.stats.eagerScoreWindows++;
+      if (!lazyFetch) reader.stats.eagerScoreFetchWindows++;
+      const data = await reader.scores(
+        lazyFetch
+          ? initial.flatMap((j) => blocks[j].map((b) => b.score))
+          : allRefs,
+        true,
+      );
+      fetchedBytes += data.reduce((n, raw) => n + raw.length, 0);
+      const offsets = blocks.map((_, j) =>
+        blocks.slice(0, j).reduce((n, bs) => n + bs.length, 0),
       );
       let p = 0;
-      const columns = blocks.map((bs, term) => {
-        const batch = scoreBatches[term];
-        batch.reset(lo, size);
-        for (let j = 0; j < bs.length; j++) {
-          const raw = data[p++];
-          reader.stats.postings += batch.append(raw, j);
-          reader.observeDecoded(bs[j].score, raw.length);
-        }
-        return batch.columns();
-      });
-      const nameIndex = new Map(names.map((n, i) => [n, i])),
-        present = (j: number, d: number) => {
-          const c = columns[j],
-            r = c.handle[d];
-          return r && (field === "all" || c[field][r - 1]) ? 1 : 0;
-        };
-      const predicate = compileCoarse(ast, nameIndex, present);
-      const candidates = candidateBuffer,
-        values = scoreBuffer;
-      let nc = 0;
+      for (const j of initial) {
+        for (let k = 0; k < blocks[j].length; k++)
+          append(j, k, data[lazyFetch ? p++ : offsets[j] + k]);
+        loaded[j] = 1;
+        columns[j] = scoreBatches[j].columns();
+      }
       for (let d = 0; d < size; d++) {
-        if (!cells[d >>> 7]) continue;
-        if (candidateMask && !candidateMask[d]) continue;
-        if (predicate(d) === 0) continue;
-        reader.stats.candidates++;
-        let score = 0,
-          remaining = upper;
-        // Batched block-max MAXSCORE: a safe partial-score bound can reject a
-        // candidate before remaining numeric contributions/positions are read.
-        let rejected = false;
-        for (const j of scoring) {
-          const c = columns[j];
-          score +=
-            (field !== "title" ? c.b[d] : 0) +
-            (field !== "body" ? boost * c.t[d] : 0);
-          remaining = Math.max(0, remaining - bounds[j]);
+        if (
+          !cells[d >>> 7] ||
+          (candidateMask && !candidateMask[d]) ||
+          predicate(d) === 0
+        )
+          continue;
+        if (essential && heap.threshold) {
+          let bound = 0;
+          for (const j of scoring)
+            bound += loaded[j]
+              ? (field !== "title" ? columns[j].b[d] : 0) +
+                (field !== "body" ? boost * columns[j].t[d] : 0)
+              : localBounds[j][d >>> 7];
+          const rounded = outward(bound, scoring.length),
+            threshold = heap.threshold;
           if (
-            !options.exactTotal &&
-            heap.threshold &&
-            (score + remaining) * (1 + Number.EPSILON * 64) <
-              heap.threshold.score
+            rounded < threshold.score ||
+            (rounded === threshold.score && lo + d > threshold.doc)
           ) {
-            rejected = true;
-            break;
+            reader.stats.partialScoreRejected++;
+            continue;
           }
         }
-        if (rejected) continue;
-        const doc = d + lo;
+        candidates[nc++] = lo + d;
+      }
+      // Candidates are sorted numeric IDs. Select each deferred block once by
+      // interval overlap, then fetch the union in one coalesced parallel wave.
+      const deferred: number[][] = blocks.map((bs, j) =>
+        loaded[j]
+          ? []
+          : bs.flatMap((b, k) => {
+              const at = lower(candidates.subarray(0, nc), b.first);
+              return at < nc && candidates[at] <= b.last ? [k] : [];
+            }),
+      );
+      const tail = lazyFetch
+        ? await reader.scores(
+            deferred.flatMap((ks, j) => ks.map((k) => blocks[j][k].score)),
+            true,
+          )
+        : [];
+      fetchedBytes += tail.reduce((n, raw) => n + raw.length, 0);
+      p = 0;
+      for (let j = 0; j < blocks.length; j++)
+        if (!loaded[j]) {
+          for (const k of deferred[j])
+            append(j, k, lazyFetch ? tail[p++] : data[offsets[j] + k]);
+          loaded[j] = 1;
+          columns[j] = scoreBatches[j].columns();
+        }
+      let kept = 0;
+      for (let i = 0; i < nc; i++) {
+        const doc = candidates[i],
+          d = doc - lo;
+        if (predicate(d) === 0) continue;
+        reader.stats.candidates++;
+        let score = 0;
+        // Preserve the original summation order and float64 contributions.
+        for (const j of scoring)
+          score +=
+            (field !== "title" ? columns[j].b[d] : 0) +
+            (field !== "body" ? boost * columns[j].t[d] : 0);
         if (
           options.after &&
           (score > options.after.score ||
@@ -865,9 +968,10 @@ export class ColumnarIndex {
         )
           continue;
         if (!options.exactTotal && !heap.accepts(doc, score)) continue;
-        candidates[nc] = doc;
-        values[nc++] = score;
+        candidates[kept] = doc;
+        values[kept++] = score;
       }
+      nc = kept;
       const positionData = new Map<string, Uint8Array>();
       // Very sparse phrases use compact forward IDs. Broad phrases/proximity
       // retain the buffered positional path and avoid per-document forward I/O.
@@ -1039,7 +1143,7 @@ export class ColumnarIndex {
       }
       const active =
         scoreBatches.reduce((s, batch) => s + batch.bytes, 0) +
-        data.reduce((s, raw) => s + raw.length, 0) +
+        fetchedBytes +
         candidates.byteLength +
         values.byteLength +
         [...positionData.values()].reduce((s, b) => s + b.length, 0);

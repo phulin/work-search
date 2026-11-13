@@ -151,6 +151,16 @@ export class Reader {
     memoryHits: 0,
     deduplicated: 0,
     stages: 0,
+    scoreBlocksFetched: 0,
+    scoreBlockVisits: 0,
+    scoreBlocksDecoded: 0,
+    scorePostingsDecoded: 0,
+    scoreFetchWaves: 0,
+    scoreIOWaves: 0,
+    lazyScoreWindows: 0,
+    eagerScoreWindows: 0,
+    eagerScoreFetchWindows: 0,
+    partialScoreRejected: 0,
     decodedBytes: 0,
     repeatedDecodedBytes: 0,
     positionIntegers: 0,
@@ -189,6 +199,7 @@ export class Reader {
     pairDirectoryMatches: 0,
   };
   seenDecoded = new Set<string>();
+  private seenScoreBlocks = new Set<string>();
   seenInflated = new Set<string>();
   seenPackageSections = new Set<string>();
   pairDecoded = new Map<string, Uint8Array>();
@@ -321,6 +332,52 @@ export class Reader {
   async many(refs: Ref[]) {
     this.stats.stages++;
     return Promise.all(refs.map((r) => this.read(r)));
+  }
+  private noteScores(refs: Ref[]) {
+    for (const ref of refs) {
+      this.stats.scoreBlockVisits++;
+      const key = this.key(ref);
+      if (!this.seenScoreBlocks.has(key)) {
+        this.seenScoreBlocks.add(key);
+        this.stats.scoreBlocksFetched++;
+      }
+    }
+  }
+  async scores(refs: Ref[], coalesce = false) {
+    if (!refs.length) return [];
+    this.noteScores(refs);
+    this.stats.scoreFetchWaves++;
+    const before = this.stats.requests + this.stats.sharedGets;
+    const raw = await (coalesce ? this.packets(refs) : this.many(refs));
+    if (this.stats.requests + this.stats.sharedGets > before)
+      this.stats.scoreIOWaves++;
+    return raw;
+  }
+  async prefetchScores(refs: Ref[]) {
+    if (!refs.length) return;
+    this.noteScores(refs);
+    this.stats.scoreFetchWaves++;
+    const before = this.stats.requests + this.stats.sharedGets;
+    await this.prefetch(refs);
+    if (this.stats.requests + this.stats.sharedGets > before)
+      this.stats.scoreIOWaves++;
+  }
+  /** No I/O and no LRU mutation. Used only to price another score fetch wave. */
+  resident(ref: Ref) {
+    if (this.seeded(ref)) return true;
+    const [object, offset, length] = ref;
+    for (
+      let page = Math.floor(offset / PAGE);
+      page <= Math.floor((offset + length - 1) / PAGE);
+      page++
+    )
+      if (
+        !this.memory.pages.entries.has(
+          `${this.root.generation}/${this.namespace}/${object}/${page}`,
+        )
+      )
+        return false;
+    return true;
   }
   /** A packet is a transfer unit, independent of the 256-KiB cache pages.
    * Fetch a contiguous miss span once, validate each page, and populate the

@@ -26,6 +26,14 @@ starting I/O. Selected pairs prove their endpoint words, avoiding redundant
 presence reads. Necessary initial reads start together, and loading membership
 does not force a different executor. The pair/context format remains unchanged.
 
+[Lazy batched MAXSCORE](LAZY-MAXSCORE.md) now reads essential numeric columns
+before deciding which deferred score blocks survivors need. Conservative cell
+bounds preserve exact rank/ties; only fully verified matches enter the heap.
+The transfer decision can remain eager to avoid another costly wave, while
+decoding stays selective. Numeric batches cover 16K documents without changing
+posting blocks, physical pages or document-directory addressing. Exact totals
+retain exhaustive execution.
+
 ## Binary layout
 
 CTD3 bundles metadata for at most one million high-DF terms and a compact direct

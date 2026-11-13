@@ -7,6 +7,12 @@ from work still running.
 
 ## Current experiment scope and analysis change
 
+The [lazy MAXSCORE follow-up](LAZY-MAXSCORE.md) stages numeric score reads:
+essential terms first, conservative partial-score rejection, then coalesced
+deferred blocks for survivors. It compares against the frozen pre-change engine
+on local 1M data, with warm and empty cache conditions. No live Cloudflare work
+or index/context/excerpt changes are part of this round.
+
 The [planner regression follow-up](PLANNER-REGRESSIONS.md) keeps N=100/M=1,000
 and the same pair/context bytes. It compares optional reads with the existing
 term/document/block plan before I/O, removes the post-read executor override,

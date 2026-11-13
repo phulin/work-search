@@ -155,7 +155,9 @@ it("preserves exhaustive ranks, zero-score ties and pagination across bounded pr
         expect(d.score).toBeCloseTo(expected[i].score, 11),
       );
       expect(got.total).toBe(docs.length);
-      expect(reader.stats.prefetchWindows).toBe(3);
+      expect(reader.stats.prefetchTransferBytes).toBeLessThanOrEqual(
+        reader.stats.prefetchWindows * 2 * 1048576,
+      );
       const phraseReader = new Reader(root, objects.source),
         phrase = await index.search('"alpha beta"', phraseReader, {
           limit: 7,

@@ -31,7 +31,8 @@ for (let session = 0; session < sessions; session++)
           {
             env: {
               ...process.env,
-              CWS_CONTROL_SOURCE: "work/pair-control-2d77fc0",
+              CWS_CONTROL_SOURCE:
+                process.env.CWS_CONTROL_SOURCE ?? "work/pair-control-2d77fc0",
               CWS_PAIR_INDEX: pairs,
               CWS_PLANS: "control-N100-M1000,auto-N100-M1000",
               CWS_CONDITION: condition,
