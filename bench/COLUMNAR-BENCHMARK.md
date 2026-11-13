@@ -5,6 +5,79 @@ adoption** while the scale, startup, load and native memory gates below remain.
 The public demo has not changed. This ledger distinguishes completed measurements
 from work still running.
 
+## Current experiment scope and analysis change
+
+At the user's request, further experiments use **1M documents** until the index
+format and query planner are stable. The 10M serving conversion and unfinished
+65,536-pair merge were stopped; their checkpoints remain. The completed full-source
+oracle is retained separately as a correctness artifact, not evidence of a live
+10M serving deployment. No 10M coordinator remains active.
+
+New construction applies English Porter2 stemming after the existing NFKC and
+lowercase tokenization. Frequencies, document frequencies, positions and BM25
+scores are rebuilt from the merged stems; common words remain indexed. This is
+an intentional analysis change. Prior 1M latency results below describe the
+unstemmed generation and cannot establish the new generation's performance.
+
+Before the 1M-only direction, a native 1,000-document validation completed with
+22,392 stemmed terms. An independent source oracle verified its query DFs and
+global token statistics. A cold-path variant bundled 100 terms and put 22,292
+terms in direct R2 shards, including small complete score/position packets. The
+bundled directory plus routing table occupied 7,495 bytes; new shard objects
+occupied 10,632,927 bytes. This intentionally small bundle exercised cold reads;
+the production builder's cap is one million terms. It is not a scale estimate.
+
+That isolated live Worker returned **228/228 correct measured responses** across
+76 contracts and three sessions, plus 228 correct warmups. All measured requests
+joined native CPU observations. It used in-request application-memory resets,
+warm shared pages and complete uncached responses including metadata/snippets.
+Client P50/P95/P99 was 100/189/353 ms; CPU was 21/70/108 ms. These are small-pilot
+scenario statistics, not a comparison to the earlier 1M runs or a useful P99
+estimate for adoption. Raw results and the source oracle are in
+`results/columnar/stem-1000-*`.
+
+The stemmed 1M build is running natively on the existing constructor Worker.
+It produced 2,539,780 terms; the common-term directory and cold routing occupy
+about 14 MB. Its independent 160-contract source oracle completed all one million
+documents and is retained as `native-stem-1m-independent-oracle.json.gz`.
+Document packages and publication remain in progress. The common/rare split and
+planner still require complete 1M serving correctness, latency and memory work.
+Repository checks pass: 233 tests across 63 files, TypeScript checking and
+formatting. Worker tests require local networking for their workerd instances;
+they timed out inside the restricted sandbox and passed with local networking.
+
+## Local iteration loop
+
+Format and planner experiments now use local 1M data and modeled R2/cache delays;
+live Workers validate finalists. The retained source corpus contains exactly
+1,000,000 documents, 9,600,212,036 canonical JSONL bytes, SHA-256
+`7776178824e974e234bcb8d6e5a6b32598a2bdd01311866217b4d8048e372fcc`,
+in a roughly 3.3 GiB gzip file. Local checksum verification completed before
+54.05 GiB of obsolete task-generated packs, incomplete staging data and unused
+experiment caches were reclaimed. Frozen controls, manifests and results remain.
+
+`bench/columnar/simulate.ts` executes the production engine and readers against
+local immutable bytes. Preparation downloads missing bytes outside measurements;
+timed replay disables network access and fails if data is missing. The real
+six-slot scheduler determines overlap and dependent stages. Each plan has
+independent bounded application and shared caches. Complete engine responses
+include metadata, query-relevant snippets and JSON serialization; reported local
+process CPU and modeled wall time are separate. This excludes client HTTP latency
+and does not claim native Worker CPU or opaque R2 backend cache behavior.
+
+A harness validation used the existing unstemmed 1M generation: five broad
+contracts under memory reuse, plus five selective contracts under memory reuse,
+warm shared/empty application memory, and fresh namespaces. Three randomized
+repetitions produced **192 correct complete responses**, 48 forced-plan
+unsupported outcomes, and zero errors. All four timed sessions performed zero
+downloads. Unsupported means a forced strategy exceeded its transfer/candidate
+budget; the automatic planner retained exact coverage. Model inputs were 20 ms
+R2 latency, 100 MiB/s R2 transfer, 2 ms shared latency and 1,000 MiB/s shared
+transfer. These are harness assumptions, not measured Cloudflare defaults. This
+small validation establishes the local loop, not crossover thresholds or a speedup.
+See `results/columnar/local-1m-{replay-validation.json,*.json.gz}` and the README
+for commands and model parameters.
+
 ## Latest measured iterations
 
 The 10,000-attempt-per-engine finalist campaign finished over three randomized,
@@ -55,8 +128,9 @@ The largest corpus contains 14,231,212 normalized terms. Its full serving direct
 has not been built or deployed, so full-bundle fit remains unresolved. English
 Snowball/Porter2 reduced 2,812,380 terms to 2,539,780 at 1M documents (9.69%), and
 14,231,212 to 12,670,951 on all 10,032,254 documents (10.96%). Complete term counts
-were checked against construction metadata. These diagnostics change no serving
-semantics; see `stemming-{1m,full}.json`.
+were checked against construction metadata. Those vocabulary-only diagnostics
+did not rebuild serving scores; the new generation above does. See
+`stemming-{1m,full}.json`.
 
 Native vocabulary construction had read about 7,100–7,400 dictionary pages and
 308–313 MB per 1,024-document job. Routing all words together barely changed this

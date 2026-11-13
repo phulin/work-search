@@ -8,7 +8,7 @@ import {
 import { createHash } from "node:crypto";
 import { benchmarkToken } from "../bench/columnar/token.js";
 import { OfflineObjects } from "../src/columnar/offline.js";
-import { packetDirectory } from "./packet-directory.js";
+import { tieredPacketDirectory } from "./tiered-packet-directory.js";
 import { packetRootProjector } from "./construction-packet-root.js";
 import { encodeDocumentDirectory } from "../src/columnar/document-directory.js";
 import { constructionHTTP } from "./construction-http.js";
@@ -62,6 +62,8 @@ const original: Root = JSON.parse(
     createHash("sha256").update(JSON.stringify(x)).digest("hex"),
   packageGeneration = hash({
     source: original.corpusHash,
+    sourceGeneration: original.generation,
+    analysis: original.analysis,
     code: groupHealth.code,
     format: "grouped-CDP2",
   }),
@@ -248,6 +250,12 @@ await pool<any>(state.terms, async (job, i) => {
     job.objects.push(...result.objects);
     job.blocks.push(...result.blocks);
     job.completedTerms += result.completedTerms;
+    if (result.dfCounts) {
+      const histogram = new Map<number, number>(job.dfCounts ?? []);
+      for (const [df, count] of result.dfCounts)
+        histogram.set(df, (histogram.get(df) ?? 0) + count);
+      job.dfCounts = [...histogram];
+    }
     job.bodyOccurrences += result.bodyOccurrences;
     job.titleOccurrences += result.titleOccurrences;
     job.previous = task;
@@ -257,8 +265,17 @@ await pool<any>(state.terms, async (job, i) => {
   }
   console.log("Packet terms", i + 1, "/", state.terms.length);
 });
-const { directory, terms, bodyOccurrences, titleOccurrences } =
-  await packetDirectory(state, out, uploader, token);
+const tiered = await tieredPacketDirectory(
+    state,
+    original,
+    out,
+    uploader,
+    token,
+    call,
+    save,
+    width,
+  ),
+  { directory, terms, bodyOccurrences, titleOccurrences } = tiered;
 if (
   terms !== source.terms ||
   bodyOccurrences !== Math.round(original.count * original.avgBody) ||
@@ -266,7 +283,7 @@ if (
 )
   throw Error("Packet corpus coverage mismatch");
 console.log(
-  "Complete bundled directory",
+  "Bundled common terms and cold routing",
   directory.length,
   "bytes",
   terms,
@@ -315,6 +332,8 @@ state.terms.forEach((j: any, i: number) => {
     objectIds.push(i * OBJECT_GROUP + n);
   });
 });
+objects.push(...tiered.objects);
+objectIds.push(...tiered.objectIds);
 const root: Root = {
   ...original,
   generation: "",
@@ -403,6 +422,8 @@ const report = {
   bodyOccurrences,
   titleOccurrences,
   directoryBytes: directory.length,
+  bundledTerms: tiered.hotTerms,
+  remoteTerms: tiered.coldTerms,
   packetBytes: objects.reduce((n, o) => n + o.size, 0),
   documentBytes: bytes,
   documentDirectoryBytes: documentDirectory.length,

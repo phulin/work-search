@@ -7,6 +7,7 @@ import {
   type PacketPlan,
 } from "../../src/columnar/packet-execution.js";
 import { parse, queryTerms, simplify } from "../../src/query/parser.js";
+import { tokenizerFor } from "../../src/query/analysis.js";
 import {
   Memory,
   Reader,
@@ -118,13 +119,12 @@ export function createPacketBenchmarkWorker(
         )
           throw Error("Unknown benchmark plan");
         const input: any = await request.json(),
-          ast = parse(input.q, input.mode);
+          ast = parse(input.q, input.mode, tokenizerFor(root.analysis));
         if (input.resetMemory) {
           memory.clear();
           directory.clear();
         }
-        const terms = await directory.lookup(queryTerms(ast)),
-          namespace =
+        const namespace =
             input.cacheNamespace ?? env.CACHE_NAMESPACE ?? "packet-benchmark",
           shared: SharedPages = {
             async get(key) {
@@ -155,6 +155,7 @@ export function createPacketBenchmarkWorker(
             namespace,
             (p) => ctx.waitUntil(p),
           ),
+          terms = await directory.lookup(queryTerms(ast), reader),
           packages = {
             averageBytes: root.documentPackages!.averageBytes,
             load: (doc: number) =>

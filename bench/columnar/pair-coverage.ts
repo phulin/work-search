@@ -2,13 +2,41 @@ import { readFile, writeFile } from "node:fs/promises";
 import { TermDirectory } from "../../src/columnar/term-directory.js";
 import { parse, queryTerms } from "../../src/query/parser.js";
 import { planPairAnchor } from "../../src/columnar/pair-evidence.js";
-const [contracts, out, ...dirs] = process.argv.slice(2);
+const args = process.argv.slice(2),
+  selectionAt = args.indexOf("--selection");
+const selectionFile =
+  selectionAt < 0 ? undefined : args.splice(selectionAt, 2)[1];
+const [contracts, out, ...dirs] = args;
 if (!out || !dirs.length) throw Error("Use ORACLE OUTPUT INDEX_DIRECTORY...");
+if (selectionFile && dirs.length !== 1)
+  throw Error("Selection estimates require one base index");
+const selection = selectionFile
+  ? JSON.parse(await readFile(selectionFile, "utf8"))
+  : undefined;
 const oracle = JSON.parse(await readFile(contracts, "utf8")),
   results = [];
 for (const dir of dirs) {
   const root = JSON.parse(await readFile(dir + "/root.json", "utf8"));
   if (root.corpusHash !== oracle.corpusHash) throw Error("Corpus mismatch");
+  if (selection) {
+    if (
+      selection.corpusHash !== root.corpusHash ||
+      selection.documents !== root.count
+    )
+      throw Error("Selection corpus mismatch");
+    root.positionalPairs = Object.fromEntries(
+      selection.pairs.map((p: any) => [
+        `${p.a}:${p.b}`,
+        {
+          a: p.a,
+          b: p.b,
+          df: p.df,
+          occurrences: p.occurrences,
+          ref: [0, 0, p.cost],
+        },
+      ]),
+    );
+  }
   const dictionary = new TermDirectory(
       await readFile(dir + "/directory.bin"),
       root.count,
@@ -42,7 +70,9 @@ for (const dir of dirs) {
     });
   }
   results.push({
-    generation: root.generation,
+    ...(selection
+      ? { baseGeneration: root.generation, selectionEstimate: true }
+      : { generation: root.generation }),
     pairs: Object.keys(root.positionalPairs ?? {}).length,
     queries: rows.length,
     withAnchor: rows.filter((r) => r.df !== undefined).length,

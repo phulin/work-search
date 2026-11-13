@@ -1,4 +1,4 @@
-import { tokenize } from "../../src/query/tokenize.js";
+import { tokenizerFor, type Analysis } from "../../src/query/analysis.js";
 import { parse, queryTerms, type Node } from "../../src/query/parser.js";
 import { exhaustive } from "./exhaustive.js";
 
@@ -14,6 +14,7 @@ export interface OracleContract {
   };
 }
 export interface OracleStatistics {
+  analysis?: Analysis;
   count: number;
   avgBody: number;
   avgTitle: number;
@@ -83,7 +84,11 @@ export class OracleScan {
       return i;
     };
     this.plans = contracts.map((contract) => {
-      const ast = parse(contract.q, contract.options?.mode),
+      const ast = parse(
+          contract.q,
+          contract.options?.mode,
+          tokenizerFor(statistics.analysis),
+        ),
         k = (contract.options?.limit ?? 20) * ((contract.page ?? 0) + 1);
       if (!Number.isInteger(k) || k < 1 || k > 1000)
         throw Error("Invalid oracle result limit");
@@ -104,7 +109,8 @@ export class OracleScan {
     title?: string;
     metadata?: unknown;
   }) {
-    const body = tokenize(d.body),
+    const tokenize = tokenizerFor(this.statistics.analysis),
+      body = tokenize(d.body),
       title = tokenize(d.title ?? ""),
       bf = this.bodyFrequency,
       tf = this.titleFrequency,

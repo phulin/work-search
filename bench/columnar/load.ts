@@ -70,6 +70,8 @@ for (const name of variants) {
   const r = await fetch(`https://${name}.phulin.workers.dev/health`);
   if (!r.ok) throw Error("Health " + name);
   health[name] = await r.json();
+  if (externalScenarios && health[name].analysis !== externalScenarios.analysis)
+    throw Error("Scenario analysis mismatch " + name);
   if (
     externalScenarios &&
     health[name].generation !== externalScenarios.generation &&

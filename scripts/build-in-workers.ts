@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { benchmarkToken } from "../bench/columnar/token.js";
 import type { Root, Ref } from "../src/columnar/format.js";
+import { ENGLISH_ANALYSIS } from "../src/query/analysis.js";
 import { planMerges } from "./construction-merge-plan.js";
 import { vocabularyRoot } from "./construction-vocabulary-root.js";
 import { constructionHTTP } from "./construction-http.js";
@@ -60,7 +61,10 @@ const health = await Promise.all(
 );
 if (
   health.some(
-    (h) => h.code !== health[0].code || h.sourceHash !== health[0].sourceHash,
+    (h) =>
+      h.code !== health[0].code ||
+      h.sourceHash !== health[0].sourceHash ||
+      h.analysis !== ENGLISH_ANALYSIS,
   ) ||
   count > health[0].sourceDocuments
 )
@@ -77,6 +81,7 @@ const state = await readFile(checkpoint, "utf8").then(JSON.parse, () => ({
   build,
   code: health[0].code,
   sourceHash,
+  analysis: ENGLISH_ANALYSIS,
   count,
   startedAt: new Date().toISOString(),
   ingests: [],
@@ -90,6 +95,7 @@ if (
   state.format !== "parallel-build-v2" ||
   state.code !== health[0].code ||
   state.sourceHash !== sourceHash ||
+  state.analysis !== ENGLISH_ANALYSIS ||
   state.build !== build
 )
   throw Error(
@@ -213,6 +219,7 @@ if (!state.runRef) {
         task: `ingest-${job.next}`,
         first: job.next,
         count: Math.min(128, job.end - job.next),
+        analysis: ENGLISH_ANALYSIS,
       })) as Run;
       if (run.first !== job.next || run.next <= job.next || run.next > job.end)
         throw Error("Invalid ingest continuation");
@@ -494,8 +501,11 @@ function objectDirectory(jobs: any[]) {
 const route = routing[0],
   root: Root = {
     format: "CWS1",
-    generation: sourceHash,
+    generation: createHash("sha256")
+      .update(JSON.stringify({ sourceHash, analysis: ENGLISH_ANALYSIS }))
+      .digest("hex"),
     corpusHash: sourceHash,
+    analysis: ENGLISH_ANALYSIS,
     ...statistics,
     documents: Array.from(
       { length: Math.ceil(count / 4096) },

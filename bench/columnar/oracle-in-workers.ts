@@ -16,6 +16,7 @@ import { OfflineObjects } from "../../src/columnar/offline.js";
 import { constructionHTTP } from "../../scripts/construction-http.js";
 import type { OracleConfiguration } from "./oracle-worker.js";
 import { demoWorkload } from "../demo-workload.js";
+import { tokenizerFor } from "../../src/query/analysis.js";
 import { globalQueries } from "../global-workload.js";
 
 const [dir, definitions, out] = process.argv.slice(2),
@@ -87,7 +88,9 @@ if (
   throw Error("Oracle source mismatch");
 const names = [
     ...new Set<string>(
-      contracts.flatMap((s: any) => queryTerms(parse(s.q, s.options?.mode))),
+      contracts.flatMap((s: any) =>
+        queryTerms(parse(s.q, s.options?.mode, tokenizerFor(root.analysis))),
+      ),
     ),
   ],
   objects = new OfflineObjects(dir, root, { url: uploader, token }),
@@ -102,6 +105,7 @@ await objects.close();
 const configuration: OracleConfiguration = {
     corpusHash: root.corpusHash,
     statistics: {
+      ...(root.analysis ? { analysis: root.analysis } : {}),
       count: root.count,
       avgBody: root.avgBody,
       avgTitle: root.avgTitle,
@@ -318,6 +322,7 @@ if (first !== 0 || end !== root.count) {
       generation: root.generation,
       corpusHash: root.corpusHash,
       count: root.count,
+      ...(root.analysis ? { analysis: root.analysis } : {}),
       code: health.code,
       configurationHash,
       statisticsRoot: {

@@ -24,7 +24,7 @@ export interface DocumentState {
 export async function finishDocuments(
   source: CorpusSource,
   store: BuildStore,
-  root: Pick<Root, "generation" | "count">,
+  root: Pick<Root, "generation" | "count" | "analysis">,
   vocabulary: Vocabulary,
   objectBase: number,
   saved?: DocumentState,
@@ -82,7 +82,7 @@ export async function finishDocuments(
         pointers,
         state.next - batchFirst,
       ),
-      scanned = scanText(doc.body);
+      scanned = scanText(doc.body, root.analysis);
     const window: {
         word: string;
         position: number;

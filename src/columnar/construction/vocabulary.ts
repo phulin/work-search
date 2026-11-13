@@ -7,7 +7,7 @@ import { BuildStore, jsonBytes } from "./runs.js";
 import { scanText } from "./text.js";
 export interface VocabularyRoot extends Pick<
   Root,
-  "generation" | "count" | "objects" | "objectIds"
+  "generation" | "count" | "objects" | "objectIds" | "analysis"
 > {
   idRouting: Pick<Root, "dictionaries" | "dictionaryHeight">;
 }
@@ -53,7 +53,7 @@ export async function buildVocabulary(
     await source.prefetch(pointers);
     for (; next < batchFirst + pointers.view.byteLength / 32; next++) {
       const doc = await source.document(next, pointers, next - batchFirst);
-      for (const token of scanText(doc.body).tokens()) {
+      for (const token of scanText(doc.body, root.analysis).tokens()) {
         if (!words.has(token.word))
           words.add(decoder.decode(encoder.encode(token.word)));
         tokens++;

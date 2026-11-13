@@ -1,6 +1,7 @@
 import type { Root, Branch } from "./format.js";
 import { refAt, view } from "./format.js";
 import { queryTerms, type Node } from "../query/parser.js";
+import { tokenizerFor } from "../query/analysis.js";
 import type { Reader } from "./storage.js";
 import type { Options } from "./search.js";
 export interface ResultHit {
@@ -53,11 +54,7 @@ export async function renderResults(
         let at = h.first === undefined ? -1 : h.first - passage.first;
         if (at < 0 || at >= passage.starts.length) {
           const ts = new Set(queryTerms(ast, true));
-          const m =
-            passage.text
-              .normalize("NFKC")
-              .toLowerCase()
-              .match(/[\p{L}\p{N}]+/gu) ?? [];
+          const m = tokenizerFor(root.analysis)(passage.text);
           at = m.findIndex((t: string) => ts.has(t));
         }
         const from = at >= 0 ? Math.max(0, passage.starts[at] - 160) : 0,

@@ -33,6 +33,7 @@ export interface PairDirectoryShard {
 }
 export interface Root {
   format: "CWS1";
+  analysis?: import("../query/analysis.js").Analysis;
   generation: string;
   count: number;
   avgBody: number;

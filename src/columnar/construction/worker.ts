@@ -1,5 +1,7 @@
 import { CorpusSource, type SourceRoot } from "./source.js";
 import { tokenize } from "../../query/tokenize.js";
+import { ENGLISH_ANALYSIS } from "../../query/analysis.js";
+import { finishTieredTerms } from "./tiered-terms.js";
 import {
   BuildStore,
   ingest,
@@ -52,6 +54,7 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
       )
         return Response.json({
           code,
+          analysis: ENGLISH_ANALYSIS,
           statisticsCode: code,
           sourceDocuments: root.documents,
           sourceHash: await digest(jsonBytes(root)),
@@ -176,6 +179,7 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
             "/documents",
             "/package-documents",
             "/packet-terms",
+            "/tiered-terms",
             "/pair-statistics",
             "/merge-pair-statistics",
             "/pair-occurrences",
@@ -402,6 +406,8 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
                                     store,
                                     input.first,
                                     input.count,
+                                    undefined,
+                                    input.analysis ?? ENGLISH_ANALYSIS,
                                   )
                                 : url.pathname === "/merge"
                                   ? await merge(
@@ -425,50 +431,59 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
                                       ? await verifyRange()
                                       : url.pathname === "/publish"
                                         ? await publish()
-                                        : url.pathname === "/packet-terms"
-                                          ? await finishPacketTerms(
+                                        : url.pathname === "/tiered-terms"
+                                          ? await finishTieredTerms(
                                               store,
                                               input.root,
-                                              input.fences,
+                                              input.blocks,
+                                              input.hot,
                                               input.objectBase,
-                                              input.state,
-                                              input.byteBudget,
                                             )
-                                          : url.pathname ===
-                                              "/package-documents"
-                                            ? await finishPackageDocuments(
-                                                source,
+                                          : url.pathname === "/packet-terms"
+                                            ? await finishPacketTerms(
                                                 store,
                                                 input.root,
-                                                await readVocabulary(
-                                                  store,
-                                                  input.vocabularyRef,
-                                                ),
-                                                input.generation,
-                                                input.first,
-                                                input.count,
+                                                input.fences,
+                                                input.objectBase,
+                                                input.state,
+                                                input.byteBudget,
                                               )
-                                            : url.pathname === "/vocabulary"
-                                              ? await buildVocabulary(
+                                            : url.pathname ===
+                                                "/package-documents"
+                                              ? await finishPackageDocuments(
                                                   source,
                                                   store,
                                                   input.root,
-                                                  input.first,
-                                                  input.count,
-                                                )
-                                              : await finishDocuments(
-                                                  source,
-                                                  store,
-                                                  input.documentRoot,
                                                   await readVocabulary(
                                                     store,
                                                     input.vocabularyRef,
                                                   ),
-                                                  input.objectBase,
-                                                  input.state,
-                                                  input.tokenBudget ?? 1048576,
-                                                  input.range,
-                                                );
+                                                  input.generation,
+                                                  input.first,
+                                                  input.count,
+                                                )
+                                              : url.pathname === "/vocabulary"
+                                                ? await buildVocabulary(
+                                                    source,
+                                                    store,
+                                                    input.root,
+                                                    input.first,
+                                                    input.count,
+                                                  )
+                                                : await finishDocuments(
+                                                    source,
+                                                    store,
+                                                    input.documentRoot,
+                                                    await readVocabulary(
+                                                      store,
+                                                      input.vocabularyRef,
+                                                    ),
+                                                    input.objectBase,
+                                                    input.state,
+                                                    input.tokenBudget ??
+                                                      1048576,
+                                                    input.range,
+                                                  );
             result = {
               output,
               writesAndMergeReads: store.requests,

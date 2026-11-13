@@ -66,6 +66,7 @@ export async function projectVocabularyRoot(
     throw Error("Vocabulary directory references an absent object");
   return {
     generation: root.generation,
+    ...(root.analysis ? { analysis: root.analysis } : {}),
     count: root.count,
     objects,
     objectIds,

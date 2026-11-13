@@ -1,8 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
-import { gunzipSync } from "node:zlib";
-import { decodeDirectoryBlock } from "../src/columnar/term-directory.js";
-import { view } from "../src/columnar/format.js";
+import { TermDirectory } from "../src/columnar/term-directory.js";
 const [dir, sourceRoot] = process.argv.slice(2),
   limit = Number(process.argv[4] ?? 65536);
 if (
@@ -16,10 +14,10 @@ if (
     "Usage: select-pair-vocabulary.ts PACKET_DIR SOURCE_ROOT [MAX_TERMS<=65536]",
   );
 const bytes = await readFile(dir + "/directory.bin"),
-  data = view(bytes),
-  root = JSON.parse(await readFile(sourceRoot, "utf8"));
-if (data.getUint32(0, true) !== 0x32445443)
-  throw Error("Invalid complete directory");
+  root = JSON.parse(await readFile(sourceRoot, "utf8")),
+  directory = new TermDirectory(bytes, root.count);
+if (directory.bundledTerms < Math.min(directory.terms, limit))
+  throw Error("Pair vocabulary exceeds the bundled common tier");
 let ranked: {
     word: string;
     id: number;
@@ -29,47 +27,33 @@ let ranked: {
   }[] = [],
   seen = 0;
 const prune = () => {
-  ranked.sort(
-    (a, b) =>
-      b.df - a.df ||
-      b.bodyOccurrences +
-        b.titleOccurrences -
-        (a.bodyOccurrences + a.titleOccurrences) ||
-      a.id - b.id,
-  );
+  ranked.sort((a, b) => b.df - a.df || a.id - b.id);
   ranked.length = Math.min(ranked.length, limit);
 };
-for (let i = 0; i < data.getUint32(8, true); i++) {
-  const p = 16 + i * 20,
-    at = data.getUint32(p + 8, true),
-    n = data.getUint32(p + 12, true),
-    entries = decodeDirectoryBlock(
-      gunzipSync(bytes.subarray(at, at + n)),
-      root.count,
-    );
-  seen += entries.size;
-  for (const [word, t] of entries)
-    ranked.push({
-      word,
-      id: t.id,
-      df: t.df,
-      bodyOccurrences: t.bodyOccurrences,
-      titleOccurrences: t.titleOccurrences,
-    });
+for await (const [word, t] of directory.bundledEntries()) {
+  seen++;
+  ranked.push({
+    word,
+    id: t.id,
+    df: t.df,
+    bodyOccurrences: t.bodyOccurrences,
+    titleOccurrences: t.titleOccurrences,
+  });
   if (ranked.length > limit + 4096) prune();
 }
 prune();
-if (seen !== data.getUint32(4, true))
+if (seen !== directory.bundledTerms)
   throw Error("Directory term coverage mismatch");
 const report = {
   corpusHash: root.corpusHash,
+  analysis: root.analysis,
   documents: root.count,
   avgBody: root.avgBody,
   avgTitle: root.avgTitle,
   directorySha256: createHash("sha256").update(bytes).digest("hex"),
   termsSeen: seen,
   selection:
-    "Highest corpus-wide document frequency; occurrence volume and numeric ID break ties; no query inputs",
+    "Highest corpus-wide document frequency; numeric ID breaks ties, matching the bundled tier; no query inputs",
   terms: ranked,
 };
 await writeFile(dir + "/pair-vocabulary.json", JSON.stringify(report));

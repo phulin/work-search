@@ -33,6 +33,14 @@ import { ColumnarR2 } from "../src/columnar/r2.js";
 import { Reader } from "../src/columnar/storage.js";
 import { parse, queryTerms } from "../src/query/parser.js";
 import { tokenize, type Document } from "../src/query/tokenize.js";
+import { ENGLISH_ANALYSIS, tokenizerFor } from "../src/query/analysis.js";
+import { finishPackageDocuments } from "../src/columnar/construction/package-documents.js";
+import { finishTieredTerms } from "../src/columnar/construction/tiered-terms.js";
+import {
+  TermDirectory,
+  assembleTermDirectory,
+  assembleTieredDirectory,
+} from "../src/columnar/term-directory.js";
 import { exhaustive } from "../bench/columnar/exhaustive.js";
 import { planMerges } from "../scripts/construction-merge-plan.js";
 import { projectVocabularyRoot } from "../scripts/construction-vocabulary-root.js";
@@ -123,6 +131,12 @@ export async function fixture(docs: Document[]) {
     customMetadata: { generation },
   });
   const bucket = {
+    async head(key: string) {
+      const o = objects.get(key);
+      return o
+        ? { size: o.bytes.length, customMetadata: o.customMetadata }
+        : null;
+    },
     async get(key: string, options?: any) {
       const o = objects.get(key);
       if (!o) return null;
@@ -143,6 +157,7 @@ export async function fixture(docs: Document[]) {
         bytes: Uint8Array.from(value),
         customMetadata: options?.customMetadata ?? {},
       });
+      return { key, size: value.length };
     },
   } as unknown as R2Bucket;
   const sourceRoot: SourceRoot = {
@@ -166,6 +181,195 @@ export async function fixture(docs: Document[]) {
     sourceRoot,
   };
 }
+it("merges stem variants before DF/BM25 construction and finishes stemmed phrases, fields, cursors and original snippets", async () => {
+  const docs = [
+      {
+        id: "a",
+        body: "Running runs runner. The runners ran.",
+        title: "Running courts",
+      },
+      { id: "b", body: "run run run courts", title: "Court" },
+      { id: "c", body: "runner runs", title: "Runners" },
+      { id: "d", body: "unrelated", title: "Courts" },
+    ],
+    // Explicit expected analysis, independent of the production stemmer.
+    reference = [
+      { id: "a", body: "run run runner the runner ran", title: "run court" },
+      { id: "b", body: "run run run court", title: "court" },
+      { id: "c", body: "runner run", title: "runner" },
+      { id: "d", body: "unrel", title: "court" },
+    ],
+    f = await fixture(docs),
+    run = await ingest(
+      f.source,
+      f.store,
+      0,
+      docs.length,
+      262144,
+      ENGLISH_ANALYSIS,
+    ),
+    root: Root = {
+      format: "CWS1",
+      analysis: ENGLISH_ANALYSIS,
+      generation: "c".repeat(64),
+      corpusHash: "b".repeat(64),
+      count: docs.length,
+      avgBody: run.bodyTokens / docs.length,
+      avgTitle: run.titleTokens / docs.length,
+      documents: [[0, 0, 0]],
+      objects: [],
+      dictionaries: [],
+      hot: {},
+    },
+    posted = await finishPostings(f.store, run, root, 0),
+    routing = routingOf(posted.state);
+  expect(posted.state.done).toBe(true);
+  root.objects = posted.objects;
+  root.hot = Object.fromEntries(routing.hot);
+  root.dictionaries = routing.dictionaries;
+  root.dictionaryHeight = routing.dictionaryHeight;
+  const idsRoot = await projectVocabularyRoot(
+    root,
+    routing.idRouting,
+    new Reader(root, new ColumnarR2(f.bucket)),
+  );
+  expect(idsRoot.analysis).toBe(ENGLISH_ANALYSIS);
+  const vocabularyResult = await buildVocabulary(
+      f.source,
+      f.store,
+      idsRoot,
+      0,
+      docs.length,
+    ),
+    vocabulary = await readVocabulary(f.store, vocabularyResult.vocabulary),
+    generation = "d".repeat(64),
+    packaged = await finishPackageDocuments(
+      f.source,
+      f.store,
+      idsRoot,
+      vocabulary,
+      generation,
+      0,
+      docs.length,
+    ),
+    packets = await finishPacketTerms(
+      f.store,
+      root,
+      root.dictionaries,
+      OBJECT_GROUP,
+    );
+  expect(packets.state.done).toBe(true);
+  root.objectIds = root.objects.map((_, i) => i);
+  packets.objects.forEach((o, i) => {
+    root.objects.push(o);
+    root.objectIds!.push(OBJECT_GROUP + i);
+  });
+  const directory = new TermDirectory(
+    assembleTermDirectory(
+      await Promise.all(
+        packets.blocks.map(async (b) => ({
+          first: b.first,
+          count: b.count,
+          data: await f.store.get(b.ref),
+        })),
+      ),
+    ),
+    docs.length,
+  );
+  const terms = await directory.lookup([
+    "run",
+    "running",
+    "runs",
+    "runner",
+    "court",
+  ]);
+  expect(terms.has("running") || terms.has("runs")).toBe(false);
+  expect(terms.get("run")!.df).toBe(3);
+  expect(terms.get("run")!.bodyOccurrences).toBe(6);
+  expect(terms.get("run")!.titleOccurrences).toBe(1);
+  expect(terms.get("court")!.df).toBe(3);
+  root.documentPackages = {
+    generation,
+    count: docs.length,
+    bytes: packaged.bytes,
+    averageBytes: packaged.bytes / docs.length,
+  };
+  root.documents = [];
+  const cold = await finishTieredTerms(
+    f.store,
+    root,
+    packets.blocks.map((b) => b.ref),
+    { count: 1, df: 3, lastId: terms.get("court")!.id },
+    2 * OBJECT_GROUP,
+  );
+  expect(cold.hotTerms).toBe(1);
+  expect(cold.inlineTerms).toBeGreaterThan(2);
+  cold.objects.forEach((o, i) => {
+    root.objects.push(o);
+    root.objectIds!.push(2 * OBJECT_GROUP + i);
+  });
+  const tiered = new TermDirectory(
+    assembleTieredDirectory(
+      assembleTermDirectory(
+        cold.hot
+          ? [
+              {
+                first: cold.hot.first,
+                count: cold.hot.count,
+                data: await f.store.get(cold.hot.ref),
+              },
+            ]
+          : [],
+      ),
+      assembleTermDirectory(
+        cold.cold.map((c) => ({
+          first: c.first,
+          count: c.count,
+          data: u32(c.ref),
+        })),
+      ),
+    ),
+    docs.length,
+  );
+  expect(tiered.terms).toBe(directory.terms);
+  const index = new ColumnarIndex(root, undefined, tiered),
+    reader = () => new Reader(root, new ColumnarR2(f.bucket)),
+    cases = [
+      ["running", "all", ["a", "b", "c"]],
+      ['"running runs"', "all", ["a", "b"]],
+      ['"runner runs"', "all", ["c"]],
+      ['"the runners"', "all", ["a"]],
+      ["running % courts", "all", ["c"]],
+      ["running /1 runs", "body", ["a", "b"]],
+      ["running", "title", ["a"]],
+      ["courts", "body", ["b"]],
+    ] as const;
+  for (const [q, field, matches] of cases) {
+    const ast = parse(q, "and", tokenizerFor(ENGLISH_ANALYSIS)),
+      wanted = new Set(matches),
+      scores = rankedReference(reference, queryTerms(ast, true), field).filter(
+        (r) => wanted.has(r.id as any),
+      ),
+      actual = await index.search(q, reader(), { limit: 20, field });
+    expect(
+      actual.results.map((r) => r.id),
+      q,
+    ).toEqual(scores.map((r) => r.id));
+    actual.results.forEach((r, i) =>
+      expect(r.score, q).toBeCloseTo(scores[i].score, 13),
+    );
+  }
+  const first = await index.search("running", reader(), { limit: 1 });
+  const firstDoc = docs.findIndex((d) => d.id === first.results[0].id);
+  const rest = await index.search("runs", reader(), {
+    after: { doc: firstDoc, score: first.results[0].score },
+  });
+  expect(rest.results).toHaveLength(2);
+  const original = await index.search('"running runs"', reader());
+  expect(original.results.find((r) => r.id === "a")!.snippet).toContain(
+    "Running runs",
+  );
+});
 it("scans exact Unicode display offsets without allocating character maps", () => {
   const samples = [
     "",

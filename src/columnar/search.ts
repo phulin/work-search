@@ -1,4 +1,5 @@
 import { Heap } from "./top-k.js";
+import { tokenizerFor } from "../query/analysis.js";
 import type { DocumentDirectory } from "./document-directory.js";
 import type { TermDirectory, DirectoryTerm } from "./term-directory.js";
 import {
@@ -163,6 +164,7 @@ export class ColumnarIndex {
     readonly packages?: CandidatePackages,
     readonly documentDirectory?: DocumentDirectory,
   ) {
+    tokenizerFor(root.analysis);
     if (
       root.format !== "CWS1" ||
       !/^[a-f0-9]{64}$/.test(root.generation) ||
@@ -193,7 +195,7 @@ export class ColumnarIndex {
       .root,
   ) {
     if (routing === this.root && this.directory)
-      return this.directory.lookup(names);
+      return this.directory.lookup(names, reader);
     return this.dictionary(names, reader, routing);
   }
   async dictionary<T>(
@@ -212,7 +214,7 @@ export class ColumnarIndex {
     pairs?: { root: PairRoot; reader: Reader },
   ) {
     if (this.heads && !this.directory) {
-      const ast = parse(q, options.mode),
+      const ast = parse(q, options.mode, tokenizerFor(this.root.analysis)),
         started = performance.now();
       if (ast.kind === "term") {
         const results = await this.heads.search(ast.term, reader, options);
@@ -233,7 +235,7 @@ export class ColumnarIndex {
       }
     }
     const started = performance.now(),
-      original = parse(q, options.mode),
+      original = parse(q, options.mode, tokenizerFor(this.root.analysis)),
       terms = await this.terms(queryTerms(original), reader),
       ast = simplify(original, (t) => terms.has(t)),
       names = queryTerms(ast),

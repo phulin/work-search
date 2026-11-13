@@ -58,7 +58,7 @@ export async function finishPackageDocuments(
     const doc = await source.document(next, pointers, next - batchFirst),
       missing = [
         ...new Set(
-          [...scanText(doc.title ?? "").tokens()]
+          [...scanText(doc.title ?? "", root.analysis).tokens()]
             .map((t) => t.word)
             .filter((word) => !ids.has(word)),
         ),
@@ -72,7 +72,11 @@ export async function finishPackageDocuments(
       if (found.size !== missing.length)
         throw Error("Title token missing from global directory");
     }
-    const packet = await encodeDocumentPackage({ ...doc, doc: next }, ids);
+    const packet = await encodeDocumentPackage(
+      { ...doc, doc: next },
+      ids,
+      root.analysis,
+    );
     while (writes.size >= 4) await Promise.race(writes);
     if (writeError) throw writeError;
     const write = (

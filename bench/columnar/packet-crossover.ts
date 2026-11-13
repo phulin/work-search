@@ -15,9 +15,10 @@ const name = process.env.CWS_VARIANTS ?? "work-search-cws-near",
   )) as any;
 if (
   health.corpusHash !== scenarios.corpusHash ||
-  health.documents !== scenarios.count
+  health.documents !== scenarios.count ||
+  health.analysis !== scenarios.analysis
 )
-  throw Error("Crossover corpus mismatch");
+  throw Error("Crossover corpus or analysis mismatch");
 let seed = 20261113;
 function rand() {
   seed ^= seed << 13;
@@ -38,6 +39,7 @@ const manifest = {
   generation: health.generation,
   corpusHash: health.corpusHash,
   documents: health.documents,
+  analysis: health.analysis,
   repeats,
   seed,
   condition: process.env.CWS_CONDITION ?? "memory-reuse",

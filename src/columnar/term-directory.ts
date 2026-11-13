@@ -1,5 +1,6 @@
-import { concat, type Term, type Ref, u32, view } from "./format.js";
-import { Lru } from "./storage.js";
+import { concat, type Term, type Ref, u32, view, refAt } from "./format.js";
+import { Lru, Semaphore, type Reader } from "./storage.js";
+import { TermShard } from "./term-shard.js";
 export interface DirectoryTerm extends Term {
   bodyOccurrences: number;
   titleOccurrences: number;
@@ -8,6 +9,20 @@ export interface DirectoryTerm extends Term {
   frequencyParts?: Ref[];
   positionalParts?: Ref[];
   embedded?: Uint8Array;
+}
+/** Conservative software accounting, not a claim about native heap size. The
+ * compressed/raw byte count alone omits maps, strings, branch records and refs. */
+export function directoryRetainedBytes(entries: Map<string, DirectoryTerm>) {
+  let bytes = 0;
+  for (const [word, term] of entries)
+    bytes +=
+      1024 +
+      word.length * 2 +
+      (term.embedded?.length ?? 0) +
+      ((term.frequencyParts?.length ?? 0) +
+        (term.positionalParts?.length ?? 0)) *
+        64;
+  return bytes;
 }
 const encoder = new TextEncoder(),
   decoder = new TextDecoder();
@@ -288,19 +303,61 @@ export function assembleTermDirectory(blocks: DirectoryBlock[]) {
   });
   return concat([header, ...keys, ...blocks.map((b) => b.data)]);
 }
+/** The hot directory and compact cold-shard routing table share one bundle.
+ * Cold routing records contain a direct Ref, never a remote discovery tree. */
+export function assembleTieredDirectory(hot: Uint8Array, cold: Uint8Array) {
+  if (
+    view(hot).getUint32(0, true) !== 0x32445443 ||
+    view(cold).getUint32(0, true) !== 0x32445443
+  )
+    throw Error("Invalid tiered directory sections");
+  return concat([
+    u32([
+      0x33445443,
+      view(hot).getUint32(4, true) + view(cold).getUint32(4, true),
+      hot.length,
+      cold.length,
+    ]),
+    hot,
+    cold,
+  ]);
+}
 export class TermDirectory {
+  readonly bytes: Uint8Array;
   readonly data: DataView;
   readonly terms: number;
+  readonly bundledTerms: number;
   readonly blocks: number;
+  private cold?: TermDirectory;
   private decoded = new Lru<Map<string, DirectoryTerm>>(2 * 1048576);
+  private decoding = new Semaphore(2);
   constructor(
-    readonly bytes: Uint8Array,
+    bundled: Uint8Array,
     readonly documents = Number.MAX_SAFE_INTEGER,
   ) {
+    let total: number | undefined;
+    let bytes = bundled;
+    if (bytes.length >= 16 && view(bytes).getUint32(0, true) === 0x33445443) {
+      const v = view(bytes),
+        hot = v.getUint32(8, true),
+        cold = v.getUint32(12, true);
+      total = v.getUint32(4, true);
+      if (16 + hot + cold !== bytes.length)
+        throw Error("Invalid tiered directory size");
+      this.cold = new TermDirectory(bytes.subarray(16 + hot), documents);
+      bytes = bytes.subarray(16, 16 + hot);
+      if (total !== view(bytes).getUint32(4, true) + this.cold.terms)
+        throw Error("Tiered vocabulary coverage mismatch");
+      for (let i = 0; i < this.cold.blocks; i++)
+        if (this.cold.block(i).length !== 12)
+          throw Error("Invalid cold routing record");
+    }
+    this.bytes = bytes;
     this.data = view(bytes);
     if (bytes.length < 16 || this.data.getUint32(0, true) !== 0x32445443)
       throw Error("Invalid term directory");
-    this.terms = this.data.getUint32(4, true);
+    this.terms = total ?? this.data.getUint32(4, true);
+    this.bundledTerms = this.data.getUint32(4, true);
     this.blocks = this.data.getUint32(8, true);
     if (16 + this.blocks * 20 > bytes.length)
       throw Error("Truncated term directory");
@@ -323,6 +380,21 @@ export class TermDirectory {
   }
   clear() {
     this.decoded.clear();
+    this.cold?.clear();
+  }
+  /** Corpus accelerators select their vocabulary from the highest-DF tier.
+   * Iteration holds one decoded metadata group rather than a vocabulary map. */
+  async *bundledEntries() {
+    for (let i = 0; i < this.blocks; i++) {
+      const raw = new Uint8Array(
+        await new Response(
+          new Response(this.block(i) as BodyInit).body!.pipeThrough(
+            new DecompressionStream("gzip"),
+          ),
+        ).arrayBuffer(),
+      );
+      yield* decodeDirectoryBlock(raw, this.documents);
+    }
   }
   private first(i: number) {
     const p = 16 + i * 20;
@@ -333,47 +405,108 @@ export class TermDirectory {
       ),
     );
   }
-  async lookup(names: string[]) {
+  private block(i: number) {
+    const p = 16 + i * 20,
+      at = this.data.getUint32(p + 8, true),
+      n = this.data.getUint32(p + 12, true);
+    return this.bytes.subarray(at, at + n);
+  }
+  private route(name: string) {
+    let lo = 0,
+      hi = this.blocks;
+    while (lo < hi) {
+      const m = (lo + hi) >>> 1;
+      if (this.first(m) <= name) lo = m + 1;
+      else hi = m;
+    }
+    return lo - 1;
+  }
+  async lookup(names: string[], reader?: Reader) {
     const wanted = new Map<number, string[]>();
     for (const name of names) {
-      let lo = 0,
-        hi = this.blocks;
-      while (lo < hi) {
-        const m = (lo + hi) >>> 1;
-        if (this.first(m) <= name) lo = m + 1;
-        else hi = m;
-      }
-      if (lo) {
-        const a = wanted.get(lo - 1) ?? [];
+      const i = this.route(name);
+      if (i >= 0) {
+        const a = wanted.get(i) ?? [];
         a.push(name);
-        wanted.set(lo - 1, a);
+        wanted.set(i, a);
       }
     }
     const found = new Map<string, DirectoryTerm>();
     await Promise.all(
-      [...wanted].map(async ([i, ns]) => {
-        const key = String(i);
-        let entries = this.decoded.get(key);
-        if (!entries) {
-          const p = 16 + i * 20,
-            at = this.data.getUint32(p + 8, true),
-            n = this.data.getUint32(p + 12, true),
-            raw = new Uint8Array(
-              await new Response(
-                new Response(
-                  this.bytes.subarray(at, at + n) as BodyInit,
-                ).body!.pipeThrough(new DecompressionStream("gzip")),
-              ).arrayBuffer(),
-            );
-          entries = decodeDirectoryBlock(raw, this.documents);
-          this.decoded.set(key, entries, raw.length * 4);
-        }
-        for (const name of ns) {
-          const term = entries.get(name);
-          if (term) found.set(name, term);
-        }
-      }),
+      [...wanted].map(([i, ns]) =>
+        this.decoding.run(async () => {
+          const key = String(i);
+          let entries = this.decoded.get(key);
+          if (!entries) {
+            const p = 16 + i * 20,
+              at = this.data.getUint32(p + 8, true),
+              n = this.data.getUint32(p + 12, true),
+              raw = new Uint8Array(
+                await new Response(
+                  new Response(
+                    this.bytes.subarray(at, at + n) as BodyInit,
+                  ).body!.pipeThrough(new DecompressionStream("gzip")),
+                ).arrayBuffer(),
+              );
+            entries = decodeDirectoryBlock(raw, this.documents);
+            this.decoded.set(key, entries, directoryRetainedBytes(entries));
+          }
+          for (const name of ns) {
+            const term = entries.get(name);
+            if (term) found.set(name, term);
+          }
+        }),
+      ),
     );
+    const remote = new Map<number, string[]>();
+    if (this.cold)
+      for (const name of new Set(names)) {
+        if (found.has(name)) continue;
+        const i = this.cold.route(name);
+        if (i >= 0) {
+          const wanted = remote.get(i) ?? [];
+          wanted.push(name);
+          remote.set(i, wanted);
+        }
+      }
+    if (remote.size) {
+      if (!reader) throw Error("Cold term lookup requires a query reader");
+      const shards = [...remote].map(([i, names]) => ({
+          names,
+          ref: refAt(view(this.cold!.block(i)), 0),
+        })),
+        decoded = new Map<string, TermShard>(),
+        misses = shards.filter(({ ref }) => {
+          const key = reader.key(ref),
+            cached = reader.memory.decoded.get("term-shard:" + key) as
+              TermShard | undefined;
+          if (cached) decoded.set(key, cached);
+          return !cached;
+        }),
+        raw = await reader.packets(misses.map((s) => s.ref));
+      reader.stats.termDirectoryRanges += misses.length;
+      reader.stats.termDirectoryBytes += raw.reduce((n, r) => n + r.length, 0);
+      for (let i = 0; i < misses.length; i++) {
+        const shard = await TermShard.decode(raw[i], this.documents),
+          key = reader.key(misses[i].ref);
+        decoded.set(key, shard);
+        reader.memory.decoded.set("term-shard:" + key, shard, shard.bytes);
+      }
+      for (const { ref, names } of shards) {
+        const key = reader.key(ref),
+          shard = decoded.get(key);
+        // Keep the local result above: an oversized shard need not enter the LRU.
+        if (!shard) throw Error("Term shard was evicted during lookup");
+        shard.seed(reader, names);
+        for (const name of names) {
+          const term = shard.entries.get(name);
+          if (term) {
+            found.set(name, term);
+            reader.stats.termDirectoryMatches++;
+          }
+        }
+      }
+    }
     return found;
   }
 }

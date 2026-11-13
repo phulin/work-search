@@ -1,5 +1,6 @@
-/** Offsets into NFKC display text, without a per-character offset array. */
-export function scanText(original: string) {
+import { normalizeTerm, type Analysis } from "../../query/analysis.js";
+/** Stemming changes token identity, never display spans or position counts. */
+export function scanText(original: string, analysis?: Analysis) {
   const text = original.normalize("NFKC"),
     lower = text.toLowerCase();
   function* tokens() {
@@ -22,7 +23,12 @@ export function scanText(original: string) {
     for (const match of lower.matchAll(/[\p{L}\p{N}]+/gu)) {
       const start = advance(match.index),
         finish = (advance(match.index + match[0].length - 1), end);
-      yield { word: match[0], position: position++, start, end: finish };
+      yield {
+        word: normalizeTerm(match[0], analysis),
+        position: position++,
+        start,
+        end: finish,
+      };
     }
   }
   return { text, tokens };

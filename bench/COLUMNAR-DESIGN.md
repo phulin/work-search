@@ -4,16 +4,40 @@ The primary execution paths are complete term reads and candidate-document reads
 Hierarchical block retrieval handles queries that exceed their budgets. The live
 1M implementation and measurements are described in [the benchmark report](COLUMNAR-BENCHMARK.md).
 Full-corpus adoption is not yet established. The public demo is unchanged.
+Further construction and serving experiments are limited to 1M documents until
+the format and planner are stable; the 10M build work is stopped.
+The primary iteration loop now runs against local 1M data with configurable
+R2/cache latency and bandwidth. Immutable data preparation is untimed; timed
+replay refuses network reads. Plan comparisons isolate their application and
+shared caches, and reuse the production readers/executors. Live Workers validate
+finalists after the faster local experiments.
 
 ## Binary layout
 
-The complete CTD2 term directory is bundled. Every word has a numeric ID, DF,
-body/title occurrence counts, direct frequency/position addresses and sizes, and
-a block-tree root. UTF-8 names are front-coded in independently compressed
-128-term groups. Binary restart keys permit lookup without materializing the
-whole vocabulary. Queried groups use a bounded 2 MiB decoded cache. The 1M
-corpus has 2,812,380 terms in 33,402,940 bytes. Full-corpus bundle size must be
-measured; it is not extrapolated from this result.
+CTD3 bundles metadata for at most one million high-DF terms and a compact direct
+routing table for the rest. Every term remains indexed. Ties at the bundle
+boundary use lexical numeric IDs. Hot metadata contains DF, body/title occurrence
+counts, direct frequency/position addresses and sizes, and a block-tree root.
+UTF-8 names are front-coded in independently compressed 1,024-term groups. Binary
+restart keys permit lookup without materializing the vocabulary. Queried hot
+groups use a bounded 2 MiB decoded cache with conservative charges for decoded
+maps, names and address records. At most two groups decode concurrently.
+
+Cold routing records contain direct R2 shard references. CTS1 shards contain
+compressed metadata plus independently accessible, uncompressed small complete
+frequency/position packets. Reading a shard seeds the query reader with those
+validated original address spans, including subranges used by block fallback;
+matching and scoring need no additional packet GET for those terms. Larger cold
+packets keep their existing direct addresses. Shard values use the ordinary
+bounded decoded LRU, while read deduplication stays request-local. Cached shards
+own their backing buffers; a shard sliced from a coalesced transfer cannot retain
+the larger transfer. Only packets requested by the query seed its reader.
+
+The earlier 1M unstemmed CTD2 directory contained 2,812,380 terms in 33,402,940
+bytes. During the 10M build its partial directory reached about 116 MB after
+10.53M terms, exceeding Workers' bundle limit before completion. This motivated
+the explicit common/rare split; shrinking vocabulary by dropping words is not
+used. The new directory's full-scale footprint still requires measurement.
 
 CTF3 term frequency/score packets are contiguous, independently addressable
 streams. They contain packed document IDs and frequencies, exact float64
@@ -58,8 +82,16 @@ candidate package work. It can intersect up to eight inexpensive mandatory word
 lists or two useful positional pairs from one mandatory phrase. Rarest-term DF
 alone does not select the plan. Initial budgets are 8 MiB transfer, 24 MiB
 estimated execution memory, and 512 candidate packages. Observed candidate counts
-and actual package sizes are checked before package retrieval. Exceeding a
+are checked before package retrieval, and actual bytes after each batch. Exceeding a
 strategy budget switches to complete block coverage; it never drops candidates.
+
+New generations declare `nfkc-lower-porter2-v1`: NFKC and lowercase tokenization
+followed once by English Snowball/Porter2 stemming. Ingestion merges variants
+before calculating DF, frequencies, positions and float64 BM25 contributions.
+Query atoms and phrase/proximity tokens use the same analysis; exact matching is
+defined over that normalized token stream. Display spans and positional counts
+do not change, and common words remain searchable. Stemming requires a fresh
+generation; existing unstemmed benchmark controls retain their original analysis.
 
 All paths preserve the Boolean AST, fields, negation, repeated terms, phrase and
 proximity spans, float64 scores, title boosts, deterministic score/document ties,
@@ -95,7 +127,9 @@ descriptors and compact shard fences remain bundled. Query lookup batches up to
 eight relevant ranges, then replans using the resulting descriptors. Missing
 entries remain unknown. A live native pilot verified every descriptor and inline
 packet against its source; the 65,536-pair generation is still being built and
-has not established a latency benefit. Selection uses corpus DF, occurrence
+has not established a latency benefit. Its unfinished unstemmed merge was stopped
+when stemming was requested; its completed source/statistics checkpoints remain.
+Selection uses corpus DF, occurrence
 volume, and estimated verification work saved per conservative byte, with no
 benchmark-query input. It currently requires at least a twofold DF reduction and
 limits individual pair packets to 8 MiB.
@@ -150,8 +184,9 @@ See the [README commands](../README.md) for construction, resumption, publicatio
 and isolated deployment. Generations identify the complete immutable layout and
 scope all caches. Source checksums and job acknowledgements prevent mixed builds.
 A temporary benchmark bridge preserves the compiled constructor of an in-progress
-10M source build while newer pair jobs use the same Worker and a shared admission
-gate. It should be removed when that build completes. No CI execution service,
+source build while newer jobs use the same Worker and a shared admission
+gate. Those unstemmed bulk jobs are now stopped; the temporary bridge must be
+removed after the new analysis path is validated. No CI execution service,
 Worker pool, Containers, Durable Objects, or external search database is used.
 
 ## Alternatives and remaining work
@@ -168,7 +203,10 @@ The historical 4f97 control and the later same-corpus 1M block layout remain
 separate benchmark controls. The former local builder lives under benchmark control
 tooling; native construction is the default. Earlier head/legacy-render compatibility
 paths still exist in serving source and must be removed after the active builds
-and comparisons complete. Full-corpus directory/bundle limits, scale-specific latency and
-load, final large-sample comparisons, and native retained/peak memory remain
+and comparisons complete. The immediate acceptance work uses the stemmed 1M
+generation: independent exhaustive/reference agreement, complete-term versus
+candidate-document crossover measurements, fallback coverage, startup and cache
+conditions, and controlled load. No 10M build resumes before these settle the
+format and planner. Final large-sample comparisons and native retained/peak memory remain
 adoption gates. Current Cloudflare limits are documented in the
 [official limits](https://developers.cloudflare.com/workers/platform/limits/).

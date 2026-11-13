@@ -24,7 +24,11 @@ type Token =
       distance?: number;
       ordered?: boolean;
     };
-export function parse(q: string, mode: "and" | "or" = "and"): Node {
+export function parse(
+  q: string,
+  mode: "and" | "or" = "and",
+  analyze: (text: string) => string[] = tokenize,
+): Node {
   if (!["and", "or"].includes(mode))
     throw new QuerySyntaxError("Unknown implicit search mode");
   q = q.replace(/[“”]/g, '"');
@@ -65,7 +69,7 @@ export function parse(q: string, mode: "and" | "or" = "and"): Node {
         } else text += x;
       }
       if (!closed) throw new QuerySyntaxError("Unclosed quote");
-      const terms = tokenize(text);
+      const terms = analyze(text);
       if (!terms.length) throw new QuerySyntaxError("Empty phrase");
       if (terms.length > 256)
         throw new QuerySyntaxError("Phrase exceeds 256 tokens");
@@ -128,7 +132,7 @@ export function parse(q: string, mode: "and" | "or" = "and"): Node {
       tokens.push({ kind: "not" });
       continue;
     }
-    const words = tokenize(word);
+    const words = analyze(word);
     if (!words.length) throw new QuerySyntaxError("Expected searchable term");
     for (const term of words)
       tokens.push({ kind: "atom", node: { kind: "term", term } });

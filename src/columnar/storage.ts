@@ -110,6 +110,27 @@ function packetGroups(refs: Ref[]) {
 }
 const EMPTY_PACKET = new Uint8Array(0);
 export class Reader {
+  private inline = new Map<number, { ref: Ref; data: Uint8Array }[]>();
+  /** A validated dictionary shard can carry its own complete small postings. */
+  seed(ref: Ref, data: Uint8Array) {
+    if (!ref[2] || ref[2] !== data.length) throw Error("Invalid seeded range");
+    const spans = this.inline.get(ref[0]) ?? [];
+    if (spans.some((s) => s.ref[1] === ref[1] && s.ref[2] === ref[2])) return;
+    spans.push({ ref: [...ref], data });
+    this.inline.set(ref[0], spans);
+    this.stats.inlinePostingBytes += data.length;
+  }
+  private seeded(ref: Ref) {
+    const span = this.inline
+      .get(ref[0])
+      ?.find(
+        (s) => ref[1] >= s.ref[1] && ref[1] + ref[2] <= s.ref[1] + s.ref[2],
+      );
+    return span?.data.subarray(
+      ref[1] - span.ref[1],
+      ref[1] - span.ref[1] + ref[2],
+    );
+  }
   // I/O promises belong to their request context in workerd. Share validated
   // bytes across requests; deduplicate outstanding I/O within each request.
   pending = new Map<string, Promise<Uint8Array>>();
@@ -117,6 +138,10 @@ export class Reader {
   sharedWrites = new Set<Promise<void>>();
   sharedWriteBytes = 0;
   stats = {
+    inlinePostingBytes: 0,
+    termDirectoryRanges: 0,
+    termDirectoryBytes: 0,
+    termDirectoryMatches: 0,
     requests: 0,
     bytes: 0,
     sharedGets: 0,
@@ -259,6 +284,8 @@ export class Reader {
     }
   }
   async read(ref: Ref) {
+    const inline = this.seeded(ref);
+    if (inline) return inline;
     const [object, offset, length] = ref,
       o = objectAt(this.root, object);
     if (
@@ -305,6 +332,8 @@ export class Reader {
     }
   }
   private async readPacket(ref: Ref, warmOnly = false): Promise<Uint8Array> {
+    const inline = this.seeded(ref);
+    if (inline) return warmOnly ? EMPTY_PACKET : inline;
     const [object, offset, length] = ref,
       descriptor = objectAt(this.root, object);
     if (
@@ -421,13 +450,23 @@ export class Reader {
   }
   async packets(refs: Ref[]) {
     this.stats.stages++;
-    const groups = packetGroups(refs);
     const result: Uint8Array[] = new Array(refs.length);
+    const pending: Ref[] = [],
+      indices: number[] = [];
+    refs.forEach((ref, i) => {
+      const inline = this.seeded(ref);
+      if (inline) result[i] = inline;
+      else {
+        pending.push(ref);
+        indices.push(i);
+      }
+    });
+    const groups = packetGroups(pending);
     await Promise.all(
       groups.map(async (group) => {
         const data = await this.packet(group.ref);
         for (const { ref, index } of group.entries)
-          result[index] = data.subarray(
+          result[indices[index]] = data.subarray(
             ref[1] - group.ref[1],
             ref[1] - group.ref[1] + ref[2],
           );
@@ -438,7 +477,7 @@ export class Reader {
   /** Conservative physical transfer footprint, including page alignment and
    * the same range coalescing used by packets(). No bytes are decoded here. */
   packetFootprint(refs: Ref[]) {
-    return packetGroups(refs).reduce(
+    return packetGroups(refs.filter((r) => !this.seeded(r))).reduce(
       (bytes, { ref: [, offset, length] }) =>
         bytes +
         (Math.ceil((offset + length) / PAGE) - Math.floor(offset / PAGE)) *
@@ -449,7 +488,9 @@ export class Reader {
   async prefetch(refs: Ref[]) {
     this.stats.stages++;
     await Promise.all(
-      packetGroups(refs).map(({ ref }) => this.readPacket(ref, true)),
+      packetGroups(refs.filter((r) => !this.seeded(r))).map(({ ref }) =>
+        this.readPacket(ref, true),
+      ),
     );
   }
   async document(

@@ -68,6 +68,7 @@ export function createColumnarWorker(
       if (url.pathname === "/health")
         return Response.json({
           format: root.format,
+          analysis: root.analysis,
           generation: root.generation,
           documents: root.count,
           corpusHash: root.corpusHash,

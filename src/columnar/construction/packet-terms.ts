@@ -61,6 +61,7 @@ export async function finishPacketTerms(
     completedTerms = 0,
     bodyOccurrences = 0,
     titleOccurrences = 0;
+  const dfCounts = new Map<number, number>();
   const parent = async (list: Branch[]): Promise<Branch> => ({
     first: list[0].first,
     last: list.at(-1)!.last,
@@ -210,6 +211,7 @@ export async function finishPacketTerms(
         },
       ]);
       completedTerms++;
+      dfCounts.set(term.df, (dfCounts.get(term.df) ?? 0) + 1);
       bodyOccurrences += term.bodyOccurrences;
       titleOccurrences += term.titleOccurrences;
       state.term = undefined;
@@ -252,6 +254,7 @@ export async function finishPacketTerms(
     objects: objects.objects,
     blocks,
     completedTerms,
+    dfCounts: [...dfCounts],
     bodyOccurrences,
     titleOccurrences,
     reads: reader.stats.requests,

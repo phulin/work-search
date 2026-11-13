@@ -3,7 +3,7 @@ import { OfflineObjects } from "./offline.js";
 import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { tokenize } from "../query/tokenize.js";
+import { tokenizerFor } from "../query/analysis.js";
 import { Packer } from "./packer.js";
 import {
   type Root,
@@ -99,7 +99,7 @@ export async function buildColumnarPairs(
     const record = JSON.parse(
       gunzipSync(await read(refAt(view(d.record), 0))).toString(),
     );
-    tokens[1] = tokenize(record.title ?? "").map(
+    tokens[1] = tokenizerFor(base.analysis)(record.title ?? "").map(
       (t) => ids.get(t) ?? 0xffffffff,
     );
     d.directory = directory;

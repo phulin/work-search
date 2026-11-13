@@ -307,6 +307,7 @@ export async function ingest(
   first: number,
   count: number,
   tokenBudget = 262144,
+  analysis?: import("../../query/analysis.js").Analysis,
 ): Promise<Run> {
   if (
     !Number.isInteger(first) ||
@@ -330,7 +331,10 @@ export async function ingest(
     let bl = 0,
       tl = 0;
     for (const field of [0, 1]) {
-      for (const token of scanText(field ? (d.title ?? "") : d.body).tokens()) {
+      for (const token of scanText(
+        field ? (d.title ?? "") : d.body,
+        analysis,
+      ).tokens()) {
         let pair = postings.get(token.word);
         if (!pair) postings.set(token.word, (pair = [[], []]));
         pair[field].push(token.position);

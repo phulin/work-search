@@ -30,8 +30,9 @@ export interface PackageDocument {
 export async function encodeDocumentPackage(
   document: PackageDocument,
   ids: Map<string, number>,
+  analysis?: import("../query/analysis.js").Analysis,
 ) {
-  const body = scanText(document.body),
+  const body = scanText(document.body, analysis),
     bodyIds: number[] = [],
     titleIds: number[] = [],
     starts: number[] = [],
@@ -51,7 +52,7 @@ export async function encodeDocumentPackage(
     starts.push(t.start);
     ends.push(t.end);
   }
-  for (const t of scanText(document.title ?? "").tokens())
+  for (const t of scanText(document.title ?? "", analysis).tokens())
     titleIds.push(add(t.word, 1));
   const names = [...frequencies.keys()].sort((a, b) => a - b),
     stats = [
