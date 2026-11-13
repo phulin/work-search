@@ -99,8 +99,14 @@ try {
         text = [];
       for (let i = 0; i < a.length; i++) {
         const h = a[i],
-          loc = view(await reader.read(h.branch.locators)),
-          p = h.row * 36,
+          loc = view(
+            await reader.read(
+              h.branch.locators[2]
+                ? h.branch.locators
+                : root.documents[Math.floor(h.doc / 4096)],
+            ),
+          ),
+          p = (h.branch.locators[2] ? h.row : h.doc % 4096) * 36,
           record = await reader.json(refAt(loc, p)),
           passage = await reader.json(refAt(loc, p + 24));
         const tokens =

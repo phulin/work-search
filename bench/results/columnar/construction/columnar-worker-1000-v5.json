@@ -1,0 +1,74 @@
+{
+  "manifest": {
+    "build": "worker-1000-v5",
+    "code": "830f1fbc9c61e3e49605d4f849e5161c51b2d664bcaa6c8c08a241f44bf9ed57",
+    "sourceHash": "efdc4d8ef7a26ee02bea3765379d9affec373af61ea8384efca304581db182eb",
+    "sourceDocuments": 10032254,
+    "count": 1000,
+    "terms": 29017,
+    "bodyTokens": 1234436,
+    "titleTokens": 3924,
+    "generation": "8c130f5c1a47c3db250bd05bee9c64ae311d410f6e098c9937b6da49778b298a",
+    "objects": 17,
+    "bytes": 43052486,
+    "startedAt": "2026-11-13T01:36:27.178Z",
+    "finishedAt": "2026-11-13T01:37:09.060Z",
+    "construction": "Cloudflare Workers and R2"
+  },
+  "buildMs": 40635.252197265625,
+  "phases": [
+    {
+      "path": "/ingest",
+      "tasks": 8,
+      "clientMs": 11603.529166000002,
+      "workerWallMs": 8847,
+      "sourceRequests": 24,
+      "sourceBytes": 3378090,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 16,
+      "stageBytes": 21859253
+    },
+    {
+      "path": "/merge",
+      "tasks": 3,
+      "clientMs": 10980.108292000004,
+      "workerWallMs": 10486,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 45,
+      "stageBytes": 68429914
+    },
+    {
+      "path": "/postings",
+      "tasks": 3,
+      "clientMs": 9879.818584,
+      "workerWallMs": 9302,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 27,
+      "stageBytes": 53278551
+    },
+    {
+      "path": "/documents",
+      "tasks": 2,
+      "clientMs": 7508.916708000004,
+      "workerWallMs": 6401,
+      "sourceRequests": 27,
+      "sourceBytes": 3566737,
+      "dictionaryRequests": 6,
+      "dictionaryBytes": 1022736,
+      "stageRequests": 7,
+      "stageBytes": 15107203
+    }
+  ],
+  "limitations": [
+    "Build time excludes deployment and final publication checks.",
+    "Source, stage, and dictionary bytes count transfers, including repeated reads.",
+    "Successful live execution establishes that the sampled tasks were admitted; native peak or retained memory is not available here."
+  ]
+}

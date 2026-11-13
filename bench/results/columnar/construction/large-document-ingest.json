@@ -1,0 +1,256 @@
+{
+  "rows": [
+    {
+      "source": {
+        "doc": 5875029,
+        "compressedBytes": 1416749
+      },
+      "output": {
+        "chunks": [
+          {
+            "key": "3239d3f0d2d7958ea2d42a4fb9d9731df3dc44c7179799ef34594a35b5c17d40/stage-3239d3f0d2d7958ea2d42a4fb9d9731df3dc44c7179799ef34594a35b5c17d40.bin",
+            "size": 2097135,
+            "sha256": "3239d3f0d2d7958ea2d42a4fb9d9731df3dc44c7179799ef34594a35b5c17d40"
+          },
+          {
+            "key": "1010392b4b62c0ba55d5453cd4e2a907dcbac9a18da5c05dddba749256dd0a3e/stage-1010392b4b62c0ba55d5453cd4e2a907dcbac9a18da5c05dddba749256dd0a3e.bin",
+            "size": 140520,
+            "sha256": "1010392b4b62c0ba55d5453cd4e2a907dcbac9a18da5c05dddba749256dd0a3e"
+          }
+        ],
+        "first": 5875029,
+        "next": 5875030,
+        "count": 1,
+        "bodyTokens": 599294,
+        "titleTokens": 25
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2237655,
+      "telemetry": {
+        "isolate": "cd9b2afb-775b-4dcf-adb5-490326226db6",
+        "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+        "wallMs": 2045,
+        "requests": 3,
+        "bytes": 1417203
+      }
+    },
+    {
+      "source": {
+        "doc": 5509447,
+        "compressedBytes": 1361019
+      },
+      "output": {
+        "chunks": [
+          {
+            "key": "0593c02836aff9757470dececb8434adcd192535141a7af56b933677d6df9d85/stage-0593c02836aff9757470dececb8434adcd192535141a7af56b933677d6df9d85.bin",
+            "size": 2096163,
+            "sha256": "0593c02836aff9757470dececb8434adcd192535141a7af56b933677d6df9d85"
+          },
+          {
+            "key": "b00278f63336c6190fa28ec3c8991233d0f26145126cb84622a9dbec1f23929b/stage-b00278f63336c6190fa28ec3c8991233d0f26145126cb84622a9dbec1f23929b.bin",
+            "size": 1114610,
+            "sha256": "b00278f63336c6190fa28ec3c8991233d0f26145126cb84622a9dbec1f23929b"
+          }
+        ],
+        "first": 5509447,
+        "next": 5509448,
+        "count": 1,
+        "bodyTokens": 532346,
+        "titleTokens": 7
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3210773,
+      "telemetry": {
+        "isolate": "cd9b2afb-775b-4dcf-adb5-490326226db6",
+        "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+        "wallMs": 1828,
+        "requests": 3,
+        "bytes": 1361369
+      }
+    },
+    {
+      "source": {
+        "doc": 5665076,
+        "compressedBytes": 1258129
+      },
+      "output": {
+        "chunks": [
+          {
+            "key": "3f5cd335a45b684df761b4e9bae630e7625ccfe230d3e9ca380ed8f209311f57/stage-3f5cd335a45b684df761b4e9bae630e7625ccfe230d3e9ca380ed8f209311f57.bin",
+            "size": 2091795,
+            "sha256": "3f5cd335a45b684df761b4e9bae630e7625ccfe230d3e9ca380ed8f209311f57"
+          }
+        ],
+        "first": 5665076,
+        "next": 5665077,
+        "count": 1,
+        "bodyTokens": 533440,
+        "titleTokens": 34
+      },
+      "writesAndMergeReads": 1,
+      "writeAndMergeBytes": 2091795,
+      "telemetry": {
+        "isolate": "cd9b2afb-775b-4dcf-adb5-490326226db6",
+        "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+        "wallMs": 1456,
+        "requests": 3,
+        "bytes": 1258658
+      }
+    },
+    {
+      "source": {
+        "doc": 5930801,
+        "compressedBytes": 1166428
+      },
+      "output": {
+        "chunks": [
+          {
+            "key": "183d31d18e57bbe741b15d705cb8ace86618849b6c95e372b8ac77ead6d0cc28/stage-183d31d18e57bbe741b15d705cb8ace86618849b6c95e372b8ac77ead6d0cc28.bin",
+            "size": 2097152,
+            "sha256": "183d31d18e57bbe741b15d705cb8ace86618849b6c95e372b8ac77ead6d0cc28"
+          },
+          {
+            "key": "65f132e49c314b6637f4a23d6d1c0a528961f9c668a7eb08325d26c40a913958/stage-65f132e49c314b6637f4a23d6d1c0a528961f9c668a7eb08325d26c40a913958.bin",
+            "size": 1524266,
+            "sha256": "65f132e49c314b6637f4a23d6d1c0a528961f9c668a7eb08325d26c40a913958"
+          }
+        ],
+        "first": 5930801,
+        "next": 5930802,
+        "count": 1,
+        "bodyTokens": 262338,
+        "titleTokens": 20
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3621418,
+      "telemetry": {
+        "isolate": "cd9b2afb-775b-4dcf-adb5-490326226db6",
+        "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+        "wallMs": 2125,
+        "requests": 3,
+        "bytes": 1166850
+      }
+    },
+    {
+      "source": {
+        "doc": 4454907,
+        "compressedBytes": 1060655
+      },
+      "output": {
+        "chunks": [
+          {
+            "key": "adb39be1e2e14603605f82d381f57f24efdc4cd98311caaca99b3919735daced/stage-adb39be1e2e14603605f82d381f57f24efdc4cd98311caaca99b3919735daced.bin",
+            "size": 1730354,
+            "sha256": "adb39be1e2e14603605f82d381f57f24efdc4cd98311caaca99b3919735daced"
+          }
+        ],
+        "first": 4454907,
+        "next": 4454908,
+        "count": 1,
+        "bodyTokens": 453196,
+        "titleTokens": 5
+      },
+      "writesAndMergeReads": 1,
+      "writeAndMergeBytes": 1730354,
+      "telemetry": {
+        "isolate": "cd9b2afb-775b-4dcf-adb5-490326226db6",
+        "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+        "wallMs": 1021,
+        "requests": 3,
+        "bytes": 1061005
+      }
+    },
+    {
+      "source": {
+        "doc": 5927887,
+        "compressedBytes": 1027168
+      },
+      "output": {
+        "chunks": [
+          {
+            "key": "93cc5dd4886bfe7dae6d84e43eb194bc834931674dbfbecd28958d5799774d2c/stage-93cc5dd4886bfe7dae6d84e43eb194bc834931674dbfbecd28958d5799774d2c.bin",
+            "size": 1716141,
+            "sha256": "93cc5dd4886bfe7dae6d84e43eb194bc834931674dbfbecd28958d5799774d2c"
+          }
+        ],
+        "first": 5927887,
+        "next": 5927888,
+        "count": 1,
+        "bodyTokens": 411974,
+        "titleTokens": 29
+      },
+      "writesAndMergeReads": 1,
+      "writeAndMergeBytes": 1716141,
+      "telemetry": {
+        "isolate": "cd9b2afb-775b-4dcf-adb5-490326226db6",
+        "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+        "wallMs": 1148,
+        "requests": 3,
+        "bytes": 1027636
+      }
+    },
+    {
+      "source": {
+        "doc": 5905834,
+        "compressedBytes": 1022015
+      },
+      "output": {
+        "chunks": [
+          {
+            "key": "30253365a1ea71de5115a8d9c37203bbb7a1a156e9a7b2390645c8a350fc05bc/stage-30253365a1ea71de5115a8d9c37203bbb7a1a156e9a7b2390645c8a350fc05bc.bin",
+            "size": 2009825,
+            "sha256": "30253365a1ea71de5115a8d9c37203bbb7a1a156e9a7b2390645c8a350fc05bc"
+          }
+        ],
+        "first": 5905834,
+        "next": 5905835,
+        "count": 1,
+        "bodyTokens": 394150,
+        "titleTokens": 8
+      },
+      "writesAndMergeReads": 1,
+      "writeAndMergeBytes": 2009825,
+      "telemetry": {
+        "isolate": "cd9b2afb-775b-4dcf-adb5-490326226db6",
+        "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+        "wallMs": 1488,
+        "requests": 3,
+        "bytes": 1022363
+      }
+    },
+    {
+      "source": {
+        "doc": 5932858,
+        "compressedBytes": 1004158
+      },
+      "output": {
+        "chunks": [
+          {
+            "key": "55f49f34b475a0ed7cd931530d50389a2c5532b7d89d0457f37861010a3e177c/stage-55f49f34b475a0ed7cd931530d50389a2c5532b7d89d0457f37861010a3e177c.bin",
+            "size": 2097126,
+            "sha256": "55f49f34b475a0ed7cd931530d50389a2c5532b7d89d0457f37861010a3e177c"
+          },
+          {
+            "key": "5783fe4346e66c28be339bcb3bb29ae1fdda48ee52a7fc270e572ef7cd4bd2d4/stage-5783fe4346e66c28be339bcb3bb29ae1fdda48ee52a7fc270e572ef7cd4bd2d4.bin",
+            "size": 839092,
+            "sha256": "5783fe4346e66c28be339bcb3bb29ae1fdda48ee52a7fc270e572ef7cd4bd2d4"
+          }
+        ],
+        "first": 5932858,
+        "next": 5932859,
+        "count": 1,
+        "bodyTokens": 322960,
+        "titleTokens": 14
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2936218,
+      "telemetry": {
+        "isolate": "cd9b2afb-775b-4dcf-adb5-490326226db6",
+        "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+        "wallMs": 1991,
+        "requests": 3,
+        "bytes": 1004548
+      }
+    }
+  ]
+}

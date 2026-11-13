@@ -1,0 +1,74 @@
+{
+  "manifest": {
+    "build": "worker-1000-v2",
+    "code": "19101249071d90f7846f136437a92f5b614fda9cecd139890a2ea93b2adb3fb1",
+    "sourceHash": "efdc4d8ef7a26ee02bea3765379d9affec373af61ea8384efca304581db182eb",
+    "sourceDocuments": 10032254,
+    "count": 1000,
+    "terms": 29017,
+    "bodyTokens": 1234436,
+    "titleTokens": 3924,
+    "generation": "9440dcc2fee2ef630ac12ce52db20bb9a72f214632c4140440796bbdf1ff55d8",
+    "objects": 47,
+    "bytes": 42538618,
+    "startedAt": "2026-11-13T01:14:01.259Z",
+    "finishedAt": "2026-11-13T01:18:18.641Z",
+    "construction": "Cloudflare Workers and R2"
+  },
+  "buildMs": 189852.36645507812,
+  "phases": [
+    {
+      "path": "/ingest",
+      "tasks": 19,
+      "clientMs": 16238.669330999997,
+      "workerWallMs": 12245,
+      "sourceRequests": 57,
+      "sourceBytes": 7854001,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 19,
+      "stageBytes": 22506512
+    },
+    {
+      "path": "/merge",
+      "tasks": 7,
+      "clientMs": 19688.386167000004,
+      "workerWallMs": 18501,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 94,
+      "stageBytes": 131784646
+    },
+    {
+      "path": "/postings",
+      "tasks": 3,
+      "clientMs": 9045.652833,
+      "workerWallMs": 8488,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 24,
+      "stageBytes": 52767159
+    },
+    {
+      "path": "/documents",
+      "tasks": 19,
+      "clientMs": 144718.704626,
+      "workerWallMs": 135148,
+      "sourceRequests": 57,
+      "sourceBytes": 7841021,
+      "dictionaryRequests": 8645,
+      "dictionaryBytes": 2082764805,
+      "stageRequests": 38,
+      "stageBytes": 14979607
+    }
+  ],
+  "limitations": [
+    "Build time excludes deployment and final publication checks.",
+    "Source, stage, and dictionary bytes count transfers, including repeated reads.",
+    "Successful live execution establishes that the sampled tasks were admitted; native peak or retained memory is not available here."
+  ]
+}

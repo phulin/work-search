@@ -11,18 +11,27 @@ pub fn hex(a: &[u8]) -> String {
 }
 pub enum InputFile {
     Local(File),
+    Stdin(std::io::Stdin),
     Remote(Box<crate::remote::Input>),
 }
 impl Read for InputFile {
     fn read(&mut self, b: &mut [u8]) -> std::io::Result<usize> {
         match self {
             Self::Local(f) => f.read(b),
+            Self::Stdin(f) => f.read(b),
             Self::Remote(f) => f.read(b),
         }
     }
 }
 pub type InputReader = BufReader<InputFile>;
 pub fn reader(p: &Path) -> Result<InputReader> {
+    // Linux cannot reopen a socket-backed Node stdin through /dev/stdin.
+    if p == Path::new("-") {
+        return Ok(BufReader::with_capacity(
+            256 * 1024,
+            InputFile::Stdin(std::io::stdin()),
+        ));
+    }
     let path = if p == Path::new("-") {
         Path::new("/dev/stdin")
     } else {

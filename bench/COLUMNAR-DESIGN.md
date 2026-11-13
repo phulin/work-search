@@ -26,6 +26,9 @@ Positions have a per-row offset directory. Locators contain direct references to
 the result record, forward directory, and first relevant passage. Display IDs,
 metadata, and address arrays are absent from scoring loops. Result records and
 passage text use gzip; posting execution uses no general-purpose decompression.
+The Worker builder stores locators once in 4,096-document tables and leaves the
+posting locator column empty. Surviving document handles address those tables
+directly, avoiding repeated locator storage without a remote discovery step.
 
 Forward body blocks contain numeric token IDs, 256 core tokens, and 32 tokens of
 overlap on each side. Token IDs and display text have separate references.

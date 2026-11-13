@@ -197,13 +197,22 @@ export class ColumnarIndex {
     )
       throw Error("Invalid CWS1 root");
   }
-  async terms(
+  terms(
     names: string[],
     reader: Reader,
     routing: Pick<Root, "hot" | "dictionaries" | "dictionaryHeight"> = this
       .root,
   ) {
-    const terms = new Map<string, Term>();
+    return this.dictionary(names, reader, routing);
+  }
+  async dictionary<T>(
+    names: string[],
+    reader: Reader,
+    routing: Pick<Root, "dictionaries" | "dictionaryHeight"> & {
+      hot: Record<string, T>;
+    },
+  ) {
+    const terms = new Map<string, T>();
     const cold: string[] = [];
     for (const name of names) {
       const hot = Object.hasOwn(routing.hot, name)
@@ -250,8 +259,7 @@ export class ColumnarIndex {
           }
           const entries = await reader.load(
             ref,
-            (b) =>
-              new Map<string, Term>(JSON.parse(new TextDecoder().decode(b))),
+            (b) => new Map<string, T>(JSON.parse(new TextDecoder().decode(b))),
             ref[2] * 3,
           );
           for (const name of names) {
@@ -808,15 +816,16 @@ export class ColumnarIndex {
       ),
       displayStart = performance.now();
     const locators = await reader.many(
-      ranked.map(
-        (h) =>
-          h.branch?.locators ?? this.root.documents[Math.floor(h.doc / 4096)],
+      ranked.map((h) =>
+        h.branch?.locators[2]
+          ? h.branch.locators
+          : this.root.documents[Math.floor(h.doc / 4096)],
       ),
     );
     const results = await Promise.all(
       ranked.map(async (h, i) => {
         const v = view(locators[i]),
-          p = h.row * 36,
+          p = (h.branch?.locators[2] ? h.row : h.doc % 4096) * 36,
           recordRef = refAt(v, p),
           forwardRef = refAt(v, p + 12);
         let snippetRef = refAt(v, p + 24);

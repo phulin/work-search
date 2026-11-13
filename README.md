@@ -46,10 +46,26 @@ yarn columnar:heads work/cws-1m
 ```
 
 Accelerators read the published format independently of builder staging files.
+For the already published R2 corpus, construction can run entirely in Workers.
+The local TypeScript process schedules requests and stores small checkpoints;
+postings, sorting runs, passage text and serving objects stay in R2.
+
+```sh
+yarn node --import tsx scripts/construction-source.ts work/full-flp/published.json
+yarn columnar:deploy:builder
+yarn columnar:build:r2 1000 work/cws-r2-pilot pilot-1
+yarn deploy work/cws-r2-pilot work-search-cws-r2-pilot --deploy-only
+```
+
+Repeating the build command resumes completed R2 tasks. Use a new build ID and
+output directory after changing construction code or source. Source generations
+and checksums prevent mixed inputs; the completed layout determines the serving
+generation and cache identity. The frozen benchmark control remains separate.
+
 The default builder reclaims consumed staging data. For corpora larger than local
 disk, set `CWS_OFFLINE_STORE` to the authenticated uploader; construction spills
-checksummed temporary streams to R2 with bounded upload backpressure. The local full-build command pins the official source snapshot and exact builder
-source; it does not depend on a CI service.
+checksummed temporary streams to R2 with bounded upload backpressure. Build results
+record the source checksum and builder version; construction does not depend on a CI service.
 
 ## Isolated deployment and comparison
 

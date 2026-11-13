@@ -89,7 +89,70 @@ let doc = 0,
   titleSum = 0;
 const hash = createHash("sha256"),
   started = performance.now();
-for await (const line of jsonLines(input)) {
+async function* corpusLines() {
+  if (input !== "r2") {
+    yield* jsonLines(input);
+    return;
+  }
+  const sourceRoot = JSON.parse(
+      await readFile("work/columnar-worker-build/source-root.json", "utf8"),
+    ),
+    token = await benchmarkToken(),
+    url =
+      process.env.CWS_BUILD_URL ??
+      "https://work-search-cws-build-0.phulin.workers.dev";
+  const health = (await fetch(url + "/health", {
+    headers: { authorization: `Bearer ${token}` },
+  }).then((r) => r.json())) as any;
+  if (
+    health.sourceHash !==
+      createHash("sha256").update(JSON.stringify(sourceRoot)).digest("hex") ||
+    createHash("sha256")
+      .update(JSON.stringify({ sourceRoot, count: root.count }))
+      .digest("hex") !== root.corpusHash
+  )
+    throw Error("R2 oracle source mismatch");
+  for (let first = 0; first < root.count;) {
+    const part = sourceRoot.parts.find(
+        (p: any) => p.first <= first && p.first + p.count > first,
+      ),
+      count = Math.min(
+        128,
+        root.count - first,
+        part.first + part.count - first,
+      );
+    let result;
+    for (let retry = 0; ; retry++)
+      try {
+        const response = await fetch(url + "/source", {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ first, count }),
+          signal: AbortSignal.timeout(120000),
+        });
+        if (!response.ok) throw Error("R2 source read " + response.status);
+        result = (await response.json()) as any;
+        break;
+      } catch (e) {
+        if (retry === 4) throw e;
+        await new Promise((r) => setTimeout(r, 500 * 2 ** retry));
+      }
+    if (
+      result.first !== first ||
+      result.next !== first + result.rows.length ||
+      !result.rows.length
+    )
+      throw Error("R2 oracle document gap");
+    for (const d of result.rows) {
+      if (d.doc !== first++) throw Error("R2 oracle source order mismatch");
+      yield JSON.stringify(d);
+    }
+  }
+}
+for await (const line of corpusLines()) {
   if (!line.trim()) continue;
   const d = JSON.parse(line);
   hash.update(JSON.stringify(d) + "\n");
@@ -168,7 +231,7 @@ for await (const line of jsonLines(input)) {
 }
 if (
   doc !== root.count ||
-  hash.digest("hex") !== root.corpusHash ||
+  (input !== "r2" && hash.digest("hex") !== root.corpusHash) ||
   bodySum / doc !== root.avgBody ||
   titleSum / doc !== root.avgTitle
 )
@@ -187,7 +250,9 @@ await writeFile(
     scenarios: plans.map((p: any) => {
       const limit = p.options?.limit ?? 20,
         start = (p.page ?? 0) * limit,
-        last = p.ranked[start - 1];
+        last = start
+          ? p.ranked[Math.min(start, p.ranked.length) - 1]
+          : undefined;
       return {
         q: p.q,
         kind: p.kind,

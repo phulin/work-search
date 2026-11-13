@@ -28,7 +28,7 @@ const uploadAgent = new Agent({
   maxSockets: uploadConcurrency,
 });
 const compress = promisify(gzip);
-function headObject(address: string, token: string) {
+function headObjectOnce(address: string, token: string) {
   return new Promise<{
     status: number;
     headers: Record<string, string | string[] | undefined>;
@@ -50,6 +50,42 @@ function headObject(address: string, token: string) {
     r.setTimeout(120000, () => r.destroy(Error("Upload HEAD timeout")));
     r.once("error", no);
     r.end();
+  });
+}
+async function headObject(address: string, token: string) {
+  for (let attempt = 0; ; attempt++)
+    try {
+      return await headObjectOnce(address, token);
+    } catch (e) {
+      if (attempt === 4) throw e;
+      await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
+    }
+}
+function uploadObject(
+  address: string,
+  headers: Record<string, string>,
+  body: Buffer,
+) {
+  // Node 26 fetch negotiates HTTP/2. Long concurrent immutable transfers hit
+  // transient stream resets; use the same bounded HTTP/1 agent as HEAD checks.
+  return new Promise<{ status: number; text: string }>((ok, no) => {
+    const r = httpsRequest(
+      address,
+      { method: "PUT", agent: uploadAgent, headers },
+      (response) => {
+        let text = "";
+        response.on("data", (chunk) => {
+          if (text.length < 2000) text += chunk.toString();
+        });
+        response.once("error", no);
+        response.once("end", () =>
+          ok({ status: response.statusCode ?? 0, text }),
+        );
+      },
+    );
+    r.setTimeout(180000, () => r.destroy(Error("Immutable upload timeout")));
+    r.once("error", no);
+    r.end(body);
   });
 }
 const [out, name] = process.argv.slice(2);
@@ -170,9 +206,9 @@ if (!process.argv.includes("--deploy-only")) {
             const compressed = await compress(await readFile(path), {
               level: 1,
             });
-            const r = await fetch(address, {
-              method: "PUT",
-              headers: {
+            const r = await uploadObject(
+              address,
+              {
                 authorization: `Bearer ${token}`,
                 "content-length": String(compressed.length),
                 "x-sha256": object.sha256,
@@ -185,11 +221,10 @@ if (!process.argv.includes("--deploy-only")) {
                     }
                   : {}),
               },
-              body: compressed,
-            });
-            if (!r.ok)
-              throw Error("Upload " + r.status + ": " + (await r.text()));
-            await r.arrayBuffer();
+              compressed,
+            );
+            if (r.status < 200 || r.status >= 300)
+              throw Error("Upload " + r.status + ": " + r.text);
             break;
           } catch (e) {
             if (attempt === 4) throw e;

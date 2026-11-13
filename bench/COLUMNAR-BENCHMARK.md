@@ -5,7 +5,7 @@ adoption** while the scale, startup, load and native memory gates below remain.
 The public demo has not changed. This ledger distinguishes completed measurements
 from work still running.
 
-## Pinned comparison
+## Comparison setup
 
 The checkout began at `dd08b3c943362af8a3d404ed5cb6bc28d402b914`. The frozen control
 archives `4f97eb49f1aa2115fbc3026c4924a1182a90917b`: unchanged global engine,
@@ -26,7 +26,7 @@ Each raw compressed run contains timestamps, seed, workload/options, cache state
 health/generation, request/isolate IDs, correctness, complete client time, arrival
 lateness, errors and counters. Sanitized live tails provide sampled native CPU
 and wall time joined by request ID. Tail coverage is incomplete. Deployment
-manifests under `work/columnar-deploy` pin runtime snapshots and source hashes.
+manifests under `work/columnar-deploy` record runtime versions and source hashes.
 Report code computes query/session-block bootstrap intervals; small pilot P99s
 remain exploratory. Machine-readable raw and summarized data are in
 [`results/columnar`](results/columnar).
@@ -79,7 +79,32 @@ where a favorable microbenchmark failed the complete-response live comparison.
 V6 additionally decodes positions only for requested fields, bounds deferred
 shared-cache writes and records errors with telemetry. V9 freezes the current
 runtime after removing unsuccessful band ordering; its substantial warm-shared,
-empty-application-memory comparison is running.
+empty-application-memory comparison is complete.
+
+## Substantial empty-application-cache run
+
+`final-warm-fra` completed three randomized/interleaved sessions with 10,000
+attempts per variant and eight total scheduled arrivals/sec. A placed Frankfurt
+Worker client fetched and parsed every complete response. Each search reset its
+application caches inside that request; shared pages were warmed. This is neither
+a new-isolate experiment nor control over R2 backend caches.
+
+| Variant        | Attempts |    P50 |      P95 |       P99 | HTTP 503 |
+| -------------- | -------: | -----: | -------: | --------: | -------: |
+| Frozen control |   10,000 | 334 ms | 5,897 ms | 55,788 ms |      132 |
+| Replacement V9 |   10,000 | 180 ms |   506 ms |    632 ms |        1 |
+
+All successful responses passed the oracle. Native tails joined 9,868 successful
+control requests and 9,999 replacement requests. Their CPU P50/P95/P99 were
+177/3,596/8,060 ms and 81/220/319 ms, respectively. Worker wall P99 was
+55,783/626 ms; client tails therefore cannot be explained by local result-file
+processing alone. Client arrival-lateness P99 remained below 2.6 ms for both.
+
+The query/session-block bootstrap P99 intervals were 15,619–60,774 ms for control
+and 589–684 ms for V9. These wide control intervals matter: workload classes and
+all-outcome/error distributions remain separate in
+[`final-warm-fra-summary.json`](results/columnar/final-warm-fra-summary.json).
+These are this scenario mixture's request percentiles, not production traffic.
 
 ## Regional observations
 
@@ -110,12 +135,36 @@ Exact bundled certificates took about 51 seconds and occupy about 6.07 MB.
 
 A fresh 1,000-document remote-spill build passed 96 live query/field comparisons
 including metadata and snippet presence, using CRC metadata returned with R2
-range reads. Its temporary R2 streams were successfully deleted. The full official
-snapshot is now being constructed through that bounded path; An attempted CI build failed and was removed; construction continues locally.
-Its separate credential and temporary metadata copies were removed. Actual 1M and largest-corpus
-live performance are pending and are not inferred from 100k.
+range reads. Its temporary R2 streams were successfully deleted. The attempted CI
+build was removed, including its separate credential and temporary metadata.
+Local full construction and the incomplete 1M bulk upload were stopped when the
+user selected native Worker/R2 construction. No Actions build remains active.
 
-191 repository tests pass, including independent exhaustive small corpora,
+The new TypeScript construction Worker reads archived source records directly
+from R2, performs bounded external merging, emits CWS1 postings and numeric
+forward blocks, and publishes a complete root. Its first 1,000-document build
+produced 29,017 terms and 42.5 MB of serving data without a local index copy.
+The independent R2 scan verified document count, average lengths, all workload
+term DFs and exhaustive rankings. A live search Worker then passed 152 measured
+complete responses over the 76 scenarios in two sessions, including metadata,
+snippets and pagination. This corpus differs from the 100k comparison corpus.
+The initial pilot oracle incorrectly omitted a cursor when a first page was
+underfilled; that test bug was fixed before the passing run.
+
+Coalescing contiguous source ranges reduced the same pilot from 453 to 193 sec;
+bounded token-ID reuse reduced it to 169 sec; a compact ID dictionary and remote
+checkpoints reduced it to 83 sec. These are single construction pilots, not
+serving latency claims. Raw task receipts, source generations, roots, and phase
+totals are in [`construction`](results/columnar/construction). All eight largest
+known compressed source records, including a 599,294-token document, completed
+live ingestion. This does not establish native peak memory.
+
+The available published R2 source contains 10,032,254 documents across 254
+partitions. This is not proof that the entire official CSV snapshot was imported.
+Actual 1M and largest-corpus live search performance remain pending and are not
+inferred from either pilot or the 100k comparison.
+
+195 repository tests pass, including independent exhaustive small corpora,
 70k-vocabulary hierarchical routing, adversarial compound winners absent from
 single-term certificates, phrases/proximity/negatives, long repeated documents,
 fields/boosts, deterministic ties, search-after, corruption, generation consistency,
@@ -141,8 +190,7 @@ are available; production allocation attribution and peak/retained memory remain
 unestablished. The current `stages` counter counts execution batches, not a full
 I/O dependency graph. These are measurement gaps, not zero-cost observations.
 
-Remaining adoption gates: complete the substantial empty-application-cache run;
-fresh namespaces and actual deployment/startup trials; controlled load ladders
+Remaining adoption gates: fresh namespaces and actual deployment/startup trials; controlled load ladders
 with queueing/rejections; live correctness/performance at 1M and the full available
 snapshot; native retained/peak memory under load; and identification/optimization
 of scale-specific bottlenecks. See [the design](COLUMNAR-DESIGN.md) for the final

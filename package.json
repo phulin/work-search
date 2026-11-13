@@ -27,6 +27,8 @@
     "builder:test": "yarn builder:compile && cargo test --locked && vitest run tests/rust-builder.test.ts && node --import tsx bench/rust-builder/unicode.ts",
     "bench:builder": "node --import tsx bench/rust-builder/benchmark.ts",
     "columnar:build": "node --import tsx scripts/build-columnar.ts",
+    "columnar:build:r2": "node --import tsx scripts/build-in-workers.ts",
+    "columnar:deploy:builder": "node --import tsx scripts/deploy-construction.ts",
     "columnar:pairs": "node --import tsx scripts/build-columnar-pairs.ts",
     "columnar:heads": "node --import tsx scripts/build-columnar-heads.ts",
     "columnar:corpus": "node --import tsx scripts/columnar-corpus.ts",
