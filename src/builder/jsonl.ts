@@ -1,10 +1,15 @@
 import { createReadStream } from "node:fs";
+import { createGunzip } from "node:zlib";
 
 // JSONL records are delimited by LF (optionally CRLF). U+2028/U+2029 are legal
 // JSON string contents, but recent Node readline versions treat them as lines.
 export async function* jsonLines(path: string): AsyncGenerator<string> {
   let partial = "";
-  for await (const chunk of createReadStream(path, { encoding: "utf8" })) {
+  const source = createReadStream(path),
+    stream = path.endsWith(".gz") ? source.pipe(createGunzip()) : source;
+  if (stream !== source) source.on("error", (e) => stream.destroy(e));
+  stream.setEncoding("utf8");
+  for await (const chunk of stream) {
     let scan = partial.length,
       start = 0;
     partial += chunk;

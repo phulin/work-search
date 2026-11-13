@@ -74,8 +74,11 @@ for (const name of variants) {
 for (let pass = 0; pass < 2; pass++)
   for (const [qi, q] of queries.entries()) {
     for (const name of (pass + qi) % 2 ? [...variants].reverse() : variants) {
-      await call(name, "/__reset", {});
-      const { result, ms } = await call(name, "/search", { q: q.q, limit: 20 }),
+      const { result, ms } = await call(name, "/search", {
+          q: q.q,
+          limit: 20,
+          resetMemory: true,
+        }),
         want = oracle[q.q];
       if (
         result.results.length !== want.length ||

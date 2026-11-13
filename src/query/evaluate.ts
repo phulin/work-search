@@ -78,10 +78,12 @@ interface SpanList {
 }
 const EMPTY: SpanList = { starts: [], ends: [], count: 0, monotone: true };
 class SpanBuffer implements SpanList {
-  private peak = 0;
-  constructor(private readonly reserve: () => void) {}
-  starts: number[] = [];
-  ends: number[] = [];
+  constructor(
+    private readonly reserve: (n: number) => void,
+    private readonly limit = 4096,
+  ) {}
+  starts = new Uint32Array(0);
+  ends = new Uint32Array(0);
   count = 0;
   monotone = true;
   reset() {
@@ -89,11 +91,17 @@ class SpanBuffer implements SpanList {
     this.monotone = true;
   }
   add(start: number, end: number) {
-    if (this.count >= 4096)
+    if (this.count >= this.limit)
       throw new QueryResourceError("Too many positional spans in one document");
-    if (this.count >= this.peak) {
-      this.reserve();
-      this.peak++;
+    if (this.count >= this.starts.length) {
+      const size = Math.min(this.limit, Math.max(16, this.starts.length * 2));
+      this.reserve(size - this.starts.length);
+      const starts = new Uint32Array(size),
+        ends = new Uint32Array(size);
+      starts.set(this.starts);
+      ends.set(this.ends);
+      this.starts = starts;
+      this.ends = ends;
     }
     this.starts[this.count] = start;
     this.ends[this.count++] = end;
@@ -107,7 +115,7 @@ class SpanBuffer implements SpanList {
     }
     // Only nested expressions materialize spans. Their ordering is part of the
     // interval-join contract; ends need not be monotone even when starts are.
-    const order = Array.from({ length: this.count }, (_, i) => i).sort(
+    const order = Uint32Array.from({ length: this.count }, (_, i) => i).sort(
       (a, b) => this.starts[a] - this.starts[b] || this.ends[a] - this.ends[b],
     );
     const starts = order.map((i) => this.starts[i]),
@@ -245,6 +253,7 @@ export function positionalMatcher(
     doc: number,
     field: number,
   ) => ArrayLike<number> | undefined,
+  limits: { spans?: number; scratchSpans?: number; checks?: number } = {},
 ) {
   let document = 0,
     epoch = 0,
@@ -264,7 +273,7 @@ export function positionalMatcher(
     return t;
   };
   const tick = () => {
-    if (++checks > 10000000)
+    if (++checks > (limits.checks ?? 10000000))
       throw new QueryResourceError("Positional work limit exceeded");
   };
   const fields = field === "body" ? [0] : field === "title" ? [1] : [0, 1];
@@ -318,11 +327,14 @@ export function positionalMatcher(
     const phraseLists = phrase
       ? [new Array<SpanList>(phrase.length), new Array<SpanList>(phrase.length)]
       : undefined;
-    const reserve = () => {
-      if (++scratchSpans > 32768)
+    const reserve = (n: number) => {
+      if ((scratchSpans += n) > (limits.scratchSpans ?? 32768))
         throw new QueryResourceError("Positional scratch limit exceeded");
     };
-    const buffers = [new SpanBuffer(reserve), new SpanBuffer(reserve)];
+    const buffers = [
+      new SpanBuffer(reserve, limits.spans),
+      new SpanBuffer(reserve, limits.spans),
+    ];
     let truthEpoch = -1,
       truthValue = false;
     const spanEpoch = [-1, -1];

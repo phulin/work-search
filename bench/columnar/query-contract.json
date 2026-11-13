@@ -1,0 +1,260 @@
+{
+  "heldout": [
+    {
+      "q": "double jeopardy",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "wrongful termination",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "burden proof",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "plea agreement",
+      "kind": "plain",
+      "origin": "hand-authored legal terms"
+    },
+    {
+      "q": "\"medical malpractice\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"1970 fence maintained cattle\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:1209151"
+    },
+    {
+      "q": "\"excessive force\"",
+      "kind": "phrase",
+      "origin": "hand-authored legal phrase"
+    },
+    {
+      "q": "\"new york until it\"",
+      "kind": "phrase",
+      "origin": "corpus-derived phrase",
+      "document": "courtlistener:6778639"
+    },
+    {
+      "q": "material /75 fact",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "the /5 the",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:1133889"
+    },
+    {
+      "q": "statute /5 limitations",
+      "kind": "proximity",
+      "origin": "hand-authored legal connector"
+    },
+    {
+      "q": "jimmie /5 defendants",
+      "kind": "proximity",
+      "origin": "corpus-derived connector",
+      "document": "courtlistener:7766188"
+    },
+    {
+      "q": "(rules OR of) AND rule",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:6672005"
+    },
+    {
+      "q": "(of OR the) AND limit",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:1655462"
+    },
+    {
+      "q": "(firm OR s) AND \"or\"",
+      "kind": "boolean",
+      "origin": "corpus-derived Boolean query",
+      "document": "courtlistener:7304300"
+    },
+    {
+      "q": "(due OR process) AND court",
+      "kind": "boolean",
+      "origin": "hand-authored Boolean stress query"
+    },
+    {
+      "q": "\"the and of the\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "\"in the\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "\"court court court court\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "\"and on that advice\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "NOT \"summary judgment\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "court NOT \"personal jurisdiction\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "NOT NOT \"clear and convincing evidence\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "(jurisdiction OR \"summary judgment\") AND NOT \"res ipsa loquitur\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "\"summary judgment\" /10 evidence",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "(motion OR court) +5 jurisdiction",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "court OR the OR of OR \"and\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "(the OR of) AND (court OR judgment)",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "\"\uff2a\uff35\uff32\uff29\uff33\uff24\uff29\uff23\uff34\uff29\uff2f\uff2e\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "\"judgment summary\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "\"and and\"",
+      "kind": "heldout-adversarial"
+    },
+    {
+      "q": "\"unfindable word zero\"",
+      "kind": "heldout-adversarial"
+    }
+  ],
+  "contracts": [
+    {
+      "id": "contract-0",
+      "q": "court",
+      "kind": "field-body",
+      "options": {
+        "field": "body"
+      }
+    },
+    {
+      "id": "contract-1",
+      "q": "court",
+      "kind": "field-title",
+      "options": {
+        "field": "title"
+      }
+    },
+    {
+      "id": "contract-2",
+      "q": "court",
+      "kind": "tie-title-zero",
+      "options": {
+        "field": "title",
+        "titleBoost": 0
+      }
+    },
+    {
+      "id": "contract-3",
+      "q": "court",
+      "kind": "boost-20",
+      "options": {
+        "titleBoost": 20
+      }
+    },
+    {
+      "id": "contract-4",
+      "q": "court",
+      "kind": "boost-arbitrary",
+      "options": {
+        "titleBoost": 3.25
+      }
+    },
+    {
+      "id": "contract-5",
+      "q": "summary OR judgment",
+      "kind": "mode-or",
+      "options": {
+        "mode": "or"
+      }
+    },
+    {
+      "id": "contract-6",
+      "q": "\"clear and convincing evidence\"",
+      "kind": "phrase-title",
+      "options": {
+        "field": "title"
+      }
+    },
+    {
+      "id": "contract-7",
+      "q": "\"in the\"",
+      "kind": "common-phrase-body",
+      "options": {
+        "field": "body"
+      }
+    },
+    {
+      "id": "contract-8",
+      "q": "motion /5 ten",
+      "kind": "proximity-body",
+      "options": {
+        "field": "body"
+      }
+    },
+    {
+      "id": "contract-9",
+      "q": "court",
+      "kind": "pagination",
+      "options": {
+        "after": {
+          "doc": 57303,
+          "score": 0.8152360552646022
+        }
+      }
+    },
+    {
+      "id": "contract-10",
+      "q": "\"summary judgment\"",
+      "kind": "phrase-pagination",
+      "options": {
+        "after": {
+          "doc": 9462,
+          "score": 5.416276642328292
+        }
+      }
+    },
+    {
+      "id": "contract-11",
+      "q": "jurisdiction",
+      "kind": "large-page",
+      "options": {
+        "limit": 100
+      }
+    }
+  ]
+}

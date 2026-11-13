@@ -27,7 +27,7 @@ pub fn objects(out: &Path, runs: &[Run], finals: &[Finalized]) -> Result<(Vec<Ob
             if dest.exists() {
                 fs::remove_file(&dest)?;
             }
-            if fs::hard_link(&source, &dest).is_err() {
+            if !crate::remote::adopt(&source, &dest)? && fs::hard_link(&source, &dest).is_err() {
                 fs::copy(source, dest)?;
             }
             let mut object = old.clone();
@@ -199,6 +199,7 @@ impl Leaf {
         Ok(())
     }
 }
+#[allow(clippy::too_many_arguments)]
 pub fn emit(
     out: &Path,
     runs: &[Run],
@@ -207,8 +208,20 @@ pub fn emit(
     count: u32,
     averages: (f64, f64),
     corpus_hash: &str,
+    reclaim: bool,
 ) -> Result<Root> {
-    let fan = posting_fan_in();
+    let maximum = if crate::remote::enabled() {
+        posting_fan_in().min(64)
+    } else {
+        posting_fan_in()
+    };
+    // If a spill is necessary, reclaim small completed groups rather than
+    // retaining a second copy of nearly every source run at once.
+    let fan = if reclaim && runs.len() > maximum {
+        maximum.min(64)
+    } else {
+        maximum
+    };
     let dir = out.join("staging/merge");
     let mut cs = if runs.len() <= fan {
         runs.iter()
@@ -241,6 +254,13 @@ pub fn emit(
                 }
             }
             w.flush()?;
+            drop(w);
+            drop(inputs);
+            if reclaim {
+                for run in group {
+                    crate::remote::remove(&run_dir(out, run.id).join("postings.stage"))?;
+                }
+            }
             paths.push(dest);
         }
         crate::merge::bounded_records(paths, out)?
@@ -254,7 +274,11 @@ pub fn emit(
             heap.push(Reverse((c.key(), i)));
         }
     }
-    let mut p = Packer::new(&out.join("packs"), objects.len() as u32)?;
+    let allocator = std::rc::Rc::new(std::cell::Cell::new(objects.len() as u32));
+    let mut p = Packer::shared(&out.join("packs"), allocator.clone())?;
+    let mut scores = Packer::shared(&out.join("packs"), allocator.clone())?;
+    let mut positions = Packer::shared(&out.join("packs"), allocator.clone())?;
+    let mut locators = Packer::shared(&out.join("packs"), allocator)?;
     let mut plans = writer(&out.join("staging/plans.bin"))?;
     let mut terms = reader(&out.join("staging/vocabulary.global"))?;
     let mut tree = Tree::new();
@@ -368,9 +392,9 @@ pub fn emit(
                     }
                     current = Some(block.term);
                 }
-                let positions = p.put(&block.positions)?;
-                let locators = p.put(&block.locators)?;
-                let score = p.put(&block.scores)?;
+                let positions = positions.put(&block.positions)?;
+                let locators = locators.put(&block.locators)?;
+                let score = scores.put(&block.scores)?;
                 tree.push(
                     Branch {
                         first: block.first,
@@ -474,7 +498,33 @@ pub fn emit(
         }
     }
     flush_dict(&mut entries, &mut dictionaries, &mut p)?;
+    let mut dictionary_height = 0;
+    while dictionaries.len() > 256 {
+        let mut upper = Vec::new();
+        for group in dictionaries.chunks(256) {
+            let reference = p.put(&serde_json::to_vec(group)?)?;
+            upper.push(Dictionary {
+                first: group[0].first.clone(),
+                last: group.last().unwrap().last.clone(),
+                reference,
+            });
+        }
+        dictionaries = upper;
+        dictionary_height += 1;
+    }
     objects.extend(p.finish()?);
+    objects.extend(scores.finish()?);
+    objects.extend(positions.finish()?);
+    objects.extend(locators.finish()?);
+    objects.sort_unstable_by_key(|o| {
+        o.name
+            .strip_prefix("plan-")
+            .unwrap()
+            .strip_suffix(".bin")
+            .unwrap()
+            .parse::<u32>()
+            .unwrap()
+    });
     let mut hot_terms = BTreeMap::new();
     for Reverse((_, Reverse(JsKey(name)), payload)) in hot {
         hot_terms.insert(name, serde_json::from_str(&payload)?);
@@ -488,6 +538,7 @@ pub fn emit(
         corpus_hash: corpus_hash.to_owned(),
         documents,
         dictionaries,
+        dictionary_height,
         hot: hot_terms,
         objects: objects.clone(),
     })

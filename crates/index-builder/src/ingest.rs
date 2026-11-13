@@ -1,8 +1,9 @@
+use crate::js_string::{JsString, Slice};
 use crate::{format::*, tokenize::Tokens, util::*};
 use libdeflater::{CompressionLvl, Compressor};
 use rustc_hash::FxHashMap;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::value::RawValue;
 use std::{
     io::{Read, Write},
     path::{Path, PathBuf},
@@ -32,20 +33,22 @@ pub struct Task {
 }
 #[derive(Deserialize)]
 struct Document {
-    id: String,
-    body: String,
+    id: JsString,
+    body: JsString,
     #[serde(default, deserialize_with = "title")]
-    title: Option<String>,
+    title: Option<JsString>,
     #[serde(default, deserialize_with = "metadata")]
-    metadata: Option<Value>,
+    metadata: Option<Box<RawValue>>,
 }
 fn metadata<'de, D: serde::Deserializer<'de>>(
     d: D,
-) -> std::result::Result<Option<Value>, D::Error> {
-    Value::deserialize(d).map(Some)
+) -> std::result::Result<Option<Box<RawValue>>, D::Error> {
+    Box::<RawValue>::deserialize(d).map(Some)
 }
-fn title<'de, D: serde::Deserializer<'de>>(d: D) -> std::result::Result<Option<String>, D::Error> {
-    String::deserialize(d).map(Some)
+fn title<'de, D: serde::Deserializer<'de>>(
+    d: D,
+) -> std::result::Result<Option<JsString>, D::Error> {
+    JsString::deserialize(d).map(Some)
 }
 #[derive(Default)]
 struct Slot {
@@ -173,15 +176,16 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
     for (i, line) in task.lines.iter().enumerate() {
         let stage = Instant::now();
         let d: Document = serde_json::from_str(line)?;
-        if d.id.is_empty() {
+        if d.id.text.is_empty() {
             return Err("empty document ID".into());
         }
         let doc = task
             .first
             .checked_add(i as u32)
             .ok_or("document overflow")?;
-        let body = Tokens::new(&d.body);
-        let title = Tokens::new(d.title.as_deref().unwrap_or(""));
+        let body_source = d.body.normalized();
+        let body = Tokens::new(&body_source.text);
+        let title = Tokens::new(d.title.as_ref().map_or("", |s| s.text.as_str()));
         let b = intern(&body, &mut dictionary, &mut dfs);
         let t = intern(&title, &mut dictionary, &mut dfs);
         let bl: u32 = b.len().try_into()?;
@@ -212,7 +216,7 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
             #[derive(Serialize)]
             struct Passage<'a> {
                 first: usize,
-                text: &'a str,
+                text: Slice<'a>,
                 starts: Vec<u32>,
                 ends: Vec<u32>,
             }
@@ -220,7 +224,7 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
                 &mut packer,
                 &Passage {
                     first: lo,
-                    text: &body.text[char_start..char_end],
+                    text: body_source.slice(&body.text, char_start, char_end, usize::MAX),
                     starts,
                     ends,
                 },
@@ -230,30 +234,21 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
         }
         #[derive(Serialize)]
         struct Display<'a> {
-            id: &'a str,
+            id: &'a JsString,
             #[serde(skip_serializing_if = "Option::is_none")]
-            title: &'a Option<String>,
+            title: &'a Option<JsString>,
             #[serde(skip_serializing_if = "Option::is_none")]
-            metadata: &'a Option<Value>,
-            preview: String,
+            metadata: &'a Option<Box<RawValue>>,
+            preview: Slice<'a>,
         }
         // Preview boundary is UTF-16, matching JavaScript's slice(0,400).
-        let mut n = 0;
-        let mut end = 0;
-        for (at, c) in body.text.char_indices() {
-            if n + c.len_utf16() > 400 {
-                break;
-            }
-            n += c.len_utf16();
-            end = at + c.len_utf8();
-        }
         let rr = compressor.put(
             &mut packer,
             &Display {
                 id: &d.id,
                 title: &d.title,
                 metadata: &d.metadata,
-                preview: body.text[..end].to_owned(),
+                preview: body_source.slice(&body.text, 0, body.text.len(), 400),
             },
         )?;
         for n in [doc, bl, tl] {
@@ -338,7 +333,7 @@ pub fn ingest(task: Task, out: &Path, resume: bool) -> Result<Run> {
             slot.bf = 0;
             slot.tf = 0;
         }
-        ids.push((d.id, doc));
+        ids.push((d.id.id_key(), doc));
         phases[2] += stage.elapsed().as_micros();
     }
     let docs_hash = finish_digest(docs)?;

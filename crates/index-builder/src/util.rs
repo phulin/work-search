@@ -9,11 +9,61 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + S
 pub fn hex(a: &[u8]) -> String {
     a.iter().map(|b| format!("{b:02x}")).collect()
 }
-pub fn reader(p: &Path) -> Result<BufReader<File>> {
-    Ok(BufReader::with_capacity(256 * 1024, File::open(p)?))
+pub enum InputFile {
+    Local(File),
+    Remote(Box<crate::remote::Input>),
 }
-pub fn writer(p: &Path) -> Result<BufWriter<File>> {
-    Ok(BufWriter::with_capacity(1024 * 1024, File::create(p)?))
+impl Read for InputFile {
+    fn read(&mut self, b: &mut [u8]) -> std::io::Result<usize> {
+        match self {
+            Self::Local(f) => f.read(b),
+            Self::Remote(f) => f.read(b),
+        }
+    }
+}
+pub type InputReader = BufReader<InputFile>;
+pub fn reader(p: &Path) -> Result<InputReader> {
+    let path = if p == Path::new("-") {
+        Path::new("/dev/stdin")
+    } else {
+        p
+    };
+    let source = if path.exists() {
+        InputFile::Local(File::open(path)?)
+    } else if let Some(remote) = crate::remote::Input::open(path)? {
+        InputFile::Remote(Box::new(remote))
+    } else {
+        return Err(format!("missing input {}", path.display()).into());
+    };
+    Ok(BufReader::with_capacity(256 * 1024, source))
+}
+pub enum OutputFile {
+    Local(File),
+    Remote(crate::remote::Output),
+}
+impl Write for OutputFile {
+    fn write(&mut self, b: &[u8]) -> std::io::Result<usize> {
+        match self {
+            Self::Local(f) => f.write(b),
+            Self::Remote(f) => f.write(b),
+        }
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        match self {
+            Self::Local(f) => f.flush(),
+            Self::Remote(f) => f.flush(),
+        }
+    }
+}
+fn output(p: &Path) -> Result<OutputFile> {
+    Ok(if crate::remote::is_stream(p) {
+        OutputFile::Remote(crate::remote::Output::new(p))
+    } else {
+        OutputFile::Local(File::create(p)?)
+    })
+}
+pub fn writer(p: &Path) -> Result<BufWriter<OutputFile>> {
+    Ok(BufWriter::with_capacity(1024 * 1024, output(p)?))
 }
 pub fn u32le<W: Write>(w: &mut W, n: u32) -> Result<()> {
     w.write_all(&n.to_le_bytes())?;
@@ -163,7 +213,7 @@ pub fn posting_fan_in() -> usize {
 /// Hash accepted file writes below the large BufWriter, not each posting field.
 /// This makes checkpoint digests available without rereading temporary files.
 pub struct DigestFile {
-    file: File,
+    file: OutputFile,
     hash: Sha256,
 }
 impl Write for DigestFile {
@@ -180,7 +230,7 @@ pub fn digest_writer(p: &Path) -> Result<BufWriter<DigestFile>> {
     Ok(BufWriter::with_capacity(
         1048576,
         DigestFile {
-            file: File::create(p)?,
+            file: output(p)?,
             hash: Sha256::new(),
         },
     ))

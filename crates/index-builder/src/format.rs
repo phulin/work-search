@@ -2,7 +2,6 @@ use crate::util::*;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
-    fs::File,
     io::{BufWriter, Write},
     path::{Path, PathBuf},
 };
@@ -15,7 +14,10 @@ pub struct Object {
     pub name: String,
     pub size: u64,
     pub sha256: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub checksums: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub key: Option<String>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Branch {
@@ -35,7 +37,7 @@ pub struct Term {
     pub df: u32,
     pub tree: Branch,
 }
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct Dictionary {
     pub first: String,
     pub last: String,
@@ -53,6 +55,7 @@ pub struct Root {
     pub corpus_hash: String,
     pub documents: Vec<Ref>,
     pub dictionaries: Vec<Dictionary>,
+    pub dictionary_height: u32,
     pub hot: std::collections::BTreeMap<String, Term>,
     pub objects: Vec<Object>,
 }
@@ -173,9 +176,10 @@ pub fn encode_branches(a: &[Branch]) -> Vec<u8> {
 pub struct Packer {
     dir: PathBuf,
     number: u32,
+    allocator: std::rc::Rc<std::cell::Cell<u32>>,
     at: usize,
     page_len: usize,
-    file: Option<BufWriter<File>>,
+    file: Option<BufWriter<OutputFile>>,
     hash: Sha256,
     crc: crc32fast::Hasher,
     checksums: Vec<u32>,
@@ -183,10 +187,14 @@ pub struct Packer {
 }
 impl Packer {
     pub fn new(dir: &Path, start: u32) -> Result<Self> {
+        Self::shared(dir, std::rc::Rc::new(std::cell::Cell::new(start)))
+    }
+    pub fn shared(dir: &Path, allocator: std::rc::Rc<std::cell::Cell<u32>>) -> Result<Self> {
         std::fs::create_dir_all(dir)?;
         Ok(Self {
             dir: dir.into(),
-            number: start,
+            number: u32::MAX,
+            allocator,
             at: 0,
             page_len: 0,
             file: None,
@@ -198,7 +206,9 @@ impl Packer {
     }
     fn write(&mut self, mut b: &[u8]) -> Result<()> {
         if self.file.is_none() {
-            self.file = Some(writer(&self.dir.join(format!("plan-{}.bin", self.number)))?)
+            self.file = Some(writer(
+                &self.dir.join(format!("plan-{}.bin.writing", self.number)),
+            )?)
         }
         self.hash.update(b);
         self.file.as_mut().unwrap().write_all(b)?;
@@ -228,6 +238,11 @@ impl Packer {
             self.finish_object()?;
             at = 0;
         }
+        if self.number == u32::MAX {
+            self.number = self.allocator.get();
+            self.allocator
+                .set(self.number.checked_add(1).ok_or("object count overflow")?);
+        }
         if at > self.at {
             static ZEROS: [u8; PAGE] = [0; PAGE];
             self.write(&ZEROS[..at - self.at])?;
@@ -248,14 +263,22 @@ impl Packer {
         if let Some(mut f) = self.file.take() {
             f.flush()?;
         }
+        std::fs::rename(
+            self.dir.join(format!("plan-{}.bin.writing", self.number)),
+            self.dir.join(format!("plan-{}.bin", self.number)),
+        )?;
+        let sha256 = hex(&std::mem::replace(&mut self.hash, Sha256::new()).finalize());
+        let key =
+            crate::remote::artifact(&self.dir.join(format!("plan-{}.bin", self.number)), &sha256)?;
         self.objects.push(Object {
             name: format!("plan-{}.bin", self.number),
             size: self.at as u64,
-            sha256: hex(&std::mem::replace(&mut self.hash, Sha256::new()).finalize()),
+            sha256,
+            key,
             checksums: std::mem::take(&mut self.checksums),
         });
         self.at = 0;
-        self.number += 1;
+        self.number = u32::MAX;
         Ok(())
     }
     pub fn finish(mut self) -> Result<Vec<Object>> {

@@ -223,7 +223,7 @@ pub fn validate_ids(out: &Path, runs: &[Run]) -> Result<()> {
 // Fixed header + packed position payload; each input cursor reuses its storage.
 // term,doc,bf,tf,b:f64,t:f64,locators[9],df,body_bytes,title_bytes.
 pub struct RecordCursor {
-    pub reader: std::io::BufReader<std::fs::File>,
+    pub reader: InputReader,
     pub header: [u8; 80],
     pub positions: Vec<u8>,
     pub valid: bool,

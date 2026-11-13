@@ -3,6 +3,7 @@ import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { jsonLines } from "../src/builder/jsonl.js";
+import { gzipSync } from "node:zlib";
 import { build } from "../src/builder/build.js";
 import { BinaryIndex } from "../src/format/index.js";
 import { FileStorage } from "../src/storage/filesystem.js";
@@ -25,6 +26,11 @@ it("keeps literal Unicode line/paragraph separators inside JSON records across c
     const rows = [];
     for await (const line of jsonLines(input)) rows.push(JSON.parse(line));
     expect(rows).toEqual(docs);
+    await writeFile(input + ".gz", gzipSync(await readFile(input)));
+    const compressed = [];
+    for await (const line of jsonLines(input + ".gz"))
+      compressed.push(JSON.parse(line));
+    expect(compressed).toEqual(docs);
     await build({ input, out: root + "/index", chunkDocs: 1 });
     const index = new BinaryIndex(await readFile(root + "/index/bundle.bin")),
       storage = new FileStorage(root + "/index/objects");

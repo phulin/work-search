@@ -1,0 +1,71 @@
+name: Exact search scale construction
+on:
+  push:
+    branches: [codex/workers-search-replacement]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: columnar-scale-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[scale-build]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        count: [1000000, 4294967295]
+    env:
+      CWS_SNAPSHOT_URL: https://com-courtlistener-storage.s3-us-west-2.amazonaws.com/bulk-data/opinions-2026-09-30.csv.bz2
+      CWS_OFFLINE_STORE: https://work-search-cws-upload.phulin.workers.dev
+      CWS_REMOTE_URL: https://work-search-cws-upload.phulin.workers.dev
+      CWS_CORPUS_DIR: work/scale-${{ matrix.count }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: 26.7.0
+      - name: Prepare bounded construction space
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc
+          rustup toolchain install 1.93.0 --profile minimal
+          rustup default 1.93.0
+          corepack enable
+          corepack prepare yarn@1.22.22 --activate
+          yarn install --frozen-lockfile
+      - name: Install benchmark-only credential
+        env:
+          CWS_TOKEN: ${{ secrets.CWS_OFFLINE_TOKEN }}
+        run: |
+          test -n "$CWS_TOKEN"
+          mkdir -p work/columnar-deploy
+          umask 077
+          printf '%s' "$CWS_TOKEN" > work/columnar-deploy/benchmark-token
+      - name: Verify pinned source metadata
+        run: yarn node --import tsx bench/columnar/ci-input.ts
+      - name: Verify streamed source against local pilot
+        run: |
+          CWS_CORPUS_MANIFEST=work/pilot-source.json yarn node --import tsx scripts/columnar-corpus.ts work/pilot.jsonl 1000
+          node --input-type=module -e 'import{readFile}from"node:fs/promises";const m=JSON.parse(await readFile("work/pilot.jsonl.manifest.json"));if(m.documents!==1000||m.sha256!=="074236dab3f4a71b3228010ca18136878095a0f434cd9c4f2662e4b1bb43478d")throw Error("Pinned source pilot mismatch");'
+      - name: Build directly from streamed official source
+        run: yarn node --import tsx bench/columnar/full-build.ts "$CWS_CORPUS_DIR" '${{ matrix.count }}' > work/scale-build.log 2>&1
+      - name: Exhaustive independent correctness oracle
+        run: yarn node --import tsx bench/columnar/oracle-large.ts "$CWS_CORPUS_DIR" "$CWS_CORPUS_DIR/corpus.jsonl.gz" "$CWS_CORPUS_DIR/oracle.json" > work/scale-oracle.log 2>&1
+      - name: Corpus-selected exact bundled certificates
+        run: yarn columnar:heads "$CWS_CORPUS_DIR" > work/scale-heads.log 2>&1
+      - name: Remove temporary remote construction streams
+        run: yarn node --import tsx bench/columnar/cleanup-staging.ts "$CWS_CORPUS_DIR"
+      - name: Retain generation and measurement provenance
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: columnar-scale-${{ matrix.count }}
+          retention-days: 7
+          path: |
+            work/scale-*.log
+            work/scale-${{ matrix.count }}/*.json
+            work/scale-${{ matrix.count }}/*.jsonl
+            work/scale-${{ matrix.count }}/heads.bin
+            work/scale-${{ matrix.count }}/builder-source/**

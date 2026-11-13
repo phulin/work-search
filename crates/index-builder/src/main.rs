@@ -1,8 +1,10 @@
 mod finalize;
 mod format;
 mod ingest;
+mod js_string;
 mod merge;
 mod publish;
+mod remote;
 mod tokenize;
 mod util;
 use ingest::{Run, Task};
@@ -32,6 +34,9 @@ struct Args {
     batch_bytes: usize,
     max_documents: u32,
     resume: bool,
+    reclaim: bool,
+    remote_url: Option<String>,
+    remote_token: Option<PathBuf>,
 }
 fn parse() -> Result<Args> {
     let mut a = Args {
@@ -41,6 +46,9 @@ fn parse() -> Result<Args> {
         batch_bytes: 4 * 1048576,
         max_documents: u32::MAX,
         resume: false,
+        reclaim: false,
+        remote_url: None,
+        remote_token: None,
     };
     let mut it = std::env::args().skip(1);
     while let Some(k) = it.next() {
@@ -59,6 +67,11 @@ fn parse() -> Result<Args> {
                 a.max_documents = it.next().ok_or("--max-docs needs a number")?.parse()?
             }
             "--resume" => a.resume = true,
+            "--reclaim-staging" => a.reclaim = true,
+            "--remote-url" => a.remote_url = Some(it.next().ok_or("--remote-url needs an origin")?),
+            "--remote-token-file" => {
+                a.remote_token = Some(it.next().ok_or("--remote-token-file needs a path")?.into())
+            }
             _ => return Err(format!("unknown option {k}").into()),
         }
     }
@@ -223,11 +236,17 @@ fn build(a: Args) -> Result<()> {
     unicode_guard()?;
     let start = Instant::now();
     let config = Config {
-        format: "rust-cws1-v2".into(),
+        format: "rust-cws1-v4-lanes".into(),
         input: a
             .input
             .iter()
-            .map(std::fs::canonicalize)
+            .map(|p| {
+                if p == std::path::Path::new("-") {
+                    Ok(p.clone())
+                } else {
+                    std::fs::canonicalize(p)
+                }
+            })
             .collect::<std::io::Result<Vec<_>>>()?,
         batch_bytes: a.batch_bytes,
         max_documents: a.max_documents,
@@ -235,6 +254,11 @@ fn build(a: Args) -> Result<()> {
         unicode: tokenize::V8_UNICODE.into(),
     };
     std::fs::create_dir_all(a.out.join("staging"))?;
+    if a.out.join("root.json").exists() && !a.resume {
+        return Err(
+            "output already contains a published generation; use a new output directory".into(),
+        );
+    }
     let lock = std::fs::OpenOptions::new()
         .read(true)
         .write(true)
@@ -243,7 +267,19 @@ fn build(a: Args) -> Result<()> {
         .open(a.out.join("staging/build.lock"))?;
     lock.try_lock()
         .map_err(|e| format!("another builder owns this output directory: {e}"))?;
+    if let Some(url) = &a.remote_url {
+        remote::configure(
+            &a.out,
+            url,
+            a.remote_token
+                .as_deref()
+                .ok_or("remote token file required")?,
+        )?;
+    }
     let cp = a.out.join("staging/config.json");
+    if a.out.join("staging/reclaimed.json").exists() {
+        return Err("staging was reclaimed; resume requires retained checkpoints; use a new output directory".into());
+    }
     if cp.exists() {
         if !a.resume {
             return Err("output already contains a build; use --resume or a new directory".into());
@@ -291,6 +327,21 @@ fn build(a: Args) -> Result<()> {
     let finalize_ms = stage.elapsed().as_millis();
     let stage = Instant::now();
     let (mut objects, bases) = publish::objects(&a.out, &runs, &finals)?;
+    if a.reclaim {
+        // Finalized immutable objects have been adopted. These source streams
+        // will never be read again in this build. Reclamation disables resume.
+        atomic_json(&a.out.join("staging/reclaimed.json"), &true)?;
+        for run in &runs {
+            for name in [
+                "documents.stage",
+                "ids.bin",
+                "vocabulary.bin",
+                "directories.stage",
+            ] {
+                remote::remove(&ingest::run_dir(&a.out, run.id).join(name))?;
+            }
+        }
+    }
     let publish_ms = stage.elapsed().as_millis();
     let stage = Instant::now();
     let mut root = publish::emit(
@@ -301,12 +352,18 @@ fn build(a: Args) -> Result<()> {
         count,
         (ab, at),
         &corpus_hash,
+        a.reclaim,
     )?;
+    if remote::enabled() {
+        for object in &mut root.objects {
+            object.checksums.clear();
+        }
+    }
     root.generation = hex(&Sha256::digest(serde_json::to_vec(&root)?));
     let generation = root.generation.clone();
     let emit_ms = stage.elapsed().as_millis();
     let bytes: u64 = root.objects.iter().map(|o| o.size).sum();
-    let manifest = serde_json::json!({"builder":"rust-cws1-v2","format":"CWS1","generation":generation,"corpusHash":corpus_hash,"corpusHashContract":"SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record","count":count,"terms":terms,"bodyTokens":body,"titleTokens":title,"bytes":bytes,"buildMs":start.elapsed().as_millis(),"stagesMs":{"ingest":ingest_ms,"vocabularyAndIds":vocabulary_ms,"forwardEncoding":finalize_ms,"relocateAndPublish":publish_ms,"mergeAndEmit":emit_ms},"threads":a.threads,"batchBytes":a.batch_bytes,"runs":runs.len(),"scorer":"Rust float64, approximate FP equality","scoringImplementation":config.scorer,"unicode":config.unicode,"config":config,"objects":root.objects.len()});
+    let manifest = serde_json::json!({"builder":config.format,"format":"CWS1","generation":generation,"corpusHash":corpus_hash,"corpusHashContract":"SHA256 of nonempty source JSONL records, original JSON bytes, one LF per record","count":count,"terms":terms,"bodyTokens":body,"titleTokens":title,"bytes":bytes,"buildMs":start.elapsed().as_millis(),"stagesMs":{"ingest":ingest_ms,"vocabularyAndIds":vocabulary_ms,"forwardEncoding":finalize_ms,"relocateAndPublish":publish_ms,"mergeAndEmit":emit_ms},"threads":a.threads,"batchBytes":a.batch_bytes,"runs":runs.len(),"scorer":"Rust float64, approximate FP equality","scoringImplementation":config.scorer,"unicode":config.unicode,"config":config,"objects":root.objects.len()});
     atomic_json(&a.out.join("manifest.json"), &manifest)?;
     // Prepare the root, then publish the completion checkpoint before the root
     // becomes visible. A crash cannot leave a published root without its proof.
@@ -347,6 +404,7 @@ fn main() {
         }
         build(parse()?)
     })();
+    remote::cleanup();
     if let Err(e) = result {
         eprintln!("builder failed: {e}");
         std::process::exit(1)
