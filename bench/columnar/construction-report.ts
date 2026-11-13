@@ -22,10 +22,12 @@ for (const dir of process.argv.slice(2)) {
           count: state.count,
           startedAt: state.startedAt,
           complete: false,
-          ingested: state.ingests.reduce(
-            (n: number, j: any) => n + j.next - j.first,
-            0,
-          ),
+          ingested: state.runRef
+            ? state.count
+            : state.ingests.reduce(
+                (n: number, j: any) => n + j.next - j.first,
+                0,
+              ),
           completedPostingJobs: state.postings.filter((j: any) => j.done)
             .length,
           completedDocuments: state.documents.reduce(
@@ -33,7 +35,8 @@ for (const dir of process.argv.slice(2)) {
               n + (j.next ?? j.range.first) - j.range.first,
             0,
           ),
-          note: "Stopped diagnostic build; phase totals cover completed requests only, not a complete-build latency.",
+          completedMergeLevels: state.completedMergeLevels,
+          note: "Incomplete build; phase totals cover completed requests only, not a complete-build latency.",
         };
       },
     ),

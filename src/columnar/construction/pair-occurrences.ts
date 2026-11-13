@@ -205,7 +205,7 @@ export async function documentGroupPairRuns(
   if (
     !width ||
     width > 65536 ||
-    selection.pairs.length > 4096 ||
+    selection.pairs.length > 65536 ||
     offsets.length < 2 ||
     offsets[0] !== 0 ||
     offsets.at(-1) !== bytes.length

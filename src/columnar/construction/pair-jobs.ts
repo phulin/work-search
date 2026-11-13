@@ -103,7 +103,12 @@ export async function pairOccurrencesJob(
 }
 export async function finishPairsJob(
   store: BuildStore,
-  input: { selectionRef: Chunk; run: PairRun; objectBase: number },
+  input: {
+    selectionRef: Chunk;
+    run: PairRun;
+    objectBase: number;
+    range?: { firstKey: number; endKey: number };
+  },
 ) {
   const selection: PairSelection = JSON.parse(
     new TextDecoder().decode(await store.get(input.selectionRef)),
@@ -114,14 +119,26 @@ export async function finishPairsJob(
     input.run.end !== selection.documents
   )
     throw Error("Incomplete positional pair corpus");
-  const selected = new Map(selection.pairs.map((p) => [p.key, p])),
+  const selected = new Map(
+      selection.pairs
+        .filter(
+          (p) =>
+            !input.range ||
+            (p.key >= input.range.firstKey && p.key < input.range.endKey),
+        )
+        .map((p) => [p.key, p]),
+    ),
     objects = new ObjectStore(store, input.objectBase),
     writer = new PackedWriter(objects),
     descriptors: Record<string, PositionalPair> = {};
   let count = 0,
     occurrences = 0,
     bytes = 0;
-  for await (const { key, packet: raw } of pairRunEntries(store, input.run)) {
+  for await (const { key, packet: raw } of pairRunEntries(
+    store,
+    input.run,
+    input.range,
+  )) {
     const p = new PairPacket(raw),
       expected = selected.get(key);
     let n = 0;

@@ -1,0 +1,192 @@
+{
+  "completedAt": "2026-11-13T11:58:21.372Z",
+  "note": "Live native constructor pilot under concurrent construction load; exact output bytes checked per pair. Wall time is diagnostic, not an isolated throughput comparison.",
+  "rows": [
+    {
+      "route": "/vocabulary-once",
+      "group": 0,
+      "clientMs": 50245.177625,
+      "output": {
+        "first": 0,
+        "end": 1024,
+        "words": 28977,
+        "tokens": 1258502,
+        "vocabulary": {
+          "key": "b3b61b5588e5fa667441992d313c8af616d1b74645648047caee3de8a459c987/stage-b3b61b5588e5fa667441992d313c8af616d1b74645648047caee3de8a459c987.bin",
+          "size": 201772,
+          "sha256": "b3b61b5588e5fa667441992d313c8af616d1b74645648047caee3de8a459c987"
+        },
+        "dictionaryRequests": 7120,
+        "dictionaryBytes": 305738310
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 1942424,
+      "telemetry": {
+        "code": "02fb9b47f957f46db4abdb32ed8a4a4bbbd7fd1b390439a7d6bb97fe3734058e",
+        "isolate": "e14b65ba-34e0-475a-a766-3f4ccaa50f5e",
+        "build": "vocabulary-once-pilot-v1",
+        "task": "group-0-vocabulary-once",
+        "operation": "/vocabulary-once",
+        "wallMs": 49350,
+        "requests": 24,
+        "bytes": 3445471
+      }
+    },
+    {
+      "route": "/vocabulary",
+      "group": 0,
+      "clientMs": 206176.90300000002,
+      "output": {
+        "first": 0,
+        "end": 1024,
+        "words": 28977,
+        "tokens": 1258502,
+        "vocabulary": {
+          "key": "b3b61b5588e5fa667441992d313c8af616d1b74645648047caee3de8a459c987/stage-b3b61b5588e5fa667441992d313c8af616d1b74645648047caee3de8a459c987.bin",
+          "size": 201772,
+          "sha256": "b3b61b5588e5fa667441992d313c8af616d1b74645648047caee3de8a459c987"
+        },
+        "dictionaryRequests": 7135,
+        "dictionaryBytes": 308101365
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 1942424,
+      "telemetry": {
+        "isolate": "21e54c1d-8f1f-4bf7-89b9-8bc0a2ccaa60",
+        "code": "44848dae240da0dd21d68b52ea61e300635dc422e4d45a6fcebe4a14a8695a44",
+        "build": "vocabulary-once-pilot-v1",
+        "task": "group-0-vocabulary",
+        "operation": "/vocabulary",
+        "placement": null,
+        "wallMs": 68218,
+        "queueMs": 0,
+        "requests": 24,
+        "bytes": 3445471
+      }
+    },
+    {
+      "route": "/vocabulary",
+      "group": 1,
+      "clientMs": 92564.92979200001,
+      "output": {
+        "first": 1024,
+        "end": 2048,
+        "words": 32433,
+        "tokens": 1441527,
+        "vocabulary": {
+          "key": "fb8eb06dcd00df28223ee3c04949d7472dff3bfb6b3b4825e144e58e84954ffc/stage-fb8eb06dcd00df28223ee3c04949d7472dff3bfb6b3b4825e144e58e84954ffc.bin",
+          "size": 224452,
+          "sha256": "fb8eb06dcd00df28223ee3c04949d7472dff3bfb6b3b4825e144e58e84954ffc"
+        },
+        "dictionaryRequests": 7286,
+        "dictionaryBytes": 312499905
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 1965104,
+      "telemetry": {
+        "isolate": "de27b936-b691-498f-a5d1-c8d92bc5a34e",
+        "code": "44848dae240da0dd21d68b52ea61e300635dc422e4d45a6fcebe4a14a8695a44",
+        "build": "vocabulary-once-pilot-v1",
+        "task": "group-1-vocabulary",
+        "operation": "/vocabulary",
+        "placement": null,
+        "wallMs": 50846,
+        "queueMs": 0,
+        "requests": 24,
+        "bytes": 3874607
+      }
+    },
+    {
+      "route": "/vocabulary-once",
+      "group": 1,
+      "clientMs": 47927.679915999994,
+      "output": {
+        "first": 1024,
+        "end": 2048,
+        "words": 32433,
+        "tokens": 1441527,
+        "vocabulary": {
+          "key": "fb8eb06dcd00df28223ee3c04949d7472dff3bfb6b3b4825e144e58e84954ffc/stage-fb8eb06dcd00df28223ee3c04949d7472dff3bfb6b3b4825e144e58e84954ffc.bin",
+          "size": 224452,
+          "sha256": "fb8eb06dcd00df28223ee3c04949d7472dff3bfb6b3b4825e144e58e84954ffc"
+        },
+        "dictionaryRequests": 7267,
+        "dictionaryBytes": 309702955
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 1965104,
+      "telemetry": {
+        "code": "02fb9b47f957f46db4abdb32ed8a4a4bbbd7fd1b390439a7d6bb97fe3734058e",
+        "isolate": "f7099c71-58a8-4842-8626-49ea0e6bb153",
+        "build": "vocabulary-once-pilot-v1",
+        "task": "group-1-vocabulary-once",
+        "operation": "/vocabulary-once",
+        "wallMs": 47245,
+        "requests": 24,
+        "bytes": 3874607
+      }
+    },
+    {
+      "route": "/vocabulary-once",
+      "group": 2,
+      "clientMs": 77576.45087500004,
+      "output": {
+        "first": 2048,
+        "end": 3072,
+        "words": 35201,
+        "tokens": 1707536,
+        "vocabulary": {
+          "key": "d3a17b6b45748ffef4f48f2b019b6bfbfd5583c10b72a7cbb9f90f062fd2cd2d/stage-d3a17b6b45748ffef4f48f2b019b6bfbfd5583c10b72a7cbb9f90f062fd2cd2d.bin",
+          "size": 240422,
+          "sha256": "d3a17b6b45748ffef4f48f2b019b6bfbfd5583c10b72a7cbb9f90f062fd2cd2d"
+        },
+        "dictionaryRequests": 7356,
+        "dictionaryBytes": 310149770
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 1981074,
+      "telemetry": {
+        "code": "02fb9b47f957f46db4abdb32ed8a4a4bbbd7fd1b390439a7d6bb97fe3734058e",
+        "isolate": "a9b2cd3f-4316-4065-ab1d-07d6968efbf9",
+        "build": "vocabulary-once-pilot-v1",
+        "task": "group-2-vocabulary-once",
+        "operation": "/vocabulary-once",
+        "wallMs": 76513,
+        "requests": 24,
+        "bytes": 4497710
+      }
+    },
+    {
+      "route": "/vocabulary",
+      "group": 2,
+      "clientMs": 47330.78012500005,
+      "output": {
+        "first": 2048,
+        "end": 3072,
+        "words": 35201,
+        "tokens": 1707536,
+        "vocabulary": {
+          "key": "d3a17b6b45748ffef4f48f2b019b6bfbfd5583c10b72a7cbb9f90f062fd2cd2d/stage-d3a17b6b45748ffef4f48f2b019b6bfbfd5583c10b72a7cbb9f90f062fd2cd2d.bin",
+          "size": 240422,
+          "sha256": "d3a17b6b45748ffef4f48f2b019b6bfbfd5583c10b72a7cbb9f90f062fd2cd2d"
+        },
+        "dictionaryRequests": 7375,
+        "dictionaryBytes": 312994771
+      },
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 1981074,
+      "telemetry": {
+        "isolate": "37d49f11-98a2-42ba-9795-56f210073a61",
+        "code": "44848dae240da0dd21d68b52ea61e300635dc422e4d45a6fcebe4a14a8695a44",
+        "build": "vocabulary-once-pilot-v1",
+        "task": "group-2-vocabulary",
+        "operation": "/vocabulary",
+        "placement": null,
+        "wallMs": 46851,
+        "queueMs": 0,
+        "requests": 24,
+        "bytes": 4497710
+      }
+    }
+  ]
+}

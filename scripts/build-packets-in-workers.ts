@@ -9,8 +9,10 @@ import { createHash } from "node:crypto";
 import { benchmarkToken } from "../bench/columnar/token.js";
 import { OfflineObjects } from "../src/columnar/offline.js";
 import { packetDirectory } from "./packet-directory.js";
+import { packetRootProjector } from "./construction-packet-root.js";
 import { encodeDocumentDirectory } from "../src/columnar/document-directory.js";
 import { constructionHTTP } from "./construction-http.js";
+import { constructionLock } from "./construction-lock.js";
 import {
   generationFor,
   VERIFY_OBJECTS,
@@ -39,6 +41,7 @@ if (
     "Usage: build-packets-in-workers.ts SOURCE_BUILD OUTPUT BUILD_ID",
   );
 await mkdir(out, { recursive: true });
+await constructionLock(out + "/coordinator.lock");
 const original: Root = JSON.parse(
     await readFile(
       input +
@@ -106,33 +109,15 @@ function save(force = false) {
   });
   return saving;
 }
-let active = 0,
-  window = Math.min(width, 16),
-  successes = 0;
+// A capacity 503 is local to one isolate. It must not collapse the
+// corpus-wide dispatch window; pool() already bounds outstanding jobs.
 const post = constructionHTTP(width);
-const waiting: (() => void)[] = [];
-function wake() {
-  while (active < window && waiting.length) {
-    active++;
-    waiting.shift()!();
-  }
-}
 async function call(path: string, task: string, value: any = {}) {
   let busyRetries = 0,
     transientRetries = 0;
   for (let retry = 0; ; retry++) {
-    if (active >= window) await new Promise<void>((r) => waiting.push(r));
-    else active++;
     const started = performance.now();
-    let released = false,
-      busy = false;
-    const release = () => {
-      if (!released) {
-        released = true;
-        active--;
-        wake();
-      }
-    };
+    let busy = false;
     try {
       const r = await post(
           url + path,
@@ -142,18 +127,9 @@ async function call(path: string, task: string, value: any = {}) {
         text = await r.text();
       if (!r.ok) {
         busy = r.status === 503 && text.includes("capacity busy");
-        if (busy) {
-          window = Math.max(2, Math.floor(window / 2));
-          successes = 0;
-        }
         throw Error(`${path} ${r.status}: ${text.slice(0, 1000)}`);
       }
       const result = JSON.parse(text);
-      if (++successes >= 32) {
-        window = Math.min(width, window + 1);
-        successes = 0;
-      }
-      release();
       await appendFile(
         out + "/requests.jsonl",
         JSON.stringify({
@@ -161,7 +137,7 @@ async function call(path: string, task: string, value: any = {}) {
           path,
           task,
           clientMs: performance.now() - started,
-          concurrencyWindow: window,
+          concurrencyWindow: width,
           transport: "https-http1-keepalive",
           ...result,
           output: undefined,
@@ -169,7 +145,6 @@ async function call(path: string, task: string, value: any = {}) {
       );
       return result.output;
     } catch (e) {
-      release();
       await appendFile(
         out + "/errors.jsonl",
         JSON.stringify({
@@ -202,10 +177,6 @@ async function pool<T>(jobs: T[], f: (job: T, i: number) => Promise<void>) {
       }
     }),
   );
-}
-if (!state.rootRef) {
-  state.rootRef = await call("/stage", "source-root", { value: original });
-  await save();
 }
 if (!state.terms.length) {
   const objects = new OfflineObjects(input, original, { url: uploader, token }),
@@ -246,7 +217,7 @@ if (!state.terms.length) {
     });
   await save();
 }
-if (!state.packages.length) {
+if (!state.packages.length && !process.argv.includes("--directory-only")) {
   for (const vocabulary of source.vocabularies)
     for (const segment of vocabulary.segments)
       for (let first = segment.first; first < segment.end; first += 128)
@@ -262,11 +233,13 @@ if (!state.packages.length) {
 }
 // One deployment handles independently invocable bounded jobs. Bulk index data
 // stays in R2; the coordinator receives only layout metadata and receipts.
+const projectRoot = packetRootProjector(original);
 await pool<any>(state.terms, async (job, i) => {
+  const projected = projectRoot(job.fences);
   while (!job.done) {
-    const task = `terms-${i}-${job.steps}`,
+    const task = `terms-window-${i}-${job.steps}`,
       result = await call("/packet-terms", task, {
-        rootRef: state.rootRef,
+        root: projected,
         fences: job.fences,
         objectBase: i * OBJECT_GROUP + job.objects.length,
         stateTask: job.previous,

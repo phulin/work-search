@@ -51,6 +51,7 @@
     "htmlparser2": "^12.0.0",
     "miniflare": "4.20260730.0",
     "prettier": "^3.10.0",
+    "stemr": "^1.0.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",
     "vite": "8.1.0",

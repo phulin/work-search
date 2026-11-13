@@ -24,6 +24,7 @@ import { exhaustive } from "../bench/columnar/exhaustive.js";
 import { parse, queryTerms } from "../src/query/parser.js";
 import { tokenize } from "../src/query/tokenize.js";
 import { encodePairPacket, type PairRow } from "../src/columnar/pair-packet.js";
+import { encodePairDirectory } from "../src/columnar/pair-directory.js";
 import {
   executePackets,
   packetPlan,
@@ -232,8 +233,65 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
         ref: pairRef,
       },
     };
+    const lookupWriter = new Packer(dir + "/index/packs", {
+        next: root.objects.length,
+        objects: root.objects,
+      }),
+      lookupRef = lookupWriter.put(
+        encodePairDirectory([
+          {
+            pair: root.positionalPairs[`${a}:${b}`],
+            inline: encodePairPacket(a, b, rows),
+          },
+        ]),
+      );
+    lookupWriter.flush();
+    const remoteRoot: Root = {
+        ...root,
+        positionalPairs: undefined,
+        pairDirectory: {
+          pairs: 1,
+          shards: [{ first: [a, b], last: [a, b], ref: lookupRef }],
+        },
+      },
+      remote = new ColumnarIndex(remoteRoot, undefined, directory, {
+        averageBytes: 500,
+        async load(doc) {
+          return new DocumentPackage(packages.get(doc)!, doc);
+        },
+      });
     await objects.close();
     objects = new OfflineObjects(dir + "/index", root);
+    for (const q of [
+      '"alpha beta"',
+      '"alpha beta gamma"',
+      '"alpha beta" AND NOT "beta gamma"',
+      '("alpha beta" AND rare) OR ("alpha beta" AND gamma)',
+      'NOT "alpha beta"',
+    ])
+      for (const field of ["all", "body", "title"] as const) {
+        const options: Options = {
+            field,
+            exactTotal: true,
+            limit: 7,
+            titleBoost: 3.25,
+          },
+          expected = await control.search(
+            q,
+            new Reader(before, original.source),
+            options,
+          ),
+          got = await remote.search(
+            q,
+            new Reader(remoteRoot, objects.source),
+            options,
+          );
+        expect(got.total, q + field).toBe(expected.total);
+        expect(got.results, q + field).toEqual(expected.results);
+        if (q === '"alpha beta"')
+          expect(got.diagnostics.pairDirectoryMatches).toBe(1);
+        expect(remoteRoot.positionalPairs).toBeUndefined();
+      }
     // The block executor must retain positional pair evidence even when a
     // complete read or candidate-package strategy does not fit its budget.
     const blocked = new ColumnarIndex(root);

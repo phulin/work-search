@@ -18,6 +18,22 @@ import { buildColumnarPairs } from "../src/columnar/pair-build.js";
 import { OfflineObjects } from "../src/columnar/offline.js";
 import { refAt, view } from "../src/columnar/format.js";
 import { gunzipSync } from "node:zlib";
+it("counts distinct decoded ranges exactly for large sparse logical object IDs", () => {
+  const reader = new Reader(
+    { generation: "a".repeat(64), objects: [] },
+    {
+      async read() {
+        throw Error("No I/O expected");
+      },
+    },
+  );
+  reader.observeDecoded([500000000, 0, 8], 8);
+  reader.observeDecoded([500000000, 1, 8], 8);
+  reader.observeDecoded([500000001, 0, 8], 8);
+  reader.observeDecoded([500000000, 1, 8], 8);
+  expect(reader.stats.decodedBytes).toBe(32);
+  expect(reader.stats.repeatedDecodedBytes).toBe(8);
+});
 it("preserves JavaScript unpaired UTF-16 strings, metadata keys, normalized passages and split-pair previews", async () => {
   const dir = await mkdtemp(join(tmpdir(), "cws-surrogates-"));
   try {
@@ -140,6 +156,21 @@ it("preserves exhaustive ranks, zero-score ties and pagination across bounded pr
       );
       expect(got.total).toBe(docs.length);
       expect(reader.stats.prefetchWindows).toBe(3);
+      const phraseReader = new Reader(root, objects.source),
+        phrase = await index.search('"alpha beta"', phraseReader, {
+          limit: 7,
+          exactTotal: true,
+        }),
+        phraseExpected = reference(docs, "alpha beta", "and").filter((hit) =>
+          docs[Number(hit.id.slice(1))].body.includes("alpha beta"),
+        );
+      expect(phrase.results.map((hit) => hit.id)).toEqual(
+        phraseExpected.slice(0, 7).map((hit) => hit.id),
+      );
+      expect(phrase.total).toBe(phraseExpected.length);
+      phrase.results.forEach((hit, i) =>
+        expect(hit.score).toBeCloseTo(phraseExpected[i].score, 11),
+      );
       const tied = await index.search(
         "alpha OR beta",
         new Reader(root, objects.source),

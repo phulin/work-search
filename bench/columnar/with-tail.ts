@@ -1,12 +1,18 @@
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
+import { createWriteStream } from "node:fs";
+import { finished } from "node:stream/promises";
 const variants = (
     process.env.CWS_VARIANTS ?? "work-search-cws-control,work-search-cws-near"
   ).split(","),
   label = process.env.CWS_LABEL ?? "pilot",
   rows: unknown[] = [];
 await mkdir("work/columnar-bench", { recursive: true });
+const journal = createWriteStream(`work/columnar-bench/${label}-cpu.jsonl`),
+  counts: Record<string, number> = {};
+let journalError: Error | undefined;
+journal.on("error", (error) => (journalError = error));
 const tails = variants.map((name) => {
   const config =
     name === "work-search-cws-control"
@@ -53,7 +59,7 @@ const tails = variants.map((name) => {
                   telemetry = JSON.parse(message).benchmark ?? telemetry;
                 } catch {}
               }
-          rows.push({
+          const row = {
             name,
             requestId:
               telemetry?.requestId ?? url.searchParams.get("requestId"),
@@ -63,7 +69,10 @@ const tails = variants.map((name) => {
             outcome: v.outcome,
             telemetry,
             timestamp: v.eventTimestamp,
-          });
+          };
+          rows.push(row);
+          counts[name] = (counts[name] ?? 0) + 1;
+          journal.write(JSON.stringify(row) + "\n");
         } catch {}
         current = "";
       }
@@ -71,6 +80,11 @@ const tails = variants.map((name) => {
   });
   return { child, name, stderrBytes: () => stderrBytes };
 });
+const heartbeat = setInterval(() => {
+  console.log("Native tail coverage", counts);
+  if (journalError)
+    console.error("Native journal failure", String(journalError));
+}, 60000);
 try {
   await new Promise((r) => setTimeout(r, 10000));
   await new Promise<void>((ok, no) => {
@@ -89,7 +103,10 @@ try {
   });
   await new Promise((r) => setTimeout(r, 5000));
 } finally {
+  clearInterval(heartbeat);
   for (const t of tails) t.child.kill("SIGTERM");
+  journal.end();
+  await finished(journal);
   await writeFile(
     `work/columnar-bench/${label}-cpu.json.gz`,
     gzipSync(

@@ -1,0 +1,41 @@
+{
+  "count": 14231212,
+  "sourceDocuments": 10032254,
+  "sourceRoot": {
+    "key": "9f52a27d227ade2ade766ceb1a67b0b431b12915464828b597bd75eb67bb0c01/stage-9f52a27d227ade2ade766ceb1a67b0b431b12915464828b597bd75eb67bb0c01.bin",
+    "size": 1740652,
+    "sha256": "9f52a27d227ade2ade766ceb1a67b0b431b12915464828b597bd75eb67bb0c01"
+  },
+  "elapsedMs": 418683.93025,
+  "variants": [
+    {
+      "blockSize": 256,
+      "bytes": 42724520,
+      "rawBytes": 66806333,
+      "blocks": 55591,
+      "sha256": "9f9fb88f98d721a2ea3c3ae44f7d20c96492a5789757d436828491f097f2c042"
+    },
+    {
+      "blockSize": 512,
+      "bytes": 39930048,
+      "rawBytes": 66530373,
+      "blocks": 27796,
+      "sha256": "cc4fd7df1b2aa3f0072e9c78a9822d8550fffdee3ffe016d119f6314783c69b4"
+    },
+    {
+      "blockSize": 1024,
+      "bytes": 38310664,
+      "rawBytes": 66393014,
+      "blocks": 13898,
+      "sha256": "da605d16be307ea341311c8b743e128b15767b402c57c3cee109f3d7fd946424"
+    },
+    {
+      "blockSize": 2048,
+      "bytes": 37194945,
+      "rawBytes": 66324038,
+      "blocks": 6949,
+      "sha256": "e62ca917750257c39e4a45a8d8d3194a74faefbe3d56d6ee10afe40ea57d196f"
+    }
+  ],
+  "note": "Complete native constructor word-to-ID directory. Every source ID and lexical ordinal validated. This does not contain serving posting metadata."
+}

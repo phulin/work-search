@@ -39,6 +39,7 @@ import type { Heads } from "./heads.js";
 import { planPairAnchor } from "./pair-evidence.js";
 import { readPairAnchor } from "./pair-execution.js";
 import { ScoreBatch } from "./score-batch.js";
+import { lookupRemotePairs } from "./pair-lookup.js";
 export interface Options {
   mode?: "and" | "or";
   limit?: number;
@@ -275,6 +276,7 @@ export class ColumnarIndex {
     )
       throw Error("Invalid search cursor");
     let planned: PacketPlan | undefined;
+    let queryRoot = this.root;
     if (this.directory) {
       planned = packetPlan(
         ast,
@@ -283,10 +285,25 @@ export class ColumnarIndex {
         options,
         packages,
       );
-      const result = await executePackets(
+      queryRoot = await lookupRemotePairs(
         ast,
         terms as Map<string, DirectoryTerm>,
         this.root,
+        reader,
+        planned,
+      );
+      if (queryRoot !== this.root)
+        planned = packetPlan(
+          ast,
+          terms as Map<string, DirectoryTerm>,
+          queryRoot,
+          options,
+          packages,
+        );
+      const result = await executePackets(
+        ast,
+        terms as Map<string, DirectoryTerm>,
+        queryRoot,
         reader,
         options,
         packages,
@@ -387,9 +404,9 @@ export class ColumnarIndex {
             );
       }
     }
-    if (!pairCandidates && this.root.positionalPairs) {
+    if (!pairCandidates && queryRoot.positionalPairs) {
       const ids = new Map([...terms].map(([name, t]) => [name, t.id])),
-        selected = planPairAnchor(ast, ids, this.root);
+        selected = planPairAnchor(ast, ids, queryRoot);
       if (selected) {
         context = await readPairAnchor(
           selected.pairs,

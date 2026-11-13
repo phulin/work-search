@@ -12,6 +12,7 @@ import type { Root, Ref } from "../src/columnar/format.js";
 import { planMerges } from "./construction-merge-plan.js";
 import { vocabularyRoot } from "./construction-vocabulary-root.js";
 import { constructionHTTP } from "./construction-http.js";
+import { postingWindow } from "./construction-posting-window.js";
 import { type Run } from "../src/columnar/construction/runs.js";
 import {
   OBJECT_GROUP,
@@ -192,144 +193,173 @@ async function pool<T>(
     ),
   );
 }
-const ingestRange = Math.min(
-  4096,
-  Math.max(128, Math.ceil(count / (width * 4 * 128)) * 128),
-);
-if (!state.ingests.length)
-  for (let first = 0; first < count; first += ingestRange)
-    state.ingests.push({
-      first,
-      end: Math.min(count, first + ingestRange),
-      next: first,
-      runs: [],
+let run: Run;
+if (!state.runRef) {
+  const ingestRange = Math.min(
+    4096,
+    Math.max(128, Math.ceil(count / (width * 4 * 128)) * 128),
+  );
+  if (!state.ingests.length)
+    for (let first = 0; first < count; first += ingestRange)
+      state.ingests.push({
+        first,
+        end: Math.min(count, first + ingestRange),
+        next: first,
+        runs: [],
+      });
+  await pool<any>(state.ingests, async (job, _i, worker) => {
+    while (job.next < job.end) {
+      const run = (await call(worker, "/ingest", {
+        task: `ingest-${job.next}`,
+        first: job.next,
+        count: Math.min(128, job.end - job.next),
+      })) as Run;
+      if (run.first !== job.next || run.next <= job.next || run.next > job.end)
+        throw Error("Invalid ingest continuation");
+      job.runs.push(run);
+      job.next = run.next;
+      await save();
+      console.log(
+        "R2 ingest",
+        state.ingests.reduce((n: number, j: any) => n + j.next - j.first, 0),
+        "/",
+        count,
+      );
+    }
+  });
+  let runs: Run[] = state.ingests
+      .flatMap((j: any) => j.runs)
+      .sort((a: Run, b: Run) => a.first - b.first),
+    level = 0;
+  async function mergeStage(stage: number, jobs: any[], groups: Run[][]) {
+    // Each document group is staged once even when many lexical jobs use it.
+    const refs = new Map<number, any>();
+    for (const job of jobs) if (job.runsRef) refs.set(job.group, job.runsRef);
+    await pool(groups, async (group, i, worker) => {
+      if (refs.has(i) || group.length === 1) return;
+      refs.set(
+        i,
+        await call(worker, "/stage", {
+          task: `merge-input-${stage}-${i}`,
+          value: group,
+        }),
+      );
     });
-await pool<any>(state.ingests, async (job, _i, worker) => {
-  while (job.next < job.end) {
-    const run = (await call(worker, "/ingest", {
-      task: `ingest-${job.next}`,
-      first: job.next,
-      count: Math.min(128, job.end - job.next),
-    })) as Run;
-    if (run.first !== job.next || run.next <= job.next || run.next > job.end)
-      throw Error("Invalid ingest continuation");
-    job.runs.push(run);
-    job.next = run.next;
+    for (const job of jobs) job.runsRef ??= refs.get(job.group);
     await save();
-    console.log(
-      "R2 ingest",
-      state.ingests.reduce((n: number, j: any) => n + j.next - j.first, 0),
-      "/",
-      count,
-    );
+    await pool<any>(jobs, async (job, i, worker) => {
+      if (job.done) return;
+      const group = groups[job.group];
+      if (group.length === 1) {
+        if (job.range) throw Error("A lexical merge needs at least two inputs");
+        job.run = group[0];
+        job.done = true;
+        await save();
+        return;
+      }
+      while (!job.done) {
+        const task = `merge-${stage}-${i}-${job.step}`,
+          o = await call(worker, "/merge", {
+            task,
+            runsRef: job.runsRef,
+            stateTask: job.previous,
+            range: job.range,
+          });
+        job.previous = task;
+        job.chunks.push(...o.chunks);
+        job.step++;
+        job.done = o.state.done;
+        if (job.done)
+          job.run = {
+            first: group[0].first,
+            next: group.at(-1)!.next,
+            count: group.reduce((n, r) => n + r.count, 0),
+            bodyTokens: group.reduce((n, r) => n + r.bodyTokens, 0),
+            titleTokens: group.reduce((n, r) => n + r.titleTokens, 0),
+            chunks: job.chunks,
+          };
+        await save();
+      }
+      console.log("R2 merged", stage, i, "/", jobs.length);
+    });
   }
-});
-let runs: Run[] = state.ingests
-    .flatMap((j: any) => j.runs)
-    .sort((a: Run, b: Run) => a.first - b.first),
-  level = 0;
-async function mergeStage(stage: number, jobs: any[], groups: Run[][]) {
-  // Each document group is staged once even when many lexical jobs use it.
-  const refs = new Map<number, any>();
-  for (const job of jobs) if (job.runsRef) refs.set(job.group, job.runsRef);
-  await pool(groups, async (group, i, worker) => {
-    if (refs.has(i) || group.length === 1) return;
-    refs.set(
-      i,
-      await call(worker, "/stage", {
-        task: `merge-input-${stage}-${i}`,
-        value: group,
-      }),
-    );
-  });
-  for (const job of jobs) job.runsRef ??= refs.get(job.group);
-  await save();
-  await pool<any>(jobs, async (job, i, worker) => {
-    if (job.done) return;
-    const group = groups[job.group];
-    if (group.length === 1) {
-      if (job.range) throw Error("A lexical merge needs at least two inputs");
-      job.run = group[0];
-      job.done = true;
-      await save();
-      return;
-    }
-    while (!job.done) {
-      const task = `merge-${stage}-${i}-${job.step}`,
-        o = await call(worker, "/merge", {
-          task,
-          runsRef: job.runsRef,
-          stateTask: job.previous,
-          range: job.range,
-        });
-      job.previous = task;
-      job.chunks.push(...o.chunks);
-      job.step++;
-      job.done = o.state.done;
-      if (job.done)
-        job.run = {
-          first: group[0].first,
-          next: group.at(-1)!.next,
-          count: group.reduce((n, r) => n + r.count, 0),
-          bodyTokens: group.reduce((n, r) => n + r.bodyTokens, 0),
-          titleTokens: group.reduce((n, r) => n + r.titleTokens, 0),
-          chunks: job.chunks,
-        };
-      await save();
-    }
-    console.log("R2 merged", stage, i, "/", jobs.length);
-  });
-}
-while (runs.length > 1) {
-  const plan = planMerges(runs, width);
-  state.merges[level] ??= plan.jobs.map((job) => ({
-    ...job,
-    step: 0,
-    chunks: [],
-  }));
-  const jobs = state.merges[level],
-    groups: Run[][] = [];
-  for (const job of jobs)
-    groups[job.group] ??= runs.slice(job.firstRun, job.endRun);
-  await mergeStage(level, jobs, groups);
-  level++;
-  if (jobs[0].lexical === undefined) {
-    runs = jobs.map((j: any) => j.run);
-    continue;
-  }
-  let parts: any[] = jobs;
-  if (groups.length > 1) {
-    const lexical: Run[][] = [];
-    for (const job of jobs) (lexical[job.lexical] ??= []).push(job.run);
-    state.merges[level] ??= lexical.map((_, group) => ({
-      group,
+  while (runs.length > 1) {
+    const plan = planMerges(runs, width);
+    state.merges[level] ??= plan.jobs.map((job) => ({
+      ...job,
       step: 0,
       chunks: [],
     }));
-    parts = state.merges[level];
-    await mergeStage(level++, parts, lexical);
+    const jobs = state.merges[level],
+      groups: Run[][] = [];
+    for (const job of jobs)
+      groups[job.group] ??= runs.slice(job.firstRun, job.endRun);
+    await mergeStage(level, jobs, groups);
+    level++;
+    if (jobs[0].lexical === undefined) {
+      runs = jobs.map((j: any) => j.run);
+      continue;
+    }
+    let parts: any[] = jobs;
+    if (groups.length > 1) {
+      const lexical: Run[][] = [];
+      for (const job of jobs) (lexical[job.lexical] ??= []).push(job.run);
+      state.merges[level] ??= lexical.map((_, group) => ({
+        group,
+        step: 0,
+        chunks: [],
+      }));
+      parts = state.merges[level];
+      await mergeStage(level++, parts, lexical);
+    }
+    runs = [
+      {
+        first: runs[0].first,
+        next: runs.at(-1)!.next,
+        count: runs.reduce((n, r) => n + r.count, 0),
+        bodyTokens: runs.reduce((n, r) => n + r.bodyTokens, 0),
+        titleTokens: runs.reduce((n, r) => n + r.titleTokens, 0),
+        chunks: parts.flatMap((j) => j.run.chunks),
+      },
+    ];
   }
-  runs = [
+  run = runs[0];
+} else {
+  const response = await fetch(
+    "https://work-search-cws-upload.phulin.workers.dev/" + state.runRef.key,
     {
-      first: runs[0].first,
-      next: runs.at(-1)!.next,
-      count: runs.reduce((n, r) => n + r.count, 0),
-      bodyTokens: runs.reduce((n, r) => n + r.bodyTokens, 0),
-      titleTokens: runs.reduce((n, r) => n + r.titleTokens, 0),
-      chunks: parts.flatMap((j) => j.run.chunks),
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(60000),
     },
-  ];
+  );
+  if (!response.ok) throw Error("Final construction run " + response.status);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (
+    bytes.length !== state.runRef.size ||
+    createHash("sha256").update(bytes).digest("hex") !== state.runRef.sha256
+  )
+    throw Error("Final construction run identity mismatch");
+  run = JSON.parse(bytes.toString());
 }
-const run = runs[0],
-  statistics = {
-    count,
-    avgBody: run.bodyTokens / count,
-    avgTitle: run.titleTokens / count,
-  };
+const statistics = {
+  count,
+  avgBody: run.bodyTokens / count,
+  avgTitle: run.titleTokens / count,
+};
 if (!state.runRef) {
   state.runRef = await call(0, "/stage", { task: "final-run", value: run });
-  await save();
 }
+// The immutable final run replaces every earlier input/merge descriptor. Keeping
+// all duplicated chunk arrays in the active checkpoint exceeded V8's maximum
+// string length at 10M documents. Resume directly from this verified final run.
+state.completedMergeLevels ??= state.merges.map((jobs: any[]) => ({
+  jobs: jobs.length,
+  done: jobs.filter((j) => j.done).length,
+  steps: jobs.reduce((n, j) => n + (j.step ?? 0), 0),
+}));
+state.ingests = [];
+state.merges = [];
+await save(true);
 if (!state.postings.length) {
   const target = Number(
       process.env.CWS_BUILD_TERM_BYTES ?? (count <= 10000 ? 2 : 32) * 1048576,
@@ -361,13 +391,23 @@ if (!state.postings.length) {
   await save();
 }
 await pool<any>(state.postings, async (job, i, worker) => {
+  // Existing continuations retain their original cursor space. New jobs stage
+  // only their lexical window, avoiding a whole-corpus descriptor read per call.
+  if (!job.done && !job.step && !job.windowRef) {
+    const window = postingWindow(run, job.range);
+    job.windowRef = await call(worker, "/stage", {
+      task: `posting-window-${i}`,
+      value: window.run,
+    });
+    job.windowRange = window.range;
+  }
   while (!job.done) {
-    const task = `postings-${i}-${job.step}`,
+    const task = `${job.windowRef ? "postings-window" : "postings"}-${i}-${job.step}`,
       o = await call(worker, "/postings", {
         task,
-        runRef: state.runRef,
+        runRef: job.windowRef ?? state.runRef,
         statistics,
-        range: job.range,
+        range: job.windowRange ?? job.range,
         objectBase: job.group * OBJECT_GROUP + job.objects.length,
         stateTask: job.previous,
         compact: true,
@@ -430,6 +470,16 @@ while (routing.length > 1) {
   nextGroup += jobs.length;
   routing = jobs.map((j: any) => j.routing);
   routingLevel++;
+}
+// Upper routing jobs have incorporated every per-partition hot list. Retaining
+// those lists duplicated a million term plans in each later checkpoint. Only
+// the final root's hot descriptors are still needed; completed routing jobs
+// resume from their immutable outputs without replaying their inputs.
+if (state.routingLevels.length) {
+  const finalRouting = routing[0];
+  for (const job of [...state.postings, ...state.routingLevels.flat()])
+    if (job.routing && job.routing !== finalRouting) job.routing.hot = [];
+  await save(true);
 }
 function objectDirectory(jobs: any[]) {
   const objects: Root["objects"] = [],

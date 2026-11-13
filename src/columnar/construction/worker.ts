@@ -21,6 +21,7 @@ import {
 } from "./pair-jobs.js";
 import { mergePairOccurrenceRuns } from "./pair-occurrences.js";
 import { pairRangeJob } from "./pair-range-jobs.js";
+import { finishPairDirectoryJob } from "./pair-directory-job.js";
 import { finishPacketTerms } from "./packet-terms.js";
 import { buildVocabulary, readVocabulary } from "./vocabulary.js";
 export function createConstructionWorker(root: SourceRoot, code: string) {
@@ -44,9 +45,14 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
         request.headers.get("authorization") !== `Bearer ${env.INTERNAL_TOKEN}`
       )
         return new Response("Not found", { status: 404 });
-      if (url.pathname === "/health" || url.pathname === "/pair-range-health")
+      if (
+        url.pathname === "/health" ||
+        url.pathname === "/pair-range-health" ||
+        url.pathname === "/expanded-pair-health"
+      )
         return Response.json({
           code,
+          statisticsCode: code,
           sourceDocuments: root.documents,
           sourceHash: await digest(jsonBytes(root)),
           isolate,
@@ -173,6 +179,9 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
             "/pair-statistics",
             "/merge-pair-statistics",
             "/pair-occurrences",
+            "/expanded-pair-occurrences",
+            "/expanded-finish-pairs",
+            "/expanded-pair-directory",
             "/merge-pair-occurrences",
             "/merge-pair-occurrences-range",
             "/pair-restarts",
@@ -367,94 +376,99 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
                 ? await pairStatisticsJob(store, input)
                 : url.pathname === "/merge-pair-statistics"
                   ? await mergePairStatisticsJob(store, input)
-                  : url.pathname === "/pair-occurrences"
+                  : url.pathname === "/pair-occurrences" ||
+                      url.pathname === "/expanded-pair-occurrences"
                     ? await pairOccurrencesJob(store, input)
                     : url.pathname === "/merge-pair-occurrences"
                       ? {
                           run: await mergePairOccurrenceRuns(store, input.runs),
                         }
-                      : url.pathname === "/finish-pairs"
-                        ? await finishPairsJob(store, input)
-                        : url.pathname === "/stage"
-                          ? await store.put(jsonBytes(input.value))
-                          : url.pathname === "/routing"
-                            ? await combineRouting(
-                                store,
-                                input.parts,
-                                input.objectBase,
-                              )
-                            : url.pathname === "/ingest"
-                              ? await ingest(
-                                  source,
+                      : url.pathname === "/expanded-pair-directory"
+                        ? await finishPairDirectoryJob(store, input)
+                        : url.pathname === "/finish-pairs" ||
+                            url.pathname === "/expanded-finish-pairs"
+                          ? await finishPairsJob(store, input)
+                          : url.pathname === "/stage"
+                            ? await store.put(jsonBytes(input.value))
+                            : url.pathname === "/routing"
+                              ? await combineRouting(
                                   store,
-                                  input.first,
-                                  input.count,
+                                  input.parts,
+                                  input.objectBase,
                                 )
-                              : url.pathname === "/merge"
-                                ? await merge(
+                              : url.pathname === "/ingest"
+                                ? await ingest(
+                                    source,
                                     store,
-                                    input.runs,
-                                    input.state,
-                                    128 * 1048576,
-                                    input.range,
+                                    input.first,
+                                    input.count,
                                   )
-                                : url.pathname === "/postings"
-                                  ? await finishPostings(
+                                : url.pathname === "/merge"
+                                  ? await merge(
                                       store,
-                                      input.run,
-                                      input.statistics,
-                                      input.objectBase,
+                                      input.runs,
                                       input.state,
-                                      input.byteBudget,
+                                      128 * 1048576,
                                       input.range,
                                     )
-                                  : url.pathname === "/verify"
-                                    ? await verifyRange()
-                                    : url.pathname === "/publish"
-                                      ? await publish()
-                                      : url.pathname === "/packet-terms"
-                                        ? await finishPacketTerms(
-                                            store,
-                                            input.root,
-                                            input.fences,
-                                            input.objectBase,
-                                            input.state,
-                                            input.byteBudget,
-                                          )
-                                        : url.pathname === "/package-documents"
-                                          ? await finishPackageDocuments(
-                                              source,
+                                  : url.pathname === "/postings"
+                                    ? await finishPostings(
+                                        store,
+                                        input.run,
+                                        input.statistics,
+                                        input.objectBase,
+                                        input.state,
+                                        input.byteBudget,
+                                        input.range,
+                                      )
+                                    : url.pathname === "/verify"
+                                      ? await verifyRange()
+                                      : url.pathname === "/publish"
+                                        ? await publish()
+                                        : url.pathname === "/packet-terms"
+                                          ? await finishPacketTerms(
                                               store,
                                               input.root,
-                                              await readVocabulary(
-                                                store,
-                                                input.vocabularyRef,
-                                              ),
-                                              input.generation,
-                                              input.first,
-                                              input.count,
+                                              input.fences,
+                                              input.objectBase,
+                                              input.state,
+                                              input.byteBudget,
                                             )
-                                          : url.pathname === "/vocabulary"
-                                            ? await buildVocabulary(
+                                          : url.pathname ===
+                                              "/package-documents"
+                                            ? await finishPackageDocuments(
                                                 source,
                                                 store,
                                                 input.root,
-                                                input.first,
-                                                input.count,
-                                              )
-                                            : await finishDocuments(
-                                                source,
-                                                store,
-                                                input.documentRoot,
                                                 await readVocabulary(
                                                   store,
                                                   input.vocabularyRef,
                                                 ),
-                                                input.objectBase,
-                                                input.state,
-                                                input.tokenBudget ?? 1048576,
-                                                input.range,
-                                              );
+                                                input.generation,
+                                                input.first,
+                                                input.count,
+                                              )
+                                            : url.pathname === "/vocabulary"
+                                              ? await buildVocabulary(
+                                                  source,
+                                                  store,
+                                                  input.root,
+                                                  input.first,
+                                                  input.count,
+                                                )
+                                              : await finishDocuments(
+                                                  source,
+                                                  store,
+                                                  input.documentRoot,
+                                                  await readVocabulary(
+                                                    store,
+                                                    input.vocabularyRef,
+                                                  ),
+                                                  input.objectBase,
+                                                  input.state,
+                                                  input.tokenBudget ?? 1048576,
+                                                  input.range,
+                                                );
             result = {
               output,
               writesAndMergeReads: store.requests,

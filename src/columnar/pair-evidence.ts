@@ -19,7 +19,7 @@ export function pairPhraseCovered(
       covered.fill(1, Math.max(0, at - 1), Math.min(words.length, at + 3));
   return covered.every(Boolean);
 }
-function mandatoryPhrases(ast: Node): Map<string, string[]> {
+export function mandatoryPhrases(ast: Node): Map<string, string[]> {
   if (ast.kind === "phrase")
     return new Map([[JSON.stringify(ast.terms), ast.terms]]);
   if (!("left" in ast)) return new Map();
@@ -58,7 +58,7 @@ export function planPairAnchor(
       })
       .sort((a, b) => a.pair.df - b.pair.df || a.pair.ref[2] - b.pair.ref[2]);
     for (const { pair, at } of occurrences) {
-      if (pairs.length === 2 || bytes + pair.ref[2] > 2 * 1048576) continue;
+      if (pairs.length === 2 || bytes + pair.ref[2] > 8 * 1048576) continue;
       // Repeated instances of the same pair share one packet but still cover
       // their own phrase offsets during exact evidence evaluation.
       if (!pairs.includes(pair)) {

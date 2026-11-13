@@ -1,0 +1,1149 @@
+{
+  "label": "packets-1m-source-heldout-fetch",
+  "manifest": {
+    "finishedAt": "2026-11-13T11:30:29.402Z",
+    "label": "packets-1m-source-heldout-fetch",
+    "condition": "memory-reuse",
+    "warmup": true,
+    "countPerVariant": 252,
+    "totalRate": 4,
+    "clientConcurrencyLimit": 16,
+    "sessions": 3,
+    "seed": 20261112,
+    "queries": [
+      {
+        "q": "\"because level the pip\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"because of the pip\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "5d3b6b4d43561e68ed903a8598453c183d5834c5008d7475b7f8f660a21f98d1"
+      },
+      {
+        "q": "\"transferred must be\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "aab5cf7b5b6bdb2bfa954722aa7ff258fa96a69df974044fe1906b3a141b3187"
+      },
+      {
+        "q": "\"transferred\" +3 \"be\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "a05f457163b3671c4fcba33ab0944544e4899d615d9aa8836645feb74edcaa91"
+      },
+      {
+        "q": "\"stating v defendant\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"stating that defendant\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "3d5bc4b17f1edb0fcc66607f370dfaec3c8b5223a3ce4b5186b6f41f0f37abcb"
+      },
+      {
+        "q": "\"gonzalez 47 ny2d\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "7f354728ab80eaf29aaa95790b0ec22b84232e7e1516d43fe2806da265f2c9fd"
+      },
+      {
+        "q": "\"gonzalez\" +3 \"ny2d\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4639f16088678a3b3f3aafa6fcc321f218bbf890d0e15d4d11fe0066a5f76f04"
+      },
+      {
+        "q": "\"open set mean was there\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"open i mean was there\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "82ac0aa3318ff7bba615227a46da74b62b16af1b784e32c075779156bc8dc5a4"
+      },
+      {
+        "q": "\"to hamiter within sixty days\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"to pay within sixty days\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "2bfbd2a758a089fef04a6b2f9ae97de1dff7305a1b7bd06706742e262e4c244c"
+      },
+      {
+        "q": "\"circuit court curiam saydon\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"circuit per curiam saydon\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "5979b35f6176c3dda8ebcc727c901bb0a7070ec19c8f07cfa762f88f352a1483"
+      },
+      {
+        "q": "\"not procedure it was part\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"not aware it was part\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "513be3771c923e09dcbcc4d356721105d69e7f9f9b42269270740b2bb6fdda09"
+      },
+      {
+        "q": "\"contrary united what walsh s argument\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"contrary to what walsh s argument\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "8899735689e0da00a799c2c831323cac4bd26bec8f97d05aabb4dcf51bd92c9e"
+      },
+      {
+        "q": "\"pipeline the june 18 1983\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"pipeline on june 18 1983\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "fd49e08c0e74bb33c84ac4034efd59af738aaa47672e4ea0189a7e8ef23cf2ea"
+      },
+      {
+        "q": "\"000 bond forfeiture effective from april\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "da0b0fa3e0bc4eb1c1e14994163c83dc33b8b9b82cb53267661d3d8bc48e1506"
+      },
+      {
+        "q": "\"000\" +6 \"april\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "7f08a70f0b94fe2add1ea3df5b1df60b6945ba98fda19c649d458b7be26dee03"
+      },
+      {
+        "q": "\"to withdraw as counsel is\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "ae56e3e3714e00f5c88510b487b4b251df69e9da2504571695b7c03c4d33d8f8"
+      },
+      {
+        "q": "\"to\" +5 \"is\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "e2a6d40a381cd2e0b17228e2c7f2d035123cae66c2cf47741c8132c2559d9345"
+      },
+      {
+        "q": "\"judgment saunders resentence supreme court\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"judgment of resentence supreme court\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "14f487a63c82912639bbad3c8954acbf3fff275d9adf97c731ffb84183561c61"
+      },
+      {
+        "q": "\"facts case costs\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"facts with costs\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "d05c24a444c635a407f0c1f7e7f35b0f471f87e0c11846b60e7acb5460411b37"
+      },
+      {
+        "q": "\"two boys elmer\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "0935bb9cacbec2e682914abc5ee1a0d84af85ef87343950153f593cb9d2edfac"
+      },
+      {
+        "q": "\"two\" +3 \"elmer\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "fa5b2f7cb91afcf70f7c767abd279036ec3fab8cf28c543452c2b9923e721fe3"
+      },
+      {
+        "q": "\"if n would do so elmer\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"if ehner would do so elmer\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "6c9a14d7026583e1b0e99e22809c3eb359429249b767e26950d33d310893ced9"
+      },
+      {
+        "q": "\"that the for\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "cc51f6ba5d124b0b5a14e2279b4e10d05f3813b7f66c290d1acc6bb9ece06493"
+      },
+      {
+        "q": "\"that coverage for\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "cda595d38ddb187e698f39ef4e135b87087aff151f215861ac48691d1fc78d8a"
+      },
+      {
+        "q": "\"and 103 state v\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"and legal state v\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "e45ed34e321ff2922b1f146cdd39788356408d5da26f9de9c655b18b6d9b261f"
+      },
+      {
+        "q": "\"that policy coverage was applicable\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"that uim coverage was applicable\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "709cbd633dbe8c7374ca68fa5e0d62c14c7bf5aeb9861c1071af649812b359bf"
+      },
+      {
+        "q": "\"as added employer as\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"as her employer as\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "760f038d478c0ab082c82df7166e7a26448e59ed9f1d311bc047b266d932c2c4"
+      },
+      {
+        "q": "\"was could for\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"was judgment for\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "6e5942c7287fe9e37cc324b87037eb0c17d7f11d3102e38cf06a6e16853186c9"
+      },
+      {
+        "q": "\"that the administrator of the\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "ad06e2d0968d8883797dcd4b140d76617994de935009a7741cba37c6d52333aa"
+      },
+      {
+        "q": "\"that\" +5 \"the\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "e690dfbf9a7a3e96f7dad2175a19d306b4e41949d9f28130d659ef820c0e8a28"
+      },
+      {
+        "q": "\"the property and demanding\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "96162b60014e480039065331c2a8f62b6b1a12e63c0333f5e9cde300b4583bc8"
+      },
+      {
+        "q": "\"the\" +4 \"demanding\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "92894397d07e775dc99f9aacab60bcdccac0aa439860adcec5c7f22dc3534ba6"
+      },
+      {
+        "q": "\"sjoecial jury of merchants who\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "77f9df563ecf304a699a664917346e4130430b3d09eb2bc45f2eccdf60d528c1"
+      },
+      {
+        "q": "\"sjoecial\" +5 \"who\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "bb659e59df549fbb07dc036f4262ed1793f1274297396b96261ff92aa13330c0"
+      },
+      {
+        "q": "\"counted in the twenty\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "0215552ff3acc20ffc8de9017c5fc3de9266f4a07d37732e7fd39c5744c6d81c"
+      },
+      {
+        "q": "\"counted was the twenty\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "0c6e6ad780af27d1b44a613963c5e0eb7a4b1f138fdf793ba659c382a8a382fb"
+      },
+      {
+        "q": "\"it has doubtless because our\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"it was doubtless because our\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "c558b430949519808cf41a5e195a421d936e51a4a0dca97c48ca64e175ff1c79"
+      },
+      {
+        "q": "\"it the it was\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"it and it was\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "02631c20baee586f72c2abe180bb716a303db908f28a50ad44046c970f31e26d"
+      },
+      {
+        "q": "\"was delivered by deblanc j\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "d11b4c4c486378fbb44119d10f59bc569ef4c0eab02dfb618f77d18bb075e46c"
+      },
+      {
+        "q": "\"was\" +5 \"j\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "70bd59b01c9377b7362805cf780bb239e6cc1f56efc09a27bfcb82b002a2161e"
+      },
+      {
+        "q": "\"further and developed\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "0141d46c9634502dfe47a18900721347db0b1f4b2c9c53bc85f5981ae745a6f4"
+      },
+      {
+        "q": "\"further\" +3 \"developed\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "dcf2db46edf00a78281cb86f2520fbc865ee9d46d4477a6b75eb125cadc7e724"
+      },
+      {
+        "q": "\"whether of court\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"whether the court\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "fa16e396c577e0765b499c07c5588112c89804f2f193c6176befebf88b7d3420"
+      },
+      {
+        "q": "\"56 time see also rye 477\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"56 06 see also rye 477\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "3eb9aee6e35090bf578496097e4cd3d207f99518856881644a604ff5fd1b0875"
+      },
+      {
+        "q": "\"water suit or privy in suit\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"water closet or privy in suit\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "d53bd69d1f7b5580094404429a826ddf4bd1c550de85f073c256f95aa690fef6"
+      },
+      {
+        "q": "\"b hereunto explaining\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"b 1 explaining\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "a1f8426f3ef230d12215413e6e27683f394d83e1c27e65adfcdb7e16e1130e79"
+      },
+      {
+        "q": "\"a rodriguez justice in\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "d77495066df3b6ad45868341d29b1355f96163a7f6a4fd38338451426804f69e"
+      },
+      {
+        "q": "\"a\" +4 \"in\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "99037adad30801402e447053b9a808a268a3956a624917238ba8238e853a1cd8"
+      },
+      {
+        "q": "\"s mo dus operandi\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "df98372fd801e1ae76a2585abf8b42e318e9bbe1f87e75890df98871011f368a"
+      },
+      {
+        "q": "\"s\" +4 \"operandi\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "d7d0ba56313b29c49ef134edbc103abadf277387a036daa1b161894c1c32d970"
+      },
+      {
+        "q": "\"trial no was\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"trial he was\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "40c91c68e16ee6586bdad08ae79fed3b21cf2fa72aef2994d03f5e925da2d217"
+      },
+      {
+        "q": "\"show for this brief of documentary\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"show that this brief of documentary\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "151ddcc93cd86e668e9d34d1c7df39ca81338de9c300adb01d914c5fc0115b51"
+      },
+      {
+        "q": "\"210 211 and 612 at\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "e3fd1f444758938f342e9b4bb44dc2eee582de47be230355291117f1f6d8edbe"
+      },
+      {
+        "q": "\"210\" +5 \"at\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "cdd4f9fce00f62f6e0be9b6f00671da0c25246ce03c27a7016930e3b16a7ac15"
+      },
+      {
+        "q": "\"which laws may be\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "6273958e7978f37d7306ddafd546014e428630c2051aa1288d88c46642ec6153"
+      },
+      {
+        "q": "\"which relief may be\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "f719f9b57441fe6a28b77af2797bd31537bce1c0bb900d8435a95fe2a8f77386"
+      },
+      {
+        "q": "\"same case below 363 fed\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "ec38fdf9a35bc5b03ee76f984c811f27d5e7c8ad5c9439d8a2f06969e2f55adf"
+      },
+      {
+        "q": "\"same\" +5 \"fed\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "6932c8aa7b7213d84a418bbccf604490dfe2cf54c598c7e1f0db53bfe283d826"
+      },
+      {
+        "q": "\"of appeals tiorari to\"",
+        "kind": "source-mutated-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      {
+        "q": "\"of cer tiorari to\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "all"
+        },
+        "oracleSha256": "996bd944fdce88dfdc4e3839cc162f0fea81b9dc1b4d0eafc2885331db55b44a"
+      },
+      {
+        "q": "\"denied same case below\"",
+        "kind": "source-natural-phrase",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "49e61e4c308fa92254614ea644c106a834aeba9f177561764b5dfaa43e8b652a"
+      },
+      {
+        "q": "\"denied\" +4 \"below\"",
+        "kind": "source-ordered-proximity",
+        "options": {
+          "field": "body"
+        },
+        "oracleSha256": "415408f1dc4227cb12b4e0815dbece716b9bb2e179fafe3b027d6f3b52e3ea1a"
+      }
+    ],
+    "health": {
+      "work-search-cws-prefetch": {
+        "format": "CWS1",
+        "generation": "4c41c86b35e6e2689860be16765eb6990aea6314ca16a3f327866edef38081f4",
+        "documents": 1000000,
+        "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+        "directoryBytes": 33402940,
+        "isolate": "8b221491-269e-4414-8690-80ebfbb49d29",
+        "sequence": 1,
+        "cacheNamespace": "work-search-cws-prefetch",
+        "pageBytes": 262144,
+        "version": {
+          "id": "ace6e477-d23f-45b7-9bc1-e728fc44ac3f",
+          "tag": "",
+          "timestamp": "2026-11-13T11:14:05.643335Z"
+        }
+      }
+    },
+    "clientRegion": "local-New-England",
+    "node": "v26.7.0",
+    "startedAt": "2026-11-13T11:15:03.175Z",
+    "harnessSha256": "b8340f79d470c0cea75324bb9260de4405c65b5a9eb3c056d4da063cbc90c638",
+    "responseCaching": false,
+    "resolvedCursors": {}
+  },
+  "rawSha256": "20e3503165afbafa84e11ff942dc4e59e36651f1b566bdb868eae6e74fe19ca6",
+  "groups": [
+    {
+      "name": "work-search-cws-prefetch",
+      "kind": "all-scenarios",
+      "attempts": 252,
+      "successes": 250,
+      "errors": {
+        "503": 2
+      },
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 250,
+        "p50": 2816.211709000054,
+        "p95": 8164.000541999994,
+        "p99": 18539.174666999956,
+        "max": 27145.987208999926
+      },
+      "clientAllOutcomesMs": {
+        "n": 252,
+        "p50": 2753.7378749999916,
+        "p95": 8164.000541999994,
+        "p99": 18539.174666999956,
+        "max": 27145.987208999926
+      },
+      "clientIncludingQueueMs": {
+        "n": 250,
+        "p50": 2817.2490830000024,
+        "p95": 8165.774999999965,
+        "p99": 18540.00654199999,
+        "max": 27146.587666000007
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 250,
+        "p50": [2431.9468330000527, 3145.4216250000754],
+        "p95": [6839.252416000003, 11739.081333000096],
+        "p99": [11739.081333000096, 27145.987208999926],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 252,
+        "p50": 1.2541660000570118,
+        "p95": 2.5539589999825694,
+        "p99": 215.75404100003652,
+        "max": 374.2191669999156
+      },
+      "sampledCpuMs": {
+        "n": 250,
+        "p50": 996,
+        "p95": 4108,
+        "p99": 11900,
+        "max": 15276
+      },
+      "sampledWorkerWallMs": {
+        "n": 250,
+        "p50": 2518,
+        "p95": 8116,
+        "p99": 18491,
+        "max": 26351
+      },
+      "tailJoined": 250,
+      "workerReportedWallMs": {
+        "n": 250,
+        "p50": 2020,
+        "p95": 7114,
+        "p99": 17932,
+        "max": 25820
+      },
+      "metadataMs": {
+        "n": 250,
+        "p50": 10,
+        "p95": 49,
+        "p99": 170,
+        "max": 236
+      },
+      "activeBufferBytes": {
+        "n": 250,
+        "p50": 1202596,
+        "p95": 2289440,
+        "p99": 4577195,
+        "max": 4577195
+      },
+      "observedColos": ["BOS"],
+      "observedIsolates": 99,
+      "completionThroughputPerSec": 0.3870000254933837,
+      "totals": {
+        "requests": 1878,
+        "bytes": 523868294,
+        "sharedGets": 97855,
+        "sharedPuts": 0,
+        "memoryHits": 903442,
+        "deduplicated": 15655,
+        "stages": 167409,
+        "postings": 291857792,
+        "candidates": 16661243,
+        "positionIntegers": 916600956,
+        "pairContextIntegers": 6810,
+        "forwardIntegers": 9601740,
+        "resultRequests": 96,
+        "resultBytes": 3231726,
+        "resultSharedGets": 1897,
+        "resultMemoryHits": 0,
+        "coalescedReads": 1673,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 6844594416,
+        "repeatedDecodedBytes": 342621928,
+        "inflatedBytes": 9104315,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-prefetch",
+      "kind": "source-mutated-phrase",
+      "attempts": 81,
+      "successes": 80,
+      "errors": {
+        "503": 1
+      },
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 80,
+        "p50": 3469.8295839999337,
+        "p95": 12091.48904200003,
+        "p99": 27145.987208999926,
+        "max": 27145.987208999926
+      },
+      "clientAllOutcomesMs": {
+        "n": 81,
+        "p50": 3469.8295839999337,
+        "p95": 12091.48904200003,
+        "p99": 27145.987208999926,
+        "max": 27145.987208999926
+      },
+      "clientIncludingQueueMs": {
+        "n": 80,
+        "p50": 3471.083875000011,
+        "p95": 12091.995791999972,
+        "p99": 27146.587666000007,
+        "max": 27146.587666000007
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 80,
+        "p50": [3154.6549999999697, 4391.113209000032],
+        "p95": [7625.780875000055, 26035.747832999914],
+        "p99": [16806.001791999908, 27145.987208999926],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 81,
+        "p50": 1.344249999965541,
+        "p95": 2.6559589999960735,
+        "p99": 318.2804999999935,
+        "max": 318.2804999999935
+      },
+      "sampledCpuMs": {
+        "n": 80,
+        "p50": 1326,
+        "p95": 7900,
+        "p99": 15276,
+        "max": 15276
+      },
+      "sampledWorkerWallMs": {
+        "n": 80,
+        "p50": 3258,
+        "p95": 11682,
+        "p99": 26351,
+        "max": 26351
+      },
+      "tailJoined": 80,
+      "workerReportedWallMs": {
+        "n": 80,
+        "p50": 2767,
+        "p95": 10321,
+        "p99": 25820,
+        "max": 25820
+      },
+      "metadataMs": {
+        "n": 80,
+        "p50": 0,
+        "p95": 11,
+        "p99": 50,
+        "max": 50
+      },
+      "activeBufferBytes": {
+        "n": 80,
+        "p50": 1395972,
+        "p95": 2610020,
+        "p99": 4577195,
+        "max": 4577195
+      },
+      "observedColos": ["BOS"],
+      "observedIsolates": 50,
+      "completionThroughputPerSec": 0.12439286533715904,
+      "totals": {
+        "requests": 577,
+        "bytes": 153802040,
+        "sharedGets": 35505,
+        "sharedPuts": 0,
+        "memoryHits": 361520,
+        "deduplicated": 5457,
+        "stages": 68013,
+        "postings": 106827576,
+        "candidates": 6510298,
+        "positionIntegers": 757434876,
+        "pairContextIntegers": 6810,
+        "forwardIntegers": 5543988,
+        "resultRequests": 0,
+        "resultBytes": 0,
+        "resultSharedGets": 36,
+        "resultMemoryHits": 0,
+        "coalescedReads": 550,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 3106936932,
+        "repeatedDecodedBytes": 116977348,
+        "inflatedBytes": 500925,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-prefetch",
+      "kind": "source-ordered-proximity",
+      "attempts": 45,
+      "successes": 45,
+      "errors": {},
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 45,
+        "p50": 1544.8929169999901,
+        "p95": 2484.8844590000226,
+        "p99": 2816.211709000054,
+        "max": 2816.211709000054
+      },
+      "clientAllOutcomesMs": {
+        "n": 45,
+        "p50": 1544.8929169999901,
+        "p95": 2484.8844590000226,
+        "p99": 2816.211709000054,
+        "max": 2816.211709000054
+      },
+      "clientIncludingQueueMs": {
+        "n": 45,
+        "p50": 1548.171250000014,
+        "p95": 2485.303833999962,
+        "p99": 2817.2490830000024,
+        "max": 2817.2490830000024
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 45,
+        "p50": [1270.0509160000365, 1797.0088749999995],
+        "p95": [2030.879125000094, 2816.211709000054],
+        "p99": [2111.0996670000022, 2816.211709000054],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 45,
+        "p50": 1.3135829999810085,
+        "p95": 3.063625000009779,
+        "p99": 374.2191669999156,
+        "max": 374.2191669999156
+      },
+      "sampledCpuMs": {
+        "n": 45,
+        "p50": 496,
+        "p95": 1067,
+        "p99": 1311,
+        "max": 1311
+      },
+      "sampledWorkerWallMs": {
+        "n": 45,
+        "p50": 1247,
+        "p95": 2063,
+        "p99": 2446,
+        "max": 2446
+      },
+      "tailJoined": 45,
+      "workerReportedWallMs": {
+        "n": 45,
+        "p50": 912,
+        "p95": 1698,
+        "p99": 2012,
+        "max": 2012
+      },
+      "metadataMs": {
+        "n": 45,
+        "p50": 17,
+        "p95": 50,
+        "p99": 109,
+        "max": 109
+      },
+      "activeBufferBytes": {
+        "n": 45,
+        "p50": 596148,
+        "p95": 979096,
+        "p99": 979096,
+        "max": 979096
+      },
+      "observedColos": ["BOS"],
+      "observedIsolates": 32,
+      "completionThroughputPerSec": 0.07061862504796823,
+      "totals": {
+        "requests": 0,
+        "bytes": 0,
+        "sharedGets": 6983,
+        "sharedPuts": 0,
+        "memoryHits": 80349,
+        "deduplicated": 1369,
+        "stages": 24267,
+        "postings": 18293559,
+        "candidates": 2749491,
+        "positionIntegers": 1465800,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 6702,
+        "resultRequests": 0,
+        "resultBytes": 0,
+        "resultSharedGets": 816,
+        "resultMemoryHits": 0,
+        "coalescedReads": 0,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 354644100,
+        "repeatedDecodedBytes": 29109240,
+        "inflatedBytes": 3870345,
+        "repeatedInflatedBytes": 0
+      }
+    },
+    {
+      "name": "work-search-cws-prefetch",
+      "kind": "source-natural-phrase",
+      "attempts": 126,
+      "successes": 125,
+      "errors": {
+        "503": 1
+      },
+      "correctnessFailures": 0,
+      "clientSuccessMs": {
+        "n": 125,
+        "p50": 3128.10716600006,
+        "p95": 7304.322749999934,
+        "p99": 11558.042167000007,
+        "max": 12250.33050000004
+      },
+      "clientAllOutcomesMs": {
+        "n": 126,
+        "p50": 3119.324499999988,
+        "p95": 7304.322749999934,
+        "p99": 11558.042167000007,
+        "max": 12250.33050000004
+      },
+      "clientIncludingQueueMs": {
+        "n": 125,
+        "p50": 3128.1072910000803,
+        "p95": 7393.930916999932,
+        "p99": 11559.1547079999,
+        "max": 12252.028249999974
+      },
+      "uncertainty": {
+        "method": "1000 query/session-block bootstrap resamples; conditional on this workload, not production traffic",
+        "blocks": 125,
+        "p50": [2851.50549999997, 3424.061250000028],
+        "p95": [6294.322374999989, 11250.521416999982],
+        "p99": [7467.12179200002, 12250.33050000004],
+        "tailCaution": "Pilot has too few tail observations for a reliable P99 estimate"
+      },
+      "arrivalLatenessMs": {
+        "n": 126,
+        "p50": 1.154541999916546,
+        "p95": 2.371584000007715,
+        "p99": 89.60787499998696,
+        "max": 126.50337499997113
+      },
+      "sampledCpuMs": {
+        "n": 125,
+        "p50": 1177,
+        "p95": 3148,
+        "p99": 5331,
+        "max": 5688
+      },
+      "sampledWorkerWallMs": {
+        "n": 125,
+        "p50": 2979,
+        "p95": 6992,
+        "p99": 11197,
+        "max": 11504
+      },
+      "tailJoined": 125,
+      "workerReportedWallMs": {
+        "n": 125,
+        "p50": 2441,
+        "p95": 6540,
+        "p99": 10833,
+        "max": 10957
+      },
+      "metadataMs": {
+        "n": 125,
+        "p50": 14,
+        "p95": 73,
+        "p99": 178,
+        "max": 236
+      },
+      "activeBufferBytes": {
+        "n": 125,
+        "p50": 1298496,
+        "p95": 2289440,
+        "p99": 2611956,
+        "max": 2611956
+      },
+      "observedColos": ["BOS"],
+      "observedIsolates": 67,
+      "completionThroughputPerSec": 0.19640408445069205,
+      "totals": {
+        "requests": 1301,
+        "bytes": 370066254,
+        "sharedGets": 55367,
+        "sharedPuts": 0,
+        "memoryHits": 461573,
+        "deduplicated": 8829,
+        "stages": 75129,
+        "postings": 166736657,
+        "candidates": 7401454,
+        "positionIntegers": 157700280,
+        "pairContextIntegers": 0,
+        "forwardIntegers": 4051050,
+        "resultRequests": 96,
+        "resultBytes": 3231726,
+        "resultSharedGets": 1045,
+        "resultMemoryHits": 0,
+        "coalescedReads": 1123,
+        "coalescedExtraBytes": 0,
+        "decodedBytes": 3383013384,
+        "repeatedDecodedBytes": 196535340,
+        "inflatedBytes": 4733045,
+        "repeatedInflatedBytes": 0
+      }
+    }
+  ]
+}

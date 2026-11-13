@@ -1,0 +1,26 @@
+{
+  "checkedAt": "2026-11-13T11:46:06.862Z",
+  "health": {
+    "code": "d3fe5fec7bd407b625f29da17c1ae610607d208b58c4ca28b540bef49de3327c",
+    "statisticsCode": "929039d6395647491158f0555ce117c0678a7873b39fd7975926173a69b1c2c8",
+    "format": "CPP3+CPD1",
+    "isolate": "788c2100-ce2a-4a24-bfd5-87a670c86da2"
+  },
+  "sourceGeneration": "681472634d48bd5129592ef291c6ce13e198b9b1e5afc1b4ded4b00f82d9c216",
+  "occurrenceChunkHashes": [
+    ["06750d5307f80879fa7f918348ca9214a19ee5f0479c05b59a56a9140df14ae0", 193420]
+  ],
+  "pairs": 64,
+  "inlineBytes": 33900,
+  "shards": 1,
+  "objects": [
+    {
+      "name": "plan-500000000.bin",
+      "key": "67d20b0653e6cd5ed8950c587a04c6f8fc3f2cbb7d8365d3ee34b86a34f93ba7/plan-0.bin",
+      "size": 36476,
+      "sha256": "67d20b0653e6cd5ed8950c587a04c6f8fc3f2cbb7d8365d3ee34b86a34f93ba7",
+      "checksums": [102342738]
+    }
+  ],
+  "note": "Live native occurrence hashes match prior output; every directory descriptor and inlined complete packet matches the immutable source."
+}

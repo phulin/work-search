@@ -1,0 +1,28 @@
+{
+  "count": 14231212,
+  "sourceDocuments": 10032254,
+  "sourceRoot": {
+    "key": "9f52a27d227ade2ade766ceb1a67b0b431b12915464828b597bd75eb67bb0c01/stage-9f52a27d227ade2ade766ceb1a67b0b431b12915464828b597bd75eb67bb0c01.bin",
+    "size": 1740652,
+    "sha256": "9f52a27d227ade2ade766ceb1a67b0b431b12915464828b597bd75eb67bb0c01"
+  },
+  "elapsedMs": 25315.861709,
+  "variants": [
+    {
+      "blockSize": 512,
+      "bytes": 57457205,
+      "rawBytes": 56664235,
+      "blocks": 27796,
+      "sha256": "a26111353dbf9585bdcc45c6b35b11aa8689ba958fdcb69d25131aff099e311a"
+    },
+    {
+      "blockSize": 2048,
+      "bytes": 56778606,
+      "rawBytes": 56580847,
+      "blocks": 6949,
+      "sha256": "1e6e43cee34f1cb12b9902b0d7cdd97539d126f3f2cb4db1983c415f371ddd38"
+    }
+  ],
+  "note": "Every word round-tripped exactly from the validated complete native CWI1 vocabulary; sampled lexical ordinal lookups also matched. No serving posting metadata.",
+  "format": "CWI2 with direct 32-word restarts"
+}

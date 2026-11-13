@@ -88,10 +88,17 @@ candidate-package budget decisions. The same evidence survives a switch to
 block retrieval and can avoid ordinary word-position decoding. Missing pairs or
 uncovered neighborhoods mean unknown, with ordinary exact verification.
 
-All selected descriptors currently fit in the bundled root; there is no remote
-pair-discovery stage. A remote pair dictionary has not been implemented or
-measured. Selection uses corpus DF, occurrence volume, and estimated verification
-work saved per conservative byte, with no benchmark-query input.
+The existing 4,096-pair deployment bundles descriptors and keeps 733 MB of CPP3
+payloads in R2. The expanded format puts descriptors in sorted CPD1 lookup shards;
+small complete postings are inline with their dictionary entries. Only 256 hot
+descriptors and compact shard fences remain bundled. Query lookup batches up to
+eight relevant ranges, then replans using the resulting descriptors. Missing
+entries remain unknown. A live native pilot verified every descriptor and inline
+packet against its source; the 65,536-pair generation is still being built and
+has not established a latency benefit. Selection uses corpus DF, occurrence
+volume, and estimated verification work saved per conservative byte, with no
+benchmark-query input. It currently requires at least a twofold DF reduction and
+limits individual pair packets to 8 MiB.
 
 ## Memory and I/O
 

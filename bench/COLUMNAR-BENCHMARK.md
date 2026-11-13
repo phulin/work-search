@@ -7,13 +7,100 @@ from work still running.
 
 ## Latest measured iterations
 
-The finalist comparison is running with 10,000 measured requests per engine,
-randomized interleaving, three sessions and four total arrivals/second. It compares
-the frozen same-source 1M block layout with the packet engine, including result
-metadata and snippets. Neither serving deployment will change during the campaign.
-Both native CPU streams joined every request in the preceding 12-request-per-engine
-availability pilot. Results are pending. This control is distinct from the
-historical 4f97 baseline.
+The 10,000-attempt-per-engine finalist campaign finished over three randomized,
+interleaved BOS sessions at four total offered arrivals/second. The same-source
+1M frozen block control returned 9,996 correct responses and four admission 503s;
+the packet replacement returned 9,992 correct responses and eight admission 503s.
+Every successful request joined a native CPU observation. Complete-response
+client P50/P95/P99 was 940/4,795/21,741 ms versus 746/3,436/5,360 ms. CPU was
+446/2,170/14,347 ms versus 299/1,342/2,243 ms. Result metadata/snippet time was
+56/135/249 ms versus 15/38/74 ms. Normal application reuse still traversed many
+isolates; shared pages supplied almost all reads (six control and one replacement
+origin GETs during measured responses). This is a warmed workload comparison,
+not a production percentile or a fresh-isolate test.
+
+Query/session-block bootstrap 95% intervals for client P99 were 6,322–28,175 ms
+for the control and 4,505–6,193 ms for the replacement. The aggregate weights the
+76 contracts approximately uniformly. Class-specific results remain separate:
+held-out adversarial P95 fell from 21,201 to 4,545 ms (2,106 successes each), but
+plain-common P95 rose from 967 to 1,035 ms (262/261 successes), field-body P95
+from 758 to 900 ms (131/130), and zero-title-boost ties from 333 to 600 ms
+(131 each). Small class tails remain uncertain. Client launch lateness P99 was
+below 3 ms for both variants. These distributions, raw observations, source and
+generation provenance, errors and uncertainty are `packets-1m-finalist-10000*`.
+The much slower source-derived workload below is an additional adoption gate.
+
+The source-derived 84-contract workload completed three sessions with 252
+measured attempts on the 213-pair generation. All 245 successful responses were
+correct; seven were admission 503s. Client P50/P95/P99 was 2,900/8,298/18,916 ms;
+joined native CPU was 913/3,625/10,332 ms. Extending bounded frequency lookahead to
+positional queries and coalescing their block reads returned 250 correct responses
+and two admission 503s, with client 2,816/8,164/18,539 ms and CPU
+996/4,108/11,900 ms. These were sequential pilots under concurrent construction
+load, not an interleaved speedup result. The small wall-time change and higher CPU
+do not justify retaining this experiment in the normal path. See
+`packets-1m-source-heldout-{213,fetch}*`, including class-specific distributions and
+bootstrap intervals.
+
+Expanded pair construction selected 65,536 corpus-derived pairs under an 8 GiB
+budget; the conservative payload bound is 8,288,553,192 bytes. Occurrences and
+context remain in R2; CPD1 shards combine dictionary entries with small complete
+postings, and 256 hot descriptors remain bundled. The generation is not yet
+deployed or benchmarked. A live pilot matched existing occurrence chunk hashes,
+all 64 sampled directory descriptors and every inline packet byte; see
+`expanded-pair-native-validation.json`. This is correctness evidence, not a
+coverage or latency result for the expanded generation.
+
+The largest corpus contains 14,231,212 normalized terms. Its full serving directory
+has not been built or deployed, so full-bundle fit remains unresolved. English
+Snowball/Porter2 reduced 2,812,380 terms to 2,539,780 at 1M documents (9.69%), and
+14,231,212 to 12,670,951 on all 10,032,254 documents (10.96%). Complete term counts
+were checked against construction metadata. These diagnostics change no serving
+semantics; see `stemming-{1m,full}.json`.
+
+Native vocabulary construction had read about 7,100–7,400 dictionary pages and
+308–313 MB per 1,024-document job. Routing all words together barely changed this
+work and had mixed timing, so that experiment was rejected. A complete bundled
+word-to-ID directory removed dictionary I/O. Its compressed prototype occupied
+39,930,048 bytes and took 14.0/15.6/19.6 seconds on three native jobs. CWI2 replaces
+small compressed blocks with directly readable 32-word restarts and packed prefix
+lengths: 56,778,606 bytes for all 14,231,212 words. Every word round-tripped exactly,
+and three native vocabulary outputs matched the frozen constructor byte for byte.
+Wall times were 3.2/3.7/9.1 seconds versus 68.2/50.8/46.9 seconds for the recorded
+remote counterparts, under concurrent construction load. These are diagnostic
+timings, not a controlled throughput ratio. CWI2 is active for remaining vocabulary
+jobs. The larger constructor bundle consumes memory headroom; native peak/retained
+memory remains unproved. See `word-directory-full*` and `vocabulary-*-native*`.
+
+The new source-derived workload exposes missing coverage: the 213-pair generation
+has usable anchors for one of 84 contracts, and the 4,096-pair generation for seven;
+four are fully covered by context. These are descriptor estimates, not measured
+intersections or latency gains. Initial correct warmup responses on the smaller
+generation included 20–33-second cases. One 32.9-second phrase response made 527
+origin reads totaling 134.3 MB, with 51.7 MB decoded and 1,000 execution batches.
+The batch counter does not measure the complete I/O dependency graph. Fresh-query
+results must accompany the older workload; pair storage alone does not solve the
+remaining broad phrase rejection cost.
+
+All five full-corpus merge levels and all 4,004 posting jobs finished. Vocabulary
+and packet conversion are running concurrently. Packet jobs now receive only
+their reachable native object groups: one projected descriptor was 19,992 bytes
+and 47 objects instead of 26,272,879 bytes and 63,764 objects. A continuation test
+produced identical packet objects and directory blocks. This reduces metadata
+work; a controlled throughput gain has not yet been measured. The posting
+coordinator had exceeded V8's maximum string length when the checkpoint approached
+512 MB; the verified immutable final run now replaces duplicated completed-phase
+descriptors, reducing the active checkpoint to 23 MB. New posting jobs also stage
+only their reachable lexical chunk descriptors. One new descriptor was 9,094 bytes
+versus the old 40,879,443-byte corpus-wide descriptor. A continuation/boundary test
+produced identical output objects. Existing partial jobs retain their old cursor
+space. These are representation/work reductions; a controlled throughput ratio has
+not been established. A later invocation-memory P99 sample reached 168,782,640
+bytes without reported resource outcomes, so memory headroom is still unproved.
+
+The completed finalist control is the frozen same-source 1M block layout,
+distinct from the historical 4f97 baseline. Neither serving deployment changed
+during that campaign.
 
 The benchmark client now appends each completed observation to a JSONL journal and
 compresses its final report after the measured requests drain. Previously, repeated
@@ -112,8 +199,8 @@ At 09:26 UTC construction invocation-memory P99 reached 136,476,940 bytes; a lat
 either window. These lagged invocation samples are not peak-memory measurements,
 and the higher observation leaves insufficient demonstrated headroom.
 
-The full 10,032,254-document build completed ingestion and four merge levels,
-including all 576 lexical jobs. Its 96 final lexical merges are running. The
+The full 10,032,254-document build completed ingestion and all five merge levels,
+including all 576 intermediate and 96 final lexical jobs. Posting output is running. The
 broader 4,096-pair generation is complete and deployed. Both coordinators encountered
 client timeouts; completed immutable work was retained. Capacity-busy and network
 retry budgets are now separate, preventing busy responses from exhausting the

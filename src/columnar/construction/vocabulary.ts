@@ -23,6 +23,10 @@ export async function buildVocabulary(
   root: VocabularyRoot,
   first: number,
   count: number,
+  bundled?: {
+    generation: string;
+    lookup(names: string[]): Promise<Map<string, number>>;
+  },
 ) {
   if (
     !Number.isInteger(first) ||
@@ -76,14 +80,19 @@ export async function buildVocabulary(
   const reader = new Reader(root, new ColumnarR2(store.bucket), memory),
     names = [...words].sort(),
     ids = new Map<string, number>();
-  for (let at = 0; at < names.length; at += 4096) {
-    const found = await loadDictionary<number>(
-      names.slice(at, at + 4096),
-      reader,
-      { ...root.idRouting, hot: {} },
-    );
-    for (const [word, id] of found) ids.set(word, id);
-  }
+  if (bundled && bundled.generation !== root.generation)
+    throw Error("Bundled vocabulary generation mismatch");
+  if (bundled) {
+    for (const [word, id] of await bundled.lookup(names)) ids.set(word, id);
+  } else
+    for (let at = 0; at < names.length; at += 4096) {
+      const found = await loadDictionary<number>(
+        names.slice(at, at + 4096),
+        reader,
+        { ...root.idRouting, hot: {} },
+      );
+      for (const [word, id] of found) ids.set(word, id);
+    }
   if (ids.size !== names.length)
     throw Error("Source vocabulary missing from global dictionary");
   const bytes = new Uint8Array(

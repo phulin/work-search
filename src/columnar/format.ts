@@ -26,6 +26,11 @@ export interface PositionalPair {
   occurrences: number;
   ref: Ref;
 }
+export interface PairDirectoryShard {
+  first: [number, number];
+  last: [number, number];
+  ref: Ref;
+}
 export interface Root {
   format: "CWS1";
   generation: string;
@@ -49,6 +54,7 @@ export interface Root {
   objectIds?: number[];
   directory?: { sha256: string; bytes: number; terms: number };
   positionalPairs?: Record<string, PositionalPair>;
+  pairDirectory?: { pairs: number; shards: PairDirectoryShard[] };
   documentPackages?: {
     generation: string;
     count: number;

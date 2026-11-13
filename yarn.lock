@@ -1152,6 +1152,11 @@ std-env@^4.3.0:
   resolved "https://registry.yarnpkg.com/std-env/-/std-env-4.3.0.tgz#4e7231b61fd83219aa7f76f71fa8818b07e41321"
   integrity sha512-OtU/EgQ1kIm5KwqQpBC6ZEMXrZRui11w8zgfTWp8cdO9B8OaPsbA8bTHO2P+HNo1VlUTGMVBwPhydu6poeXiag==
 
+stemr@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/stemr/-/stemr-1.0.0.tgz#a8a130ef77f60ad8e9e6269f984ca1ffc30783ca"
+  integrity sha512-68XKvW1f/j6N9O2CrjnVHT9zvD/30w8ECJs6e11k8JFyoLt0B3W5ir64iMV3sk2+VobU75xYJ85diYw+wyed7A==
+
 supports-color@^10.0.0:
   version "10.2.2"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-10.2.2.tgz#466c2978cc5cd0052d542a0b576461c2b802ebb4"

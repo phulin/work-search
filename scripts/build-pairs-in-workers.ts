@@ -63,8 +63,9 @@ class SelectionHeap {
 
 const [base, out, build] = process.argv.slice(2),
   budget =
-    Number(process.argv[5]?.startsWith("--") ? 64 : (process.argv[5] ?? 64)) *
-    1048576,
+    Number(
+      process.argv[5]?.startsWith("--") ? 8192 : (process.argv[5] ?? 8192),
+    ) * 1048576,
   reuseAt = process.argv.indexOf("--reuse-statistics"),
   width = Number(process.env.CWS_BUILD_CONCURRENCY ?? 8),
   url =
@@ -87,9 +88,12 @@ if (
   );
 const root: Root = JSON.parse(await readFile(base + "/root.json", "utf8")),
   packages = JSON.parse(await readFile(base + "/build.json", "utf8")),
-  health = (await fetch(url + (process.env.CWS_PAIR_HEALTH ?? "/health"), {
-    headers: { authorization: `Bearer ${token}` },
-  }).then((r) => r.json())) as any;
+  health = (await fetch(
+    url + (process.env.CWS_PAIR_HEALTH ?? "/expanded-pair-health"),
+    {
+      headers: { authorization: `Bearer ${token}` },
+    },
+  ).then((r) => r.json())) as any;
 if (
   !root.directory ||
   !root.documentPackages?.locators ||
@@ -136,7 +140,7 @@ if (reuseAt >= 0 && !state.statistics.length) {
     await readFile(process.argv[reuseAt + 1] + "/build.json", "utf8"),
   );
   if (
-    previous.code !== health.code ||
+    previous.code !== (health.statisticsCode ?? health.code) ||
     previous.sourceGeneration !== root.generation ||
     !previous.selection
   )
@@ -389,7 +393,7 @@ if (!state.selection) {
       if (
         anchor < Math.min(1024, root.count / 8) ||
         df * 2 >= anchor ||
-        cost > 2 * 1048576
+        cost > 8 * 1048576
       )
         continue;
       const saved =
@@ -418,7 +422,7 @@ if (!state.selection) {
   const pairs = [];
   let bytes = 0;
   for (const p of ranked)
-    if (pairs.length < 4096 && bytes + p.cost <= budget) {
+    if (bytes + p.cost <= budget) {
       pairs.push(p);
       bytes += p.cost;
     }
@@ -432,11 +436,24 @@ if (!state.selection) {
     budget,
     estimatedBytes: bytes,
     selection:
-      "Up to 4096 corpus pairs from the highest 65536 occurrence-weighted avoided-verification utilities per conservative packet byte; no query inputs",
+      "Storage-budgeted corpus pairs from a bounded 65536-entry utility selection heap; no query inputs. Pair payload bound 8 MiB; descriptors are remote except selected hot entries.",
   };
   await writeFile(out + "/selection.json", JSON.stringify(state.selection));
   state.selectionRef = await call("/stage", "selection", {
-    value: state.selection,
+    value: {
+      documents: state.selection.documents,
+      terms: state.selection.terms.map((t: any) => ({ id: t.id })),
+      pairs: state.selection.pairs.map(
+        ({ key, a, b, df, occurrences, cost }: any) => ({
+          key,
+          a,
+          b,
+          df,
+          occurrences,
+          cost,
+        }),
+      ),
+    },
   });
   await save(true);
   console.log(
@@ -449,7 +466,7 @@ if (!state.selection) {
 await pool<any>(groups, async (group, i) => {
   if (!state.occurrences[i]) {
     state.occurrences[i] = (
-      await call("/pair-occurrences", `occurrences-${i}`, {
+      await call("/expanded-pair-occurrences", `occurrences-${i}`, {
         selectionRef: state.selectionRef,
         group,
       })
@@ -463,24 +480,129 @@ const run = await merge("occurrences", state.occurrences.flat()),
     Math.ceil(
       ((root.objectIds?.at(-1) ?? root.objects.length - 1) + 1) / OBJECT_GROUP,
     ) * OBJECT_GROUP;
-if (!state.finishedPairs) {
-  state.finishedPairs = await call("/finish-pairs", "finish", {
-    selectionRef: state.selectionRef,
-    run,
-    objectBase,
-  });
-  await save(true);
+if (!state.finishJobs) {
+  state.finishJobs = [];
+  let first = 0,
+    bytes = 0;
+  const selected = state.selection.pairs;
+  for (let i = 0; i < selected.length; i++) {
+    bytes += selected[i].cost;
+    if (
+      bytes >= 32 * 1048576 ||
+      i - first + 1 >= 512 ||
+      i + 1 === selected.length
+    ) {
+      state.finishJobs.push({
+        firstKey: selected[first].key,
+        endKey: selected[i + 1]?.key ?? 2 ** 32,
+      });
+      first = i + 1;
+      bytes = 0;
+    }
+  }
 }
-const pairs = state.finishedPairs,
+await pool<any>(state.finishJobs, async (job, i) => {
+  if (!job.output) {
+    job.output = await call("/expanded-finish-pairs", `finish-${i}`, {
+      selectionRef: state.selectionRef,
+      run,
+      range: { firstKey: job.firstKey, endKey: job.endKey },
+      objectBase: objectBase + i * OBJECT_GROUP,
+    });
+    await save();
+  }
+});
+const cppObjects = state.finishJobs.flatMap((j: any) => j.output.objects),
+  cppIds = state.finishJobs.flatMap((j: any, i: number) =>
+    j.output.objects.map(
+      (_: any, k: number) => objectBase + i * OBJECT_GROUP + k,
+    ),
+  ),
+  descriptors = Object.assign(
+    {},
+    ...state.finishJobs.map((j: any) => j.output.descriptors),
+  ),
+  directoryBase = objectBase + state.finishJobs.length * OBJECT_GROUP,
+  ordered = Object.values(descriptors).sort(
+    (a: any, b: any) => a.a - b.a || a.b - b.b,
+  ) as any[];
+if (ordered.length !== state.selection.pairs.length)
+  throw Error("Incomplete pair finalization");
+state.directoryJobs ??= Array.from(
+  { length: Math.ceil(ordered.length / 256) },
+  (_, i) => ({ first: i * 256, end: Math.min(ordered.length, (i + 1) * 256) }),
+);
+const cppById = new Map(
+  cppIds.map((id: number, i: number) => [id, cppObjects[i]]),
+);
+await pool<any>(state.directoryJobs, async (job, i) => {
+  if (job.output) return;
+  const pairs = ordered.slice(job.first, job.end),
+    ids = [
+      ...new Set<number>(
+        pairs.filter((p) => p.ref[2] <= 16384).map((p) => p.ref[0]),
+      ),
+    ].sort((a, b) => a - b);
+  job.output = await call("/expanded-pair-directory", `directory-${i}`, {
+    pairs,
+    objectIds: ids,
+    objects: ids.map((id) => cppById.get(id)),
+    objectBase: directoryBase + i * OBJECT_GROUP,
+  });
+  await save();
+});
+const directoryObjects = state.directoryJobs.flatMap(
+    (j: any) => j.output.objects,
+  ),
+  directoryIds = state.directoryJobs.flatMap((j: any, i: number) =>
+    j.output.objects.map(
+      (_: any, k: number) => directoryBase + i * OBJECT_GROUP + k,
+    ),
+  ),
+  hot = Object.fromEntries(
+    [...state.selection.pairs]
+      .sort((a: any, b: any) => b.utility - a.utility || a.key - b.key)
+      .slice(0, 256)
+      .map((p: any) => [`${p.a}:${p.b}`, descriptors[`${p.a}:${p.b}`]]),
+  ),
+  pairs = {
+    objects: [...cppObjects, ...directoryObjects],
+    coverage: {
+      documents: root.count,
+      vocabulary: state.vocabulary.terms.length,
+      pairs: ordered.length,
+      occurrences: state.finishJobs.reduce(
+        (n: number, j: any) => n + j.output.coverage.occurrences,
+        0,
+      ),
+      bytes: state.finishJobs.reduce(
+        (n: number, j: any) => n + j.output.coverage.bytes,
+        0,
+      ),
+      directoryShards: state.directoryJobs.reduce(
+        (n: number, j: any) => n + j.output.shards.length,
+        0,
+      ),
+      inlineBytes: state.directoryJobs.reduce(
+        (n: number, j: any) => n + j.output.inlineBytes,
+        0,
+      ),
+    },
+  },
   paired: Root = {
     ...root,
     generation: "",
     objects: [...root.objects, ...pairs.objects],
     objectIds: [
       ...(root.objectIds ?? root.objects.map((_, i) => i)),
-      ...pairs.objects.map((_: any, i: number) => objectBase + i),
+      ...cppIds,
+      ...directoryIds,
     ],
-    positionalPairs: pairs.descriptors,
+    positionalPairs: hot,
+    pairDirectory: {
+      pairs: ordered.length,
+      shards: state.directoryJobs.flatMap((j: any) => j.output.shards),
+    },
   };
 paired.generation = await generationFor(paired);
 await writeFile(out + "/root.json", JSON.stringify(paired));

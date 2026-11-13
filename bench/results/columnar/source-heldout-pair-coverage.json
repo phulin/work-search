@@ -1,0 +1,952 @@
+{
+  "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+  "results": [
+    {
+      "generation": "4c41c86b35e6e2689860be16765eb6990aea6314ca16a3f327866edef38081f4",
+      "pairs": 213,
+      "queries": 84,
+      "withAnchor": 1,
+      "fullyCovered": 1,
+      "rows": [
+        {
+          "q": "\"because level the pip\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"because of the pip\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"transferred must be\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"transferred\" +3 \"be\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"stating v defendant\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"stating that defendant\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"gonzalez 47 ny2d\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"gonzalez\" +3 \"ny2d\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"open set mean was there\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"open i mean was there\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"to hamiter within sixty days\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"to pay within sixty days\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"circuit court curiam saydon\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"circuit per curiam saydon\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"not procedure it was part\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"not aware it was part\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"contrary united what walsh s argument\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"contrary to what walsh s argument\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"pipeline the june 18 1983\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"pipeline on june 18 1983\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"000 bond forfeiture effective from april\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"000\" +6 \"april\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"to withdraw as counsel is\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"to\" +5 \"is\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"judgment saunders resentence supreme court\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"judgment of resentence supreme court\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"facts case costs\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"facts with costs\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"two boys elmer\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"two\" +3 \"elmer\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"if n would do so elmer\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"if ehner would do so elmer\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"that the for\"",
+          "kind": "source-mutated-phrase",
+          "field": "all",
+          "bytes": 34868,
+          "df": 704,
+          "covered": true,
+          "pairs": [
+            {
+              "a": 2630408,
+              "b": 1805663,
+              "df": 704,
+              "occurrences": 1003
+            }
+          ]
+        },
+        {
+          "q": "\"that coverage for\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"and 103 state v\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"and legal state v\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"that policy coverage was applicable\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"that uim coverage was applicable\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"as added employer as\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"as her employer as\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"was could for\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"was judgment for\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"that the administrator of the\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"that\" +5 \"the\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"the property and demanding\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"the\" +4 \"demanding\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"sjoecial jury of merchants who\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"sjoecial\" +5 \"who\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"counted in the twenty\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"counted was the twenty\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"it has doubtless because our\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"it was doubtless because our\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"it the it was\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"it and it was\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"was delivered by deblanc j\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"was\" +5 \"j\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"further and developed\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"further\" +3 \"developed\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"whether of court\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"whether the court\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"56 time see also rye 477\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"56 06 see also rye 477\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"water suit or privy in suit\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"water closet or privy in suit\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"b hereunto explaining\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"b 1 explaining\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"a rodriguez justice in\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"a\" +4 \"in\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"s mo dus operandi\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"s\" +4 \"operandi\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"trial no was\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"trial he was\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"show for this brief of documentary\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"show that this brief of documentary\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"210 211 and 612 at\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"210\" +5 \"at\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"which laws may be\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"which relief may be\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"same case below 363 fed\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"same\" +5 \"fed\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"of appeals tiorari to\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"of cer tiorari to\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"denied same case below\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"denied\" +4 \"below\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        }
+      ]
+    },
+    {
+      "generation": "681472634d48bd5129592ef291c6ce13e198b9b1e5afc1b4ded4b00f82d9c216",
+      "pairs": 4096,
+      "queries": 84,
+      "withAnchor": 7,
+      "fullyCovered": 4,
+      "rows": [
+        {
+          "q": "\"because level the pip\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"because of the pip\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"transferred must be\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"transferred\" +3 \"be\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"stating v defendant\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"stating that defendant\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"gonzalez 47 ny2d\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"gonzalez\" +3 \"ny2d\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"open set mean was there\"",
+          "kind": "source-mutated-phrase",
+          "field": "all",
+          "bytes": 1283160,
+          "df": 27767,
+          "covered": false,
+          "pairs": [
+            {
+              "a": 2739751,
+              "b": 2634543,
+              "df": 27767,
+              "occurrences": 33789
+            }
+          ]
+        },
+        {
+          "q": "\"open i mean was there\"",
+          "kind": "source-natural-phrase",
+          "field": "all",
+          "bytes": 1283160,
+          "df": 27767,
+          "covered": false,
+          "pairs": [
+            {
+              "a": 2739751,
+              "b": 2634543,
+              "df": 27767,
+              "occurrences": 33789
+            }
+          ]
+        },
+        {
+          "q": "\"to hamiter within sixty days\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"to pay within sixty days\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"circuit court curiam saydon\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"circuit per curiam saydon\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"not procedure it was part\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"not aware it was part\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"contrary united what walsh s argument\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"contrary to what walsh s argument\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"pipeline the june 18 1983\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"pipeline on june 18 1983\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"000 bond forfeiture effective from april\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"000\" +6 \"april\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"to withdraw as counsel is\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"to\" +5 \"is\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"judgment saunders resentence supreme court\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"judgment of resentence supreme court\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"facts case costs\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"facts with costs\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"two boys elmer\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"two\" +3 \"elmer\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"if n would do so elmer\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"if ehner would do so elmer\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"that the for\"",
+          "kind": "source-mutated-phrase",
+          "field": "all",
+          "bytes": 34868,
+          "df": 704,
+          "covered": true,
+          "pairs": [
+            {
+              "a": 2630408,
+              "b": 1805663,
+              "df": 704,
+              "occurrences": 1003
+            }
+          ]
+        },
+        {
+          "q": "\"that coverage for\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"and 103 state v\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"and legal state v\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"that policy coverage was applicable\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"that uim coverage was applicable\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"as added employer as\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"as her employer as\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"was could for\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"was judgment for\"",
+          "kind": "source-natural-phrase",
+          "field": "all",
+          "bytes": 124224,
+          "df": 3138,
+          "covered": true,
+          "pairs": [
+            {
+              "a": 2739751,
+              "b": 2009352,
+              "df": 3138,
+              "occurrences": 3243
+            }
+          ]
+        },
+        {
+          "q": "\"that the administrator of the\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"that\" +5 \"the\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"the property and demanding\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"the\" +4 \"demanding\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"sjoecial jury of merchants who\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"sjoecial\" +5 \"who\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"counted in the twenty\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"counted was the twenty\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"it has doubtless because our\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"it was doubtless because our\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"it the it was\"",
+          "kind": "source-mutated-phrase",
+          "field": "body",
+          "bytes": 16928,
+          "df": 362,
+          "covered": true,
+          "pairs": [
+            {
+              "a": 2630408,
+              "b": 1982092,
+              "df": 362,
+              "occurrences": 496
+            }
+          ]
+        },
+        {
+          "q": "\"it and it was\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"was delivered by deblanc j\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"was\" +5 \"j\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"further and developed\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"further\" +3 \"developed\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"whether of court\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"whether the court\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"56 time see also rye 477\"",
+          "kind": "source-mutated-phrase",
+          "field": "all",
+          "bytes": 168380,
+          "df": 4204,
+          "covered": false,
+          "pairs": [
+            {
+              "a": 2644849,
+              "b": 2502918,
+              "df": 4204,
+              "occurrences": 4413
+            }
+          ]
+        },
+        {
+          "q": "\"56 06 see also rye 477\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"water suit or privy in suit\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"water closet or privy in suit\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"b hereunto explaining\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"b 1 explaining\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"a rodriguez justice in\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"a\" +4 \"in\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        },
+        {
+          "q": "\"s mo dus operandi\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"s\" +4 \"operandi\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"trial no was\"",
+          "kind": "source-mutated-phrase",
+          "field": "all",
+          "bytes": 8660,
+          "df": 185,
+          "covered": true,
+          "pairs": [
+            {
+              "a": 2226115,
+              "b": 2739751,
+              "df": 185,
+              "occurrences": 223
+            }
+          ]
+        },
+        {
+          "q": "\"trial he was\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"show for this brief of documentary\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"show that this brief of documentary\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"210 211 and 612 at\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"210\" +5 \"at\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"which laws may be\"",
+          "kind": "source-mutated-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"which relief may be\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"same case below 363 fed\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"same\" +5 \"fed\"",
+          "kind": "source-ordered-proximity",
+          "field": "all"
+        },
+        {
+          "q": "\"of appeals tiorari to\"",
+          "kind": "source-mutated-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"of cer tiorari to\"",
+          "kind": "source-natural-phrase",
+          "field": "all"
+        },
+        {
+          "q": "\"denied same case below\"",
+          "kind": "source-natural-phrase",
+          "field": "body"
+        },
+        {
+          "q": "\"denied\" +4 \"below\"",
+          "kind": "source-ordered-proximity",
+          "field": "body"
+        }
+      ]
+    }
+  ],
+  "caveat": "Descriptor coverage and DF estimates, not measured candidate intersections or serving latency."
+}

@@ -36,6 +36,13 @@ import { tokenize, type Document } from "../src/query/tokenize.js";
 import { exhaustive } from "../bench/columnar/exhaustive.js";
 import { planMerges } from "../scripts/construction-merge-plan.js";
 import { projectVocabularyRoot } from "../scripts/construction-vocabulary-root.js";
+import { packetRootProjector } from "../scripts/construction-packet-root.js";
+import { finishPacketTerms } from "../src/columnar/construction/packet-terms.js";
+import {
+  encodeWords,
+  assembleWords,
+  WordDirectory,
+} from "../src/columnar/word-directory.js";
 import {
   buildVocabulary,
   readVocabulary,
@@ -338,6 +345,44 @@ it("builds the serving format through bounded R2 runs, resumed merges, and final
   root.hot = Object.fromEntries(combined.routing.hot);
   root.dictionaries = combined.routing.dictionaries;
   root.dictionaryHeight = combined.routing.dictionaryHeight;
+  const leafFences: Root["dictionaries"] = [],
+    dictionaryReader = new Reader(root, new ColumnarR2(bucket));
+  async function collectLeaves(fences: Root["dictionaries"], height: number) {
+    for (const fence of fences)
+      if (height)
+        await collectLeaves(
+          JSON.parse(
+            new TextDecoder().decode(await dictionaryReader.read(fence.ref)),
+          ),
+          height - 1,
+        );
+      else leafFences.push(fence);
+  }
+  await collectLeaves(root.dictionaries, root.dictionaryHeight ?? 0);
+  const fence = [leafFences[0]],
+    packetRoot = packetRootProjector(root)(fence);
+  expect(packetRoot.objects.length).toBeLessThan(root.objects.length);
+  async function packetOutput(input: Root) {
+    const objects: Root["objects"] = [],
+      blocks = [];
+    let state:
+      Awaited<ReturnType<typeof finishPacketTerms>>["state"] | undefined;
+    do {
+      const result = await finishPacketTerms(
+        store,
+        input,
+        fence,
+        20000 * OBJECT_GROUP + objects.length,
+        state,
+        1000,
+      );
+      objects.push(...result.objects);
+      blocks.push(...result.blocks);
+      state = result.state;
+    } while (!state.done);
+    return { objects, blocks, state };
+  }
+  expect(await packetOutput(packetRoot)).toEqual(await packetOutput(root));
   const documentBase = (parts.length + 1) * OBJECT_GROUP;
   let documentObjects = 0;
   let documentState: DocumentState | undefined,
@@ -356,6 +401,53 @@ it("builds the serving format through bounded R2 runs, resumed merges, and final
       docs.length,
     ),
     vocabulary = await readVocabulary(store, builtVocabulary.vocabulary);
+  const allWords: string[] = [],
+    idReader = new Reader(projected, new ColumnarR2(bucket));
+  async function collectWords(fences: Root["dictionaries"], height: number) {
+    for (const fence of fences) {
+      const data = JSON.parse(
+        new TextDecoder().decode(await idReader.read(fence.ref)),
+      );
+      if (height) await collectWords(data, height - 1);
+      else
+        for (const [word, id] of data) {
+          expect(id).toBe(allWords.length + 1);
+          allWords.push(word);
+        }
+    }
+  }
+  await collectWords(
+    projected.idRouting.dictionaries,
+    projected.idRouting.dictionaryHeight ?? 0,
+  );
+  const wordDirectory = new WordDirectory(
+    assembleWords([
+      {
+        first: allWords[0],
+        count: allWords.length,
+        data: encodeWords(allWords),
+      },
+    ]),
+  );
+  const bundledVocabulary = await buildVocabulary(
+    source,
+    store,
+    {
+      ...projected,
+      objects: [],
+      objectIds: [],
+      idRouting: { dictionaries: [] },
+    },
+    0,
+    docs.length,
+    {
+      generation: projected.generation,
+      lookup: (names) => wordDirectory.lookup(names),
+    },
+  );
+  expect(bundledVocabulary.vocabulary).toEqual(builtVocabulary.vocabulary);
+  expect(bundledVocabulary.dictionaryRequests).toBe(0);
+  expect(bundledVocabulary.dictionaryBytes).toBe(0);
   do {
     const out = await finishDocuments(
       source,

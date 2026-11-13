@@ -149,9 +149,12 @@ export class Reader {
     prefetchWindows: 0,
     prefetchTransferBytes: 0,
     prefetchOriginBytes: 0,
+    pairDirectoryRanges: 0,
+    pairDirectoryBytes: 0,
+    pairDirectoryMatches: 0,
   };
-  seenDecoded = new Set<number>();
-  seenInflated = new Set<number>();
+  seenDecoded = new Set<string>();
+  seenInflated = new Set<string>();
   seenPackageSections = new Set<string>();
   pairDecoded = new Map<string, Uint8Array>();
   anchors = new Map<string, import("./pair-execution.js").PairAnchorEvidence>();
@@ -585,7 +588,7 @@ export class Reader {
   }
   observeDecoded(ref: Ref, bytes: number) {
     this.stats.decodedBytes += bytes;
-    const address = ref[0] * 64 * 1048576 + ref[1];
+    const address = `${ref[0]}:${ref[1]}`;
     if (this.seenDecoded.has(address)) this.stats.repeatedDecodedBytes += bytes;
     this.seenDecoded.add(address);
   }
@@ -601,7 +604,7 @@ export class Reader {
     ).body!.pipeThrough(new DecompressionStream("gzip"));
     const text = await new Response(raw).text();
     if (text.length > 8 * 1048576) throw Error("Oversized text record");
-    const address = ref[0] * 64 * 1048576 + ref[1];
+    const address = `${ref[0]}:${ref[1]}`;
     this.stats.inflatedBytes += text.length * 2;
     if (this.seenInflated.has(address))
       this.stats.repeatedInflatedBytes += text.length * 2;
