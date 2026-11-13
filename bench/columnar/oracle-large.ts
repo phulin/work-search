@@ -2,7 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { jsonLines } from "../../src/builder/jsonl.js";
 import { tokenize } from "../../src/query/tokenize.js";
-import { parse, queryTerms } from "../../src/query/parser.js";
+import { parse, queryTerms, type Node } from "../../src/query/parser.js";
 import { ColumnarIndex } from "../../src/columnar/search.js";
 import { Reader } from "../../src/columnar/storage.js";
 import { OfflineObjects } from "../../src/columnar/offline.js";
@@ -42,17 +42,19 @@ const root = JSON.parse(await readFile(rootPath, "utf8")),
         ),
     ),
   );
-const scenarios = [
-  ...demoWorkload,
-  ...globalQueries.filter((q) => !demoWorkload.some((p) => p.q === q.q)),
-  ...heldout.queries,
-  ...contracts.map((c: any) => ({
-    ...c,
-    oracle: undefined,
-    options: { ...c.options, after: undefined },
-    page: c.kind.includes("pagination") ? 1 : 0,
-  })),
-];
+const scenarios = process.env.CWS_ORACLE_DEFINITIONS
+  ? JSON.parse(await readFile(process.env.CWS_ORACLE_DEFINITIONS, "utf8"))
+  : [
+      ...demoWorkload,
+      ...globalQueries.filter((q) => !demoWorkload.some((p) => p.q === q.q)),
+      ...heldout.queries,
+      ...contracts.map((c: any) => ({
+        ...c,
+        oracle: undefined,
+        options: { ...c.options, after: undefined },
+        page: c.kind.includes("pagination") ? 1 : 0,
+      })),
+    ];
 const names = [
     ...new Set<string>(
       scenarios.flatMap((s: any) => queryTerms(parse(s.q, s.options?.mode))),
@@ -84,10 +86,25 @@ const idf = names.map((t) =>
   tf = new Uint32Array(names.length),
   b = new Float64Array(names.length),
   t = new Float64Array(names.length);
+// Independent necessary-word proof. This only rejects documents missing a
+// mandatory word; phrase/proximity truth still comes from exhaustive token scans.
+function requiredWords(n: Node): Set<string> {
+  if (n.kind === "term") return new Set([n.term]);
+  if (n.kind === "phrase") return new Set(n.terms);
+  if (!("left" in n)) return new Set();
+  const a = requiredWords(n.left),
+    b = requiredWords(n.right);
+  if (n.kind === "or") return new Set([...a].filter((t) => b.has(t)));
+  if (n.kind === "except") return a;
+  return new Set([...a, ...b]);
+}
 const plans = scenarios.map((s: any) => ({
   ...s,
   ast: parse(s.q, s.options?.mode),
   scoring: queryTerms(parse(s.q, s.options?.mode), true).map((n) =>
+    wordIndex.get(n)!,
+  ),
+  required: [...requiredWords(parse(s.q, s.options?.mode))].map((n) =>
     wordIndex.get(n)!,
   ),
   ranked: [] as any[],
@@ -205,6 +222,16 @@ for await (const line of corpusLines()) {
       boost = opts.titleBoost ?? 2,
       k = (opts.limit ?? 20) * ((p.page ?? 0) + 1),
       ranked = p.ranked;
+    if (
+      p.required.some((i: number) =>
+        field === "body"
+          ? !bf[i]
+          : field === "title"
+            ? !tf[i]
+            : !bf[i] && !tf[i],
+      )
+    )
+      continue;
     let score = 0;
     for (const i of p.scoring)
       score +=

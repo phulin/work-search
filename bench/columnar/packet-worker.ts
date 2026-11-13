@@ -37,7 +37,7 @@ export function createPacketBenchmarkWorker(
   return {
     async fetch(request: Request, env: any, ctx: ExecutionContext) {
       const url = new URL(request.url);
-      if (!url.pathname.startsWith("/__benchmark/plan/"))
+      if (!url.pathname.startsWith("/__benchmark/"))
         return normal.fetch(request, env, ctx);
       isolate ??= crypto.randomUUID();
       if (
@@ -45,6 +45,55 @@ export function createPacketBenchmarkWorker(
         request.headers.get("authorization") !== `Bearer ${env.INTERNAL_TOKEN}`
       )
         return new Response("Forbidden", { status: 403 });
+      // Keep one real invocation active during the native sampling interval.
+      // This route is diagnostic only; each iteration executes and consumes a
+      // complete ordinary search response, without response caching.
+      if (url.pathname === "/__benchmark/profile") {
+        const input: any = await request.json(),
+          duration = Number(input.durationMs ?? 30000);
+        if (!Number.isFinite(duration) || duration < 1000 || duration > 45000)
+          return new Response("Invalid profile duration", { status: 400 });
+        const started = performance.now(),
+          profileId = crypto.randomUUID();
+        let calls = 0,
+          bytes = 0,
+          last = "";
+        do {
+          const search = new URL("/search", url.origin);
+          search.searchParams.set("requestId", `${profileId}-${calls}`);
+          const response = await normal.fetch(
+            new Request(search, {
+              method: "POST",
+              headers: request.headers,
+              body: JSON.stringify({
+                q: input.q,
+                ...input.options,
+                resetMemory: input.resetMemory ?? false,
+              }),
+            }),
+            env,
+            ctx,
+          );
+          last = await response.text();
+          bytes += last.length;
+          calls++;
+          if (!response.ok)
+            return Response.json(
+              { profileId, calls, error: last },
+              { status: 500 },
+            );
+        } while (performance.now() - started < duration);
+        return Response.json(
+          {
+            profileId,
+            calls,
+            responseCharacters: bytes,
+            wallMs: performance.now() - started,
+            last: JSON.parse(last),
+          },
+          { headers: { "cache-control": "no-store" } },
+        );
+      }
       const requestId =
           url.searchParams.get("requestId") ?? crypto.randomUUID(),
         started = performance.now();

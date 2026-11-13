@@ -175,7 +175,8 @@ export function createColumnarWorker(
           );
         memory.activeQueries++;
         const execute = async () => {
-          // Serialized with admission: reset occurs in the request that executes search.
+          // Reset in this search request; a separate reset request could reach
+          // another isolate. Admission permits two active requests per isolate.
           if (authorized && input.resetMemory) {
             memory.clear();
             directory?.clear();

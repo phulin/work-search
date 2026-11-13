@@ -149,6 +149,9 @@ for (const label of labels) {
           ok.map((r: any) => r.telemetry?.wallMs),
         ),
         metadataMs: distribution(ok.map((r: any) => r.diagnostics?.metadataMs)),
+        activeBufferBytes: distribution(
+          ok.map((r: any) => r.diagnostics?.peakActiveBufferBytes),
+        ),
         observedColos: [...new Set(ok.map((r: any) => r.colo))],
         observedIsolates: [...new Set(ok.map((r: any) => r.telemetry?.isolate))]
           .length,
@@ -167,6 +170,14 @@ for (const label of labels) {
             "postings",
             "candidates",
             "positionIntegers",
+            "pairContextIntegers",
+            "forwardIntegers",
+            "resultRequests",
+            "resultBytes",
+            "resultSharedGets",
+            "resultMemoryHits",
+            "coalescedReads",
+            "coalescedExtraBytes",
             "decodedBytes",
             "repeatedDecodedBytes",
             "inflatedBytes",
@@ -177,7 +188,19 @@ for (const label of labels) {
     }
   const result = {
     label,
-    manifest: data.manifest,
+    manifest: {
+      ...data.manifest,
+      queries: data.manifest.queries?.map(({ oracle, ...query }: any) => ({
+        ...query,
+        ...(oracle
+          ? {
+              oracleSha256: createHash("sha256")
+                .update(JSON.stringify(oracle))
+                .digest("hex"),
+            }
+          : {}),
+      })),
+    },
     rawSha256: createHash("sha256").update(bytes).digest("hex"),
     groups,
   };

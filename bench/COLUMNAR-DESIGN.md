@@ -71,13 +71,22 @@ document range. One builder deployment handles concurrent invocations. The
 coordinator backs off on admission rejections. Package publication reduces ordered
 write acknowledgements in groups before checking full generation coverage.
 
-CPP2 selected-pair packets retain occurrence positions and one token on each side.
+CPP3 selected-pair packets retain occurrence positions and one token on each side.
+Empty fields consume no span bytes; a singleton uses three direct uint32 values.
+Longer spans have separate packed position and context columns. Native pair
+construction scans numeric document tokens twice: first for corpus-wide adjacent
+pair counts, then for selected occurrence columns. Four-way merge levels bound
+memory; occurrence merges copy encoded spans without decoding positions. The
+selection budget uses document/occurrence counts and estimated verification work
+saved per conservative byte. It has no query input. The common-word vocabulary
+is bounded at 1,024 words, with at most 4,096 selected descriptors in the root;
+remote pair-dictionary lookup is not implemented yet.
 The document executor can intersect mandatory pairs from one phrase, reject
 nonmatches using context, and omit word-position decoding for phrases entirely
 covered by the pair evidence. Several contexts can jointly cover a longer phrase.
 Missing pairs and uncovered neighborhoods remain unknown. The evidence callback
 also preserves Boolean negation and proximity span composition. Exhaustive tests
-exercise this integration; corpus-scale native pair construction and live pair
+exercise this integration and native construction; corpus-scale live pair
 measurements are still outstanding. The earlier CWP1 experiment does not establish
 those requirements at 1M or 10M.
 

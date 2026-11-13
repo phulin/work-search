@@ -107,6 +107,7 @@ export class Reader {
     decodedBytes: 0,
     repeatedDecodedBytes: 0,
     positionIntegers: 0,
+    pairContextIntegers: 0,
     forwardIntegers: 0,
     postings: 0,
     candidates: 0,
@@ -128,6 +129,7 @@ export class Reader {
   seenDecoded = new Set<number>();
   seenInflated = new Set<number>();
   seenPackageSections = new Set<string>();
+  pairDecoded = new Map<string, Uint8Array>();
   constructor(
     readonly root: Pick<Root, "generation" | "objects" | "objectIds">,
     readonly source: Source,

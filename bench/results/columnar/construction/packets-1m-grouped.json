@@ -1,0 +1,23 @@
+{
+  "format": "term-packets-and-document-packages",
+  "build": "packets-1m-grouped-v1",
+  "code": "7611fceb44ea7a3736441e8067cd74d80e1d1a24e240b95012bd107864c368bc",
+  "groupCode": "9629cafabd5c7cec8496eec87c35a2c4d55b989d978675d1dc1657f6b5260b44",
+  "sourceGeneration": "d989bc2cecfffc447970f61a9347328a5c5f0adcffbd801791594ba966615e77",
+  "generation": "c6ddc6f53e5acc7ba3520ad36b64dfbcd9d191f03f86daae2e43d5cbbe1c5b02",
+  "documents": 1000000,
+  "terms": 2812380,
+  "bodyOccurrences": 1494537623,
+  "titleOccurrences": 4973510,
+  "directoryBytes": 33402940,
+  "packetBytes": 24649044904,
+  "documentBytes": 20143777366,
+  "documentDirectoryBytes": 2703736,
+  "startedAt": "2026-11-13T06:13:19.359Z",
+  "finishedAt": "2026-11-13T06:54:25.732Z",
+  "reused": "Existing native sorted postings and range vocabularies; newly constructed serving packets and document packages",
+  "workers": [
+    "https://work-search-cws-build-0.phulin.workers.dev"
+  ],
+  "concurrency": 32
+}

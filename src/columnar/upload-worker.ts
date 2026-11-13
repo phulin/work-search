@@ -8,6 +8,13 @@ export default {
     if (request.headers.get("authorization") !== `Bearer ${env.UPLOAD_TOKEN}`)
       return new Response("Not found", { status: 404 });
     const key = decodeURIComponent(new URL(request.url).pathname.slice(1));
+    if (/^[a-f0-9]{64}\/root\.json$/.test(key) && request.method === "GET") {
+      const object = await env.INDEX.get(key);
+      return new Response(object?.body ?? "Missing published generation", {
+        status: object ? 200 : 404,
+        headers: { "cache-control": "no-store" },
+      });
+    }
     if (key === "__verify-packages" && request.method === "POST") {
       try {
         return Response.json(

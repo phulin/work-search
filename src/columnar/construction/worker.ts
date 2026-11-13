@@ -13,6 +13,13 @@ import { finishPostings, combineRouting } from "./finish.js";
 import { finishDocuments } from "./documents.js";
 import { finishPackageDocuments } from "./package-documents.js";
 import { createDocumentGroupHandler } from "./document-groups.js";
+import {
+  pairStatisticsJob,
+  mergePairStatisticsJob,
+  pairOccurrencesJob,
+  finishPairsJob,
+} from "./pair-jobs.js";
+import { mergePairOccurrenceRuns } from "./pair-occurrences.js";
 import { finishPacketTerms } from "./packet-terms.js";
 import { buildVocabulary, readVocabulary } from "./vocabulary.js";
 export function createConstructionWorker(root: SourceRoot, code: string) {
@@ -162,6 +169,11 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
             "/documents",
             "/package-documents",
             "/packet-terms",
+            "/pair-statistics",
+            "/merge-pair-statistics",
+            "/pair-occurrences",
+            "/merge-pair-occurrences",
+            "/finish-pairs",
             "/vocabulary",
             "/publish",
             "/verify",
@@ -344,77 +356,98 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
               return { generation: input.root.generation };
             };
             const output =
-              url.pathname === "/stage"
-                ? await store.put(jsonBytes(input.value))
-                : url.pathname === "/routing"
-                  ? await combineRouting(store, input.parts, input.objectBase)
-                  : url.pathname === "/ingest"
-                    ? await ingest(source, store, input.first, input.count)
-                    : url.pathname === "/merge"
-                      ? await merge(
-                          store,
-                          input.runs,
-                          input.state,
-                          128 * 1048576,
-                          input.range,
-                        )
-                      : url.pathname === "/postings"
-                        ? await finishPostings(
-                            store,
-                            input.run,
-                            input.statistics,
-                            input.objectBase,
-                            input.state,
-                            input.byteBudget,
-                            input.range,
-                          )
-                        : url.pathname === "/verify"
-                          ? await verifyRange()
-                          : url.pathname === "/publish"
-                            ? await publish()
-                            : url.pathname === "/packet-terms"
-                              ? await finishPacketTerms(
+              url.pathname === "/pair-statistics"
+                ? await pairStatisticsJob(store, input)
+                : url.pathname === "/merge-pair-statistics"
+                  ? await mergePairStatisticsJob(store, input)
+                  : url.pathname === "/pair-occurrences"
+                    ? await pairOccurrencesJob(store, input)
+                    : url.pathname === "/merge-pair-occurrences"
+                      ? {
+                          run: await mergePairOccurrenceRuns(store, input.runs),
+                        }
+                      : url.pathname === "/finish-pairs"
+                        ? await finishPairsJob(store, input)
+                        : url.pathname === "/stage"
+                          ? await store.put(jsonBytes(input.value))
+                          : url.pathname === "/routing"
+                            ? await combineRouting(
+                                store,
+                                input.parts,
+                                input.objectBase,
+                              )
+                            : url.pathname === "/ingest"
+                              ? await ingest(
+                                  source,
                                   store,
-                                  input.root,
-                                  input.fences,
-                                  input.objectBase,
-                                  input.state,
-                                  input.byteBudget,
+                                  input.first,
+                                  input.count,
                                 )
-                              : url.pathname === "/package-documents"
-                                ? await finishPackageDocuments(
-                                    source,
+                              : url.pathname === "/merge"
+                                ? await merge(
                                     store,
-                                    input.root,
-                                    await readVocabulary(
-                                      store,
-                                      input.vocabularyRef,
-                                    ),
-                                    input.generation,
-                                    input.first,
-                                    input.count,
+                                    input.runs,
+                                    input.state,
+                                    128 * 1048576,
+                                    input.range,
                                   )
-                                : url.pathname === "/vocabulary"
-                                  ? await buildVocabulary(
-                                      source,
+                                : url.pathname === "/postings"
+                                  ? await finishPostings(
                                       store,
-                                      input.root,
-                                      input.first,
-                                      input.count,
-                                    )
-                                  : await finishDocuments(
-                                      source,
-                                      store,
-                                      input.documentRoot,
-                                      await readVocabulary(
-                                        store,
-                                        input.vocabularyRef,
-                                      ),
+                                      input.run,
+                                      input.statistics,
                                       input.objectBase,
                                       input.state,
-                                      input.tokenBudget ?? 1048576,
+                                      input.byteBudget,
                                       input.range,
-                                    );
+                                    )
+                                  : url.pathname === "/verify"
+                                    ? await verifyRange()
+                                    : url.pathname === "/publish"
+                                      ? await publish()
+                                      : url.pathname === "/packet-terms"
+                                        ? await finishPacketTerms(
+                                            store,
+                                            input.root,
+                                            input.fences,
+                                            input.objectBase,
+                                            input.state,
+                                            input.byteBudget,
+                                          )
+                                        : url.pathname === "/package-documents"
+                                          ? await finishPackageDocuments(
+                                              source,
+                                              store,
+                                              input.root,
+                                              await readVocabulary(
+                                                store,
+                                                input.vocabularyRef,
+                                              ),
+                                              input.generation,
+                                              input.first,
+                                              input.count,
+                                            )
+                                          : url.pathname === "/vocabulary"
+                                            ? await buildVocabulary(
+                                                source,
+                                                store,
+                                                input.root,
+                                                input.first,
+                                                input.count,
+                                              )
+                                            : await finishDocuments(
+                                                source,
+                                                store,
+                                                input.documentRoot,
+                                                await readVocabulary(
+                                                  store,
+                                                  input.vocabularyRef,
+                                                ),
+                                                input.objectBase,
+                                                input.state,
+                                                input.tokenBudget ?? 1048576,
+                                                input.range,
+                                              );
             result = {
               output,
               writesAndMergeReads: store.requests,

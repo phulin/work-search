@@ -11,16 +11,50 @@ export interface PairRow {
 }
 /** Positional pair packets retain one token on either side of each occurrence.
  * Context ID zero denotes a field boundary; real IDs are encoded as ID + 1. */
+export interface PairColumnRow {
+  doc: number;
+  body: {
+    positions: ArrayLike<number>;
+    previous: ArrayLike<number>;
+    next: ArrayLike<number>;
+  };
+  title: PairColumnRow["body"];
+}
 export function encodePairPacket(a: number, b: number, rows: PairRow[]) {
+  const context = (id: number | undefined) => {
+    if (id === undefined) return 0;
+    if (!Number.isInteger(id) || id < 0 || id >= 0xffffffff)
+      throw Error("Invalid pair context ID");
+    return id + 1;
+  };
+  const columns = (occurrences: PairOccurrence[]) => ({
+    positions: occurrences.map((o) => o.position),
+    previous: occurrences.map((o) => context(o.previous)),
+    next: occurrences.map((o) => context(o.next)),
+  });
+  return encodePairColumns(
+    a,
+    b,
+    rows.map((r) => ({
+      doc: r.doc,
+      body: columns(r.body),
+      title: columns(r.title),
+    })),
+  );
+}
+/** Numeric builder entry avoids allocating one object per occurrence. Empty
+ * fields need no bytes; singleton occurrences store just three integers. */
+export function encodePairColumns(a: number, b: number, rows: PairColumnRow[]) {
   if (
     ![a, b].every((n) => Number.isInteger(n) && n >= 0 && n < 0xffffffff) ||
     !rows.length ||
     rows.some(
       (r, i) =>
-        r.doc < 0 ||
         !Number.isInteger(r.doc) ||
+        r.doc < 0 ||
+        r.doc > 0xffffffff ||
         (i > 0 && r.doc <= rows[i - 1].doc) ||
-        (!r.body.length && !r.title.length),
+        (!r.body.positions.length && !r.title.positions.length),
     )
   )
     throw Error("Invalid positional pair rows");
@@ -31,41 +65,37 @@ export function encodePairPacket(a: number, b: number, rows: PairRow[]) {
     index: number[] = [],
     spans: Uint8Array[] = [];
   let at = 0;
-  for (const r of rows)
-    for (const occurrences of [r.body, r.title]) {
-      if (
-        occurrences.some(
-          (o, i) =>
-            !Number.isInteger(o.position) ||
-            o.position < 0 ||
-            (i > 0 && o.position <= occurrences[i - 1].position) ||
-            [o.previous, o.next].some(
-              (t) =>
-                t !== undefined &&
-                (!Number.isInteger(t) || t < 0 || t >= 0xffffffff),
-            ),
+  for (const row of rows)
+    for (const c of [row.body, row.title]) {
+      const count = c.positions.length;
+      if (c.previous.length !== count || c.next.length !== count)
+        throw Error("Pair context count mismatch");
+      for (let i = 0; i < count; i++)
+        if (
+          ![c.positions[i], c.previous[i], c.next[i]].every(
+            (n) => Number.isInteger(n) && n >= 0 && n <= 0xffffffff,
+          ) ||
+          (i > 0 && c.positions[i] <= c.positions[i - 1])
         )
-      )
-        throw Error("Invalid pair occurrence");
-      const columns = [
-          pack(
-            occurrences.map((o) => o.position),
-            true,
-          ),
-          pack(
-            occurrences.map((o) =>
-              o.previous === undefined ? 0 : o.previous + 1,
-            ),
-          ),
-          pack(occurrences.map((o) => (o.next === undefined ? 0 : o.next + 1))),
-        ],
+          throw Error("Invalid pair occurrence");
+      let raw: Uint8Array;
+      if (!count) raw = new Uint8Array();
+      else if (count === 1)
+        raw = u32([c.positions[0], c.previous[0], c.next[0]]);
+      else {
+        const columns = [
+          pack(c.positions, true),
+          pack(c.previous),
+          pack(c.next),
+        ];
         raw = concat([u32(columns.map((c) => c.length)), ...columns]);
-      index.push(at, raw.length, occurrences.length);
+      }
+      index.push(at, raw.length, count);
       spans.push(raw);
       at += raw.length;
     }
   return concat([
-    u32([0x32505043, a, b, rows.length, docs.length, index.length * 4, at, 1]),
+    u32([0x33505043, a, b, rows.length, docs.length, index.length * 4, at, 1]),
     docs,
     u32(index),
     ...spans,
@@ -77,11 +107,19 @@ export class PairPacket {
   readonly docs: Uint32Array;
   readonly index: DataView;
   readonly spans: Uint8Array;
-  constructor(readonly bytes: Uint8Array) {
+  constructor(
+    readonly bytes: Uint8Array,
+    readonly decoded?: (
+      row: number,
+      field: number,
+      occurrences: number,
+      bytes: number,
+    ) => void,
+  ) {
     const v = view(bytes);
     if (
       bytes.length < 32 ||
-      v.getUint32(0, true) !== 0x32505043 ||
+      v.getUint32(0, true) !== 0x33505043 ||
       v.getUint32(28, true) !== 1
     )
       throw Error("Invalid pair packet");
@@ -103,7 +141,12 @@ export class PairPacket {
     this.spans = bytes.subarray(32 + dn + ix);
   }
   count(row: number, field: number) {
-    if (row < 0 || row >= this.docs.length || (field !== 0 && field !== 1))
+    if (
+      !Number.isInteger(row) ||
+      row < 0 ||
+      row >= this.docs.length ||
+      (field !== 0 && field !== 1)
+    )
       throw Error("Invalid pair row");
     return this.index.getUint32(row * 24 + field * 12 + 8, true);
   }
@@ -112,8 +155,24 @@ export class PairPacket {
       p = row * 24 + field * 12,
       at = this.index.getUint32(p, true),
       n = this.index.getUint32(p + 4, true);
-    if (n < 12 || at + n > this.spans.length)
+    if (at + n > this.spans.length || (count === 0 ? n !== 0 : n < 12))
       throw Error("Invalid pair occurrence span");
+    this.decoded?.(row, field, count, n);
+    if (!count)
+      return {
+        positions: new Uint32Array(),
+        previous: new Uint32Array(),
+        next: new Uint32Array(),
+      };
+    if (count === 1) {
+      if (n !== 12) throw Error("Invalid singleton pair context");
+      const v = view(this.spans.subarray(at, at + n));
+      return {
+        positions: Uint32Array.of(v.getUint32(0, true)),
+        previous: Uint32Array.of(v.getUint32(4, true)),
+        next: Uint32Array.of(v.getUint32(8, true)),
+      };
+    }
     const raw = this.spans.subarray(at, at + n),
       v = view(raw),
       arrays: Uint32Array[] = [];
@@ -155,6 +214,52 @@ export class PairPacket {
       starts: starts.subarray(0, n),
     };
   }
+}
+/** Merge disjoint document ranges without decoding occurrence/context integers.
+ * Native fan-in keeps the complete packet below its selected size budget. */
+export function mergePairPackets(packets: PairPacket[]) {
+  if (!packets.length) throw Error("Pair merge requires packets");
+  const sorted = [...packets].sort((a, b) => a.docs[0] - b.docs[0]),
+    a = sorted[0].a,
+    b = sorted[0].b,
+    count = sorted.reduce((n, p) => n + p.docs.length, 0),
+    docs = new Uint32Array(count),
+    index = new Uint8Array(count * 24),
+    v = view(index);
+  let row = 0,
+    offset = 0,
+    previous = -1;
+  for (const p of sorted) {
+    if (p.a !== a || p.b !== b || p.docs[0] <= previous)
+      throw Error("Pair merge document overlap or ID mismatch");
+    docs.set(p.docs, row);
+    for (let r = 0; r < p.docs.length; r++)
+      for (let field = 0; field < 2; field++) {
+        const from = r * 24 + field * 12,
+          to = (row + r) * 24 + field * 12,
+          at = p.index.getUint32(from, true),
+          n = p.index.getUint32(from + 4, true),
+          count = p.index.getUint32(from + 8, true);
+        if (
+          at + n > p.spans.length ||
+          (count === 0 ? n !== 0 : count === 1 ? n !== 12 : n < 12)
+        )
+          throw Error("Invalid merged pair span");
+        v.setUint32(to, at + offset, true);
+        v.setUint32(to + 4, n, true);
+        v.setUint32(to + 8, count, true);
+      }
+    row += p.docs.length;
+    offset += p.spans.length;
+    previous = p.docs.at(-1)!;
+  }
+  const encoded = pack(docs, true);
+  return concat([
+    u32([0x33505043, a, b, count, encoded.length, index.length, offset, 1]),
+    encoded,
+    index,
+    ...sorted.map((p) => p.spans),
+  ]);
 }
 /** Mandatory pair intersections retain a document only when all pair anchors
  * coexist in one allowed field. This is a filter, never phrase proof by itself. */

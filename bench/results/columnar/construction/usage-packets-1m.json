@@ -1,0 +1,54 @@
+{
+  "summary": {
+    "start": "2026-11-13T06:45:53.716Z",
+    "end": "2026-11-13T07:00:53.715Z",
+    "scriptCount": 344,
+    "scriptLimit": 500,
+    "workers": {
+      "requests": 21590,
+      "errors": 0,
+      "cpuMs": 1690650.163
+    },
+    "construction": {
+      "requests": 4089,
+      "errors": 0,
+      "maxReportedMemoryP99Bytes": 54976390
+    },
+    "unattributedWorkerRequests": 0,
+    "resourceErrors": [],
+    "bucket": {
+      "reads": 127541,
+      "writes": 7501,
+      "readBytes": 14103023081,
+      "storage": {
+        "metadataSize": 74230832,
+        "objectCount": 448871,
+        "payloadSize": 440992244243
+      }
+    },
+    "notes": [
+      "Account and bucket totals include other work; adaptive analytics can lag and contain unattributed scripts.",
+      "Memory quantiles sample isolate memory at invocation, not peak memory or cumulative allocation.",
+      "Paid usage allowances are billing thresholds, not hard request limits. This is not an invoice."
+    ]
+  },
+  "serving": [
+    {
+      "dimensions": {
+        "scriptName": "work-search-cws-near",
+        "status": "success"
+      },
+      "quantiles": {
+        "cpuTimeP99": 22345988,
+        "memoryUsageBytesP50": 93044150,
+        "memoryUsageBytesP99": 115240940
+      },
+      "sum": {
+        "cpuTimeUs": 70447902,
+        "errors": 0,
+        "requests": 45,
+        "subrequests": 0
+      }
+    }
+  ]
+}

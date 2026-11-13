@@ -234,6 +234,48 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
     };
     await objects.close();
     objects = new OfflineObjects(dir + "/index", root);
+    // The block executor must retain positional pair evidence even when a
+    // complete read or candidate-package strategy does not fit its budget.
+    const blocked = new ColumnarIndex(root);
+    for (const q of [
+      '"alpha beta"',
+      '"alpha beta gamma"',
+      '"alpha beta" AND NOT "beta gamma"',
+      '("alpha beta" AND rare) OR ("alpha beta" AND gamma)',
+    ])
+      for (const field of ["all", "body", "title"] as const) {
+        const options: Options = { field, exactTotal: true, limit: 7 },
+          expected = await control.search(
+            q,
+            new Reader(before, original.source),
+            options,
+          ),
+          got = await blocked.search(
+            q,
+            new Reader(root, objects.source),
+            options,
+          );
+        expect(got.total, q + field).toBe(expected.total);
+        expect(
+          got.results.map((h) => h.id),
+          q + field,
+        ).toEqual(expected.results.map((h) => h.id));
+        for (let i = 0; i < got.results.length; i++) {
+          expect(got.results[i].score, q + field).toBeCloseTo(
+            expected.results[i].score,
+            11,
+          );
+          expect(got.results[i].snippet, q + field).toBe(
+            expected.results[i].snippet,
+          );
+        }
+        if (q === '"alpha beta"' && field !== "title") {
+          expect(got.diagnostics.pairContextIntegers).toBeGreaterThan(0);
+          expect(got.diagnostics.pairContextIntegers).toBe(
+            2 * got.diagnostics.positionIntegers,
+          );
+        }
+      }
     for (const q of [
       '"alpha beta"',
       '"alpha beta" AND gamma',

@@ -111,6 +111,8 @@ if (pairs && pairs.baseGeneration !== root.generation)
   throw Error("Pair generation mismatch");
 await mkdir("work/columnar-deploy", { recursive: true });
 const sourceDir = resolve(`work/columnar-deploy/${name}-source`);
+await rm(sourceDir, { recursive: true, force: true });
+await mkdir(sourceDir, { recursive: true });
 for (const dir of ["columnar", "query", "format", "storage"])
   await cp(`src/${dir}`, `${sourceDir}/src/${dir}`, { recursive: true });
 await writeFile(sourceDir + "/root.json", JSON.stringify(root));
@@ -165,8 +167,16 @@ if (!process.argv.includes("--deploy-only")) {
 }
 const url = "https://work-search-cws-upload.phulin.workers.dev";
 if (process.argv.includes("--deploy-only")) {
+  // Native publication already verifies every immutable object and full document
+  // coverage before writing this exact root. Reuse that proof instead of making
+  // thousands of redundant client HEAD requests on every serving deployment.
+  const published = await fetch(`${url}/${root.generation}/root.json`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  const rootVerified =
+    published.ok && (await published.text()) === JSON.stringify(root);
   const groups = [
-    [root.generation, root.objects],
+    [root.generation, rootVerified ? [] : root.objects],
     ...(pairs ? [[pairs.generation, pairs.objects] as const] : []),
   ] as const;
   const pending = groups.flatMap(([generation, objects]) =>

@@ -79,6 +79,19 @@ without repeating ingestion and merges:
 yarn node --import tsx scripts/build-packets-in-workers.ts work/old-native-build work/new-packets packets-v1
 ```
 
+Corpus-selected positional pairs are constructed from grouped numeric document
+tokens, with bounded four-way merge levels:
+
+```sh
+yarn node --import tsx scripts/build-pairs-in-workers.ts work/new-packets work/new-paired pairs-v1
+yarn deploy work/new-paired work-search-cws-r2-1m --deploy-only
+```
+
+This initial pair pass counts all adjacent combinations of 1,024 high-DF words
+and chooses at most 4,096 positional/context packets from corpus statistics.
+Pairs outside that vocabulary remain unknown and use exact ordinary verification.
+Full pair-vocabulary coverage and a remote pair dictionary remain outstanding.
+
 Check account script count, resource errors, CPU/memory analytics and R2 operations
 occasionally during large builds:
 

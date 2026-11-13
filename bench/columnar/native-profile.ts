@@ -35,27 +35,38 @@ for (const name of (
         "subject /5 matter jurisdiction",
         "court",
       ];
-    const traffic = Array.from({ length: 2 }, async () => {
+    const sustained = process.env.CWS_PROFILE_SUSTAINED === "1";
+    const traffic = Array.from({ length: sustained ? 1 : 2 }, async () => {
       while (active) {
-        const q = queries[cursor++ % queries.length],
+        const q =
+            process.env.CWS_PROFILE_QUERY ?? queries[cursor++ % queries.length],
           start = performance.now();
         try {
-          const r = await fetch(`https://${name}.phulin.workers.dev/search`, {
-              method: "POST",
-              headers: {
-                authorization: `Bearer ${internal}`,
-                "content-type": "application/json",
+          const r = await fetch(
+              `https://${name}.phulin.workers.dev${sustained ? "/__benchmark/profile" : "/search"}`,
+              {
+                method: "POST",
+                headers: {
+                  authorization: `Bearer ${internal}`,
+                  "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                  q,
+                  resetMemory: false,
+                  ...(sustained ? { durationMs: 30000 } : {}),
+                }),
+                signal: AbortSignal.timeout(60000),
               },
-              body: JSON.stringify({ q, resetMemory: true }),
-              signal: AbortSignal.timeout(60000),
-            }),
+            ),
             b = (await r.json()) as any;
           calls.push({
             q,
             status: r.status,
             ms: performance.now() - start,
-            telemetry: b.telemetry,
-            diagnostics: b.diagnostics,
+            profileId: b.profileId,
+            calls: b.calls,
+            telemetry: b.telemetry ?? b.last?.telemetry,
+            diagnostics: b.diagnostics ?? b.last?.diagnostics,
           });
         } catch (e) {
           calls.push({ q, error: String(e) });
@@ -64,7 +75,12 @@ for (const name of (
     });
     try {
       await new Promise((r) =>
-        setTimeout(r, Number(process.env.CWS_PROFILE_PREWARM_MS ?? 30000)),
+        setTimeout(
+          r,
+          Number(
+            process.env.CWS_PROFILE_PREWARM_MS ?? (sustained ? 2000 : 30000),
+          ),
+        ),
       );
       const start = performance.now(),
         r = await fetch(

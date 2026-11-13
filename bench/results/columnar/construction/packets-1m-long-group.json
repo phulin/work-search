@@ -1,0 +1,34 @@
+{
+  "status": 200,
+  "clientMs": 8694.953167,
+  "job": 5613,
+  "output": {
+    "first": 698368,
+    "end": 698496,
+    "documents": 128,
+    "tokens": 567448,
+    "bytes": 7448709,
+    "generation": "00f80af3c42396495e5de4a5b8006519b8b16f0a59cbd37274bc78357bd0e729",
+    "dictionaryRequests": 20,
+    "dictionaryBytes": 2543658,
+    "group": {
+      "first": 698368,
+      "end": 698496,
+      "sha256": "a0c7f799b9b5e7a06854a6259a3c8ad68cfb64741ae1ae23c6fe9c80ac1d68da",
+      "offsets": "gQAAAAAAAAAWAQAAAABAWgVgawPsXAGRIUBMKQDcMSQhAKbONnYF8B0B0FgBZxFAYAXwyQgMEQDzJEC6R1CBCCjiA0wjwEkZEBoMJC8GSc4A9DwQ/QyswwEpcMDsBLDvAUQtAMcpgDEE4DwBGNYDsAvAoTnwuwDsvQFgVYCjFtB4BQRzArcDAK8AIKUKUJwBKfBCkwGQSAAEMAXpwMBMXBCSDtjHA/NAAWgZIJoQ8CMB080A0DkwmgVsQgFXIwDfJeDTAmyoAGswABoEEHoBcAwAOAPAoCVwMQCYLwDHGYD/HIB6DZQ2A/LFwIURcB0IRCABEXoAv1xASQRUQgDnf4DZDDAABACWAhlRgA0BILYGSA0ABTwAXwrgHQBMhgA0AkAPIDDlJ6DCAPYRgBMZgJAW6FQDAxSAdwCQTBJ47AAoAoByFmCNCIhuAIdNgNYBUHAC8FMBywzAy1JgDBEUBAHhAsBmMvCjA9RRASc1AAA="
+    }
+  },
+  "writesAndMergeReads": 3,
+  "writeAndMergeBytes": 7946413,
+  "telemetry": {
+    "isolate": "5b53f6c2-b8cf-40bc-b1e1-1f000cbe4415",
+    "code": "9629cafabd5c7cec8496eec87c35a2c4d55b989d978675d1dc1657f6b5260b44",
+    "build": "packets-1m-grouped-v1",
+    "task": "packages-5613-698368",
+    "operation": "/grouped-documents",
+    "wallMs": 2571,
+    "queueMs": 5206,
+    "requests": 3,
+    "bytes": 1437614
+  }
+}

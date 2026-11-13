@@ -34,6 +34,8 @@ import { Reader } from "./storage.js";
 import { loadDictionary } from "./dictionary.js";
 import { verifyForward, type PairBatch } from "./forward.js";
 import type { Heads } from "./heads.js";
+import { planPairAnchor } from "./pair-evidence.js";
+import { readPairAnchor } from "./pair-execution.js";
 export interface Options {
   mode?: "and" | "or";
   limit?: number;
@@ -291,7 +293,8 @@ export class ColumnarIndex {
       pairCandidates: Uint32Array | undefined,
       pairAnchor: Term | undefined,
       pairBatch: PairBatch | undefined,
-      pairOffset = 0;
+      pairOffset = 0,
+      context: Awaited<ReturnType<typeof readPairAnchor>> | undefined;
     const BAND = 4096;
     if (pairs) {
       if (
@@ -370,6 +373,27 @@ export class ColumnarIndex {
                   `@${terms.get(ast.terms[i])!.id}:${terms.get(t)!.id}`,
                 ) === pairAnchor,
             );
+      }
+    }
+    if (!pairCandidates && this.root.positionalPairs) {
+      const ids = new Map([...terms].map(([name, t]) => [name, t.id])),
+        selected = planPairAnchor(ast, ids, this.root);
+      if (selected) {
+        context = await readPairAnchor(
+          selected.pairs,
+          selected.words,
+          ids,
+          field,
+          reader,
+        );
+        pairCandidates = context.candidates;
+        wantedPositions.clear();
+        for (const name of positionalTerms(ast, context.covered))
+          wantedPositions.add(name);
+        for (const doc of pairCandidates) {
+          const band = Math.floor(doc / BAND);
+          if (bands.at(-1) !== band) bands.push(band);
+        }
       }
     }
     if (
@@ -668,11 +692,18 @@ export class ColumnarIndex {
         ]),
       );
       const match = positions
-        ? positionalMatcher(ast, lists, field, direct, {
-            spans: 262144,
-            scratchSpans: 1048576,
-            checks: 100000000,
-          })
+        ? positionalMatcher(
+            ast,
+            lists,
+            field,
+            direct,
+            {
+              spans: 262144,
+              scratchSpans: 1048576,
+              checks: 100000000,
+            },
+            context?.evidence,
+          )
         : undefined;
       for (let i = 0; i < nc; i++) {
         if (positions && i % 256 === 0)
@@ -706,7 +737,7 @@ export class ColumnarIndex {
           field !== "title" &&
           options.snippets !== false
         ) {
-          if (ast.kind === "phrase") {
+          if (ast.kind === "phrase" && !context) {
             const ps = ast.terms.map((n) => direct(n, doc, 0) ?? []);
             let anchor = 0;
             for (let j = 1; j < ps.length; j++)
@@ -769,6 +800,8 @@ export class ColumnarIndex {
       display = performance.now(),
       resultRequests = reader.stats.requests,
       resultBytes = reader.stats.bytes,
+      resultSharedGets = reader.stats.sharedGets,
+      resultMemoryHits = reader.stats.memoryHits,
       positiveIds = new Set([...positive].map((n) => terms.get(n)!.id)),
       results = packages
         ? await Promise.all(
@@ -785,6 +818,8 @@ export class ColumnarIndex {
     reader.stats.metadataMs = performance.now() - display;
     reader.stats.resultRequests = reader.stats.requests - resultRequests;
     reader.stats.resultBytes = reader.stats.bytes - resultBytes;
+    reader.stats.resultSharedGets = reader.stats.sharedGets - resultSharedGets;
+    reader.stats.resultMemoryHits = reader.stats.memoryHits - resultMemoryHits;
     return {
       results,
       ...(options.exactTotal ? { total } : {}),

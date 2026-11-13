@@ -14,6 +14,7 @@ const variants = (
   rate = Number(process.env.CWS_RATE ?? 4),
   cap = Number(process.env.CWS_CONCURRENCY ?? 32),
   sessions = Number(process.env.CWS_SESSIONS ?? 3),
+  warmup = process.env.CWS_WARMUP !== "0",
   token = await benchmarkToken();
 const heldout = JSON.parse(
     await readFile("work/columnar-bench/heldout.json", "utf8"),
@@ -126,6 +127,7 @@ const manifest = {
   finishedAt: undefined as string | undefined,
   label,
   condition,
+  warmup,
   countPerVariant: count,
   totalRate: rate,
   clientConcurrencyLimit: cap,
@@ -266,7 +268,7 @@ const save = () =>
 let done = 0;
 try {
   for (let session = 0; session < sessions; session++) {
-    if (condition !== "fresh-namespace")
+    if (warmup && condition !== "fresh-namespace")
       for (const query of shuffle(queries))
         for (const name of shuffle(variants)) {
           const row = await call(name, query, session, performance.now(), true);

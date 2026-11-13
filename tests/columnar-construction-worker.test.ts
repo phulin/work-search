@@ -20,6 +20,8 @@ import {
 } from "../src/columnar/document-directory.js";
 import { ColumnarR2 } from "../src/columnar/r2.js";
 import { Reader } from "../src/columnar/storage.js";
+import { PairStatistics } from "../src/columnar/construction/pair-statistics.js";
+import { PairPacket } from "../src/columnar/pair-packet.js";
 it("builds and searches from actual Worker R2 bindings, survives retry and refuses changed task inputs", async () => {
   const dir = await mkdtemp(join(tmpdir(), "cws-construction-"));
   let mf: Miniflare | undefined;
@@ -292,9 +294,122 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
     } while (!packetTerms.output.state.done);
     const directory = assembleTermDirectory(directoryBlocks),
       bundled = new TermDirectory(directory, root.count),
-      words = await bundled.lookup(["alpha", "beta", "rare", "court"]);
+      words = await bundled.lookup(["alpha", "beta", "rare", "court", "gap"]);
     expect(words.get("alpha")!.bodyOccurrences).toBe(256);
     expect(words.get("rare")!.df).toBe(1);
+    const common = [...words.values()].map((t) => ({ id: t.id })),
+      commonRef = await call("/stage", {
+        value: { documents: 256, terms: common },
+      }),
+      statistics = [];
+    for (const group of groups)
+      statistics.push(
+        (
+          await call("/pair-statistics", {
+            vocabularyRef: commonRef.output,
+            group: {
+              ...group,
+              offsets: Buffer.from(group.offsets).toString("base64"),
+            },
+          })
+        ).output,
+      );
+    const combined = await call("/merge-pair-statistics", { runs: statistics }),
+      statsObject = await bucket.get(combined.output.data.key),
+      stats = new PairStatistics(
+        new Uint8Array(await statsObject!.arrayBuffer()),
+      ),
+      aRank = common.findIndex((t) => t.id === words.get("alpha")!.id),
+      bRank = common.findIndex((t) => t.id === words.get("beta")!.id),
+      gRank = common.findIndex((t) => t.id === words.get("gap")!.id);
+    expect(stats.first).toBe(0);
+    expect(stats.end).toBe(256);
+    const counts = new Map(
+      Array.from({ length: stats.count }, (_, i) => [
+        stats.key(i),
+        [stats.df(i), stats.occurrences(i)],
+      ]),
+    );
+    expect(counts.get(aRank * common.length + bRank)).toEqual([1, 1]);
+    expect(counts.get(aRank * common.length + gRank)).toEqual([255, 255]);
+    await call(
+      "/merge-pair-statistics",
+      { runs: [statistics[0], statistics[0]] },
+      500,
+    );
+    const selection = await call("/stage", {
+        value: {
+          documents: 256,
+          terms: common,
+          pairs: [
+            {
+              key: aRank * common.length + bRank,
+              a: words.get("alpha")!.id,
+              b: words.get("beta")!.id,
+              df: 1,
+              occurrences: 1,
+              cost: 1000000,
+            },
+            {
+              key: aRank * common.length + gRank,
+              a: words.get("alpha")!.id,
+              b: words.get("gap")!.id,
+              df: 255,
+              occurrences: 255,
+              cost: 1000000,
+            },
+          ],
+        },
+      }),
+      pairRuns = [];
+    for (const group of groups)
+      pairRuns.push(
+        ...(
+          await call("/pair-occurrences", {
+            selectionRef: selection.output,
+            group: {
+              ...group,
+              offsets: Buffer.from(group.offsets).toString("base64"),
+            },
+          })
+        ).output.runs,
+      );
+    const mergedPairs = await call("/merge-pair-occurrences", {
+        runs: pairRuns,
+      }),
+      finishedPairs = await call("/finish-pairs", {
+        selectionRef: selection.output,
+        run: mergedPairs.output.run,
+        objectBase: packetRoot.objects.length,
+      });
+    expect(finishedPairs.output.coverage.documents).toBe(256);
+    expect(finishedPairs.output.coverage.pairs).toBe(2);
+    expect(finishedPairs.output.coverage.occurrences).toBe(256);
+    const descriptor =
+        finishedPairs.output.descriptors[
+          `${words.get("alpha")!.id}:${words.get("beta")!.id}`
+        ],
+      object =
+        finishedPairs.output.objects[
+          descriptor.ref[0] - packetRoot.objects.length
+        ],
+      pairObject = await bucket.get(object.key),
+      pairBytes = new Uint8Array(await pairObject!.arrayBuffer()),
+      pairPacket = new PairPacket(
+        pairBytes.subarray(
+          descriptor.ref[1],
+          descriptor.ref[1] + descriptor.ref[2],
+        ),
+      );
+    expect([...pairPacket.docs]).toEqual([7]);
+    expect([
+      ...pairPacket.phrase(
+        0,
+        0,
+        [words.get("rare")!.id, words.get("alpha")!.id, words.get("beta")!.id],
+        1,
+      ).starts,
+    ]).toEqual([600]);
     packetRoot.generation = await generationFor(packetRoot);
     const coverage = await call("/__verify-packages", {
       task: "coverage-0",

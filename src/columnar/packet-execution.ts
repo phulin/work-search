@@ -20,13 +20,8 @@ import {
   type Ref,
   type PositionalPair,
 } from "./format.js";
-import { PairPacket, intersectPairDocuments } from "./pair-packet.js";
-import {
-  planPairAnchor,
-  pairPhraseEvidence,
-  pairPhraseCovered,
-  pairKey,
-} from "./pair-evidence.js";
+import { readPairAnchor } from "./pair-execution.js";
+import { planPairAnchor, pairPhraseEvidence } from "./pair-evidence.js";
 import { decodeTermPacket } from "./term-packet.js";
 import type { DirectoryTerm } from "./term-directory.js";
 import type { DocumentPackage } from "./document-package.js";
@@ -466,40 +461,21 @@ export async function executePackets(
   if (plan.kind === "documents") {
     let candidates: Uint32Array;
     if (plan.pairAnchors) {
-      const raw = await reader.packets(plan.pairAnchors.map((p) => p.ref)),
-        packets = raw.map((bytes, i) => {
-          const p = new PairPacket(bytes),
-            d = plan.pairAnchors![i];
-          if (p.a !== d.a || p.b !== d.b || p.docs.length !== d.df)
-            throw Error("Pair descriptor mismatch");
-          return p;
-        });
-      const pairMap = new Map(packets.map((p) => [pairKey(p.a, p.b), p])),
-        ids = new Map([...terms].map(([name, t]) => [name, t.id]));
-      reader.stats.postings += packets.reduce((n, p) => n + p.docs.length, 0);
-      phraseEvidence = pairPhraseEvidence(pairMap, ids);
+      const pair = await readPairAnchor(
+        plan.pairAnchors,
+        plan.phraseAnchor!,
+        new Map([...terms].map(([name, t]) => [name, t.id])),
+        field,
+        reader,
+      );
+      phraseEvidence = pair.evidence;
       wantedPositions.clear();
       positionalIds.clear();
-      for (const name of positionalTerms(ast, (words) =>
-        pairPhraseCovered(pairMap, ids, words),
-      )) {
+      for (const name of positionalTerms(ast, pair.covered)) {
         wantedPositions.add(name);
         positionalIds.add(terms.get(name)!.id);
       }
-      const all = intersectPairDocuments(packets, field),
-        accepted = new Uint32Array(all.length);
-      let count = 0;
-      for (const doc of all) {
-        const fields = field === "all" ? [0, 1] : [field === "body" ? 0 : 1];
-        if (
-          fields.some((f) => {
-            const exact = phraseEvidence!(plan.phraseAnchor!, doc, f);
-            return exact === undefined || exact.length > 0;
-          })
-        )
-          accepted[count++] = doc;
-      }
-      candidates = accepted.subarray(0, count);
+      candidates = pair.candidates;
     } else {
       const { cols } = await readTerms(
         plan.anchors ?? [plan.anchor!],

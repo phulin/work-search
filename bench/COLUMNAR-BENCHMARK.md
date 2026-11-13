@@ -58,17 +58,61 @@ CPU 11/35/73 ms. These warmed, noninterleaved pilot numbers do not establish a
 serving speedup over the individual-object layout. Raw data is in
 `packets-1000-grouped-pilot*`.
 
-The 1M grouped packet conversion is running natively on the single builder deployment.
+The 1M grouped packet conversion completed natively on the single builder deployment
+in 41.1 minutes, reusing the completed sorted/scoring construction and term packets.
+It contains 24,649,044,904 bytes of term/block objects, 20,143,777,366 bytes of
+document packages and a 2,703,736-byte direct package directory.
 Its initial 128-request burst hit application admission limits and stopped after
 exhausting retries. Completed immutable jobs were retained; the resumed coordinator
 uses adaptive concurrency and jittered backoff. No serving speedup is claimed
-until that generation passes the same independent 1M oracle and live comparisons.
+until repeated interleaved comparisons establish it.
 Its completed term directory is 33,402,940 bytes for all 2,812,380 words, including
 actual occurrence counts and direct stream references. The individual-PUT
 document phase was stopped after the grouped pilot passed live correctness;
 its term objects are reused. The latest usage check reported no Worker resource
 errors and construction invocation-memory P99 of 50,286,160 bytes. Earlier
 construction phases reached about 95 MiB. Neither is a peak-memory measurement.
+
+Generation `c6ddc6f5…` deployed with 14 ms reported startup. All 76 measured
+responses and all 76 warmups passed the independent 1M oracle. Complete-response
+P50/P95/P99(max) was 904/4,307/18,847 ms; joined native CPU was 380/1,958/11,808 ms.
+The earlier same-corpus control pilot was 1,097/6,047/26,238 ms. These pilots were
+not interleaved and do not establish a stable speedup or P99. A failed production
+sampling attempt overlapped only the early warmup, ending before measurement.
+The all-common-word zero-hit phrase remains an unacceptable 18.8-second case.
+
+A controlled four-arrivals/second pilot completed 152/152 correct responses with
+no HTTP errors: P50/P95/P99 939/4,722/20,040 ms, maximum 21,664 ms. Client launch
+lateness P99 was 2.6 ms. Completion throughput including the long final drain was
+2.61 responses/second; this is not a claim of sustained capacity. Invocation-memory
+P99 reached 115,240,940 bytes in the first serving sample, below 128 MiB but with
+limited headroom; these samples are not peak/retained-memory measurements.
+
+A randomized 444-request 1M forced-plan comparison had no correctness errors.
+Complete reads supported 69/222 requests, candidate packages 3/222; the remaining
+strategies exceeded their budgets and explicitly returned unsupported. Only three
+paired comparisons were available. This workload cannot calibrate the primary-plan
+crossover. A separate 120-query workload now samples vocabulary DF bands and adds
+intersections, sparse phrases and proximity; independent source validation is running.
+Winner retrieval dominated some complete-read cases: its observed origin GET
+P95 was 20 and maximum 100, with metadata time up to 1,114 ms. These classes and
+raw counters remain separate in `packets-1m-crossover-summary.json`.
+
+Native positional/context pair construction completed on 1,000 documents in
+17.7 seconds, producing 4,096 selected pairs, 183,102 occurrences and 6,599,560 bytes.
+Its two numeric-token passes and four-way merges never parse display JSON.
+The 1M pair pass is running. Initial coverage is limited to adjacent combinations
+of the 1,024 highest-DF words; useful rare-content pairs and a remote pair dictionary
+remain outstanding. Pair evidence now also restricts block fallback ranges and
+eliminates ordinary word-position decoding where context proves a phrase; reference
+tests cover scores, fields, negatives and matching snippets. Native captures still
+returned HTTP 404/code 10393 despite a sustained active search invocation.
+
+Fresh grouped construction of 128 documents took 22.0 seconds from source through
+publication, with no reused scoring output. The actual group containing the longest
+known document in the 1M corpus also completed: 128 documents, 567,448 tokens,
+7,448,709 package bytes and 2,571 ms native wall time. Receipts are under
+`results/columnar/construction`. All 208 repository tests pass.
 
 A rejected Cloudflare Queues dispatcher used the same Worker, not a Worker pool.
 Of 1,024 dispatched jobs, 966 exhausted retries on the application capacity gate;
