@@ -1,7 +1,10 @@
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 import { benchmarkToken } from "./token.js";
 const config = "work/columnar-control/wrangler.json";
+const settings = JSON.parse(await readFile(config, "utf8"));
+settings.placement = { region: "aws:us-east-1" };
+await writeFile(config, JSON.stringify(settings, null, 2));
 for (const args of [
   ["deploy", "--config", config],
   ["secret", "put", "INTERNAL_TOKEN", "--config", config],

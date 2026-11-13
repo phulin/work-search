@@ -113,6 +113,13 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
       second = await call("/ingest", { first: 0, count: 6, task: "retry" });
     expect(second.output).toEqual(first.output);
     expect(second.reused).toBe(true);
+    const concurrent = await Promise.all(
+      Array.from({ length: 8 }, (_, i) =>
+        call("/ingest", { first: i, count: 1 }),
+      ),
+    );
+    expect(concurrent.every((r) => r.output.count === 1)).toBe(true);
+    expect(concurrent.some((r) => r.telemetry.queueMs > 0)).toBe(true);
     await call("/ingest", { first: 1, count: 6, task: "retry" }, 500);
     const other = await call("/ingest", { first: 6, count: 6 }),
       a = first.output,
@@ -171,13 +178,19 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
         },
       },
     });
+    const vocabulary = await call("/vocabulary", {
+      rootRef: staged.output,
+      first: 0,
+      count: root.count,
+    });
     let documents: any;
     previous = undefined;
     do {
       const current = "document-" + task;
       documents = await call("/documents", {
         task: current,
-        rootRef: staged.output,
+        documentRoot: { generation: root.generation, count: root.count },
+        vocabularyRef: vocabulary.output.vocabulary,
         objectBase: root.objects.length,
         stateTask: previous,
         compact: true,
@@ -190,7 +203,19 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
     root.documents = documents.output.state.documents;
     await call("/publish", { root }, 500);
     root.generation = await generationFor(root);
-    await call("/publish", { root });
+    await call("/publish", { root }, 500);
+    const verifications = [];
+    for (let first = 0; first < root.objects.length; first += 256) {
+      const current = "verify-" + first;
+      await call("/verify", { task: current, root, first });
+      verifications.push(current);
+    }
+    await call("/publish", { root, verifications: ["missing"] }, 500);
+    const changed = structuredClone(root);
+    changed.objects[0].sha256 = "e".repeat(64);
+    changed.generation = await generationFor(changed);
+    await call("/publish", { root: changed, verifications }, 500);
+    await call("/publish", { root, verifications });
     expect(
       (await bucket.get(root.generation + "/root.json"))?.size,
     ).toBeGreaterThan(0);

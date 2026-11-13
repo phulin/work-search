@@ -1,0 +1,1021 @@
+{
+  "usage": [
+    {
+      "start": "2026-11-13T02:39:13.472Z",
+      "end": "2026-11-13T03:39:13.471Z",
+      "scriptCount": 501,
+      "scriptLimit": 500,
+      "workers": {
+        "requests": 37045,
+        "errors": 1,
+        "cpuMs": 82649305.772
+      },
+      "construction": {
+        "requests": 1783,
+        "errors": 0,
+        "maxReportedMemoryP99Bytes": 86100810
+      },
+      "unattributedWorkerRequests": 33025,
+      "resourceErrors": [],
+      "bucket": {
+        "reads": 27514126,
+        "writes": 143336,
+        "readBytes": 2272719670490,
+        "storage": {
+          "metadataSize": 20444898,
+          "objectCount": 135386,
+          "payloadSize": 381525130002
+        }
+      },
+      "notes": [
+        "Account and bucket totals include other work; adaptive analytics can lag and contain unattributed scripts.",
+        "Memory quantiles sample isolate memory at invocation, not peak memory or cumulative allocation.",
+        "Paid usage allowances are billing thresholds, not hard request limits. This is not an invoice."
+      ]
+    },
+    {
+      "start": "2026-11-13T02:41:46.522Z",
+      "end": "2026-11-13T03:41:46.521Z",
+      "scriptCount": 344,
+      "scriptLimit": 500,
+      "workers": {
+        "requests": 36827,
+        "errors": 1,
+        "cpuMs": 82573665.865
+      },
+      "construction": {
+        "requests": 1833,
+        "errors": 0,
+        "maxReportedMemoryP99Bytes": 86100810
+      },
+      "unattributedWorkerRequests": 33009,
+      "resourceErrors": [],
+      "bucket": {
+        "reads": 27892254,
+        "writes": 143731,
+        "readBytes": 2300375182587,
+        "storage": {
+          "metadataSize": 20444898,
+          "objectCount": 135386,
+          "payloadSize": 381525130002
+        }
+      },
+      "notes": [
+        "Account and bucket totals include other work; adaptive analytics can lag and contain unattributed scripts.",
+        "Memory quantiles sample isolate memory at invocation, not peak memory or cumulative allocation.",
+        "Paid usage allowances are billing thresholds, not hard request limits. This is not an invoice."
+      ]
+    }
+  ],
+  "retired": [
+    {
+      "name": "work-search-cws-build-101",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-100",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-1",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-10",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-102",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-103",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-104",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-105",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-106",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-107",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-108",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-109",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-11",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-110",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-111",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-112",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-113",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-114",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-115",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-116",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-117",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-118",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-119",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-12",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-120",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-121",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-122",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-123",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-124",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-126",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-125",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-127",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-128",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-129",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-13",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-130",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-132",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-133",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-131",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-135",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-134",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-136",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-138",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-139",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-140",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-137",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-14",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-141",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-142",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-15",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-143",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-16",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-17",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-18",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-2",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-19",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-21",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-20",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-22",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-23",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-24",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-25",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-26",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-28",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-27",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-3",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-29",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-30",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-31",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-32",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-33",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-34",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-35",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-36",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-37",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-38",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-39",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-40",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-4",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-42",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-41",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-43",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-44",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-45",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-46",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-47",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-48",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-5",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-50",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-49",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-51",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-52",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-53",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-54",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-55",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-56",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-57",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-58",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-59",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-6",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-60",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-61",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-62",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-63",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-64",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-65",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-66",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-67",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-68",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-69",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-7",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-70",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-71",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-72",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-73",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-74",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-75",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-76",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-77",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-78",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-79",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-8",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-80",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-82",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-81",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-83",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-84",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-85",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-86",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-87",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-88",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-89",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-9",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-90",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-91",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-92",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-93",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-94",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-96",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-95",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-97",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-98",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-99",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-client-eu",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-147",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-client-west",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-build-145",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-remote-pilot",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v1",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v2",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v3",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v4",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v5",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v6",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v7",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v8",
+      "status": 200,
+      "success": true,
+      "errors": []
+    },
+    {
+      "name": "work-search-cws-v9",
+      "status": 200,
+      "success": true,
+      "errors": []
+    }
+  ],
+  "retainedTaskWorkers": [
+    "work-search-cws-build-0",
+    "work-search-cws-upload",
+    "work-search-cws-control",
+    "work-search-cws-near",
+    "work-search-cws-worker-built"
+  ]
+}

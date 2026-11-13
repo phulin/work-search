@@ -3,7 +3,7 @@
 import { open } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import type { Root, Ref } from "./format.js";
-import { PAGE, concat } from "./format.js";
+import { PAGE, concat, objectAt } from "./format.js";
 import { Lru, Semaphore } from "./storage.js";
 import { crc32 } from "../format/codec.js";
 export class OfflineObjects {
@@ -30,14 +30,14 @@ export class OfflineObjects {
   };
   constructor(
     readonly dir: string,
-    readonly root: Pick<Root, "generation" | "objects">,
+    readonly root: Pick<Root, "generation" | "objects" | "objectIds">,
     readonly remote?: { url: string; token: string },
   ) {}
   async readKey(key: string, offset: number, length: number) {
     this.keys ??= new Map(
       this.root.objects.map((o, i) => [
         o.key ?? `${this.root.generation}/${o.name}`,
-        i,
+        this.root.objectIds?.[i] ?? i,
       ]),
     );
     const id = this.keys.get(key);
@@ -46,7 +46,7 @@ export class OfflineObjects {
   }
   async read(ref: Ref) {
     const [id, offset, length] = ref;
-    const object = this.root.objects[id];
+    const object = objectAt(this.root, id);
     if (!object || offset < 0 || length < 1 || offset + length > object.size)
       throw Error("Invalid offline reference");
     let task = this.files.get(id),
@@ -57,12 +57,10 @@ export class OfflineObjects {
       return cached.subarray(offset, offset + length);
     }
     if (!task) {
-      task = open(this.dir + "/packs/" + this.root.objects[id].name, "r").catch(
-        (e) => {
-          if (e.code !== "ENOENT" || !this.remote) throw e;
-          return undefined;
-        },
-      );
+      task = open(this.dir + "/packs/" + object.name, "r").catch((e) => {
+        if (e.code !== "ENOENT" || !this.remote) throw e;
+        return undefined;
+      });
       this.files.set(id, task);
     }
     this.users.set(id, (this.users.get(id) ?? 0) + 1);
@@ -172,7 +170,7 @@ export class OfflineObjects {
     }
   }
   async remotePage(id: number, page: number) {
-    const object = this.root.objects[id],
+    const object = objectAt(this.root, id),
       offset = page * PAGE,
       length = Math.min(PAGE, object.size - offset),
       key = object.key ?? `${this.root.generation}/${object.name}`;
@@ -215,7 +213,7 @@ export class OfflineObjects {
       }
   }
   async download(id: number) {
-    const object = this.root.objects[id];
+    const object = objectAt(this.root, id);
     let cached: Uint8Array | undefined;
     for (let attempt = 0; ; attempt++)
       try {

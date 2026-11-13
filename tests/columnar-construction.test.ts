@@ -10,10 +10,16 @@ import {
   BuildStore,
   ingest,
   merge,
+  RunReader,
+  RunWriter,
   type Run,
 } from "../src/columnar/construction/runs.js";
 import {
   finishPostings,
+  OBJECT_GROUP,
+  routingOf,
+  combineRouting,
+  type TermRange,
   type FinishState,
 } from "../src/columnar/construction/finish.js";
 import {
@@ -28,6 +34,13 @@ import { Reader } from "../src/columnar/storage.js";
 import { parse, queryTerms } from "../src/query/parser.js";
 import { tokenize, type Document } from "../src/query/tokenize.js";
 import { exhaustive } from "../bench/columnar/exhaustive.js";
+import { planMerges } from "../scripts/construction-merge-plan.js";
+import { projectVocabularyRoot } from "../scripts/construction-vocabulary-root.js";
+import {
+  buildVocabulary,
+  readVocabulary,
+  type Vocabulary,
+} from "../src/columnar/construction/vocabulary.js";
 function rankedReference(
   docs: Document[],
   terms: string[],
@@ -182,33 +195,73 @@ it("builds the serving format through bounded R2 runs, resumed merges, and final
     runs.push(run);
     first = run.next;
   }
+  // Small physical chunks give the corpus-selected lexical planner useful
+  // fences. The first lexical split has several document groups, exercising
+  // both dimensions of the merge grid before global frequencies are final.
+  for (const run of runs) {
+    const reader = new RunReader(store, run.chunks),
+      writer = new RunWriter(store, 512);
+    for (;;) {
+      const record = await reader.peek();
+      if (!record) break;
+      await writer.append(record);
+      reader.consume(record);
+    }
+    await writer.flush();
+    run.chunks = writer.chunks;
+  }
+  const mergeGroup = async (
+    group: Run[],
+    range?: { firstWord?: string; endWord?: string },
+  ): Promise<Run> => {
+    if (group.length === 1 && !range) return group[0];
+    const chunks = [];
+    let state;
+    do {
+      const out = await merge(store, group, state, 777, range);
+      state = out.state;
+      chunks.push(...out.chunks);
+    } while (!state.done);
+    return {
+      first: group[0].first,
+      next: group.at(-1)!.next,
+      count: group.reduce((n, r) => n + r.count, 0),
+      bodyTokens: group.reduce((n, r) => n + r.bodyTokens, 0),
+      titleTokens: group.reduce((n, r) => n + r.titleTokens, 0),
+      chunks,
+    };
+  };
+  let gridExercised = false;
   // Multiple external merge levels and deliberate continuations inside terms.
   while (runs.length > 1) {
-    const next: Run[] = [];
-    for (let at = 0; at < runs.length; at += 8) {
-      const group = runs.slice(at, at + 8);
-      if (group.length === 1) {
-        next.push(group[0]);
-        continue;
-      }
-      let state;
-      const chunks = [];
-      do {
-        const out = await merge(store, group, state, 777);
-        state = out.state;
-        chunks.push(...out.chunks);
-      } while (!state.done);
-      next.push({
-        first: group[0].first,
-        next: group.at(-1)!.next,
-        count: group.reduce((n, r) => n + r.count, 0),
-        bodyTokens: group.reduce((n, r) => n + r.bodyTokens, 0),
-        titleTokens: group.reduce((n, r) => n + r.titleTokens, 0),
-        chunks,
-      });
+    const plan = planMerges(runs, 32),
+      parts = await Promise.all(
+        plan.jobs.map((j) =>
+          mergeGroup(runs.slice(j.firstRun, j.endRun), j.range),
+        ),
+      );
+    let next = parts;
+    if (plan.lexical) {
+      const columns: Run[][] = [];
+      plan.jobs.forEach((job, i) =>
+        (columns[job.lexical!] ??= []).push(parts[i]),
+      );
+      gridExercised ||= columns.length > 1 && columns.some((c) => c.length > 1);
+      const final = await Promise.all(columns.map((c) => mergeGroup(c)));
+      next = [
+        {
+          first: runs[0].first,
+          next: runs.at(-1)!.next,
+          count: runs.reduce((n, r) => n + r.count, 0),
+          bodyTokens: runs.reduce((n, r) => n + r.bodyTokens, 0),
+          titleTokens: runs.reduce((n, r) => n + r.titleTokens, 0),
+          chunks: final.flatMap((r) => r.chunks),
+        },
+      ];
     }
     runs.splice(0, runs.length, ...next);
   }
+  expect(gridExercised).toBe(true);
   const run = runs[0],
     root: Root = {
       format: "CWS1",
@@ -225,41 +278,97 @@ it("builds the serving format through bounded R2 runs, resumed merges, and final
       hot: {},
       dictionaries: [],
     };
-  let state: FinishState | undefined;
-  do {
-    const out = await finishPostings(
-      store,
-      run,
-      root,
-      root.objects.length,
-      state,
-      3000,
-    );
-    state = out.state;
-    root.objects.push(...out.objects);
-  } while (!state.done);
-  root.hot = Object.fromEntries(state.hot);
-  root.dictionaries = state.dictionaries.at(-1)!;
-  root.dictionaryHeight = state.dictionaries.length - 1;
+  const original = new RunReader(store, run.chunks),
+    writer = new RunWriter(store, 512);
+  for (;;) {
+    const record = await original.peek();
+    if (!record) break;
+    await writer.append(record);
+    original.consume(record);
+  }
+  await writer.flush();
+  run.chunks = writer.chunks;
+  const starts: Omit<TermRange, "end">[] = [];
+  let nextTerm = 1;
+  for (let chunk = 0; chunk < run.chunks.length; chunk++) {
+    const c = run.chunks[chunk];
+    if (c.firstTerm)
+      starts.push({
+        first: { chunk, at: c.firstTerm.at },
+        firstTerm: nextTerm,
+      });
+    nextTerm += c.terms!;
+  }
+  expect(starts.length).toBeGreaterThan(2);
+  expect(starts.some((s) => s.first.at > 0)).toBe(true);
+  const parts = await Promise.all(
+    starts.map(async (start, i) => {
+      const objects: Root["objects"] = [];
+      let state: FinishState | undefined;
+      do {
+        const result = await finishPostings(
+          store,
+          run,
+          root,
+          i * OBJECT_GROUP + objects.length,
+          state,
+          3000,
+          { ...start, end: starts[i + 1]?.first },
+        );
+        objects.push(...result.objects);
+        state = result.state;
+      } while (!state.done);
+      return { objects, routing: routingOf(state) };
+    }),
+  );
+  root.objectIds = [];
+  const append = (objects: Root["objects"], base: number) => {
+    for (let i = 0; i < objects.length; i++) {
+      root.objects.push(objects[i]);
+      root.objectIds!.push(base + i);
+    }
+  };
+  parts.forEach((p, i) => append(p.objects, i * OBJECT_GROUP));
+  const combined = await combineRouting(
+    store,
+    parts.map((p) => p.routing),
+    parts.length * OBJECT_GROUP,
+  );
+  append(combined.objects, parts.length * OBJECT_GROUP);
+  root.hot = Object.fromEntries(combined.routing.hot);
+  root.dictionaries = combined.routing.dictionaries;
+  root.dictionaryHeight = combined.routing.dictionaryHeight;
+  const documentBase = (parts.length + 1) * OBJECT_GROUP;
+  let documentObjects = 0;
   let documentState: DocumentState | undefined,
     done = false;
+  const projected = await projectVocabularyRoot(
+    root,
+    combined.routing.idRouting,
+    new Reader(root, new ColumnarR2(bucket)),
+  );
+  expect(projected.objects.length).toBeLessThan(root.objects.length);
+  const builtVocabulary = await buildVocabulary(
+      source,
+      store,
+      projected,
+      0,
+      docs.length,
+    ),
+    vocabulary = await readVocabulary(store, builtVocabulary.vocabulary);
   do {
     const out = await finishDocuments(
       source,
       store,
-      {
-        ...root,
-        idRouting: {
-          dictionaries: state.ids.dictionaries.at(-1)!,
-          dictionaryHeight: state.ids.dictionaries.length - 1,
-        },
-      },
-      root.objects.length,
+      root,
+      vocabulary,
+      documentBase + documentObjects,
       documentState,
       100,
     );
     documentState = out.state;
-    root.objects.push(...out.objects);
+    append(out.objects, documentBase + documentObjects);
+    documentObjects += out.objects.length;
     done = out.done;
   } while (!done);
   root.documents = documentState!.documents;
@@ -333,3 +442,134 @@ it("rejects corrupt source content and overlapping merge ranges", async () => {
   f.objects.get("a".repeat(64) + "/content-1.bin")!.bytes[0] ^= 1;
   await expect(f.source.document(1)).rejects.toThrow("checksum");
 });
+it("joins independently built document ranges across the 4096-document boundary", async () => {
+  const docs = Array.from({ length: 4103 }, (_, i) => ({
+      id: `boundary-${i}`,
+      body: "alpha beta",
+      metadata: { i },
+    })),
+    { source, store, bucket } = await fixture(docs);
+  let runs: Run[] = [];
+  for (let first = 0; first < docs.length;) {
+    const run = await ingest(
+      source,
+      store,
+      first,
+      Math.min(128, docs.length - first),
+    );
+    runs.push(run);
+    first = run.next;
+  }
+  while (runs.length > 1) {
+    const next: Run[] = [];
+    for (let at = 0; at < runs.length; at += 16) {
+      const group = runs.slice(at, at + 16);
+      if (group.length === 1) {
+        next.push(group[0]);
+        continue;
+      }
+      const merged = await merge(store, group, undefined, 32 * 1048576);
+      expect(merged.state.done).toBe(true);
+      next.push({
+        ...group[0],
+        next: group.at(-1)!.next,
+        count: group.reduce((n, r) => n + r.count, 0),
+        bodyTokens: group.reduce((n, r) => n + r.bodyTokens, 0),
+        titleTokens: 0,
+        chunks: merged.chunks,
+      });
+    }
+    runs = next;
+  }
+  const root: Root = {
+    format: "CWS1",
+    generation: "c".repeat(64),
+    corpusHash: "b".repeat(64),
+    count: docs.length,
+    avgBody: 2,
+    avgTitle: 0,
+    objects: [],
+    objectIds: [],
+    documents: [
+      [0, 0, 0],
+      [0, 0, 0],
+    ],
+    hot: {},
+    dictionaries: [],
+  };
+  const postings = await finishPostings(
+    store,
+    runs[0],
+    root,
+    0,
+    undefined,
+    32 * 1048576,
+  );
+  expect(postings.state.done).toBe(true);
+  const route = routingOf(postings.state);
+  Object.assign(root, {
+    dictionaries: route.dictionaries,
+    dictionaryHeight: route.dictionaryHeight,
+    hot: Object.fromEntries(route.hot),
+    objects: postings.objects,
+    objectIds: postings.objects.map((_, i) => i),
+  });
+  const parts = await Promise.all(
+    [0, 4096].map(async (first, i) => {
+      const base = (i + 1) * OBJECT_GROUP,
+        objects: Root["objects"] = [];
+      let state: DocumentState | undefined,
+        vocabulary: Vocabulary | undefined,
+        done = false;
+      while (!done) {
+        const next = state?.next ?? first;
+        if (!vocabulary || next >= vocabulary.end) {
+          const built = await buildVocabulary(
+            source,
+            store,
+            { ...root, idRouting: route.idRouting },
+            next,
+            Math.min(1024, first + 4096 - next, docs.length - next),
+          );
+          vocabulary = await readVocabulary(store, built.vocabulary);
+        }
+        const result = await finishDocuments(
+          source,
+          store,
+          root,
+          vocabulary,
+          base + objects.length,
+          state,
+          512,
+          { first, end: Math.min(first + 4096, docs.length) },
+        );
+        objects.push(...result.objects);
+        state = result.state;
+        done = result.done;
+      }
+      return { base, objects, documents: state!.documents };
+    }),
+  );
+  root.documents = parts.flatMap((p) => p.documents);
+  for (const part of parts)
+    for (let i = 0; i < part.objects.length; i++) {
+      root.objects.push(part.objects[i]);
+      root.objectIds!.push(part.base + i);
+    }
+  const index = new ColumnarIndex(root),
+    reader = () => new Reader(root, new ColumnarR2(bucket)),
+    first = await index.search('"alpha beta"', reader(), { limit: 1 }),
+    tail = await index.search('"alpha beta"', reader(), {
+      after: { score: first.results[0].score, doc: 4094 },
+      limit: 20,
+    });
+  expect(tail.results.map((r) => r.id)).toEqual(
+    docs.slice(4095).map((d) => d.id),
+  );
+  expect(tail.results.map((r) => r.metadata)).toEqual(
+    docs.slice(4095).map((d) => d.metadata),
+  );
+  expect(tail.results.every((r) => r.snippet?.includes("alpha beta"))).toBe(
+    true,
+  );
+}, 120000);

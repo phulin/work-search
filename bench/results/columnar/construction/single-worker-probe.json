@@ -1,0 +1,221 @@
+{
+  "elapsed": 3949.973083,
+  "rows": [
+    {
+      "i": 0,
+      "status": 503,
+      "ms": 228.213583,
+      "error": "Construction capacity busy"
+    },
+    {
+      "i": 1,
+      "status": 200,
+      "ms": 2479.852791,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2709050,
+      "telemetry": {
+        "isolate": "1cacb1e3-4fb9-4a82-9a32-24f1bd73f341",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-1",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2128,
+        "requests": 3,
+        "bytes": 413261
+      }
+    },
+    {
+      "i": 2,
+      "status": 200,
+      "ms": 2367.851667,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2912748,
+      "telemetry": {
+        "isolate": "5d54c5e8-ca7b-4bd6-a1d9-3cddde5526d1",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-2",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2002,
+        "requests": 3,
+        "bytes": 447290
+      }
+    },
+    {
+      "i": 3,
+      "status": 503,
+      "ms": 218.58187500000003,
+      "error": "Construction capacity busy"
+    },
+    {
+      "i": 4,
+      "status": 503,
+      "ms": 257.418917,
+      "error": "Construction capacity busy"
+    },
+    {
+      "i": 5,
+      "status": 200,
+      "ms": 2608.219125,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2642700,
+      "telemetry": {
+        "isolate": "ed7e0f00-be76-48ad-9ace-a1cd34a0485f",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-5",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2210,
+        "requests": 3,
+        "bytes": 404025
+      }
+    },
+    {
+      "i": 6,
+      "status": 503,
+      "ms": 268.97641699999997,
+      "error": "Construction capacity busy"
+    },
+    {
+      "i": 7,
+      "status": 503,
+      "ms": 317.844125,
+      "error": "Construction capacity busy"
+    },
+    {
+      "i": 8,
+      "status": 503,
+      "ms": 318.916041,
+      "error": "Construction capacity busy"
+    },
+    {
+      "i": 9,
+      "status": 200,
+      "ms": 2619.540833,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3146119,
+      "telemetry": {
+        "isolate": "beb42eb9-a8f4-436c-8354-d9d441d6b4c7",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-9",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2173,
+        "requests": 3,
+        "bytes": 490447
+      }
+    },
+    {
+      "i": 10,
+      "status": 200,
+      "ms": 3110.85725,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3161859,
+      "telemetry": {
+        "isolate": "f6b79f10-856d-45a8-b38f-0bf70ee3d735",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-10",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2549,
+        "requests": 3,
+        "bytes": 470111
+      }
+    },
+    {
+      "i": 11,
+      "status": 200,
+      "ms": 2685.856833,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3308128,
+      "telemetry": {
+        "isolate": "84fb7def-e68a-464b-8b98-8cefae78729d",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-11",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2261,
+        "requests": 3,
+        "bytes": 514715
+      }
+    },
+    {
+      "i": 12,
+      "status": 200,
+      "ms": 2319.677542,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2632635,
+      "telemetry": {
+        "isolate": "7f5cc66a-9efb-4da3-8ce6-5fd0a9d203c1",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-12",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 1905,
+        "requests": 3,
+        "bytes": 391752
+      }
+    },
+    {
+      "i": 13,
+      "status": 200,
+      "ms": 3825.994791,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3126315,
+      "telemetry": {
+        "isolate": "c620979f-55c5-4ad7-87e7-2f3875534b72",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-13",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 3353,
+        "requests": 3,
+        "bytes": 485419
+      }
+    },
+    {
+      "i": 14,
+      "status": 200,
+      "ms": 3938.0969579999996,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3674246,
+      "telemetry": {
+        "isolate": "60dc5c55-e31b-4868-aa8c-a5e33eca5c4e",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-14",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 3393,
+        "requests": 3,
+        "bytes": 579844
+      }
+    },
+    {
+      "i": 15,
+      "status": 200,
+      "ms": 2568.07725,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3338746,
+      "telemetry": {
+        "isolate": "cea2b9a4-ed7e-470b-8528-a9fd7c34072f",
+        "code": "5c1c9547318e095f1ed02ebf63c08c480aed7e02d05a9671a557519613ed9c7c",
+        "build": "single-worker-probe-v1",
+        "task": "ingest-15",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2080,
+        "requests": 3,
+        "bytes": 537603
+      }
+    }
+  ]
+}

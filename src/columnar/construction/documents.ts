@@ -1,11 +1,9 @@
-import { type Root, type Ref, concat, pack, u32 } from "../format.js";
-import { ColumnarIndex } from "../search.js";
-import { Reader, Memory, Lru } from "../storage.js";
-import { ColumnarR2 } from "../r2.js";
+import { type Root, type Ref, pack, u32 } from "../format.js";
 import { CorpusSource } from "./source.js";
 import { BuildStore, jsonBytes } from "./runs.js";
 import { ObjectStore, PackedWriter } from "./finish.js";
 import { scanText } from "./text.js";
+import type { Vocabulary } from "./vocabulary.js";
 
 async function gzip(value: unknown) {
   return new Uint8Array(
@@ -21,48 +19,51 @@ export interface DocumentState {
   pending: number[][];
   documents: Ref[];
 }
-export type ForwardRoot = Root & {
-  idRouting: Pick<Root, "dictionaries" | "dictionaryHeight">;
-};
 /** Revisit source bodies after lexical term IDs exist. Only one document and a
  * 320-token passage window are retained; source text is never staged locally. */
 export async function finishDocuments(
   source: CorpusSource,
   store: BuildStore,
-  root: ForwardRoot,
+  root: Pick<Root, "generation" | "count">,
+  vocabulary: Vocabulary,
   objectBase: number,
   saved?: DocumentState,
   tokenBudget = 1048576,
-  idCache?: Lru<number>,
+  range?: { first: number; end: number },
 ) {
   const state: DocumentState = saved
-      ? structuredClone(saved)
-      : { next: 0, pending: [], documents: [] },
-    memory = new Memory();
-  memory.pages = new Lru(4 * 1048576);
-  memory.decoded = new Lru(2 * 1048576);
-  const reader = new Reader(root, new ColumnarR2(store.bucket), memory),
-    index = new ColumnarIndex(root),
-    objects = new ObjectStore(store, objectBase),
+    ? structuredClone(saved)
+    : { next: range?.first ?? 0, pending: [], documents: [] };
+  const objects = new ObjectStore(store, objectBase),
     textLane = new PackedWriter(objects),
     planLane = new PackedWriter(objects),
     started = performance.now();
   let tokens = 0,
-    processed = 0,
-    idHits = 0,
-    idMisses = 0;
+    processed = 0;
+  const end = range?.end ?? root.count;
+  if ((range?.first ?? 0) % 4096 || end > root.count || end < state.next)
+    throw Error("Invalid document construction range");
+  if (
+    vocabulary.generation !== root.generation ||
+    vocabulary.first > state.next ||
+    vocabulary.end <= state.next ||
+    vocabulary.end > root.count
+  )
+    throw Error("Document vocabulary coverage mismatch");
+  const batchEnd = Math.min(end, vocabulary.end),
+    ids = vocabulary.ids;
   let part = source.part(state.next),
     pointers = await source.pointers(
       state.next,
       Math.min(
         128,
-        root.count - state.next,
+        batchEnd - state.next,
         part.first + part.count - state.next,
       ),
     ),
     batchFirst = state.next;
   await source.prefetch(pointers);
-  for (; state.next < root.count; state.next++) {
+  for (; state.next < batchEnd; state.next++) {
     if (state.next >= batchFirst + pointers.view.byteLength / 32) {
       part = source.part(state.next);
       batchFirst = state.next;
@@ -70,7 +71,7 @@ export async function finishDocuments(
         state.next,
         Math.min(
           128,
-          root.count - state.next,
+          batchEnd - state.next,
           part.first + part.count - state.next,
         ),
       );
@@ -81,45 +82,7 @@ export async function finishDocuments(
         pointers,
         state.next - batchFirst,
       ),
-      scanned = scanText(doc.body),
-      words = new Set<string>(),
-      ids = new Map(
-        Object.entries(root.hot).map(([word, term]) => [word, term.id]),
-      );
-    for (const token of scanned.tokens()) words.add(token.word);
-    const names = [...words].filter((word) => {
-      if (ids.has(word)) return false;
-      const cached = idCache?.get(word);
-      if (cached !== undefined) {
-        ids.set(word, cached);
-        idHits++;
-        return false;
-      }
-      idMisses++;
-      return true;
-    });
-    // Resolving in batches also bounds the set of concurrently loaded plans.
-    for (let at = 0; at < names.length; at += 512) {
-      const plans = await index.dictionary<number>(
-        names.slice(at, at + 512),
-        reader,
-        {
-          ...root.idRouting,
-          hot: {},
-        },
-      );
-      for (const [word, id] of plans) {
-        ids.set(word, id);
-        // Substrings from tokenization must not retain old source bodies.
-        idCache?.set(
-          new TextDecoder().decode(new TextEncoder().encode(word)),
-          id,
-          8,
-        );
-      }
-    }
-    if ([...words].some((word) => !ids.has(word)))
-      throw Error("Forward vocabulary missing from final dictionary");
+      scanned = scanText(doc.body);
     const window: {
         word: string;
         position: number;
@@ -151,6 +114,8 @@ export async function finishDocuments(
       while (window.length && window[0].position < first - 32) window.shift();
     };
     for (const token of scanned.tokens()) {
+      if (!ids.has(token.word))
+        throw Error("Forward vocabulary missing a source token");
       lastPosition = token.position;
       window.push(token);
       if (token.position === first + 287) await flush();
@@ -184,7 +149,7 @@ export async function finishDocuments(
       break;
     }
   }
-  if (state.next === root.count && state.pending.length) {
+  if (state.next === end && state.pending.length) {
     state.documents.push(await planLane.put(u32(state.pending.flat())));
     state.pending = [];
   }
@@ -195,11 +160,8 @@ export async function finishDocuments(
     objects: objects.objects,
     tokens,
     processed,
-    dictionaryRequests: reader.stats.requests,
-    dictionaryBytes: reader.stats.bytes,
-    idHits,
-    idMisses,
-    idCacheBytes: idCache?.bytes ?? 0,
-    done: state.next === root.count,
+    dictionaryRequests: 0,
+    dictionaryBytes: 0,
+    done: state.next === end,
   };
 }

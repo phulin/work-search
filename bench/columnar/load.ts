@@ -197,6 +197,7 @@ async function call(
     row.ms = performance.now() - started;
     row.completeMs = performance.now() - scheduled;
     row.status = r.status;
+    row.workerPlacement = r.headers.get("cf-placement");
     row.bytes = Buffer.byteLength(text);
     if (!r.ok) {
       row.error = `HTTP ${r.status}: ${text.slice(0, 500)}`;

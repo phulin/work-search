@@ -7,15 +7,15 @@ import {
   digest,
   jsonBytes,
   generationFor,
+  VERIFY_OBJECTS,
 } from "./runs.js";
-import { finishPostings } from "./finish.js";
+import { finishPostings, combineRouting } from "./finish.js";
 import { finishDocuments } from "./documents.js";
-import { Lru } from "../storage.js";
+import { buildVocabulary, readVocabulary } from "./vocabulary.js";
 export function createConstructionWorker(root: SourceRoot, code: string) {
   let isolate: string | undefined,
-    active = 0,
-    idCacheGeneration: string | undefined;
-  const idCache = new Lru<number>(8 * 1048576);
+    pending = 0,
+    tail = Promise.resolve();
   return {
     async fetch(
       request: Request,
@@ -33,21 +33,52 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
           sourceDocuments: root.documents,
           sourceHash: await digest(jsonBytes(root)),
           isolate,
+          placement: request.headers.get("cf-placement"),
         });
       if (request.method !== "POST")
         return new Response("Method not allowed", { status: 405 });
-      if (active)
+      if (pending >= 32)
         return new Response("Construction capacity busy", {
           status: 503,
           headers: { "retry-after": "1" },
         });
-      active++;
+      // Requests may share an isolate. Queue before parsing their bodies so
+      // concurrent invocations cannot multiply construction buffers. Separate
+      // isolates still execute independently under the same deployment.
+      const queuedAt = performance.now(),
+        previous = tail;
+      let release!: () => void;
+      tail = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      pending++;
+      await previous;
       const started = performance.now(),
         source = new CorpusSource(env.INDEX, root);
       try {
         const input = (await request.json()) as any;
         let result;
-        if (url.pathname === "/probe") {
+        if (url.pathname === "/probe-io") {
+          const samples = [];
+          for (let i = 0; i < 10; i++) {
+            const started = performance.now();
+            await source.get(
+              root.parts[0].generation,
+              "contentmap-0.bin",
+              0,
+              262144,
+            );
+            samples.push(performance.now() - started);
+          }
+          const trace = await fetch(
+            "https://www.cloudflare.com/cdn-cgi/trace",
+          ).then((r) => r.text());
+          result = {
+            samples,
+            egressColo: /^colo=(.+)$/m.exec(trace)?.[1],
+            placement: request.headers.get("cf-placement"),
+          };
+        } else if (url.pathname === "/probe") {
           const part = root.parts.find((p) => p.part === input.part);
           if (!part) throw Error("Unknown source partition");
           const map = await source.get(part.generation, "contentmap-0.bin"),
@@ -120,8 +151,11 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
             "/merge",
             "/postings",
             "/documents",
+            "/vocabulary",
             "/publish",
+            "/verify",
             "/stage",
+            "/routing",
           ].includes(url.pathname)
         ) {
           if (
@@ -156,6 +190,14 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
               input.root = JSON.parse(
                 new TextDecoder().decode(await store.get(input.rootRef)),
               );
+            if (input.runRef)
+              input.run = JSON.parse(
+                new TextDecoder().decode(await store.get(input.runRef)),
+              );
+            if (input.runsRef)
+              input.runs = JSON.parse(
+                new TextDecoder().decode(await store.get(input.runsRef)),
+              );
             if (
               input.tokenBudget !== undefined &&
               (!Number.isInteger(input.tokenBudget) ||
@@ -167,21 +209,37 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
               input.byteBudget !== undefined &&
               (!Number.isInteger(input.byteBudget) ||
                 input.byteBudget < 1 ||
-                input.byteBudget > 8 * 1048576)
+                input.byteBudget > 32 * 1048576)
             )
               throw Error("Invalid byte budget");
-            const publish = async () => {
+            const validateRoot = async () => {
               // The constructor checks generation and document-table coverage.
               const { ColumnarIndex } = await import("../search.js");
               new ColumnarIndex(input.root);
               if ((await generationFor(input.root)) !== input.root.generation)
                 throw Error("Generation does not identify the complete layout");
-              for (const descriptor of input.root.objects) {
+            };
+            const verifyRange = async () => {
+              await validateRoot();
+              const first = Number(input.first),
+                descriptors = input.root.objects.slice(
+                  first,
+                  first + VERIFY_OBJECTS,
+                );
+              if (
+                !Number.isInteger(first) ||
+                first < 0 ||
+                first % VERIFY_OBJECTS ||
+                !descriptors.length
+              )
+                throw Error("Invalid publication verification range");
+              const verify = async (descriptor: any) => {
                 if (
                   !descriptor.key ||
                   !/^[a-f0-9]{64}\/plan-0\.bin$/.test(descriptor.key)
                 )
                   throw Error("Invalid built object key");
+                store.requests++;
                 const object = await env.INDEX.head(descriptor.key);
                 if (
                   !object ||
@@ -189,7 +247,54 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
                   object.customMetadata?.sha256 !== descriptor.sha256
                 )
                   throw Error("Incomplete built object");
-              }
+              };
+              for (let i = 0; i < descriptors.length; i += 4)
+                await Promise.all(descriptors.slice(i, i + 4).map(verify));
+              return {
+                first,
+                count: descriptors.length,
+                generation: input.root.generation,
+                sha256: await digest(jsonBytes(descriptors)),
+              };
+            };
+            const publish = async () => {
+              await validateRoot();
+              const tasks = input.verifications as string[];
+              if (
+                !Array.isArray(tasks) ||
+                tasks.length !==
+                  Math.ceil(input.root.objects.length / VERIFY_OBJECTS)
+              )
+                throw Error(
+                  "Publication requires complete object verification",
+                );
+              for (let at = 0; at < tasks.length; at += 4)
+                await Promise.all(
+                  tasks.slice(at, at + 4).map(async (task, i) => {
+                    if (!/^[a-z0-9-]{1,80}$/.test(task))
+                      throw Error("Invalid verification task");
+                    store.requests++;
+                    const object = await env.INDEX.get(
+                      `cws-build/${input.build}/${task}.json`,
+                    );
+                    if (!object)
+                      throw Error("Missing publication verification");
+                    store.bytes += object.size;
+                    const receipt = (await object.json<any>()).result.output,
+                      first = (at + i) * VERIFY_OBJECTS,
+                      descriptors = input.root.objects.slice(
+                        first,
+                        first + VERIFY_OBJECTS,
+                      );
+                    if (
+                      receipt.first !== first ||
+                      receipt.count !== descriptors.length ||
+                      receipt.generation !== input.root.generation ||
+                      receipt.sha256 !== (await digest(jsonBytes(descriptors)))
+                    )
+                      throw Error("Publication verification coverage mismatch");
+                  }),
+                );
               await env.INDEX.put(
                 `${input.root.generation}/root.json`,
                 jsonBytes(input.root) as ArrayBufferView<ArrayBuffer>,
@@ -197,40 +302,56 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
               );
               return { generation: input.root.generation };
             };
-            if (
-              url.pathname === "/documents" &&
-              idCacheGeneration !== input.root.generation
-            ) {
-              idCache.clear();
-              idCacheGeneration = input.root.generation;
-            }
             const output =
               url.pathname === "/stage"
                 ? await store.put(jsonBytes(input.value))
-                : url.pathname === "/ingest"
-                  ? await ingest(source, store, input.first, input.count)
-                  : url.pathname === "/merge"
-                    ? await merge(store, input.runs, input.state)
-                    : url.pathname === "/postings"
-                      ? await finishPostings(
+                : url.pathname === "/routing"
+                  ? await combineRouting(store, input.parts, input.objectBase)
+                  : url.pathname === "/ingest"
+                    ? await ingest(source, store, input.first, input.count)
+                    : url.pathname === "/merge"
+                      ? await merge(
                           store,
-                          input.run,
-                          input.statistics,
-                          input.objectBase,
+                          input.runs,
                           input.state,
-                          input.byteBudget,
+                          128 * 1048576,
+                          input.range,
                         )
-                      : url.pathname === "/publish"
-                        ? await publish()
-                        : await finishDocuments(
-                            source,
+                      : url.pathname === "/postings"
+                        ? await finishPostings(
                             store,
-                            input.root,
+                            input.run,
+                            input.statistics,
                             input.objectBase,
                             input.state,
-                            input.tokenBudget ?? 1048576,
-                            idCache,
-                          );
+                            input.byteBudget,
+                            input.range,
+                          )
+                        : url.pathname === "/verify"
+                          ? await verifyRange()
+                          : url.pathname === "/publish"
+                            ? await publish()
+                            : url.pathname === "/vocabulary"
+                              ? await buildVocabulary(
+                                  source,
+                                  store,
+                                  input.root,
+                                  input.first,
+                                  input.count,
+                                )
+                              : await finishDocuments(
+                                  source,
+                                  store,
+                                  input.documentRoot,
+                                  await readVocabulary(
+                                    store,
+                                    input.vocabularyRef,
+                                  ),
+                                  input.objectBase,
+                                  input.state,
+                                  input.tokenBudget ?? 1048576,
+                                  input.range,
+                                );
             result = {
               output,
               writesAndMergeReads: store.requests,
@@ -276,7 +397,12 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
         const telemetry = {
           isolate,
           code,
+          build: input.build,
+          task: input.task,
+          operation: url.pathname,
+          placement: request.headers.get("cf-placement"),
           wallMs: performance.now() - started,
+          queueMs: started - queuedAt,
           requests: source.requests,
           bytes: source.bytes,
         };
@@ -296,7 +422,8 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
           { status: 500 },
         );
       } finally {
-        active--;
+        pending--;
+        release();
       }
     },
   };

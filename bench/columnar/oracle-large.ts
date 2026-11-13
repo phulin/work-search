@@ -13,14 +13,15 @@ import { globalQueries } from "../global-workload.js";
 const [dir, input, out] = process.argv.slice(2);
 if (!out)
   throw Error("Usage: oracle-large.ts INDEX_DIR CORPUS.jsonl.gz OUTPUT.json");
+const rootPath = process.env.CWS_ORACLE_ROOT ?? dir + "/root.json";
 while (
-  !(await readFile(dir + "/root.json", "utf8").then(
+  !(await readFile(rootPath, "utf8").then(
     () => true,
     () => false,
   ))
 )
   await new Promise((r) => setTimeout(r, 5000));
-const root = JSON.parse(await readFile(dir + "/root.json", "utf8")),
+const root = JSON.parse(await readFile(rootPath, "utf8")),
   heldout = JSON.parse(
     await readFile("work/columnar-bench/heldout.json", "utf8").catch(async () =>
       JSON.stringify({
@@ -84,7 +85,19 @@ const plans = scenarios.map((s: any) => ({
   ),
   ranked: [] as any[],
 }));
-let doc = 0,
+const firstDoc = Number(process.env.CWS_ORACLE_FIRST ?? 0),
+  endDoc = Number(process.env.CWS_ORACLE_END ?? root.count),
+  partial = firstDoc !== 0 || endDoc !== root.count;
+if (
+  !Number.isInteger(firstDoc) ||
+  !Number.isInteger(endDoc) ||
+  firstDoc < 0 ||
+  endDoc <= firstDoc ||
+  endDoc > root.count ||
+  (partial && input !== "r2")
+)
+  throw Error("Invalid oracle range");
+let doc = firstDoc,
   bodySum = 0,
   titleSum = 0;
 const hash = createHash("sha256"),
@@ -112,15 +125,11 @@ async function* corpusLines() {
       .digest("hex") !== root.corpusHash
   )
     throw Error("R2 oracle source mismatch");
-  for (let first = 0; first < root.count;) {
+  for (let first = firstDoc; first < endDoc;) {
     const part = sourceRoot.parts.find(
         (p: any) => p.first <= first && p.first + p.count > first,
       ),
-      count = Math.min(
-        128,
-        root.count - first,
-        part.first + part.count - first,
-      );
+      count = Math.min(128, endDoc - first, part.first + part.count - first);
     let result;
     for (let retry = 0; ; retry++)
       try {
@@ -228,6 +237,33 @@ for await (const line of corpusLines()) {
       doc,
       Math.round((performance.now() - started) / 1000),
     );
+}
+if (doc !== endDoc) throw Error("Oracle range coverage mismatch");
+if (partial) {
+  await writeFile(
+    out,
+    JSON.stringify({
+      kind: "independent-oracle-part",
+      first: firstDoc,
+      next: doc,
+      corpusHash: root.corpusHash,
+      count: doc - firstDoc,
+      bodySum,
+      titleSum,
+      names,
+      observedDf: [...observedDf],
+      expectedDf: names.map((n) => terms.get(n)?.df ?? 0),
+      oracleMs: performance.now() - started,
+      plans: plans.map((p: any) => ({
+        q: p.q,
+        kind: p.kind,
+        options: p.options,
+        page: p.page,
+        ranked: p.ranked,
+      })),
+    }),
+  );
+  process.exit(0);
 }
 if (
   doc !== root.count ||

@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 const variants = (
-    process.env.CWS_VARIANTS ?? "work-search-cws-control,work-search-cws-v1"
+    process.env.CWS_VARIANTS ?? "work-search-cws-control,work-search-cws-near"
   ).split(","),
   label = process.env.CWS_LABEL ?? "pilot",
   rows: unknown[] = [];

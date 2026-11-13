@@ -26,37 +26,62 @@ await writeFile(
   entry,
   `import root from './source-root.json';import{createConstructionWorker}from'../../src/columnar/construction/worker.ts';export default createConstructionWorker(root as any,${JSON.stringify(code)});`,
 );
+const settings = (name: string, main: string) => ({
+  name,
+  main,
+  account_id: "8f088d4bd190caf693cc42bb8311fd7d",
+  compatibility_date: "2026-11-01",
+  workers_dev: true,
+  placement: { region: "aws:us-east-1" },
+  r2_buckets: [{ binding: "INDEX", bucket_name: "work-search-demo" }],
+  limits: { cpu_ms: 300000 },
+  observability: { enabled: true },
+});
+const token = await benchmarkToken();
+async function wrangler(args: string[], input?: string) {
+  for (let retry = 0; ; retry++)
+    try {
+      await new Promise<void>((ok, no) => {
+        const p = spawn("yarn", ["wrangler", ...args], {
+          stdio: ["pipe", "inherit", "inherit"],
+        });
+        p.stdin.end(input);
+        p.once("error", no);
+        p.once("exit", (c) =>
+          c === 0 ? ok() : no(Error("Construction deployment failed " + c)),
+        );
+      });
+      return;
+    } catch (error) {
+      if (retry === 4) throw error;
+      // Fresh scripts can briefly return API 10007 after a successful upload.
+      // Retrying the same immutable deployment also handles transient API errors.
+      await new Promise((r) => setTimeout(r, 1000 * 2 ** retry));
+    }
+}
+const bundleConfig = dir + "/bundle.json",
+  bundle = dir + "/dist";
+await writeFile(bundleConfig, JSON.stringify(settings(name, entry), null, 2));
+await wrangler([
+  "deploy",
+  "--config",
+  bundleConfig,
+  "--dry-run",
+  "--outdir",
+  bundle,
+]);
 const config = dir + "/" + name + ".json";
 await writeFile(
   config,
-  JSON.stringify(
-    {
-      name,
-      main: entry,
-      account_id: "8f088d4bd190caf693cc42bb8311fd7d",
-      compatibility_date: "2026-11-01",
-      workers_dev: true,
-      r2_buckets: [{ binding: "INDEX", bucket_name: "work-search-demo" }],
-      limits: { cpu_ms: 300000 },
-      observability: { enabled: true },
-    },
-    null,
-    2,
-  ),
+  JSON.stringify(settings(name, bundle + "/entry.js"), null, 2),
 );
-const token = await benchmarkToken();
-for (const args of [
-  ["deploy", "--config", config],
-  ["secret", "put", "INTERNAL_TOKEN", "--config", config],
-])
-  await new Promise<void>((ok, no) => {
-    const p = spawn("yarn", ["wrangler", ...args], {
-      stdio: ["pipe", "inherit", "inherit"],
-    });
-    p.stdin.end(args[0] === "secret" ? token : undefined);
-    p.once("error", no);
-    p.once("exit", (c) =>
-      c === 0 ? ok() : no(Error("Construction deployment failed " + c)),
-    );
-  });
-console.log(JSON.stringify({ name, code, source: dir + "/source-root.json" }));
+await wrangler(["deploy", "--config", config]);
+await wrangler(["secret", "put", "INTERNAL_TOKEN", "--config", config], token);
+console.log(
+  JSON.stringify({
+    name,
+    code,
+    source: dir + "/source-root.json",
+    placement: "aws:us-east-1",
+  }),
+);

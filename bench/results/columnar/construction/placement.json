@@ -1,0 +1,44 @@
+{
+  "at": "2026-11-13T02:25:39.153Z",
+  "bucketLocation": "ENAM",
+  "configuredRegion": "aws:us-east-1",
+  "rows": [
+    {
+      "name": "work-search-cws-build-8",
+      "placement": null,
+      "health": {
+        "code": "7c897aa8fafaa542ed801b9d9fa68f787acf8c63d035b8fbb0de447611af9ad3",
+        "sourceDocuments": 10032254,
+        "sourceHash": "cdb7fdec091a89e44f9037b973bda123d0f41fba4fea6b102f0aee42fd200b67",
+        "isolate": "cbe08b24-1922-46a0-b4e1-b47c33a34a78",
+        "placement": null
+      },
+      "r2": {
+        "samples": [
+          224,
+          74,
+          104,
+          51,
+          79,
+          74,
+          86,
+          114,
+          46,
+          46
+        ],
+        "egressColo": "IAD",
+        "placement": null,
+        "telemetry": {
+          "isolate": "3c536f1e-c21c-4519-9626-37f45b0f4c3c",
+          "code": "7c897aa8fafaa542ed801b9d9fa68f787acf8c63d035b8fbb0de447611af9ad3",
+          "operation": "/probe-io",
+          "placement": null,
+          "wallMs": 900,
+          "requests": 10,
+          "bytes": 2621440
+        }
+      },
+      "probePlacement": null
+    }
+  ]
+}

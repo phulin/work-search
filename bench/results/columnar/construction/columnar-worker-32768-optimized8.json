@@ -1,0 +1,138 @@
+{
+  "manifest": {
+    "build": "optimized-32768-8-v1",
+    "code": "7c897aa8fafaa542ed801b9d9fa68f787acf8c63d035b8fbb0de447611af9ad3",
+    "sourceHash": "be858f6de5a69cc8348303d966b88e906f99bd41cb1a5466a0acfb648384be27",
+    "sourceDocuments": 10032254,
+    "count": 32768,
+    "terms": 245653,
+    "bodyTokens": 49816555,
+    "titleTokens": 163254,
+    "generation": "2a09df9ea78444f3b640b6f7c1a583a0df13b70dff30e90c7aba5190fd371662",
+    "objects": 430,
+    "bytes": 1470828565,
+    "startedAt": "2026-11-13T02:25:54.944Z",
+    "finishedAt": "2026-11-13T02:33:54.483Z",
+    "construction": "Cloudflare Workers and R2",
+    "workers": [
+      "https://work-search-cws-build-8.phulin.workers.dev",
+      "https://work-search-cws-build-9.phulin.workers.dev",
+      "https://work-search-cws-build-10.phulin.workers.dev",
+      "https://work-search-cws-build-11.phulin.workers.dev",
+      "https://work-search-cws-build-12.phulin.workers.dev",
+      "https://work-search-cws-build-13.phulin.workers.dev",
+      "https://work-search-cws-build-14.phulin.workers.dev",
+      "https://work-search-cws-build-15.phulin.workers.dev"
+    ],
+    "concurrency": 8,
+    "postingsJobs": 23,
+    "documentJobs": 8
+  },
+  "completeMs": 479539,
+  "buildMs": 474188.15771484375,
+  "phases": [
+    {
+      "path": "/ingest",
+      "tasks": 261,
+      "elapsedMs": 134218.15771484375,
+      "clientMs": 947408.2656160005,
+      "workerWallMs": 878050,
+      "sourceRequests": 784,
+      "sourceBytes": 133751538,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 508,
+      "stageBytes": 835999743
+    },
+    {
+      "path": "/merge",
+      "tasks": 33,
+      "elapsedMs": 97373.7861328125,
+      "clientMs": 606910.9467480001,
+      "workerWallMs": 597205,
+      "sampledNativeCpu": {
+        "n": 10,
+        "sumMs": 22147,
+        "p50": 2276,
+        "p95": 3099,
+        "max": 3099
+      },
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 2522,
+      "stageBytes": 4918451652
+    },
+    {
+      "path": "/postings",
+      "tasks": 45,
+      "elapsedMs": 63921.80126953125,
+      "clientMs": 484611.538332,
+      "workerWallMs": 475217,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 715,
+      "stageBytes": 1723824316
+    },
+    {
+      "path": "/routing",
+      "tasks": 1,
+      "elapsedMs": 2112.672119140625,
+      "clientMs": 2112.672083000012,
+      "workerWallMs": 1476,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 1,
+      "stageBytes": 124865
+    },
+    {
+      "path": "/documents",
+      "tasks": 68,
+      "elapsedMs": 172117.71630859375,
+      "clientMs": 1163329.0797960004,
+      "workerWallMs": 1142651,
+      "sourceRequests": 880,
+      "sourceBytes": 151155456,
+      "dictionaryRequests": 25379,
+      "dictionaryBytes": 2345399301,
+      "stageRequests": 250,
+      "stageBytes": 640878320
+    },
+    {
+      "path": "/verify",
+      "tasks": 0,
+      "elapsedMs": 0,
+      "clientMs": 0,
+      "workerWallMs": 0,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 0,
+      "stageBytes": 0
+    },
+    {
+      "path": "/publish",
+      "tasks": 1,
+      "elapsedMs": 5296.960205078125,
+      "clientMs": 5296.960291999974,
+      "workerWallMs": 4968,
+      "sourceRequests": 0,
+      "sourceBytes": 0,
+      "dictionaryRequests": 0,
+      "dictionaryBytes": 0,
+      "stageRequests": 0,
+      "stageBytes": 0
+    }
+  ],
+  "limitations": [
+    "Build time excludes deployment and final publication checks.",
+    "Source, stage, and dictionary bytes count transfers, including repeated reads.",
+    "Successful live execution establishes that the sampled tasks were admitted; native peak or retained memory is not available here."
+  ]
+}

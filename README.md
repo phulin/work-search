@@ -53,14 +53,32 @@ postings, sorting runs, passage text and serving objects stay in R2.
 ```sh
 yarn node --import tsx scripts/construction-source.ts work/full-flp/published.json
 yarn columnar:deploy:builder
-yarn columnar:build:r2 1000 work/cws-r2-pilot pilot-1
-yarn deploy work/cws-r2-pilot work-search-cws-r2-pilot --deploy-only
+CWS_BUILD_CONCURRENCY=32 yarn columnar:build:r2 1000000 work/cws-r2-1m corpus-1m
+yarn deploy work/cws-r2-1m work-search-cws-r2-1m --deploy-only
 ```
 
 Repeating the build command resumes completed R2 tasks. Use a new build ID and
 output directory after changing construction code or source. Source generations
 and checksums prevent mixed inputs; the completed layout determines the serving
 generation and cache identity. The frozen benchmark control remains separate.
+Ingestion, intermediate merges, final term ranges, posting construction, and
+4,096-document output ranges run as independent jobs. Intermediate merges use
+multiple balanced levels; the final term dictionary remains corpus-wide.
+One builder Worker handles concurrent invocations; `CWS_BUILD_CONCURRENCY` controls
+the number of outstanding requests, up to 128. Cloudflare distributes invocations
+across isolates. A bounded queue serializes construction buffers within each
+isolate. Each job uses bounded buffers and overlapping R2 I/O.
+
+Check account script count, resource errors, CPU/memory analytics and R2 operations
+occasionally during large builds:
+
+```sh
+yarn node --import tsx scripts/cloudflare-usage.ts 1
+```
+
+The output includes account/bucket activity from other work. Invocation memory
+percentiles are separate from peak or retained memory, and paid-plan usage
+allowances are billing thresholds rather than hard request limits.
 
 The default builder reclaims consumed staging data. For corpora larger than local
 disk, set `CWS_OFFLINE_STORE` to the authenticated uploader; construction spills

@@ -25,6 +25,7 @@ import {
 } from "./runs.js";
 const zero: Ref = [0, 0, 0],
   SIZE = 8 * 1048576;
+export const OBJECT_GROUP = 16384;
 type Objects = Root["objects"];
 export class ObjectStore {
   next: number;
@@ -33,6 +34,8 @@ export class ObjectStore {
     readonly store: BuildStore,
     readonly base: number,
   ) {
+    if (!Number.isInteger(base) || base < 0 || base > 0xffffffff)
+      throw Error("Invalid construction object base");
     this.next = base;
   }
 }
@@ -53,7 +56,14 @@ export class PackedWriter {
       await this.flush();
       at = 0;
     }
-    if (this.object < 0) this.object = this.target.next++;
+    if (this.object < 0) {
+      if (
+        this.target.next >=
+        (Math.floor(this.target.base / OBJECT_GROUP) + 1) * OBJECT_GROUP
+      )
+        throw Error("Construction object group exhausted");
+      this.object = this.target.next++;
+    }
     this.buffer.set(data, at);
     this.at = at + data.length;
     return [this.object, at, data.length];
@@ -99,6 +109,21 @@ export interface Statistics {
   avgBody: number;
   avgTitle: number;
 }
+export interface TermRange {
+  first: Cursor;
+  end?: Cursor;
+  firstTerm: number;
+}
+export function initialFinishState(range?: TermRange): FinishState {
+  return {
+    cursor: range?.first ?? { chunk: 0, at: 0 },
+    nextTerm: range?.firstTerm ?? 1,
+    entries: [],
+    dictionaries: [[]],
+    ids: { entries: [], dictionaries: [[]] },
+    hot: [],
+  };
+}
 export async function finishPostings(
   store: BuildStore,
   run: Run,
@@ -106,17 +131,11 @@ export async function finishPostings(
   objectBase: number,
   saved?: FinishState,
   byteBudget = 8 * 1048576,
+  range?: TermRange,
 ) {
   const state: FinishState = saved
       ? structuredClone(saved)
-      : {
-          cursor: { chunk: 0, at: 0 },
-          nextTerm: 1,
-          entries: [],
-          dictionaries: [[]],
-          ids: { entries: [], dictionaries: [[]] },
-          hot: [],
-        },
+      : initialFinishState(range),
     reader = new RunReader(store, run.chunks, state.cursor),
     objects = new ObjectStore(store, objectBase),
     scores = new PackedWriter(objects),
@@ -186,6 +205,15 @@ export async function finishPostings(
   };
   let processed = 0;
   while (processed < byteBudget && performance.now() - started < 20000) {
+    if (
+      !state.term &&
+      range?.end &&
+      reader.cursor.chunk === range.end.chunk &&
+      reader.cursor.at === range.end.at
+    ) {
+      state.done = true;
+      break;
+    }
     let record = await reader.peek();
     if (!state.term) {
       if (!record) {
@@ -214,6 +242,9 @@ export async function finishPostings(
         tl = v.getUint32(16, true),
         bn = v.getUint32(20, true),
         tn = v.getUint32(24, true);
+      // Long documents must not turn a nominal 128-posting leaf into an
+      // unbounded positional buffer. A shorter exact leaf is equally valid.
+      if (docs.length && offsets.at(-1)! + 4 + bn + tn > 4 * 1048576) break;
       if (
         v.getUint32(4, true) !== 2 ||
         record.length !== 28 + bn + tn ||
@@ -299,4 +330,68 @@ export async function finishPostings(
   await idsLane.flush();
   state.cursor = reader.cursor;
   return { state, objects: objects.objects, processed };
+}
+export interface Routing {
+  dictionaries: Root["dictionaries"];
+  dictionaryHeight: number;
+  idRouting: Pick<Root, "dictionaries" | "dictionaryHeight">;
+  hot: [string, Term][];
+}
+export function routingOf(state: FinishState): Routing {
+  return {
+    dictionaries: state.dictionaries.at(-1)!,
+    dictionaryHeight: state.dictionaries.length - 1,
+    idRouting: {
+      dictionaries: state.ids.dictionaries.at(-1)!,
+      dictionaryHeight: state.ids.dictionaries.length - 1,
+    },
+    hot: state.hot,
+  };
+}
+export async function combineRouting(
+  store: BuildStore,
+  parts: Routing[],
+  objectBase: number,
+) {
+  if (!parts.length || parts.length > 64)
+    throw Error("Routing merge requires 1–64 ordered parts");
+  const objects = new ObjectStore(store, objectBase),
+    plans = new PackedWriter(objects);
+  const combine = async (
+    routes: Pick<Root, "dictionaries" | "dictionaryHeight">[],
+  ) => {
+    let height = Math.max(...routes.map((r) => r.dictionaryHeight ?? 0)),
+      fences: Root["dictionaries"] = [];
+    const parent = async (list: Root["dictionaries"]) => ({
+      first: list[0].first,
+      last: list.at(-1)!.last,
+      ref: await plans.put(jsonBytes(list)),
+    });
+    for (const route of routes) {
+      let list = route.dictionaries,
+        h = route.dictionaryHeight ?? 0;
+      if (!list.length) continue;
+      while (h++ < height) list = [await parent(list)];
+      fences.push(...list);
+    }
+    for (let i = 1; i < fences.length; i++)
+      if (fences[i - 1].last >= fences[i].first)
+        throw Error("Overlapping dictionary ranges");
+    while (fences.length > 256) {
+      const next = [];
+      for (let at = 0; at < fences.length; at += 256)
+        next.push(await parent(fences.slice(at, at + 256)));
+      fences = next;
+      height++;
+    }
+    return { dictionaries: fences, dictionaryHeight: height };
+  };
+  const routing = await combine(parts),
+    idRouting = await combine(parts.map((p) => p.idRouting)),
+    hot = parts
+      .flatMap((p) => p.hot)
+      .sort((a, b) => b[1].df - a[1].df || (a[0] < b[0] ? -1 : 1))
+      .slice(0, 256);
+  await plans.flush();
+  return { routing: { ...routing, idRouting, hot }, objects: objects.objects };
 }

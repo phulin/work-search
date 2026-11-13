@@ -37,10 +37,18 @@ export interface Root {
     checksums?: number[];
     key?: string;
   }[];
+  // Sorted logical IDs let parallel producers assign disjoint ID ranges without
+  // sparse manifest arrays or a reference-relocation pass.
+  objectIds?: number[];
 }
 export interface PairRoot extends Pick<
   Root,
-  "generation" | "objects" | "dictionaries" | "dictionaryHeight" | "hot"
+  | "generation"
+  | "objects"
+  | "objectIds"
+  | "dictionaries"
+  | "dictionaryHeight"
+  | "hot"
 > {
   format: "CWP1";
   baseGeneration: string;
@@ -248,4 +256,14 @@ export function lower(a: ArrayLike<number>, n: number) {
     else r = m;
   }
   return l;
+}
+export function objectAt(
+  root: Pick<Root, "objects" | "objectIds">,
+  id: number,
+) {
+  const at = root.objectIds ? lower(root.objectIds, id) : id;
+  const object = root.objects[at];
+  if (!object || (root.objectIds && root.objectIds[at] !== id))
+    throw Error("Invalid immutable object ID");
+  return object;
 }

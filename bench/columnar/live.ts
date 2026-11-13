@@ -5,7 +5,7 @@ import { demoWorkload } from "../demo-workload.js";
 import { globalQueries } from "../global-workload.js";
 import { benchmarkToken } from "./token.js";
 const variants = (
-    process.env.CWS_VARIANTS ?? "work-search-cws-control,work-search-cws-v1"
+    process.env.CWS_VARIANTS ?? "work-search-cws-control,work-search-cws-near"
   ).split(","),
   label = process.env.CWS_LABEL ?? "pilot",
   sessions = Number(process.env.CWS_SESSIONS ?? 2),

@@ -1,5 +1,12 @@
 import { crc32 } from "../format/codec.js";
-import { PAGE, type Ref, type Root, concat, decodeBranches } from "./format.js";
+import {
+  PAGE,
+  type Ref,
+  type Root,
+  concat,
+  decodeBranches,
+  objectAt,
+} from "./format.js";
 export class Lru<T> {
   entries = new Map<string, { value: T; size: number }>();
   bytes = 0;
@@ -108,7 +115,7 @@ export class Reader {
   seenDecoded = new Set<number>();
   seenInflated = new Set<number>();
   constructor(
-    readonly root: Pick<Root, "generation" | "objects">,
+    readonly root: Pick<Root, "generation" | "objects" | "objectIds">,
     readonly source: Source,
     readonly memory = new Memory(),
     readonly shared?: SharedPages,
@@ -121,7 +128,7 @@ export class Reader {
     return `${this.root.generation}:${ref.join(":")}`;
   }
   async page(object: number, page: number) {
-    const o = this.root.objects[object];
+    const o = objectAt(this.root, object);
     if (!o) throw Error("Invalid object");
     const offset = page * PAGE,
       length = Math.min(PAGE, o.size - offset),
@@ -200,7 +207,7 @@ export class Reader {
   }
   async read(ref: Ref) {
     const [object, offset, length] = ref,
-      o = this.root.objects[object];
+      o = objectAt(this.root, object);
     if (
       !o ||
       !Number.isSafeInteger(offset) ||

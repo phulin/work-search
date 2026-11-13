@@ -3,7 +3,7 @@ import { benchmarkToken } from "./token.js";
 const token = await benchmarkToken(),
   url =
     process.env.CWS_BUILD_URL ??
-    "https://work-search-cws-build-1.phulin.workers.dev",
+    "https://work-search-cws-build-0.phulin.workers.dev",
   source = JSON.parse(
     await readFile("work/columnar-worker-build/source-samples.json", "utf8"),
   ),

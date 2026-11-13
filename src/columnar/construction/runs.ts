@@ -18,10 +18,15 @@ export async function digest(bytes: Uint8Array) {
 export function generationFor(root: Root) {
   return digest(jsonBytes({ ...root, generation: undefined }));
 }
+export const VERIFY_OBJECTS = 256;
 export interface Chunk {
   key: string;
   size: number;
   sha256: string;
+  terms?: number;
+  firstTerm?: { at: number; word: string };
+  firstWord?: string;
+  lastWord?: string;
 }
 export interface Run {
   chunks: Chunk[];
@@ -40,10 +45,22 @@ export class BuildStore {
       key = `${sha256}/${name ?? `stage-${sha256}.bin`}`;
     this.requests++;
     this.bytes += bytes.length;
-    await this.bucket.put(key, bytes as ArrayBufferView<ArrayBuffer>, {
-      sha256,
-      customMetadata: { generation: sha256, sha256 },
-    });
+    try {
+      await this.bucket.put(key, bytes as ArrayBufferView<ArrayBuffer>, {
+        sha256,
+        customMetadata: { generation: sha256, sha256 },
+      });
+    } catch (error) {
+      // Independent jobs may produce identical immutable bytes. If another
+      // upload won the race, its validated object satisfies this write too.
+      this.requests++;
+      const existing = await this.bucket.head(key);
+      if (
+        existing?.size !== bytes.length ||
+        existing.customMetadata?.sha256 !== sha256
+      )
+        throw error;
+    }
     return { key, size: bytes.length, sha256 };
   }
   async get(chunk: Chunk) {
@@ -64,21 +81,86 @@ export class RunWriter {
   chunks: Chunk[] = [];
   records: Uint8Array[] = [];
   bytes = 0;
+  terms = 0;
+  firstTerm?: Chunk["firstTerm"];
+  firstWord?: string;
+  lastWord?: string;
+  private pending = new Set<Promise<void>>();
+  private failure?: unknown;
   constructor(
     readonly store: BuildStore,
     readonly target = 2 * 1048576,
+    public currentWord?: string,
+    readonly writeConcurrency = 1,
   ) {}
   async append(record: Uint8Array) {
     if (this.bytes && this.bytes + record.length > this.target)
       await this.flush();
+    if (view(record).getUint32(4, true) === 1) {
+      this.terms++;
+      this.currentWord = termHeader(record).word;
+      this.firstTerm ??= { at: this.bytes, word: this.currentWord };
+    }
+    if (this.currentWord === undefined)
+      throw Error("Construction chunk lacks term context");
+    this.firstWord ??= this.currentWord;
+    this.lastWord = this.currentWord;
     this.records.push(record);
     this.bytes += record.length;
   }
+  /** A merge copies a contiguous group of positional rows without allocating
+   * a typed-array view and promise for every posting. Headers remain separate. */
+  async appendRows(rows: Uint8Array) {
+    if (this.bytes && this.bytes + rows.length > this.target)
+      await this.flush();
+    if (this.currentWord === undefined) throw Error("Rows lack term context");
+    this.firstWord ??= this.currentWord;
+    this.lastWord = this.currentWord;
+    this.records.push(rows);
+    this.bytes += rows.length;
+  }
   async flush() {
     if (!this.bytes) return;
-    this.chunks.push(await this.store.put(concat(this.records)));
+    const bytes = concat(this.records),
+      descriptor = {
+        terms: this.terms,
+        firstTerm: this.firstTerm,
+        firstWord: this.firstWord,
+        lastWord: this.lastWord,
+      };
+    if (this.writeConcurrency === 1)
+      this.chunks.push({
+        ...(await this.store.put(bytes)),
+        ...descriptor,
+      });
+    else {
+      while (this.pending.size >= this.writeConcurrency)
+        await Promise.race(this.pending);
+      if (this.failure) throw this.failure;
+      const i = this.chunks.length;
+      this.chunks.push(undefined as unknown as Chunk);
+      const pending = this.store
+        .put(bytes)
+        .then((chunk) => {
+          this.chunks[i] = { ...chunk, ...descriptor };
+        })
+        .catch((error) => {
+          this.failure ??= error;
+        })
+        .finally(() => this.pending.delete(pending));
+      this.pending.add(pending);
+    }
     this.records = [];
     this.bytes = 0;
+    this.terms = 0;
+    this.firstTerm = undefined;
+    this.firstWord = undefined;
+    this.lastWord = undefined;
+  }
+  async finish() {
+    await this.flush();
+    await Promise.all(this.pending);
+    if (this.failure) throw this.failure;
   }
 }
 export function termRecord(word: string, df: number) {
@@ -132,6 +214,49 @@ export class RunReader {
       this.cursor.chunk++;
       this.cursor.at = 0;
       this.data = undefined;
+    }
+  }
+  contiguousRows(limit: number) {
+    if (!this.data) throw Error("Rows require a loaded input chunk");
+    const start = this.cursor.at,
+      v = view(this.data);
+    let at = start,
+      count = 0;
+    while (at < this.data.length) {
+      if (at + 8 > this.data.length) throw Error("Truncated construction row");
+      const length = v.getUint32(at, true),
+        kind = v.getUint32(at + 4, true);
+      if (length < 8 || at + length > this.data.length)
+        throw Error("Invalid construction row");
+      if (kind === 1) break;
+      if (kind !== 2 || length < 28) throw Error("Unknown construction row");
+      if (count && at + length - start > limit) break;
+      at += length;
+      count++;
+    }
+    return { bytes: this.data.subarray(start, at), count };
+  }
+  async seekTerm(word: string) {
+    let lo = 0,
+      hi = this.chunks.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >>> 1,
+        last = this.chunks[mid].lastWord;
+      if (last === undefined) throw Error("Run lacks lexical fences");
+      if (last < word) lo = mid + 1;
+      else hi = mid;
+    }
+    this.cursor = { chunk: lo, at: 0 };
+    this.data = undefined;
+    for (;;) {
+      const record = await this.peek();
+      if (!record) return;
+      if (
+        view(record).getUint32(4, true) === 1 &&
+        termHeader(record).word >= word
+      )
+        return;
+      this.consume(record);
     }
   }
 }
@@ -228,6 +353,7 @@ export async function merge(
   runs: Run[],
   state?: MergeState,
   byteBudget = 8 * 1048576,
+  range?: { firstWord?: string; endWord?: string },
 ) {
   if (
     runs.length < 2 ||
@@ -235,6 +361,7 @@ export async function merge(
     runs.some((r, i) => i && runs[i - 1].next !== r.first)
   )
     throw Error("Merge requires 2–16 consecutive document ranges");
+  const starting = !state;
   state = state
     ? structuredClone(state)
     : { cursors: runs.map(() => ({ chunk: 0, at: 0 })) };
@@ -243,23 +370,36 @@ export async function merge(
   const readers = runs.map(
       (r, i) => new RunReader(store, r.chunks, state!.cursors[i]),
     ),
-    writer = new RunWriter(store),
+    writer = new RunWriter(store, 2 * 1048576, state.word, 2),
     started = performance.now();
+  if (starting && range?.firstWord)
+    for (const reader of readers) await reader.seekTerm(range.firstWord);
   let emitted = 0;
-  while (emitted < byteBudget && performance.now() - started < 20000) {
+  while (emitted < byteBudget && performance.now() - started < 45000) {
     if (state.word === undefined) {
       const headers: ({ word: string; df: number } | undefined)[] = [];
-      // At most one outstanding R2 body at a time, below the Worker connection limit.
-      for (const reader of readers) {
-        const row = await reader.peek();
-        headers.push(row ? termHeader(row) : undefined);
-      }
+      // Consume each body inside the promise; four concurrent reads stay below
+      // the Worker connection limit and retain only one chunk per input run.
+      for (let at = 0; at < readers.length; at += 4)
+        headers.push(
+          ...(await Promise.all(
+            readers.slice(at, at + 4).map(async (reader) => {
+              const row = await reader.peek();
+              return row ? termHeader(row) : undefined;
+            }),
+          )),
+        );
       const words = headers.flatMap((h) => (h ? [h.word] : []));
       if (!words.length) {
         state.done = true;
         break;
       }
       state.word = words.reduce((a, b) => (a < b ? a : b));
+      if (range?.endWord && state.word >= range.endWord) {
+        state.word = undefined;
+        state.done = true;
+        break;
+      }
       state.sources = headers.flatMap((h, i) =>
         h?.word === state!.word ? [i] : [],
       );
@@ -289,12 +429,16 @@ export async function merge(
     }
     if (view(record).getUint32(4, true) !== 2)
       throw Error("Unknown construction record");
-    await writer.append(record);
-    emitted += record.length;
-    state.remaining!--;
-    reader.consume(record);
+    const batch = reader.contiguousRows(
+      Math.min(byteBudget - emitted, writer.target - writer.bytes),
+    );
+    await writer.appendRows(batch.bytes);
+    emitted += batch.bytes.length;
+    state.remaining! -= batch.count;
+    if (state.remaining! < 0) throw Error("Merged document frequency mismatch");
+    reader.consume(batch.bytes);
   }
-  await writer.flush();
+  await writer.finish();
   state.cursors = readers.map((r) => r.cursor);
   return { state, chunks: writer.chunks, emitted };
 }

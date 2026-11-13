@@ -153,18 +153,71 @@ underfilled; that test bug was fixed before the passing run.
 
 Coalescing contiguous source ranges reduced the same pilot from 453 to 193 sec;
 bounded token-ID reuse reduced it to 169 sec; a compact ID dictionary and remote
-checkpoints reduced it to 83 sec. These are single construction pilots, not
-serving latency claims. Raw task receipts, source generations, roots, and phase
+checkpoints reduced it to 83 sec, and separating the ID lane reduced it to
+42.35 sec. The parallel pipeline took 103.94 sec with one Worker and 30.97 sec
+with eight Workers on the same 1,000 documents. Its additional job boundaries
+cost time with a single Worker. These are single construction pilots, not
+serving latency claims. Raw task receipts, source generations, and phase
 totals are in [`construction`](results/columnar/construction). All eight largest
 known compressed source records, including a 599,294-token document, completed
 live ingestion. This does not establish native peak memory.
+
+On 32,768 documents (49,816,555 body tokens, 245,653 terms), the first parallel
+pilot was stopped after 18 minutes with document output incomplete. Its fixed
+fan-in produced an almost serial penultimate merge. Two native observations
+showed 21–22 sec wall time against 1.2–1.6 sec CPU, pointing to dependent I/O.
+Balanced merge levels, lexical final ranges, contiguous row batches, four
+concurrent reads and two pipelined writes reduced the completed merge phase
+from 656 to 97 sec with eight Workers. Grouped lexical token-ID resolution
+reduced dictionary transfers from 5.22 GB for 15,408 completed documents to
+2.35 GB for all 32,768 documents.
+
+The completed optimized build took **480 sec with eight Workers** and **259 sec
+with 32 Workers**, including publication. These were sequential single pilots,
+not randomized repeated build trials. The 32k source has only eight ingestion
+and document jobs in those runs, limiting utilization; the coordinator now
+creates more balanced ingestion jobs. The completed generations occupy about
+1.47 GB. R2 backend cache state is opaque and was not controlled.
+
+An independent full source scan verified the 32k count, average field lengths,
+workload DFs and exhaustive rankings. Its live serving Worker passed 152 measured
+responses over 76 scenarios in two sessions: P50/P95/P99 179/373/875 ms, no errors.
+All 152 requests joined native CPU observations (57/171/560 ms). Responses
+included checked titles/metadata and snippet strings; snippet matching also has
+independent small-corpus tests. These are exploratory scenario statistics with
+too few samples for a reliable P99. Raw results are `worker-built-32768*`.
+
+Construction now uses one deployed Worker with up to 128 concurrent HTTP
+invocations and a bounded per-isolate queue. A live 16-invocation ingestion test
+completed all requests across 11 isolates; the previous immediate admission
+rejection returned six 503s in 16 attempts. The complete 1,000-document build
+through one deployment took 41 sec and produced the identical serving generation
+as the eight-deployment pilot. These are small diagnostic pilots, not evidence of
+full-corpus throughput. The unused builder pool and serving experiments were
+removed, reducing the account from 501 to 344 scripts (157 task deployments).
+
+The old 1M document-output diagnostic was stopped after its scoring index
+completed: individual requests often transferred over 100 MB of dictionary data
+for a few dozen documents. A replacement range-vocabulary pilot against that
+same 1M scoring index prepared 1,024 documents with 60.8 MB of dictionary reads;
+the next request wrote 841 documents with zero dictionary reads. The ongoing
+1M run reuses the completed scoring index and records that reuse explicitly;
+its elapsed time must not be presented as a fresh full build.
+
+The configured construction region
+is `aws:us-east-1`; an authenticated outbound trace observed IAD. The bucket
+reports ENAM, a coarse geography rather than a precise server location. The
+frozen control and current serving benchmark Worker use the same region setting.
+No additional Frankfurt or Seattle campaigns were started. Object verification
+is divided into 256-object jobs; publication checks their generation-specific
+coverage receipts instead of issuing an unbounded number of HEADs in one request.
 
 The available published R2 source contains 10,032,254 documents across 254
 partitions. This is not proof that the entire official CSV snapshot was imported.
 Actual 1M and largest-corpus live search performance remain pending and are not
 inferred from either pilot or the 100k comparison.
 
-195 repository tests pass, including independent exhaustive small corpora,
+196 repository tests pass, including independent exhaustive small corpora,
 70k-vocabulary hierarchical routing, adversarial compound winners absent from
 single-term certificates, phrases/proximity/negatives, long repeated documents,
 fields/boosts, deterministic ties, search-after, corruption, generation consistency,
@@ -189,6 +242,16 @@ an exact active version and `latest-deployed`. Native tail CPU/wall observations
 are available; production allocation attribution and peak/retained memory remain
 unestablished. The current `stages` counter counts execution batches, not a full
 I/O dependency graph. These are measurement gaps, not zero-cost observations.
+
+Cloudflare's invocation memory quantiles are now collected by
+`scripts/cloudflare-usage.ts`, alongside resource errors, account script count,
+CPU usage, R2 requests and stored bytes. These sample isolate memory at invocation,
+and do not establish native peak/retained memory or cumulative allocation.
+Adaptive analytics can lag and report new scripts as `__unknown__`, so attributed
+construction totals alone are incomplete. At the first post-cleanup check there
+were no reported resource-limit outcomes; the search bucket had about 27.9M reads
+in the preceding hour, including the stopped diagnostic and other work. The high
+read amplification prompted the dictionary-path replacement above.
 
 Remaining adoption gates: fresh namespaces and actual deployment/startup trials; controlled load ladders
 with queueing/rejections; live correctness/performance at 1M and the full available

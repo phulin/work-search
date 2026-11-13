@@ -22,6 +22,7 @@ import {
   unpack,
 } from "./format.js";
 import { Reader } from "./storage.js";
+import { loadDictionary } from "./dictionary.js";
 import { verifyForward, type PairBatch } from "./forward.js";
 import type { Heads } from "./heads.js";
 export interface Options {
@@ -193,7 +194,16 @@ export class ColumnarIndex {
       root.format !== "CWS1" ||
       !/^[a-f0-9]{64}$/.test(root.generation) ||
       !root.count ||
-      root.documents.length !== Math.ceil(root.count / 4096)
+      root.documents.length !== Math.ceil(root.count / 4096) ||
+      (root.objectIds &&
+        (root.objectIds.length !== root.objects.length ||
+          root.objectIds.some(
+            (id, i) =>
+              !Number.isInteger(id) ||
+              id < 0 ||
+              id > 0xffffffff ||
+              (i > 0 && id <= root.objectIds![i - 1]),
+          )))
     )
       throw Error("Invalid CWS1 root");
   }
@@ -212,65 +222,7 @@ export class ColumnarIndex {
       hot: Record<string, T>;
     },
   ) {
-    const terms = new Map<string, T>();
-    const cold: string[] = [];
-    for (const name of names) {
-      const hot = Object.hasOwn(routing.hot, name)
-        ? routing.hot[name]
-        : undefined;
-      if (hot) {
-        terms.set(name, hot);
-        continue;
-      }
-      cold.push(name);
-    }
-    const visit = async (
-      ds: Root["dictionaries"],
-      names: string[],
-      height: number,
-    ): Promise<void> => {
-      const routes = new Map<number, string[]>();
-      for (const name of names) {
-        let l = 0,
-          r = ds.length;
-        while (l < r) {
-          const m = (l + r) >>> 1;
-          if (ds[m].last < name) l = m + 1;
-          else r = m;
-        }
-        if (l < ds.length && ds[l].first <= name) {
-          const a = routes.get(l) ?? [];
-          a.push(name);
-          routes.set(l, a);
-        }
-      }
-      if (routes.size) reader.stats.stages++;
-      await Promise.all(
-        [...routes].map(async ([i, names]) => {
-          const ref = ds[i].ref;
-          if (height) {
-            const children = await reader.load(
-              ref,
-              (b) =>
-                JSON.parse(new TextDecoder().decode(b)) as Root["dictionaries"],
-              ref[2] * 3,
-            );
-            return visit(children, names, height - 1);
-          }
-          const entries = await reader.load(
-            ref,
-            (b) => new Map<string, T>(JSON.parse(new TextDecoder().decode(b))),
-            ref[2] * 3,
-          );
-          for (const name of names) {
-            const term = entries.get(name);
-            if (term) terms.set(name, term);
-          }
-        }),
-      );
-    };
-    await visit(routing.dictionaries, cold, routing.dictionaryHeight ?? 0);
-    return terms;
+    return loadDictionary<T>(names, reader, routing);
   }
   async search(
     q: string,

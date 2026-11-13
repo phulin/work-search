@@ -199,4 +199,15 @@ for (const label of labels) {
       })),
   );
 }
-await writeFile(out + "/summary.json", JSON.stringify(reports, null, 2));
+const previous = await readFile(out + "/summary.json", "utf8").then(
+  JSON.parse,
+  () => [],
+);
+await writeFile(
+  out + "/summary.json",
+  JSON.stringify(
+    [...previous.filter((r: any) => !labels.includes(r.label)), ...reports],
+    null,
+    2,
+  ),
+);

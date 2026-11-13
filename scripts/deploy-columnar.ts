@@ -146,23 +146,34 @@ if (!process.argv.includes("--deploy-only")) {
 }
 const url = "https://work-search-cws-upload.phulin.workers.dev";
 if (process.argv.includes("--deploy-only")) {
-  for (const [generation, objects] of [
+  const groups = [
     [root.generation, root.objects],
     ...(pairs ? [[pairs.generation, pairs.objects] as const] : []),
-  ] as const)
-    for (const object of objects) {
-      const h = await headObject(
-        `${url}/${object.key ?? `${generation}/${object.name}`}`,
-        token,
-      );
-      if (
-        h.status !== 200 ||
-        Number(h.headers["content-length"]) !== object.size ||
-        h.headers["x-sha256"] !== object.sha256 ||
-        (!object.checksums && !h.headers["x-page-crc32"])
-      )
-        throw Error("Unpublished immutable object " + object.name);
-    }
+  ] as const;
+  const pending = groups.flatMap(([generation, objects]) =>
+    objects.map((object) => ({ generation, object })),
+  );
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: uploadConcurrency }, async () => {
+      for (;;) {
+        const item = pending[next++];
+        if (!item) return;
+        const { generation, object } = item;
+        const h = await headObject(
+          `${url}/${object.key ?? `${generation}/${object.name}`}`,
+          token,
+        );
+        if (
+          h.status !== 200 ||
+          Number(h.headers["content-length"]) !== object.size ||
+          h.headers["x-sha256"] !== object.sha256 ||
+          (!object.checksums && !h.headers["x-page-crc32"])
+        )
+          throw Error("Unpublished immutable object " + object.name);
+      }
+    }),
+  );
   uploadAgent.destroy();
 }
 if (!process.argv.includes("--deploy-only")) {
@@ -299,6 +310,7 @@ await writeFile(
       compatibility_date: "2026-11-01",
       account_id: "8f088d4bd190caf693cc42bb8311fd7d",
       workers_dev: true,
+      placement: { region: "aws:us-east-1" },
       r2_buckets: [{ binding: "INDEX", bucket_name: "work-search-demo" }],
       limits: { cpu_ms: 300000 },
       vars: {

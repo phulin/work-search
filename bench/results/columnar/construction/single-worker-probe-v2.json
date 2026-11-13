@@ -1,0 +1,309 @@
+{
+  "elapsed": 7330.655583,
+  "rows": [
+    {
+      "i": 0,
+      "status": 200,
+      "ms": 2737.2433330000003,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2640817,
+      "telemetry": {
+        "isolate": "f33bef3f-a1f8-4997-9e37-0745375fb3f7",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-0",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2393,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 408882
+      }
+    },
+    {
+      "i": 1,
+      "status": 200,
+      "ms": 2726.359041,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2709050,
+      "telemetry": {
+        "isolate": "493eef97-6e31-4543-8699-42eaff6bb311",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-1",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2367,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 413261
+      }
+    },
+    {
+      "i": 2,
+      "status": 200,
+      "ms": 4093.796,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2912748,
+      "telemetry": {
+        "isolate": "29a3529b-6a4f-43f8-b478-588d4cada1bd",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-2",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 3663,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 447290
+      }
+    },
+    {
+      "i": 3,
+      "status": 200,
+      "ms": 6757.438333,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3398353,
+      "telemetry": {
+        "isolate": "29a3529b-6a4f-43f8-b478-588d4cada1bd",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-3",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2395,
+        "queueMs": 3876,
+        "requests": 3,
+        "bytes": 554515
+      }
+    },
+    {
+      "i": 4,
+      "status": 200,
+      "ms": 2912.864875,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2864599,
+      "telemetry": {
+        "isolate": "ceabef87-28b9-42f8-a321-a5097e177993",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-4",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2517,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 443926
+      }
+    },
+    {
+      "i": 5,
+      "status": 200,
+      "ms": 4936.05225,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2642700,
+      "telemetry": {
+        "isolate": "493eef97-6e31-4543-8699-42eaff6bb311",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-5",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2172,
+        "queueMs": 2458,
+        "requests": 3,
+        "bytes": 404025
+      }
+    },
+    {
+      "i": 6,
+      "status": 200,
+      "ms": 5004.572166999999,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2585772,
+      "telemetry": {
+        "isolate": "366b0a5f-daf7-4f95-9f53-9fb7ab7b9245",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-6",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2140,
+        "queueMs": 2530,
+        "requests": 3,
+        "bytes": 389250
+      }
+    },
+    {
+      "i": 7,
+      "status": 200,
+      "ms": 3947.4801669999997,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2540936,
+      "telemetry": {
+        "isolate": "c728ccc3-eecd-4cb8-adaf-d97c191948b8",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-7",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 3462,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 384322
+      }
+    },
+    {
+      "i": 8,
+      "status": 200,
+      "ms": 4235.851209,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2649530,
+      "telemetry": {
+        "isolate": "9298e1d5-7997-4883-9256-c0ef122968ca",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-8",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 3790,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 404716
+      }
+    },
+    {
+      "i": 9,
+      "status": 200,
+      "ms": 2799.451917,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3146119,
+      "telemetry": {
+        "isolate": "60c3cfa7-ccc7-416c-8bc2-92804181ed83",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-9",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2455,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 490447
+      }
+    },
+    {
+      "i": 10,
+      "status": 200,
+      "ms": 3054.5780839999998,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3161859,
+      "telemetry": {
+        "isolate": "1b8995b1-3bdf-4ab4-a5b4-265c3f1d4791",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-10",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2665,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 470111
+      }
+    },
+    {
+      "i": 11,
+      "status": 200,
+      "ms": 2732.410959,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3308128,
+      "telemetry": {
+        "isolate": "366b0a5f-daf7-4f95-9f53-9fb7ab7b9245",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-11",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2361,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 514715
+      }
+    },
+    {
+      "i": 12,
+      "status": 200,
+      "ms": 7318.564542,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 2632635,
+      "telemetry": {
+        "isolate": "c728ccc3-eecd-4cb8-adaf-d97c191948b8",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-12",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 3268,
+        "queueMs": 3653,
+        "requests": 3,
+        "bytes": 391752
+      }
+    },
+    {
+      "i": 13,
+      "status": 200,
+      "ms": 3044.978,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3126315,
+      "telemetry": {
+        "isolate": "c3527056-6239-4901-80b1-f84f8dde4dde",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-13",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2595,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 485419
+      }
+    },
+    {
+      "i": 14,
+      "status": 200,
+      "ms": 5584.8947499999995,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3674246,
+      "telemetry": {
+        "isolate": "487392da-ed54-44e0-bffc-9298a0497eb0",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-14",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2367,
+        "queueMs": 2649,
+        "requests": 3,
+        "bytes": 579844
+      }
+    },
+    {
+      "i": 15,
+      "status": 200,
+      "ms": 2977.234375,
+      "writesAndMergeReads": 2,
+      "writeAndMergeBytes": 3338746,
+      "telemetry": {
+        "isolate": "487392da-ed54-44e0-bffc-9298a0497eb0",
+        "code": "1e1c07daffd1b119e0ac31c65692c3a8ca305cd7fdbb88399518b69f21a6cbdc",
+        "build": "single-worker-probe-v2",
+        "task": "ingest-15",
+        "operation": "/ingest",
+        "placement": null,
+        "wallMs": 2500,
+        "queueMs": 0,
+        "requests": 3,
+        "bytes": 537603
+      }
+    }
+  ]
+}

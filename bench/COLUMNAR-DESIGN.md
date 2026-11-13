@@ -132,12 +132,33 @@ validates the supplied SHA-256 before acknowledging storage. Root publication
 follows successful immutable publication, never the reverse. A dedicated cleanup
 command removes only temporary stream keys, preserving serving objects.
 
-Builder source and the exact executable are snapshotted before ingestion, so a
-concurrent rebuild cannot change provenance. Accelerator builders consume the
-published numeric format using bounded page caching and descriptor leases.
-Serving deployment snapshots runtime source, roots and selected hot data and
-records source hashes, generation, corpus hash, cache namespace and Yarn lock.
-The deployment command can verify and reclaim local duplicates after publication.
+The TypeScript Worker builder reads archived source documents directly from R2.
+A local coordinator schedules HTTP requests; it never receives posting or text
+bulk data. One deployed builder handles concurrent HTTP invocations across
+isolates. Within an isolate, a bounded queue serializes requests before parsing
+their bodies to avoid multiplying construction buffers. Ingestion and multiple
+balanced merge levels run as independent jobs. Lexical ranges cross document
+groups before the final merge, avoiding nearly serial full-corpus merge passes.
+Posting jobs receive term
+boundaries and global lexical IDs. Up to four input reads and two immutable output
+writes overlap. Continuations retain numeric cursors, not entire streams.
+
+Each producer owns a disjoint range of logical object IDs. The root stores a
+sorted ID column alongside dense object descriptors, so independent jobs never
+rewrite references or create enormous sparse arrays. Bounded hierarchy merges
+combine disjoint dictionary ranges. Document jobs cover aligned 4,096-document
+ranges. Separate jobs resolve the unique vocabulary of at most 1,024 documents
+in lexical order, using an ID-only object directory. Document output reads these
+small immutable maps instead of repeatedly traversing the global dictionary.
+Display fields and forward blocks remain separately accessible.
+
+Build output records code and source IDs, and the completed layout identifies its
+immutable generation. Retries reuse completed R2 tasks. Accelerator builders read
+the published numeric format with bounded caching. Deployment verifies immutable
+objects before publishing the matching serving root.
+Verification runs in 256-object jobs. Final publication checks their ordered
+coverage and generation receipts, keeping each request below its subrequest
+budget even when the complete generation contains many thousands of objects.
 
 The direct 1M build and independent exhaustive oracle have completed. Live 1M
 publication and largest-snapshot construction are in progress. A 1,000-document
@@ -151,7 +172,7 @@ cleanup. Larger builds are not validated by that pilot alone.
 - Flat common-term plans and score-cell traversal that repeatedly visits pages.
 - Eager positions, display-object construction per posting, lossy score storage,
   common-word removal, or approximate top-K truncation.
-- Cross-request promise/admission queues in Worker memory.
+- Cross-request fetch promises in serving Worker memory.
 - Native synchronous gzip decoding: a live 500-request-per-variant comparison
   regressed P50/P95/P99 despite a favorable local microbenchmark.
 - Hot-certificate band ordering for compound queries: a live ablation showed no
