@@ -484,6 +484,11 @@ it("executes exact pair phrases inside Boolean/proximity expressions with the or
           used++;
           if (!q.includes("W/"))
             expect(result.diagnostics.wordPositionIntegers).toBe(0);
+          if (q === '"a b c d"') {
+            expect(result.diagnostics.plannedPairPackets).toBe(0);
+            expect(result.diagnostics.plannedPresenceLists).toBe(0);
+            expect(result.diagnostics.pairDirectoryRanges).toBe(0);
+          }
         }
         if (q === '"a b c d"' && result.results.length) {
           const last = result.results.at(-1)!;

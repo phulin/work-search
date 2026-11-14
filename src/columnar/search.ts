@@ -354,17 +354,26 @@ export class ColumnarIndex {
         options.field ?? "all",
         reader,
       ),
-      membershipRead = this.membership
-        ? planMembershipAnchor(
-            original,
-            this.membership,
-            bundled,
-            basePackages?.averageBytes,
-            options.field,
-            preliminary,
-            options.exactTotal,
-          )
-        : undefined,
+      // A complete standalone phrase source already supplies both membership
+      // and exact positions. Do not first fetch redundant pair/presence filters
+      // just to rediscover a broad candidate set. Selective document plans keep
+      // their existing continuation; compound queries still price intersections.
+      primaryExact =
+        original.kind === "phrase" &&
+        preliminary?.kind !== "documents" &&
+        exactPlans.length > 0,
+      membershipRead =
+        this.membership && !primaryExact
+          ? planMembershipAnchor(
+              original,
+              this.membership,
+              bundled,
+              basePackages?.averageBytes,
+              options.field,
+              preliminary,
+              options.exactTotal,
+            )
+          : undefined,
       provedWords = membershipRead?.provedWords ?? new Set<string>(),
       unigramAnchors = preliminary?.anchors?.filter(
         (name) => !provedWords.has(name),
@@ -386,16 +395,17 @@ export class ColumnarIndex {
                   : preliminary.kind,
             }
           : preliminary,
-      presenceRanks = this.membership
-        ? planCommonPresence(
-            mandatory(original),
-            this.membership,
-            provedWords,
-            filterAlternative,
-            basePackages?.averageBytes ?? 16384,
-            options.exactTotal ?? false,
-          )
-        : [],
+      presenceRanks =
+        this.membership && !primaryExact
+          ? planCommonPresence(
+              mandatory(original),
+              this.membership,
+              provedWords,
+              filterAlternative,
+              basePackages?.averageBytes ?? 16384,
+              options.exactTotal ?? false,
+            )
+          : [],
       termRequest = bundled
         ? this.terms(
             requested.filter((name) => !bundled.has(name)),
@@ -550,13 +560,15 @@ export class ColumnarIndex {
         options,
         packages,
       );
-      queryRoot = await lookupRemotePairs(
-        ast,
-        terms as Map<string, DirectoryTerm>,
-        this.root,
-        reader,
-        planned,
-      );
+      queryRoot = primaryExact
+        ? this.root
+        : await lookupRemotePairs(
+            ast,
+            terms as Map<string, DirectoryTerm>,
+            this.root,
+            reader,
+            planned,
+          );
       if (queryRoot !== this.root)
         planned = packetPlan(
           ast,
@@ -565,19 +577,20 @@ export class ColumnarIndex {
           options,
           packages,
         );
-      planned = await this.chooseContinuation({
-        ast,
-        terms: terms as Map<string, DirectoryTerm>,
-        root: queryRoot,
-        reader,
-        options,
-        packages,
-        plan: planned,
-      });
+      if (!primaryExact)
+        planned = await this.chooseContinuation({
+          ast,
+          terms: terms as Map<string, DirectoryTerm>,
+          root: queryRoot,
+          reader,
+          options,
+          packages,
+          plan: planned,
+        });
       // The measured candidate-document continuation remains a complete
       // alternative. Do not replace a cheap, actually filtered set with a
       // corpus-wide context scan just because its unigram forecast was broad.
-      if (exactPlans.length && planned.kind !== "documents") {
+      if (exactPlans.length && (primaryExact || planned.kind !== "documents")) {
         const useful = exactPlans.filter(
           (p) => !loadedMembership?.covered(p.words),
         );

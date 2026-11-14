@@ -43,6 +43,8 @@ const runs = [
   },
 ];
 for (const r of runs) {
+  if (process.env.CWS_EXACT_LABEL)
+    r.label = r.label.replace("exact-phrases", process.env.CWS_EXACT_LABEL);
   console.log("Starting", r.label);
   const log = await open("work/" + r.label + ".log", "w");
   try {

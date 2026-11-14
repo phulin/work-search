@@ -80,6 +80,7 @@ interface ExternalMembers {
 }
 const PACKET = 0x34505043,
   CONTEXT = 0x31584343;
+const NO_POSITIONS = new Uint32Array();
 function arrayMembers(docs: Uint32Array): Members {
   return {
     count: docs.length,
@@ -307,6 +308,28 @@ export class PairPacket {
   phrase(row: number, field: number, words: number[], anchor: number) {
     if (anchor < 0 || words[anchor] !== this.a || words[anchor + 1] !== this.b)
       throw Error("Pair does not anchor phrase");
+    // Singleton rows dominate sparse pair streams. Check their encoded context
+    // directly instead of allocating three decoded columns for every document.
+    const raw = this.raw(row, field);
+    if (!raw) return { certain: true, starts: NO_POSITIONS };
+    const count = readVarint(raw, 0);
+    if (count.value === 1) {
+      const position = readVarint(raw, count.next),
+        previous = readVarint(raw, position.next),
+        next = readVarint(raw, previous.next);
+      if (next.next !== raw.length) throw Error("Invalid pair context columns");
+      this.decoded?.(row, field, 1, raw.length);
+      const matches =
+        position.value >= anchor &&
+        (anchor === 0 || previous.value === words[anchor - 1] + 1) &&
+        (anchor + 2 >= words.length || next.value === words[anchor + 2] + 1);
+      return {
+        certain: !matches || (anchor <= 1 && words.length - anchor - 2 <= 1),
+        starts: matches
+          ? Uint32Array.of(position.value - anchor)
+          : NO_POSITIONS,
+      };
+    }
     const o = this.occurrences(row, field),
       starts = new Uint32Array(o.positions.length);
     let n = 0;
