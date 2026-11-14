@@ -7,6 +7,11 @@ import "../../scripts/workerd-runtime.js";
 import { FileStorage } from "../../src/storage/filesystem.js";
 import { profileStorage } from "./profile-storage.js";
 import { benchmarkToken } from "./token.js";
+import {
+  prepareServing,
+  loadServingAssets,
+} from "../../scripts/columnar-serving.js";
+import { localProfileStorage } from "./local-profile-storage.js";
 const variant = process.argv[2] ?? "v1",
   dir =
     process.env.CWS_DIR ??
@@ -39,6 +44,19 @@ await writeFile(
     compatibility_date: "2026-11-01",
   }),
 );
+const local = process.env.CWS_PROFILE_LOCAL === "1";
+if (local) {
+  await prepareServing(
+    resolve(dir),
+    out + "/serving",
+    "cws-profile-" + variant,
+    { membershipDir: resolve(dir) },
+  );
+  await writeFile(
+    out + "/entry.ts",
+    `import worker from './serving/entry.ts';export default{fetch(request,env,ctx){return worker.fetch(request,{...env,INDEX:{async get(key,options){const r=await env.FILES.fetch('http://files/'+key,{headers:{offset:String(options?.range?.offset??0),length:String(options?.range?.length??0)}});if(!r.ok)throw Error('Local file '+r.status);return{size:Number(r.headers.get('x-cws-size')),customMetadata:JSON.parse(r.headers.get('x-cws-meta')),arrayBuffer:()=>r.arrayBuffer()};}}},ctx);}};`,
+  );
+}
 const dry = spawnSync(
   "yarn",
   [
@@ -55,13 +73,18 @@ const dry = spawnSync(
 if (dry.status) throw Error(dry.stdout + dry.stderr);
 const disk = new FileStorage(dir + "/packs"),
   pairDisk = new FileStorage(dir + "/pairs/packs"),
-  packetSource = packet
-    ? await profileStorage(
-        base,
-        process.env.CWS_PROFILE_DATA ?? out + "/data",
-        await benchmarkToken(),
+  packetSource = local
+    ? localProfileStorage(
+        resolve(dir),
+        await loadServingAssets(resolve(dir), { membershipDir: resolve(dir) }),
       )
-    : undefined;
+    : packet
+      ? await profileStorage(
+          base,
+          process.env.CWS_PROFILE_DATA ?? out + "/data",
+          await benchmarkToken(),
+        )
+      : undefined;
 const mf = new Miniflare({
   compatibilityDate: "2026-11-01",
   compatibilityFlags: ["nodejs_compat"],
@@ -212,8 +235,9 @@ try {
     }
   })();
   const outcomes = await Promise.allSettled(
-    Array.from({ length: 8 }, (_, i) =>
-      call(queries[i % queries.length], false),
+    Array.from(
+      { length: Number(process.env.CWS_PROFILE_CONCURRENCY ?? 8) },
+      (_, i) => call(queries[i % queries.length], false),
     ),
   );
   polling = false;

@@ -104,6 +104,16 @@ for (const variant of ["control", "candidate"]) {
 const root = JSON.parse(
   await readFile("work/verification-1m/root.json", "utf8"),
 );
+await mkdir(out + "/profiles/workerd", { recursive: true });
+for (const name of await readdir("work/columnar-profile/verification-1m"))
+  if (
+    name === "requests.json" ||
+    /\.(?:cpuprofile|heapprofile)\.gz$/.test(name)
+  )
+    await cp(
+      "work/columnar-profile/verification-1m/" + name,
+      out + "/profiles/workerd/" + name,
+    );
 const manifest = {
   corpusHash: root.corpusHash,
   generation: root.generation,
@@ -113,6 +123,8 @@ const manifest = {
   localControlGeneration:
     "516d94f78ae930e1a1462d8ca590a5a882347fd6412b3e8749964ee0d250e436",
   initialImplementationCommit: "614141e",
+  servingEngineCommit: "c9a35ce",
+  metadataBindingToolCommit: "cea43dc",
   notes: [
     "Local control uses identical candidate passage bytes in the frozen CDP3 arrangement.",
     "Local complete-response simulation and CPU diagnostics are not live Worker measurements.",

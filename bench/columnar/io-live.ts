@@ -1,7 +1,7 @@
 /** Interleaved complete responses on two immutable-runtime benchmark Workers. */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname } from "node:path";
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { strict as assert } from "node:assert";
 import { benchmarkToken } from "./token.js";
@@ -11,7 +11,8 @@ if (!output)
     "Usage: io-live.ts CONTROL_URL CANDIDATE_URL CONTRACT OUTPUT.json.gz",
   );
 await mkdir(dirname(output), { recursive: true });
-const contract = JSON.parse(await readFile(contractPath, "utf8")),
+const contractBytes = await readFile(contractPath),
+  contract = JSON.parse(contractBytes.toString()),
   token = await benchmarkToken(),
   urls = { control: before, candidate: after },
   rows: any[] = [],
@@ -50,6 +51,7 @@ const manifest = {
   kind: "Live complete-response comparison; no response caching",
   startedAt: new Date().toISOString(),
   contractPath,
+  contractSha256: createHash("sha256").update(contractBytes).digest("hex"),
   urls,
   health,
   seed,
@@ -94,6 +96,7 @@ async function request(
     rows.push({
       variant,
       q: s.q,
+      options: s.options,
       kind: s.kind,
       condition,
       session,
@@ -118,6 +121,7 @@ async function request(
   const row = {
     variant,
     q: s.q,
+    options: s.options,
     kind: s.kind,
     condition,
     session,
@@ -190,10 +194,14 @@ for (const { s, session } of jobs) {
     }
 }
 if (process.env.CWS_LOAD === "1") {
-  const workload = contract.scenarios.filter(
-      (s: any) =>
-        s.kind === "load" ||
-        process.env.CWS_LOAD_QUERIES?.split("|").some((q) => s.q.includes(q)),
+  const ids = new Set(
+      (process.env.CWS_LOAD_SCENARIOS ?? "")
+        .split(",")
+        .filter(Boolean)
+        .map(Number),
+    ),
+    workload = contract.scenarios.filter(
+      (s: any, i: number) => s.kind === "load" || ids.has(i),
     ),
     count = Number(process.env.CWS_LOAD_COUNT ?? 20);
   assert(workload.length);
