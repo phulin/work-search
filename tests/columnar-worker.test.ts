@@ -6,8 +6,8 @@ import { spawnSync } from "node:child_process";
 import { Miniflare } from "miniflare";
 import "../scripts/workerd-runtime.js";
 import { buildColumnar } from "../bench/columnar/control/offline-build.js";
-it.each(["bundled", "metadata"])(
-  "serves exact complete responses with %s integrity directories through workerd R2 and validated shared pages",
+it.each(["bundled", "metadata", "absent"])(
+  "serves exact complete responses with %s checksum directories through workerd R2 and generation-scoped shared pages",
   async (integrity) => {
     const dir = await mkdtemp(join(tmpdir(), "cws-worker-"));
     let mf: Miniflare | undefined;
@@ -34,7 +34,7 @@ it.each(["bundled", "metadata"])(
           Buffer.from(Uint32Array.from(o.checksums!).buffer).toString("base64"),
         ]),
       );
-      if (integrity === "metadata") {
+      if (integrity !== "bundled") {
         root.objects = root.objects.map(({ checksums, ...o }) => o);
         await writeFile(dir + "/index/root.json", JSON.stringify(root));
       }
@@ -83,7 +83,9 @@ it.each(["bundled", "metadata"])(
             customMetadata: {
               generation: root.generation,
               sha256: object.sha256,
-              crc32: crc.get(object.name)!,
+              ...(integrity === "absent"
+                ? {}
+                : { crc32: crc.get(object.name)! }),
             },
           },
         );

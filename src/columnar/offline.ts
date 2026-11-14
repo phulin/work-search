@@ -31,7 +31,7 @@ export class OfflineObjects {
       this.readKey(key, offset, length),
     readPage: async (key: string, offset: number, length: number) => {
       const data = await this.readKey(key, offset, length);
-      return { data, checksum: crc32(data) };
+      return { data };
     },
   };
   constructor(
@@ -104,7 +104,7 @@ export class OfflineObjects {
       v = new DataView(data.buffer, data.byteOffset, data.byteLength);
     if (v.getUint32(0, true) !== 0x32504443 || v.getUint32(4, true) !== doc)
       throw Error("Offline document identity mismatch");
-    return { data, checksum: crc32(data) };
+    return { data };
   }
   async readKey(key: string, offset: number, length: number) {
     this.keys ??= new Map(

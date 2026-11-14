@@ -312,16 +312,14 @@ it("matches exhaustive ranking, AST oracle, field boosts, phrases, complements a
     // Rebuild determinism includes immutable object checksums and root routing.
     const again = await buildColumnar({ input, out: dir + "/again" });
     expect(again).toEqual(root);
-    const corrupt = {
+    const truncated = {
       async read(key: string, offset: number, length: number) {
-        const b = Uint8Array.from(await source.read(key, offset, length));
-        b[0] ^= 1;
-        return b;
+        return (await source.read(key, offset, length)).subarray(0, length - 1);
       },
     };
     await expect(
-      new Reader(root, corrupt).read(root.documents[0]),
-    ).rejects.toThrow("checksum");
+      new Reader(root, truncated).read(root.documents[0]),
+    ).rejects.toThrow("Truncated");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

@@ -112,11 +112,11 @@ it("prepares immutable ranges and packages once, replays offline, and rejects da
       "run preparation first",
     );
     expect(fetches).toBe(2);
-    group[packages[0].length + 20] ^= 1;
+    group[packages[0].length + 4] ^= 1;
     await writeFile(dir + "/objects/" + groupKey, group);
     await expect(
       new Reader(root, offline).document("b".repeat(64), 1, locator),
-    ).rejects.toThrow("Document package digest mismatch");
+    ).rejects.toThrow("Invalid document package");
   } finally {
     vi.unstubAllGlobals();
     await rm(dir, { recursive: true, force: true });

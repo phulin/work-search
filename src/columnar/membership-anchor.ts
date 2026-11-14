@@ -130,7 +130,6 @@ export async function loadCommonPresence(
       const raw = await reader.named(
           `${presence.generation}/presence-${rank}.bin`,
           entry.bytes,
-          entry.crc32,
         ),
         record = new PairMembership(
           raw,
@@ -325,7 +324,7 @@ export async function readMembershipAnchor(
       requests.set(
         key,
         reader
-          .named(key, leaf.bytes, leaf.crc32)
+          .named(key, leaf.bytes)
           .then((raw) => new PairMembershipPacket(raw)),
       );
     }

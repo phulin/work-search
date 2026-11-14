@@ -226,7 +226,7 @@ if (process.env.CWS_CPU_CHILD) {
       return seed >>> 0;
     };
     for (const [sid, s] of contract.scenarios.entries()) {
-      if (!chosen.has(s.q)) continue;
+      if (process.env.CWS_CPU_ALL !== "1" && !chosen.has(s.q)) continue;
       const hashes = new Set<string>(),
         run = async (v: (typeof versions)[number]) => {
           const row = await v.call("run", sid);

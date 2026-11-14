@@ -1,0 +1,293 @@
+{
+  "kind": "Randomized interleaved local simulation, eight queries, three repetitions/version/condition, independent bounded caches. Exploratory pilot, not production percentiles.",
+  "rows": [
+    {
+      "condition": "reuse",
+      "q": "\"statute of limitations\" AND \"affirmative defense\" AND \"Rule 16\" AND diligence",
+      "control": {
+        "n": 3,
+        "wallMs": 1438.2975000000006,
+        "scoreIOWaves": 61,
+        "originReads": 71,
+        "originBytes": 18431125
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 1337.6703749999942,
+        "scoreIOWaves": 61,
+        "originReads": 71,
+        "originBytes": 18431125
+      }
+    },
+    {
+      "condition": "reuse",
+      "q": "\"burden of proving\"",
+      "control": {
+        "n": 3,
+        "wallMs": 201.30533300000388,
+        "scoreIOWaves": 10,
+        "originReads": 0,
+        "originBytes": 0
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 203.50162500000442,
+        "scoreIOWaves": 10,
+        "originReads": 0,
+        "originBytes": 0
+      }
+    },
+    {
+      "condition": "reuse",
+      "q": "\"Second Amendment\" W/P (\"one handgun\" OR \"purchase limits\")",
+      "control": {
+        "n": 3,
+        "wallMs": 727.9631249999948,
+        "scoreIOWaves": 47,
+        "originReads": 0,
+        "originBytes": 0
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 736.0717089999962,
+        "scoreIOWaves": 47,
+        "originReads": 0,
+        "originBytes": 0
+      }
+    },
+    {
+      "condition": "reuse",
+      "q": "(rules OR of) AND rule",
+      "control": {
+        "n": 3,
+        "wallMs": 101.40695799999958,
+        "scoreIOWaves": 8,
+        "originReads": 0,
+        "originBytes": 0
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 97.02479200000016,
+        "scoreIOWaves": 8,
+        "originReads": 0,
+        "originBytes": 0
+      }
+    },
+    {
+      "condition": "reuse",
+      "q": "\"requests for admission\" AND (\"application of law to fact\" OR \"legal conclusions\")",
+      "control": {
+        "n": 3,
+        "wallMs": 3775.5911669999987,
+        "scoreIOWaves": 61,
+        "originReads": 480,
+        "originBytes": 118019724
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 3369.988915999995,
+        "scoreIOWaves": 61,
+        "originReads": 478,
+        "originBytes": 117495436
+      }
+    },
+    {
+      "condition": "reuse",
+      "q": "(jurisdiction OR \"summary judgment\") AND NOT \"res ipsa loquitur\"",
+      "control": {
+        "n": 3,
+        "wallMs": 239.55812499999956,
+        "scoreIOWaves": 8,
+        "originReads": 0,
+        "originBytes": 0
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 241.04808299999422,
+        "scoreIOWaves": 8,
+        "originReads": 0,
+        "originBytes": 0
+      }
+    },
+    {
+      "condition": "reuse",
+      "q": "\"in the absence of\"",
+      "control": {
+        "n": 3,
+        "wallMs": 1151.3773750000037,
+        "scoreIOWaves": 61,
+        "originReads": 62,
+        "originBytes": 11796259
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 1215.1160840000011,
+        "scoreIOWaves": 61,
+        "originReads": 72,
+        "originBytes": 14417699
+      }
+    },
+    {
+      "condition": "reuse",
+      "q": "\"mandate rule\" AND (discovery OR \"law of the case\") AND timeliness",
+      "control": {
+        "n": 3,
+        "wallMs": 3226.0213749999966,
+        "scoreIOWaves": 60,
+        "originReads": 406,
+        "originBytes": 104819487
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 2922.3335420000003,
+        "scoreIOWaves": 60,
+        "originReads": 395,
+        "originBytes": 102156575
+      }
+    },
+    {
+      "condition": "empty",
+      "q": "\"statute of limitations\" AND \"affirmative defense\" AND \"Rule 16\" AND diligence",
+      "control": {
+        "n": 3,
+        "wallMs": 1422.0613749999975,
+        "scoreIOWaves": 61,
+        "originReads": 71,
+        "originBytes": 18431125
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 1336.564041000005,
+        "scoreIOWaves": 61,
+        "originReads": 70,
+        "originBytes": 18168981
+      }
+    },
+    {
+      "condition": "empty",
+      "q": "\"burden of proving\"",
+      "control": {
+        "n": 3,
+        "wallMs": 213.80845799999952,
+        "scoreIOWaves": 10,
+        "originReads": 0,
+        "originBytes": 0
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 215.14091700001154,
+        "scoreIOWaves": 10,
+        "originReads": 0,
+        "originBytes": 0
+      }
+    },
+    {
+      "condition": "empty",
+      "q": "\"Second Amendment\" W/P (\"one handgun\" OR \"purchase limits\")",
+      "control": {
+        "n": 3,
+        "wallMs": 737.7249169999996,
+        "scoreIOWaves": 47,
+        "originReads": 0,
+        "originBytes": 0
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 743.3459589999984,
+        "scoreIOWaves": 47,
+        "originReads": 0,
+        "originBytes": 0
+      }
+    },
+    {
+      "condition": "empty",
+      "q": "(rules OR of) AND rule",
+      "control": {
+        "n": 3,
+        "wallMs": 97.95120799999859,
+        "scoreIOWaves": 8,
+        "originReads": 0,
+        "originBytes": 0
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 108.22245800000383,
+        "scoreIOWaves": 8,
+        "originReads": 0,
+        "originBytes": 0
+      }
+    },
+    {
+      "condition": "empty",
+      "q": "\"requests for admission\" AND (\"application of law to fact\" OR \"legal conclusions\")",
+      "control": {
+        "n": 3,
+        "wallMs": 3720.852791000005,
+        "scoreIOWaves": 61,
+        "originReads": 482,
+        "originBytes": 118544012
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 3448.0672089999935,
+        "scoreIOWaves": 61,
+        "originReads": 482,
+        "originBytes": 118544012
+      }
+    },
+    {
+      "condition": "empty",
+      "q": "(jurisdiction OR \"summary judgment\") AND NOT \"res ipsa loquitur\"",
+      "control": {
+        "n": 3,
+        "wallMs": 242.8650409999973,
+        "scoreIOWaves": 8,
+        "originReads": 0,
+        "originBytes": 0
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 236.4958750000078,
+        "scoreIOWaves": 8,
+        "originReads": 0,
+        "originBytes": 0
+      }
+    },
+    {
+      "condition": "empty",
+      "q": "\"in the absence of\"",
+      "control": {
+        "n": 3,
+        "wallMs": 1192.3514579999974,
+        "scoreIOWaves": 61,
+        "originReads": 64,
+        "originBytes": 12320547
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 1220.8343749999985,
+        "scoreIOWaves": 61,
+        "originReads": 74,
+        "originBytes": 14941987
+      }
+    },
+    {
+      "condition": "empty",
+      "q": "\"mandate rule\" AND (discovery OR \"law of the case\") AND timeliness",
+      "control": {
+        "n": 3,
+        "wallMs": 3194.9205,
+        "scoreIOWaves": 60,
+        "originReads": 408,
+        "originBytes": 105343775
+      },
+      "replacement": {
+        "n": 3,
+        "wallMs": 2882.754041,
+        "scoreIOWaves": 60,
+        "originReads": 398,
+        "originBytes": 102943007
+      }
+    }
+  ]
+}

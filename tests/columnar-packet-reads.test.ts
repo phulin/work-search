@@ -2,6 +2,33 @@ import { it, expect } from "vitest";
 import { Reader, Memory, Lru } from "../src/columnar/storage.js";
 import { PAGE } from "../src/columnar/format.js";
 import { crc32 } from "../src/format/codec.js";
+it("reads pages and complete packets without consulting obsolete payload checksums", async () => {
+  const data = Uint8Array.from({ length: PAGE + 17 }, (_, i) => i & 255),
+    root = {
+      generation: "g",
+      objects: [
+        { name: "o", size: data.length, sha256: "x", checksums: [0, 0] },
+      ],
+    },
+    source = {
+      async read(_key: string, offset: number, length: number) {
+        return data.slice(offset, offset + length);
+      },
+    };
+  expect(await new Reader(root, source).read([0, 11, 23])).toEqual(
+    data.subarray(11, 34),
+  );
+  expect(await new Reader(root, source).packet([0, 0, data.length])).toEqual(
+    data,
+  );
+  const without = {
+    ...root,
+    objects: root.objects.map(({ checksums, ...o }) => o),
+  };
+  expect(await new Reader(without, source).packet([0, PAGE - 7, 24])).toEqual(
+    data.subarray(PAGE - 7),
+  );
+});
 it("preserves complete reads after the shared-cache operation budget is exhausted", async () => {
   const data = Uint8Array.of(1, 2, 3, 4),
     checksum = crc32(data),
@@ -45,7 +72,7 @@ it("preserves complete reads after the shared-cache operation budget is exhauste
   expect(reader.stats.sharedGets + reader.stats.sharedPuts).toBe(900);
   expect(reader.stats.sharedBudgetBypasses).toBeGreaterThan(0);
 });
-it("uses one contiguous GET for 900 KiB, reuses independent pages, coalesces adjacent streams and rejects corruption", async () => {
+it("uses one contiguous GET for 900 KiB, reuses independent pages, coalesces adjacent streams and rejects truncation", async () => {
   const data = Uint8Array.from(
       { length: PAGE * 6 + 131 },
       (_, i) => (i * 17 + (i >>> 11)) & 255,
@@ -103,14 +130,12 @@ it("uses one contiguous GET for 900 KiB, reuses independent pages, coalesces adj
   expect(calls.at(-1)).toEqual({ offset: 0, length: PAGE * 2 });
   const bad = {
     async read(_k: string, o: number, n: number) {
-      const b = data.slice(o, o + n);
-      b[100] ^= 1;
-      return b;
+      return data.slice(o, o + n - 1);
     },
   };
   await expect(
     new Reader(root, bad).packet([0, 0, 900 * 1024]),
-  ).rejects.toThrow("checksum");
+  ).rejects.toThrow("Truncated");
   const tail = await new Reader(root, source).packet([0, PAGE * 6 + 20, 111]);
   expect(tail).toEqual(data.subarray(PAGE * 6 + 20));
   expect(calls.at(-1)).toEqual({ offset: PAGE * 6, length: 131 });
@@ -158,15 +183,14 @@ it("retains independent pages across LRU eviction and concurrent grouped reads, 
   expect(r.stats.packetCopyBytes).toBe(82);
   memory.clear();
   expect(a[1]).toEqual(data.subarray(PAGE + 99, PAGE + 199));
-  const corrupt = {
+  const truncated = {
     async read(k: string, offset: number, length: number) {
       const raw = await source.read(k, offset, length);
-      raw[PAGE + 120] ^= 1;
-      return raw;
+      return raw.subarray(0, raw.length - 1);
     },
   };
-  await expect(new Reader(root, corrupt).packets(refs)).rejects.toThrow(
-    "checksum",
+  await expect(new Reader(root, truncated).packets(refs)).rejects.toThrow(
+    "Truncated",
   );
   await expect(new Reader(root, source).packets([[0, -1, 10]])).rejects.toThrow(
     "reference",

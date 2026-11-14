@@ -1,4 +1,3 @@
-import { crc32 } from "../format/codec.js";
 import { DocumentPackage } from "./document-package.js";
 import {
   PAGE,
@@ -60,9 +59,7 @@ export class Semaphore {
     }
   }
 }
-// get() returns only immutable bytes previously validated by this reader and
-// stored with its generation-scoped receipt. Treat this cache like validated
-// memory, rather than repeating a JavaScript checksum after every cache hit.
+// Cached immutable bytes use generation-scoped keys, just like application memory.
 export interface SharedPages {
   get(key: string): Promise<Uint8Array | undefined>;
   put(key: string, value: Uint8Array): Promise<void>;
@@ -81,14 +78,14 @@ export interface Source {
   readWhole?(
     key: string,
     range?: { offset: number; length: number; doc: number; first: number },
-  ): Promise<{ data: Uint8Array; sha256?: string; checksum?: number }>;
+  ): Promise<{ data: Uint8Array; sha256?: string }>;
   read(key: string, offset: number, length: number): Promise<Uint8Array>;
   readPage?(
     key: string,
     offset: number,
     length: number,
     expectedSha256?: string,
-  ): Promise<{ data: Uint8Array; checksum?: number }>;
+  ): Promise<{ data: Uint8Array }>;
 }
 function packetGroups(refs: Ref[]) {
   const groups: { ref: Ref; entries: { ref: Ref; index: number }[] }[] = [];
@@ -247,8 +244,7 @@ export class Reader {
     }
     const task = this.io.run(async () => {
       let data: Uint8Array | undefined,
-        origin = false,
-        checksum = o.checksums?.[page];
+        origin = false;
       if (this.shared && this.takeShared()) {
         this.stats.sharedGets++;
         data = await this.shared.get(key);
@@ -263,17 +259,12 @@ export class Reader {
             key,
             offset,
             length,
-            checksum === undefined ? o.sha256 : undefined,
+            o.sha256,
           );
           data = result.data;
-          checksum ??= result.checksum;
         } else data = await this.source.read(key, offset, length);
       }
-      if (
-        data.length !== length ||
-        (origin && (checksum === undefined || crc32(data) !== checksum))
-      )
-        throw Error("Immutable page checksum mismatch");
+      if (data.length !== length) throw Error("Truncated immutable page");
       this.memory.pages.set(key, data, data.length);
       if (this.shared && origin && this.takeShared()) {
         // Cache writes retain their input until completion. Backpressure bounds
@@ -412,7 +403,7 @@ export class Reader {
       offset + length > descriptor.size
     )
       throw Error("Invalid packet reference");
-    if (!descriptor.checksums || length > 8 * 1048576) return this.read(ref);
+    if (length > 8 * 1048576) return this.read(ref);
     const pages = await this.packetPages(ref);
     return warmOnly
       ? EMPTY_PACKET
@@ -502,8 +493,6 @@ export class Reader {
             (page - from) * PAGE,
             Math.min(data.length, (page - from + 1) * PAGE),
           );
-          if (crc32(raw) !== descriptor.checksums![page])
-            throw Error("Immutable packet checksum mismatch");
           // Each page owns its storage: evicting one page must not retain an
           // entire multi-megabyte range through another page's subarray.
           const owned = Uint8Array.from(raw),
@@ -585,7 +574,7 @@ export class Reader {
     await Promise.all(
       groups.map(async (group) => {
         const descriptor = objectAt(this.root, group.ref[0]);
-        if (descriptor?.checksums && group.ref[2] <= 8 * 1048576) {
+        if (descriptor && group.ref[2] <= 8 * 1048576) {
           const pages = await this.packetPages(group.ref),
             first = Math.floor(group.ref[1] / PAGE) * PAGE;
           for (const { ref, index } of group.entries)
@@ -626,14 +615,13 @@ export class Reader {
     );
   }
   /** Whole immutable pair packets use the same bounded cache and I/O slots as
-   * posting pages. The bundled router supplies their exact length and checksum. */
-  async named(address: string, length: number, checksum: number) {
+   * posting pages. The bundled router supplies their exact length. */
+  async named(address: string, length: number) {
     if (!this.source.readNamed || length < 16 || length > 32 * 1048576)
       throw Error("Invalid named packet source");
     const key = `${this.root.generation}/${this.namespace}/named/${address}`;
     const validate = (data: Uint8Array) => {
-      if (data.length !== length || crc32(data) !== checksum)
-        throw Error("Named packet checksum mismatch");
+      if (data.length !== length) throw Error("Truncated named packet");
       return data;
     };
     const cached = this.memory.pages.get(key);
@@ -754,13 +742,10 @@ export class Reader {
             .map((n) => n.toString(16).padStart(2, "0"))
             .join("")
         : undefined;
-      if (
-        result.sha256
-          ? digest !== result.sha256
-          : result.checksum === undefined ||
-            crc32(result.data) !== result.checksum
-      )
+      if (result.sha256 && digest !== result.sha256)
         throw Error("Document package digest mismatch");
+      if (locator && result.data.length !== locator.length)
+        throw Error("Truncated document package");
       this.memory.pages.set(key, result.data, result.data.length);
       if (
         this.shared &&

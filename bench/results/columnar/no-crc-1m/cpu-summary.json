@@ -1,0 +1,208 @@
+{
+  "kind": "Local isolated-process CPU comparison; complete responses, no artificial I/O delays/inspector; requests randomly interleaved between independent processes",
+  "source": [
+    {
+      "version": "work/cpu-control-19ea9da",
+      "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+      "search": "1d256e90be76c8e78feb8d34c52adfd1875f2c480edbea89cf56472054ac998f",
+      "maxscore": "de83082209f9da3f5772ec491a614f879e2c03306a8ba4ed4654813bad99eb7b",
+      "storage": "24198a67abac54b3d370b8a89e7a0fec25a9becd814ea4f9e9a5237ae68de7c3",
+      "kernel": "57d219718b7e73214d41c71864b242188767bb89efeecd31e22759c389f19f51"
+    },
+    {
+      "version": ".",
+      "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+      "search": "1d256e90be76c8e78feb8d34c52adfd1875f2c480edbea89cf56472054ac998f",
+      "maxscore": "de83082209f9da3f5772ec491a614f879e2c03306a8ba4ed4654813bad99eb7b",
+      "storage": "257ae4c5686ef14678994181ff29827ea56ee92a1f379fe9bd78df369852c582",
+      "kernel": "57d219718b7e73214d41c71864b242188767bb89efeecd31e22759c389f19f51"
+    }
+  ],
+  "notes": "Two isolated process pairs; batch CPU includes each version's own background GC, deferred cache work and IPC. Session ranges are descriptive, not confidence intervals or native Worker evidence.",
+  "summaries": [
+    {
+      "q": "(rules OR of) AND rule",
+      "control": {
+        "version": "work/cpu-control-19ea9da",
+        "n": 20,
+        "meanCpuMs": 65.8269,
+        "sessionMeanCpuMs": [
+          70.3634,
+          61.2904
+        ],
+        "meanWallMs": 23.64547505000001
+      },
+      "replacement": {
+        "version": ".",
+        "n": 20,
+        "meanCpuMs": 65.49035,
+        "sessionMeanCpuMs": [
+          70.8994,
+          60.0813
+        ],
+        "meanWallMs": 24.021812500000003
+      }
+    },
+    {
+      "q": "(jurisdiction OR \"summary judgment\") AND NOT \"res ipsa loquitur\"",
+      "control": {
+        "version": "work/cpu-control-19ea9da",
+        "n": 20,
+        "meanCpuMs": 87.6226,
+        "sessionMeanCpuMs": [
+          81.1895,
+          94.0557
+        ],
+        "meanWallMs": 57.50001044999999
+      },
+      "replacement": {
+        "version": ".",
+        "n": 20,
+        "meanCpuMs": 89.49680000000001,
+        "sessionMeanCpuMs": [
+          89.7533,
+          89.2403
+        ],
+        "meanWallMs": 58.055020849999934
+      }
+    },
+    {
+      "q": "\"in the absence of\"",
+      "control": {
+        "version": "work/cpu-control-19ea9da",
+        "n": 20,
+        "meanCpuMs": 170.32545,
+        "sessionMeanCpuMs": [
+          172.34949999999998,
+          168.3014
+        ],
+        "meanWallMs": 92.67657515000005
+      },
+      "replacement": {
+        "version": ".",
+        "n": 20,
+        "meanCpuMs": 170.12055,
+        "sessionMeanCpuMs": [
+          170.6233,
+          169.61780000000002
+        ],
+        "meanWallMs": 93.85556859999988
+      }
+    },
+    {
+      "q": "\"burden of proving\"",
+      "control": {
+        "version": "work/cpu-control-19ea9da",
+        "n": 20,
+        "meanCpuMs": 46.1291,
+        "sessionMeanCpuMs": [
+          46.3722,
+          45.886
+        ],
+        "meanWallMs": 28.079089649999787
+      },
+      "replacement": {
+        "version": ".",
+        "n": 20,
+        "meanCpuMs": 46.9654,
+        "sessionMeanCpuMs": [
+          46.9273,
+          47.0035
+        ],
+        "meanWallMs": 28.823056149999864
+      }
+    },
+    {
+      "q": "\"requests for admission\" AND (\"application of law to fact\" OR \"legal conclusions\")",
+      "control": {
+        "version": "work/cpu-control-19ea9da",
+        "n": 20,
+        "meanCpuMs": 693.7744,
+        "sessionMeanCpuMs": [
+          679.8003,
+          707.7484999999999
+        ],
+        "meanWallMs": 538.9777062499998
+      },
+      "replacement": {
+        "version": ".",
+        "n": 20,
+        "meanCpuMs": 276.43954999999994,
+        "sessionMeanCpuMs": [
+          267.87,
+          285.0091
+        ],
+        "meanWallMs": 148.31197920000005
+      }
+    },
+    {
+      "q": "\"mandate rule\" AND (discovery OR \"law of the case\") AND timeliness",
+      "control": {
+        "version": "work/cpu-control-19ea9da",
+        "n": 20,
+        "meanCpuMs": 646.11145,
+        "sessionMeanCpuMs": [
+          649.3876,
+          642.8353
+        ],
+        "meanWallMs": 480.2092207999998
+      },
+      "replacement": {
+        "version": ".",
+        "n": 20,
+        "meanCpuMs": 262.3175,
+        "sessionMeanCpuMs": [
+          261.0725,
+          263.5625
+        ],
+        "meanWallMs": 124.96553749999967
+      }
+    },
+    {
+      "q": "\"statute of limitations\" AND \"affirmative defense\" AND \"Rule 16\" AND diligence",
+      "control": {
+        "version": "work/cpu-control-19ea9da",
+        "n": 20,
+        "meanCpuMs": 237.87214999999998,
+        "sessionMeanCpuMs": [
+          236.0776,
+          239.6667
+        ],
+        "meanWallMs": 135.79627510000063
+      },
+      "replacement": {
+        "version": ".",
+        "n": 20,
+        "meanCpuMs": 240.36554999999998,
+        "sessionMeanCpuMs": [
+          238.3926,
+          242.3385
+        ],
+        "meanWallMs": 130.2811977499996
+      }
+    },
+    {
+      "q": "\"Second Amendment\" W/P (\"one handgun\" OR \"purchase limits\")",
+      "control": {
+        "version": "work/cpu-control-19ea9da",
+        "n": 20,
+        "meanCpuMs": 295.43745,
+        "sessionMeanCpuMs": [
+          278.6963,
+          312.1786
+        ],
+        "meanWallMs": 207.23624154999925
+      },
+      "replacement": {
+        "version": ".",
+        "n": 20,
+        "meanCpuMs": 307.24075000000005,
+        "sessionMeanCpuMs": [
+          294.5222,
+          319.9593
+        ],
+        "meanWallMs": 209.71628765000023
+      }
+    }
+  ]
+}
