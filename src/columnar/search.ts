@@ -1,4 +1,7 @@
 import { scoreLookahead } from "./score-lookahead.js";
+import { leaves } from "./candidate-layout.js";
+import { priceDocuments } from "./continuation.js";
+export { leaves } from "./candidate-layout.js";
 import { Heap } from "./top-k.js";
 import { intersectCursors } from "./numeric-cursor.js";
 import { tokenizerFor } from "../query/analysis.js";
@@ -70,6 +73,15 @@ export interface Options {
   metadata?: boolean;
   snippets?: boolean;
   exactTotal?: boolean;
+}
+export interface ContinuationContext {
+  ast: Node;
+  terms: Map<string, DirectoryTerm>;
+  root: Root;
+  reader: Reader;
+  options: Options;
+  packages?: CandidatePackages;
+  plan: PacketPlan;
 }
 const triAnd = (a: number, b: number) =>
   a === 0 || b === 0 ? 0 : a === 1 && b === 1 ? 1 : 2;
@@ -159,23 +171,6 @@ function mandatory(ast: Node): Set<string> {
   if (ast.kind === "except") return a;
   return new Set([...a, ...b]);
 }
-export async function leaves(
-  reader: Reader,
-  branch: Branch,
-  lo: number,
-  hi: number,
-): Promise<Branch[]> {
-  if (branch.last < lo || branch.first >= hi) return [];
-  if (!branch.height) return [branch];
-  const children = await reader.branches(branch.score);
-  return (
-    await Promise.all(
-      children
-        .filter((b) => b.last >= lo && b.first < hi)
-        .map((b) => leaves(reader, b, lo, hi)),
-    )
-  ).flat();
-}
 async function* leafStream(
   reader: Reader,
   branch: Branch,
@@ -188,6 +183,25 @@ async function* leafStream(
     yield* leafStream(reader, child);
 }
 export class ColumnarIndex {
+  /** A single continuation decision after candidate evidence has arrived.
+   * Local experiments override this method to compare identical input sets. */
+  protected async chooseContinuation(
+    context: ContinuationContext,
+  ): Promise<PacketPlan> {
+    const { plan, packages } = context,
+      anchor = packages?.membership;
+    if (!packages?.byteLength || !anchor || plan.kind === "complete-terms")
+      return plan;
+    const selected = function* () {
+      for (const doc of anchor.values())
+        if (!packages.presenceFilter || packages.presenceFilter(doc)) yield doc;
+    };
+    const priced = await priceDocuments(context, selected(), anchor.covered);
+    return priced.kind === "documents"
+      ? { ...priced, membershipAnchor: anchor }
+      : priced;
+  }
+
   constructor(
     readonly root: Root,
     readonly heads?: Heads,
@@ -399,9 +413,13 @@ export class ColumnarIndex {
           return true;
         }
       : undefined;
+    let packetCandidates: Uint32Array | undefined;
     const packages = basePackages
       ? {
           ...basePackages,
+          fallbackCandidates: (docs: Uint32Array) => {
+            packetCandidates = docs;
+          },
           excludedWords,
           presenceFilter,
           membership: loadedMembership,
@@ -450,6 +468,15 @@ export class ColumnarIndex {
           options,
           packages,
         );
+      planned = await this.chooseContinuation({
+        ast,
+        terms: terms as Map<string, DirectoryTerm>,
+        root: queryRoot,
+        reader,
+        options,
+        packages,
+        plan: planned,
+      });
       const result = await executePackets(
         ast,
         terms as Map<string, DirectoryTerm>,
@@ -470,7 +497,7 @@ export class ColumnarIndex {
         .map((n) => terms.get(n)!)
         .sort((a, b) => a.df - b.df)[0];
     let bands: number[] = [],
-      pairCandidates: Uint32Array | undefined,
+      pairCandidates = packetCandidates,
       pairAnchor: Term | undefined,
       pairBatch: PairBatch | undefined,
       pairOffset = 0,
@@ -479,6 +506,13 @@ export class ColumnarIndex {
     // phases without adding another remote stage per 4096 documents.
     const BAND = 16384,
       LOOKAHEAD = 8;
+    if (packetCandidates) {
+      reader.stats.anchorBufferBytes += packetCandidates.buffer.byteLength;
+      for (const doc of packetCandidates) {
+        const band = Math.floor(doc / BAND);
+        if (bands.at(-1) !== band) bands.push(band);
+      }
+    }
     if (loadedMembership) {
       wantedPositions.clear();
       for (const name of positionalTerms(ast, loadedMembership.covered))
@@ -489,7 +523,7 @@ export class ColumnarIndex {
         if (bands.at(-1) !== band) bands.push(band);
       }
     }
-    if (pairs) {
+    if (pairs && !pairCandidates) {
       if (
         pairs.root.baseGeneration !== this.root.generation ||
         pairs.root.count !== this.root.count
@@ -603,9 +637,12 @@ export class ColumnarIndex {
       let batch: Branch[] = [];
       // Bounded chunks, even for a large corpus; never materialize all plans of a common term.
       const flush = async () => {
+        const beforeIO = reader.stats.requests + reader.stats.sharedGets;
         const scores = await Promise.all(
           batch.map((b) => reader.load(b.score, decodeScores)),
         );
+        if (reader.stats.requests + reader.stats.sharedGets > beforeIO)
+          reader.stats.anchorIOWaves++;
         for (const s of scores)
           for (let r = 0; r < s.docs.length; r++)
             if (
@@ -1073,7 +1110,10 @@ export class ColumnarIndex {
             }
           }
         }
+        const beforeIO = reader.stats.requests + reader.stats.sharedGets;
         const raw = await reader.many([...refs.values()]);
+        if (reader.stats.requests + reader.stats.sharedGets > beforeIO)
+          reader.stats.positionIOWaves++;
         let i = 0;
         for (const key of refs.keys()) positionData.set(key, raw[i++]);
       };

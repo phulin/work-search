@@ -114,6 +114,18 @@ export class DocumentPackage {
   private title?: Uint32Array;
   private stats?: { ids: Uint32Array; body: Uint32Array; title: Uint32Array };
   private record?: Promise<any>;
+  /** Live binary/numeric storage; excludes transient matcher objects and text. */
+  get numericBytes() {
+    return (
+      (this.body?.byteLength ?? 0) +
+      (this.title?.byteLength ?? 0) +
+      (this.stats
+        ? this.stats.ids.byteLength +
+          this.stats.body.byteLength +
+          this.stats.title.byteLength
+        : 0)
+    );
+  }
   readonly data: DataView;
   constructor(
     readonly bytes: Uint8Array,

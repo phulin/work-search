@@ -1,0 +1,375 @@
+{
+  "rows": [
+    {
+      "q": "\"requests for admission\" AND (\"application of law to fact\" OR \"legal conclusions\")",
+      "firstIds": [
+        974214,
+        734934,
+        581847,
+        465230,
+        590826
+      ],
+      "currentFirstIds": [
+        974214,
+        734934,
+        581847,
+        465230,
+        590826
+      ],
+      "expectedNext": [
+        897496,
+        896449,
+        706250,
+        706243,
+        629799
+      ],
+      "currentWithControlCursor": [
+        897496,
+        896449,
+        706250,
+        706243,
+        629799
+      ],
+      "currentOwnCursor": [
+        897496,
+        896449,
+        706250,
+        706243,
+        629799
+      ],
+      "lastScoreError": 0
+    },
+    {
+      "q": "\"mandate rule\" AND (discovery OR \"law of the case\") AND timeliness",
+      "firstIds": [
+        811366,
+        270302,
+        159944,
+        29732
+      ],
+      "currentFirstIds": [
+        811366,
+        270302,
+        159944,
+        29732
+      ],
+      "expectedNext": [],
+      "currentWithControlCursor": [],
+      "currentOwnCursor": [],
+      "lastScoreError": 0
+    },
+    {
+      "q": "\"Rule 41(b)\" AND (\"lesser sanctions\" OR \"missed deadline\")",
+      "firstIds": [
+        773971,
+        737334,
+        758148,
+        843211,
+        858569
+      ],
+      "currentFirstIds": [
+        773971,
+        737334,
+        758148,
+        843211,
+        858569
+      ],
+      "expectedNext": [
+        680295,
+        821737,
+        213768,
+        773973,
+        403328
+      ],
+      "currentWithControlCursor": [
+        680295,
+        821737,
+        213768,
+        773973,
+        403328
+      ],
+      "currentOwnCursor": [
+        680295,
+        821737,
+        213768,
+        773973,
+        403328
+      ],
+      "lastScoreError": 0
+    },
+    {
+      "q": "corporation AND \"client file\" AND (\"pro se\" OR \"ancillary jurisdiction\")",
+      "firstIds": [
+        209749,
+        641031,
+        563822,
+        891204,
+        891205
+      ],
+      "currentFirstIds": [
+        209749,
+        641031,
+        563822,
+        891204,
+        891205
+      ],
+      "expectedNext": [
+        907714,
+        826362,
+        691923,
+        794689,
+        876127
+      ],
+      "currentWithControlCursor": [
+        907714,
+        826362,
+        691923,
+        794689,
+        876127
+      ],
+      "currentOwnCursor": [
+        907714,
+        826362,
+        691923,
+        794689,
+        876127
+      ],
+      "lastScoreError": 0
+    },
+    {
+      "q": "\"facial challenge\" AND (hypothetical OR imaginary) AND \"First Amendment\"",
+      "firstIds": [
+        348521,
+        737956,
+        150326,
+        672877,
+        857301
+      ],
+      "currentFirstIds": [
+        348521,
+        737956,
+        150326,
+        672877,
+        857301
+      ],
+      "expectedNext": [
+        147679,
+        728883,
+        725322,
+        49360,
+        990873
+      ],
+      "currentWithControlCursor": [
+        147679,
+        728883,
+        725322,
+        49360,
+        990873
+      ],
+      "currentOwnCursor": [
+        147679,
+        728883,
+        725322,
+        49360,
+        990873
+      ],
+      "lastScoreError": 0
+    },
+    {
+      "q": "\"Rule 26(f)\" AND (defer OR stay) AND \"motion to dismiss\"",
+      "firstIds": [
+        898325,
+        849143,
+        854369,
+        607516,
+        658869
+      ],
+      "currentFirstIds": [
+        898325,
+        849143,
+        854369,
+        607516,
+        658869
+      ],
+      "expectedNext": [
+        746715,
+        856184,
+        948294,
+        743337,
+        855769
+      ],
+      "currentWithControlCursor": [
+        746715,
+        856184,
+        948294,
+        743337,
+        855769
+      ],
+      "currentOwnCursor": [
+        746715,
+        856184,
+        948294,
+        743337,
+        855769
+      ],
+      "lastScoreError": 0
+    },
+    {
+      "q": "\"Rule 16\" AND \"good cause\" AND (\"additional depositions\" OR discovery)",
+      "firstIds": [
+        896940,
+        751078,
+        846946,
+        903726,
+        743273
+      ],
+      "currentFirstIds": [
+        896940,
+        751078,
+        846946,
+        903726,
+        743273
+      ],
+      "expectedNext": [
+        858544,
+        795356,
+        812755,
+        821106,
+        858547
+      ],
+      "currentWithControlCursor": [
+        858544,
+        795356,
+        812755,
+        821106,
+        858547
+      ],
+      "currentOwnCursor": [
+        858544,
+        795356,
+        812755,
+        821106,
+        858547
+      ],
+      "lastScoreError": 0
+    },
+    {
+      "q": "\"qualified immunity\" W/P \"First Amendment\" AND (retaliate OR retaliated OR retaliating OR retaliation OR retaliatory)",
+      "firstIds": [
+        156109,
+        71390,
+        822586,
+        896906,
+        73927
+      ],
+      "currentFirstIds": [
+        156109,
+        71390,
+        822586,
+        896906,
+        73927
+      ],
+      "expectedNext": [
+        307169,
+        749618,
+        680226,
+        279174,
+        992624
+      ],
+      "currentWithControlCursor": [
+        307169,
+        749618,
+        680226,
+        279174,
+        992624
+      ],
+      "currentOwnCursor": [
+        307169,
+        749618,
+        680226,
+        279174,
+        992624
+      ],
+      "lastScoreError": 0
+    },
+    {
+      "q": "\"consent decree\" AND monitor AND (interpretation OR compliance)",
+      "firstIds": [
+        146837,
+        312725,
+        748321,
+        877415,
+        783257
+      ],
+      "currentFirstIds": [
+        146837,
+        312725,
+        748321,
+        877415,
+        783257
+      ],
+      "expectedNext": [
+        418907,
+        849441,
+        705258,
+        990426,
+        869692
+      ],
+      "currentWithControlCursor": [
+        418907,
+        849441,
+        705258,
+        990426,
+        869692
+      ],
+      "currentOwnCursor": [
+        418907,
+        849441,
+        705258,
+        990426,
+        869692
+      ],
+      "lastScoreError": 0
+    },
+    {
+      "q": "\"Small Business Administration\" AND \"sovereign immunity\" AND (injunction OR \"declaratory relief\")",
+      "firstIds": [
+        412661,
+        464433,
+        424268,
+        421639,
+        418418
+      ],
+      "currentFirstIds": [
+        412661,
+        464433,
+        424268,
+        421639,
+        418418
+      ],
+      "expectedNext": [
+        932258,
+        84899,
+        826927,
+        418557,
+        653676
+      ],
+      "currentWithControlCursor": [
+        932258,
+        84899,
+        826927,
+        418557,
+        653676
+      ],
+      "currentOwnCursor": [
+        932258,
+        84899,
+        826927,
+        418557,
+        653676
+      ],
+      "lastScoreError": 0
+    }
+  ],
+  "downloads": 0
+}

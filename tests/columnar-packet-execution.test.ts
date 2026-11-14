@@ -172,30 +172,145 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
     expect(unigramPlan.kind).toBe("documents");
     expect(unigramPlan.anchor).toBe("rare");
     expect(unigramPlan.membershipAnchor).toBeUndefined();
-    // A selective anchor can lead to unusually long documents. Direct package
-    // lengths must reject an over-budget transfer before fetching any package.
+    // Oversized transfer forecasts no longer reject the entire continuation.
+    // Such candidates run alone and every candidate remains covered.
     const longQuery = parse('"rare alpha"'),
       longReader = new Reader(root, objects.source),
       longTerms = await directory.lookup(queryTerms(longQuery), longReader),
       load = vi.fn(
         async (doc: number) => new DocumentPackage(packages.get(doc)!, doc),
       );
+    const streamedLong = await executePackets(
+      longQuery,
+      longTerms,
+      root,
+      longReader,
+      { metadata: false, snippets: false },
+      {
+        averageBytes: 500,
+        byteLength: () => 9 * 1048576,
+        load,
+      },
+      "documents",
+    );
+    expect(streamedLong).toBeDefined();
+    expect(load).toHaveBeenCalled();
+    // Automatic continuation selection prices real anchor candidates before
+    // opening packages; explicit forced experiments above still stream them.
+    const pricedLoad = vi.fn(async (doc: number) => load(doc)),
+      fallbackCandidates = vi.fn(),
+      pricedPackages = {
+        averageBytes: 500,
+        byteLength: () => 9 * 1048576,
+        load: pricedLoad,
+        fallbackCandidates,
+      };
     expect(
       await executePackets(
         longQuery,
         longTerms,
         root,
         longReader,
-        { metadata: false, snippets: false },
-        {
-          averageBytes: 500,
-          byteLength: () => 9 * 1048576,
-          load,
-        },
-        "documents",
+        {},
+        pricedPackages,
+        packetPlan(longQuery, longTerms, root, {}, pricedPackages, "documents"),
       ),
     ).toBeUndefined();
-    expect(load).not.toHaveBeenCalled();
+    expect(pricedLoad).not.toHaveBeenCalled();
+    expect(fallbackCandidates).toHaveBeenCalledOnce();
+    expect(Array.from(fallbackCandidates.mock.calls[0][0])).toEqual([
+      0, 1, 2, 3, 4,
+    ]);
+    const membership = {
+      count: docs.length,
+      *values() {
+        for (let doc = 0; doc < docs.length; doc++) yield doc;
+      },
+      has: (doc: number) => doc >= 0 && doc < docs.length,
+      cursor: () => {
+        let doc = 0;
+        return { next: () => (doc < docs.length ? doc++ : Infinity) };
+      },
+      covered: () => false,
+      evidence: () => undefined,
+    };
+    for (const q of [
+      '("alpha beta" OR "beta gamma") AND NOT "rare alpha"',
+      '"alpha beta" /3 gamma',
+    ]) {
+      const ast = parse(q),
+        terms = await directory.lookup(queryTerms(ast));
+      for (const field of ["all", "body", "title"] as const) {
+        const options: Options = {
+            field,
+            limit: 7,
+            titleBoost: 3.25,
+            exactTotal: true,
+          },
+          pkgs = {
+            averageBytes: 500,
+            byteLength: (doc: number) => packages.get(doc)!.length,
+            load: async (doc: number) =>
+              new DocumentPackage(packages.get(doc)!, doc),
+            membership,
+          },
+          plan = {
+            ...packetPlan(ast, terms, root, options, pkgs),
+            kind: "documents" as const,
+            membershipAnchor: membership,
+          },
+          expected = await control.search(
+            q,
+            new Reader(before, original.source),
+            options,
+          ),
+          got = await executePackets(
+            ast,
+            terms,
+            root,
+            new Reader(root, objects.source),
+            options,
+            pkgs,
+            plan,
+          );
+        expect(got!.total).toBe(expected.total);
+        expect(got!.diagnostics.packageCandidates).toBe(600);
+        expect(got!.results.map((h) => h.id)).toEqual(
+          expected.results.map((h) => h.id),
+        );
+        got!.results.forEach((h, i) =>
+          expect(h.score).toBeCloseTo(expected.results[i].score, 11),
+        );
+        expect(got!.diagnostics.peakPackageBatchBytes).toBeLessThanOrEqual(
+          4 * 1048576,
+        );
+        expect(got!.diagnostics.peakWinnerPackageBytes).toBeLessThanOrEqual(
+          4 * 1048576,
+        );
+        if (got!.results.length) {
+          const last = got!.results.at(-1)!;
+          const after = { score: last.score, doc: last.doc };
+          const expectedNext = await control.search(
+              q,
+              new Reader(before, original.source),
+              { ...options, after },
+            ),
+            next = await executePackets(
+              ast,
+              terms,
+              root,
+              new Reader(root, objects.source),
+              { ...options, after },
+              pkgs,
+              plan,
+            );
+          expect(next!.total).toBe(expectedNext.total);
+          expect(next!.results.map((h) => h.id)).toEqual(
+            expectedNext.results.map((h) => h.id),
+          );
+        }
+      }
+    }
     for (const q of [
       "alpha",
       "rare alpha",

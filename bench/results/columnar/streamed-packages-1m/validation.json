@@ -1,0 +1,38 @@
+{
+  "implementationSha256": "1d4283b627268617128b02f485f69a7b9eb37398bd0370ea59fd1e86da74f2b1",
+  "control": "eb7a3762d395023aed421610182ac3310f71c918",
+  "tests": {
+    "command": "yarn test --maxWorkers=1 --testTimeout=120000",
+    "files": 73,
+    "tests": 270,
+    "passed": true,
+    "note": "The default full run timed out in unchanged global-fine.test.ts. It passed alone; the complete serial suite passed with a longer per-test timeout."
+  },
+  "typecheck": {
+    "command": "yarn run check",
+    "passed": true
+  },
+  "formatting": {
+    "command": "yarn prettier --check (changed TypeScript files)",
+    "passed": true
+  },
+  "independentOracle": {
+    "scenarios": 160,
+    "rows": 160,
+    "errors": 0
+  },
+  "research": {
+    "queries": 180,
+    "rows": 540,
+    "errors": [],
+    "rankedIdsAndMetadataUnchanged": true,
+    "completeResponseHashesUnchanged": 177,
+    "scoreOnlyDifferences": 3,
+    "maxAbsoluteScoreDifference": 3.552713678800501e-15
+  },
+  "cursors": {
+    "queries": 10,
+    "sameControlAndCurrentCursorResults": true
+  },
+  "downloads": 0
+}

@@ -1,0 +1,28 @@
+{
+  "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+  "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+  "count": 1000000,
+  "format": "CWS1",
+  "analysis": "nfkc-lower-porter2-v1",
+  "documentPackages": {
+    "generation": "eeadc5ceab4c2bdcc07338be26626a89e2b5f9eef0a745cfc111d2ef592676f8",
+    "count": 1000000,
+    "averageBytes": 19982.980418,
+    "bytes": 19982980418,
+    "locators": {
+      "sha256": "9726e4999421ca275b9db6f0ca3467722396cdbd15d828bbb31044d5fc1eb13c",
+      "bytes": 2702168,
+      "groups": 8034
+    }
+  },
+  "directory": {
+    "sha256": "30c94cbee0038c9e94a123db654ace47342c11c261012cd7b72f4ccfe2fe9b58",
+    "bytes": 14836106,
+    "terms": 2539780
+  },
+  "rootSha256": "08a08d01377be933cd0d8a6713cc17ce68913da4c557336939db7fa0da92c913",
+  "directorySha256": "30c94cbee0038c9e94a123db654ace47342c11c261012cd7b72f4ccfe2fe9b58",
+  "documentLocatorsSha256": "9726e4999421ca275b9db6f0ca3467722396cdbd15d828bbb31044d5fc1eb13c",
+  "pairRouterSha256": "186e456cfb168f414894ac6cb2bd3d398ea53270eef728f7284fea0dc9d55ec7",
+  "presenceSha256": "9623aeaad65d449c11e20693f2d20f06280a45568c2ffb792e71d0112237782b"
+}
