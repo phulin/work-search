@@ -3,13 +3,17 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
-import { buildColumnar } from "../bench/columnar/control/offline-build.js";
+import { buildColumnar } from "../bench/columnar/build-fixture.js";
 import { OfflineObjects } from "../src/columnar/offline.js";
 import { Reader } from "../src/columnar/storage.js";
 import { ColumnarIndex, leaves, type Options } from "../src/columnar/search.js";
 import { Packer } from "../src/columnar/packer.js";
 import { encodeTermPacket } from "../src/columnar/term-packet.js";
-import { decodeScores, type Term, type Root } from "../src/columnar/format.js";
+import {
+  decodeScoreColumns,
+  type Term,
+  type Root,
+} from "../src/columnar/format.js";
 import {
   TermDirectory,
   assembleTermDirectory,
@@ -83,7 +87,7 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
       for (const branch of await leaves(reader, t.tree, 0, root.count)) {
         const scores = await reader.read(branch.score),
           positions = await reader.read(branch.positions),
-          s = decodeScores(scores);
+          s = decodeScoreColumns(scores);
         bodyOccurrences += s.body.reduce((n, x) => n + x, 0);
         titleOccurrences += s.title.reduce((n, x) => n + x, 0);
         blocks.push({ branch, scores, positions });
@@ -760,6 +764,8 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
           [],
           [
             {
+              object: 0,
+              offset: 0,
               namespace: 0,
               bits: 0,
               prefix: 0,

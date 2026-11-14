@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { LocalObjects } from "./local-storage.js";
 import { SimulatedIO } from "./latency-model.js";
 import type { Branch, Ref } from "../../src/columnar/format.js";
-import { decodeScores } from "../../src/columnar/format.js";
+import { decodeScoreColumns } from "../../src/columnar/format.js";
 let base = process.env.CWS_SOURCE ?? ".";
 const label = process.env.CWS_LABEL ?? "baseline",
   out = "work/boolean-candidates";
@@ -253,7 +253,7 @@ for (const sid of [4, 5, 7]) {
       // than mistaking a block's [first,last] span for exact overlap.
       const overlap =
         spanOverlap &&
-        decodeScores(await diagnosticReader.read(ref)).docs.some((doc) =>
+        decodeScoreColumns(await diagnosticReader.read(ref)).docs.some((doc) =>
           candidates.has(doc),
         );
       if (spanOverlap && !overlap) spanOnlyBlocks++;

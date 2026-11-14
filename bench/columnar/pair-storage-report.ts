@@ -1,3 +1,4 @@
+import { readVarint } from "../../src/columnar/compact-integers.js";
 import { readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { crc32 } from "../../src/format/codec.js";
@@ -37,28 +38,25 @@ const routerBytes = await readFile(dir + "/router.bin"),
   };
 // Read the fixed leaf table directly so every immutable object is checked,
 // including leaves not selected by any benchmark query.
-for (let i = 0; i < leaves; i++) {
-  const p = leafStart + i * 28,
-    leaf = {
-      namespace: v.getUint32(p, true),
-      bits: v.getUint32(p + 4, true),
-      prefix: v.getUint32(p + 8, true),
-      bytes: v.getUint32(p + 12, true),
-      crc32: v.getUint32(p + 16, true),
-      pairs: v.getUint32(p + 20, true),
-      suffix: v.getUint32(p + 24, true),
-    },
-    key = pairObjectKey(router.metadata.generation, leaf),
-    raw = await readFile(dir + "/objects/" + key.split("/")[1]),
+let containerId = -1,
+  container: Uint8Array;
+for (const leaf of router.packets()) {
+  if (leaf.object !== containerId) {
+    container = await readFile(dir + "/objects/pairs-" + leaf.object + ".bin");
+    containerId = leaf.object;
+  }
+  const key = pairObjectKey(router.metadata.generation, leaf),
+    raw = Buffer.from(
+      container!.subarray(leaf.offset, leaf.offset + leaf.bytes),
+    ),
     data = view(raw);
   if (
     raw.length !== leaf.bytes ||
-    crc32(raw) !== leaf.crc32 ||
     data.getUint32(0, true) !== PAIR_PACKET_MAGIC ||
     data.getUint32(4, true) !== leaf.pairs ||
     data.getUint32(12, true) !== raw.length
   )
-    throw Error("Packet identity/checksum mismatch: " + key);
+    throw Error("Packet identity mismatch: " + key);
   let nextKey = 16 + leaf.pairs * 16,
     nextRecord = data.getUint32(8, true);
   for (let row = 0; row < leaf.pairs; row++) {
@@ -71,19 +69,19 @@ for (let i = 0; i < leaves; i++) {
       keyAt !== nextKey ||
       keyAt + keyLength > data.getUint32(8, true) ||
       at !== nextRecord ||
-      length < 44 ||
+      length < 12 ||
       at + length > raw.length
     )
       throw Error("Noncontiguous packet sections: " + key);
-    const df = data.getUint32(at + 8, true),
-      body = data.getUint32(at + 12, true),
-      title = data.getUint32(at + 16, true),
-      bo = data.getUint32(at + 20, true),
-      to = data.getUint32(at + 24, true),
-      bn = data.getUint32(at + 28, true),
-      tn = data.getUint32(at + 32, true),
-      cn = data.getUint32(at + 36, true),
-      flags = data.getUint32(at + 40, true);
+    const header: number[] = [];
+    let cursor = at + 1;
+    if (raw[at] !== 4) throw Error("Invalid membership version");
+    for (let i = 0; i < 11; i++) {
+      const v = readVarint(raw, cursor);
+      header.push(v.value);
+      cursor = v.next;
+    }
+    const [, , df, body, title, bo, to, bn, tn, cn, flags] = header;
     if (
       !df ||
       df > router.metadata.documents ||
@@ -91,7 +89,7 @@ for (let i = 0; i < leaves; i++) {
       df > body + title ||
       bo < body ||
       to < title ||
-      length !== 44 + bn + tn + cn ||
+      length !== cursor - at + bn + tn + cn ||
       flags > 15 ||
       (flags & 3) === 3 ||
       flags >>> 2 === 3
@@ -148,7 +146,7 @@ for (let i = 0; i < leaves; i++) {
     throw Error("Trailing packet data: " + key);
   totals.packets++;
   totals.packetBytes += raw.length;
-  if (i % 10000 === 0)
+  if (totals.packets % 10000 === 0)
     console.log("Verified", totals.packets, "packets", totals.pairs, "pairs");
 }
 for (const [key, value] of Object.entries(totals))

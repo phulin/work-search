@@ -1,3 +1,4 @@
+import { PacketObjects } from "../src/columnar/packet-objects.js";
 import {
   appendFile,
   mkdir,
@@ -324,6 +325,9 @@ function orderRows(data: Buffer) {
     }
   return { v, order: a };
 }
+const packetObjects = new PacketObjects(async (id, data) => {
+  await writeFile(out + "/objects/pairs-" + id + ".bin", data);
+});
 const nodes: [number, number][] = [],
   leaves: PairLeaf[] = [],
   roots = Array(namespaces.length + 1).fill(NO_PAIR_PARTITION),
@@ -496,6 +500,7 @@ async function packetize(
     throw Error("Exact hash collision exceeds packet budget; use a wider hash");
   const data = encodePairMembershipPacket(entries),
     leaf = {
+      ...(await packetObjects.append(data)),
       namespace: ns,
       bits,
       prefix,
@@ -506,10 +511,6 @@ async function packetize(
     },
     id = leaves.length;
   leaves.push(leaf);
-  await writeFile(
-    out + "/objects/" + pairObjectKey(generation, leaf).split("/")[1],
-    data,
-  );
   report.packets++;
   report.packetBytes += data.length;
   report.maxPacketBytes = Math.max(report.maxPacketBytes, data.length);
@@ -808,6 +809,7 @@ const commonPacket = encodePairMembershipPacket(
     ),
   })),
 );
+await packetObjects.flush();
 const router = encodePairRouter(
   { ...specification, generation, roots },
   nodes,

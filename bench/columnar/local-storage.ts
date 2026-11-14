@@ -11,21 +11,21 @@ type PackageMetadata = { first: number; checksums: number[] };
  * Network is permitted only during preparation. Timed replay fails on a miss. */
 export class LocalObjects implements Source {
   namedDirectory?: string;
-  async readNamed(key: string, _bytes: number) {
+  async readNamed(address: string, bytes: number) {
+    const match = /^([a-f0-9]{64}\/pairs-\d+\.bin)@(\d+)$/.exec(address),
+      key = match ? match[1] : address;
     if (
       !this.namedDirectory ||
-      !/^[a-f0-9]{64}\/(?:pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+)\.bin$/.test(
-        key,
-      )
+      (!match && !/^[a-f0-9]{64}\/presence-\d+\.bin$/.test(key))
     )
       throw Error("Missing local named packet store");
-    const name = key.split("/")[1];
-    return readFile(
-      this.namedDirectory +
+    const name = key.split("/")[1],
+      path =
+        this.namedDirectory +
         (name.startsWith("presence-")
           ? "/presence/" + name.slice(9)
-          : "/objects/" + name),
-    );
+          : "/objects/" + name);
+    return match ? this.range(path, Number(match[2]), bytes) : readFile(path);
   }
   remoteEnabled = false;
   downloads = 0;
@@ -250,7 +250,7 @@ export class LocalObjects implements Source {
       for (let at = 0; at < data.length;) {
         if (
           at + 64 > data.length ||
-          v.getUint32(at, true) !== 0x32504443 ||
+          v.getUint32(at, true) !== 0x33504443 ||
           v.getUint32(at + 4, true) !==
             metadata.first + metadata.checksums.length
         )

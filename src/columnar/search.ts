@@ -1,3 +1,5 @@
+import { positionSpan } from "./positions.js";
+import { scoreParameters } from "./scoring.js";
 import { filterDocuments, type DocumentFilter } from "./document-filter.js";
 import { scoreLookahead } from "./score-lookahead.js";
 import { leaves } from "./candidate-layout.js";
@@ -34,6 +36,7 @@ import {
   type Ref,
   type Scores,
   decodeScores,
+  decodeScoreColumns,
   lower,
   refAt,
   view,
@@ -571,7 +574,11 @@ export class ColumnarIndex {
             bs.slice(i, i + 64).map((b) => b.score),
           );
           raw.forEach((b, j) => {
-            const s = pairs.reader.decoded(bs[i + j].score, b, decodeScores);
+            const s = pairs.reader.decoded(
+              bs[i + j].score,
+              b,
+              decodeScoreColumns,
+            );
             for (let r = 0; r < s.docs.length; r++)
               if (field === "all" || s[field][r]) {
                 docs[n] = s.docs[r];
@@ -641,7 +648,7 @@ export class ColumnarIndex {
       const flush = async () => {
         const beforeIO = reader.stats.requests + reader.stats.sharedGets;
         const scores = await Promise.all(
-          batch.map((b) => reader.load(b.score, decodeScores)),
+          batch.map((b) => reader.load(b.score, decodeScoreColumns)),
         );
         if (reader.stats.requests + reader.stats.sharedGets > beforeIO)
           reader.stats.anchorIOWaves++;
@@ -672,7 +679,10 @@ export class ColumnarIndex {
     let total = 0;
     const nameIndex = new Map(names.map((n, i) => [n, i])),
       requiredIndices = [...required].map((name) => nameIndex.get(name)!);
-    const scoreBatches = names.map(() => new ScoreBatch(BAND)),
+    const scoreBatches = names.map(
+        (name) =>
+          new ScoreBatch(BAND, scoreParameters(terms.get(name)!.df, this.root)),
+      ),
       candidateBuffer = new Uint32Array(BAND),
       scoreBuffer = new Float64Array(BAND);
     let window: Branch[][][] = [];
@@ -1162,18 +1172,16 @@ export class ColumnarIndex {
           const ref = blocks[j][c.blockIndex[row]].positions,
             raw = positionData.get(reader.key(ref));
           if (!raw) return;
-          const v = view(raw),
-            n = v.getUint32(0, true),
-            r = c.blockRow[row],
-            base = 4 + (n + 1) * 4,
-            from = base + v.getUint32(4 + r * 4, true),
-            end = base + v.getUint32(8 + r * 4, true),
-            bl = v.getUint32(from, true);
-          const start = f === 0 ? from + 4 : from + 4 + bl,
-            stop = f === 0 ? from + 4 + bl : end;
-          s.fields[f] = unpack(raw.subarray(start, stop));
+          s.fields[f] = positionSpan(
+            raw,
+            c.blockRow[row],
+            f,
+            f ? c.title[row] : c.body[row],
+            (bytes) => {
+              reader.stats.decodedBytes += bytes;
+            },
+          );
           reader.stats.positionIntegers += s.fields[f]!.length;
-          reader.stats.decodedBytes += stop - start;
         }
         return s.fields[f];
       };

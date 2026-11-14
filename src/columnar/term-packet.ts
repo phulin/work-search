@@ -1,8 +1,11 @@
+import { positionSpan } from "./positions.js";
+import type { ScoreParameters } from "./scoring.js";
 import {
   concat,
   u32,
   view,
   decodeScores,
+  decodeScoreColumns,
   unpack,
   type Branch,
   type Scores,
@@ -24,18 +27,16 @@ export function encodeTermPacket(
     header = new Uint8Array(24 + blocks.length * 48),
     v = view(header),
     scores: Uint8Array[] = [],
-    positions: Uint8Array[] = [u32([0x32505443, id])],
-    handles = new Uint32Array(rows);
-  v.setUint32(0, 0x33465443, true);
+    positions: Uint8Array[] = [u32([0x32505443, id])];
+  v.setUint32(0, 0x34465443, true);
   v.setUint32(4, id, true);
   v.setUint32(8, rows, true);
   v.setUint32(12, blocks.length, true);
   let scoreAt = header.length,
-    posAt = 8,
-    row = 0;
+    posAt = 8;
   for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i],
-      s = decodeScores(b.scores);
+      s = decodeScoreColumns(b.scores);
     if (s.docs.length !== b.branch.count)
       throw Error("Packet block count mismatch");
     const p = 24 + i * 48;
@@ -52,15 +53,13 @@ export function encodeTermPacket(
     v.setFloat64(p + 40, b.branch.t, true);
     scores.push(b.scores);
     positions.push(b.positions);
-    handles.set(s.docs, row);
-    row += s.docs.length;
     scoreAt += b.scores.length;
     posAt += b.positions.length;
   }
   v.setUint32(16, scoreAt, true);
   v.setUint32(20, posAt + (positionRefs ? 0x80000000 : 0), true);
   return {
-    frequencies: concat([header, ...scores, new Uint8Array(handles.buffer)]),
+    frequencies: concat([header, ...scores]),
     positional: concat(positions),
   };
 }
@@ -81,12 +80,13 @@ export interface PacketColumns {
 export function decodeTermPacket(
   data: Uint8Array,
   expectedId: number,
-  positionBase: Ref = [0, 0, 0],
+  positionBase: Ref,
+  parameters: ScoreParameters,
 ): PacketColumns {
   const v = view(data);
   if (
     data.length < 24 ||
-    v.getUint32(0, true) !== 0x33465443 ||
+    v.getUint32(0, true) !== 0x34465443 ||
     v.getUint32(4, true) !== expectedId
   )
     throw Error("Invalid frequency packet");
@@ -99,7 +99,7 @@ export function decodeTermPacket(
     !rows ||
     !blocks ||
     24 + blocks * 48 > handlesAt ||
-    handlesAt + rows * 4 !== data.length
+    handlesAt !== data.length
   )
     throw Error("Invalid frequency packet directory");
   const docs = new Uint32Array(rows),
@@ -116,7 +116,7 @@ export function decodeTermPacket(
       n = v.getUint32(p + 16, true);
     if (at < 24 + blocks * 48 || at + n > handlesAt)
       throw Error("Invalid score block address");
-    const s: Scores = decodeScores(data.subarray(at, at + n));
+    const s: Scores = decodeScores(data.subarray(at, at + n), parameters);
     if (
       s.docs.length !== v.getUint32(p + 8, true) ||
       next + s.docs.length > rows ||
@@ -143,7 +143,7 @@ export function decodeTermPacket(
     title,
     b,
     t,
-    locators: new DataView(data.buffer, data.byteOffset + handlesAt, rows * 4),
+    locators: new DataView(docs.buffer, docs.byteOffset, docs.byteLength),
     position(row, field, raw) {
       if (
         row < 0 ||
@@ -183,22 +183,10 @@ export function decodeTermPacket(
                   : [positionBase[0], positionBase[1] + ref[1], ref[2]],
               )
             : raw.subarray(ref[1], ref[1] + ref[2]),
-        bv = view(block),
-        count = bv.getUint32(0, true),
-        r = row - starts[lo],
-        base = 4 + (count + 1) * 4;
-      if (block.length !== ref[2] || count !== starts[lo + 1] - starts[lo])
-        throw Error("Positional block count mismatch");
-      const from = base + bv.getUint32(4 + r * 4, true),
-        end = base + bv.getUint32(8 + r * 4, true),
-        bn = bv.getUint32(from, true);
-      if (from + 4 + bn > end || end > block.length)
-        throw Error("Invalid positional span");
-      return unpack(
-        field
-          ? block.subarray(from + 4 + bn, end)
-          : block.subarray(from + 4, from + 4 + bn),
-      );
+        r = row - starts[lo];
+      if (block.length !== ref[2])
+        throw Error("Positional block length mismatch");
+      return positionSpan(block, r, field, field ? title[row] : body[row]);
     },
   };
 }

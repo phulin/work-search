@@ -66,7 +66,7 @@ export function createDocumentGroupHandler(root: SourceRoot, code: string) {
         return new Response("Not found", { status: 404 });
       const path = new URL(request.url).pathname;
       if (path === "/group-health")
-        return Response.json({ code, format: "grouped-CDP2" });
+        return Response.json({ code, format: "grouped-CDP3" });
       if (path !== "/grouped-documents" || request.method !== "POST")
         return new Response("Not found", { status: 404 });
       if (pending >= 4)

@@ -1,7 +1,12 @@
 import { concat, pack, unpack, u32, view, lower } from "./format.js";
-/** A multi-occurrence field adds 48 bytes of column headers. Every such field
- * requires an occurrence beyond the document's first, with at most two fields
- * per document. Doc IDs, index rows and integers use worst-case 32-bit widths. */
+import {
+  encodeSpan,
+  decodeSpan,
+  packedAt,
+  encodeVarints,
+  readVarint,
+} from "./compact-integers.js";
+/** Conservative construction bound, independent of a particular encoding. */
 export function pairPacketByteBound(documents: number, occurrences: number) {
   if (
     !Number.isSafeInteger(documents) ||
@@ -60,8 +65,53 @@ export function encodePairPacket(a: number, b: number, rows: PairRow[]) {
     })),
   );
 }
-/** Numeric builder entry avoids allocating one object per occurrence. Empty
- * fields need no bytes; singleton occurrences store just three integers. */
+
+interface Members {
+  count: number;
+  values(): Iterable<number>;
+  indexOf(doc: number): number;
+}
+interface ExternalMembers {
+  a: number;
+  b: number;
+  body: Members;
+  title: Members;
+  df: number;
+}
+const PACKET = 0x34505043,
+  CONTEXT = 0x31584343;
+function arrayMembers(docs: Uint32Array): Members {
+  return {
+    count: docs.length,
+    values: () => docs,
+    indexOf(doc) {
+      const row = lower(docs, doc);
+      return docs[row] === doc ? row : -1;
+    },
+  };
+}
+function encodeField(rows: PairColumnRow["body"][]) {
+  const spans: Uint8Array[] = [],
+    offsets = [0];
+  for (const c of rows) {
+    const count = c.positions.length;
+    if (!count || c.previous.length !== count || c.next.length !== count)
+      throw Error("Pair context count mismatch");
+    const raw = concat([
+      encodeVarints([count]),
+      encodeSpan(c.positions, true),
+      encodeSpan(c.previous),
+      encodeSpan(c.next),
+    ]);
+    spans.push(raw);
+    offsets.push(offsets.at(-1)! + raw.length);
+  }
+  if (rows.length <= 1) return concat(spans);
+  const directory = pack(offsets);
+  return concat([u32([directory.length]), directory, ...spans]);
+}
+/** Context is ordered by each field's existing membership list. No identities,
+ * duplicate document lists, or directories for absent fields are serialized. */
 export function encodePairColumns(a: number, b: number, rows: PairColumnRow[]) {
   if (
     ![a, b].every((n) => Number.isInteger(n) && n >= 0 && n < 0xffffffff) ||
@@ -76,55 +126,76 @@ export function encodePairColumns(a: number, b: number, rows: PairColumnRow[]) {
     )
   )
     throw Error("Invalid positional pair rows");
-  const docs = pack(
-      rows.map((r) => r.doc),
-      true,
-    ),
-    index: number[] = [],
-    spans: Uint8Array[] = [];
-  let at = 0;
-  for (const row of rows)
-    for (const c of [row.body, row.title]) {
-      const count = c.positions.length;
-      if (c.previous.length !== count || c.next.length !== count)
-        throw Error("Pair context count mismatch");
-      for (let i = 0; i < count; i++)
-        if (
-          ![c.positions[i], c.previous[i], c.next[i]].every(
-            (n) => Number.isInteger(n) && n >= 0 && n <= 0xffffffff,
-          ) ||
-          (i > 0 && c.positions[i] <= c.positions[i - 1])
+  const body = rows.filter((r) => r.body.positions.length),
+    title = rows.filter((r) => r.title.positions.length),
+    bd = body.length
+      ? pack(
+          body.map((r) => r.doc),
+          true,
         )
-          throw Error("Invalid pair occurrence");
-      let raw: Uint8Array;
-      if (!count) raw = new Uint8Array();
-      else if (count === 1)
-        raw = u32([c.positions[0], c.previous[0], c.next[0]]);
-      else {
-        const columns = [
-          pack(c.positions, true),
-          pack(c.previous),
-          pack(c.next),
-        ];
-        raw = concat([u32(columns.map((c) => c.length)), ...columns]);
-      }
-      index.push(at, raw.length, count);
-      spans.push(raw);
-      at += raw.length;
-    }
+      : new Uint8Array(),
+    td = title.length
+      ? pack(
+          title.map((r) => r.doc),
+          true,
+        )
+      : new Uint8Array(),
+    bf = encodeField(body.map((r) => r.body)),
+    tf = encodeField(title.map((r) => r.title)),
+    context = concat([u32([CONTEXT, bf.length, tf.length]), bf, tf]);
   return concat([
-    u32([0x33505043, a, b, rows.length, docs.length, index.length * 4, at, 1]),
-    docs,
-    u32(index),
-    ...spans,
+    u32([PACKET, a, b, bd.length, td.length, context.length]),
+    bd,
+    td,
+    context,
   ]);
+}
+class ContextField {
+  private directory?: Uint8Array;
+  private spans: Uint8Array;
+  constructor(
+    readonly data: Uint8Array,
+    readonly members: Members,
+  ) {
+    if (!members.count) {
+      if (data.length) throw Error("Unexpected empty-field context");
+      this.spans = data;
+      return;
+    }
+    if (members.count === 1) {
+      this.spans = data;
+      return;
+    }
+    if (data.length < 16) throw Error("Truncated pair field directory");
+    const length = view(data).getUint32(0, true);
+    if (length < 12 || 4 + length > data.length)
+      throw Error("Invalid pair field directory");
+    this.directory = data.subarray(4, 4 + length);
+    this.spans = data.subarray(4 + length);
+    if (
+      view(this.directory).getUint32(0, true) !== members.count + 1 ||
+      packedAt(this.directory, 0) ||
+      packedAt(this.directory, members.count) !== this.spans.length
+    )
+      throw Error("Invalid pair field offsets");
+  }
+  raw(doc: number) {
+    const row = this.members.indexOf(doc);
+    if (row < 0) return undefined;
+    if (!this.directory) return this.spans;
+    const from = packedAt(this.directory, row),
+      end = packedAt(this.directory, row + 1);
+    if (end <= from || end > this.spans.length)
+      throw Error("Invalid pair occurrence span");
+    return this.spans.subarray(from, end);
+  }
 }
 export class PairPacket {
   readonly a: number;
   readonly b: number;
   readonly docs: Uint32Array;
-  readonly index: DataView;
-  readonly spans: Uint8Array;
+  readonly contextBytes: Uint8Array;
+  private fields: ContextField[];
   constructor(
     readonly bytes: Uint8Array,
     readonly decoded?: (
@@ -133,32 +204,69 @@ export class PairPacket {
       occurrences: number,
       bytes: number,
     ) => void,
+    external?: ExternalMembers,
   ) {
-    const v = view(bytes);
-    if (
-      bytes.length < 32 ||
-      v.getUint32(0, true) !== 0x33505043 ||
-      v.getUint32(28, true) !== 1
-    )
-      throw Error("Invalid pair packet");
-    this.a = v.getUint32(4, true);
-    this.b = v.getUint32(8, true);
-    const n = v.getUint32(12, true),
-      dn = v.getUint32(16, true),
-      ix = v.getUint32(20, true),
-      sn = v.getUint32(24, true);
-    if (!n || ix !== n * 24 || 32 + dn + ix + sn !== bytes.length)
-      throw Error("Invalid pair directory");
-    this.docs = unpack(bytes.subarray(32, 32 + dn));
-    if (
-      this.docs.length !== n ||
-      this.docs.some((d, i) => i > 0 && d <= this.docs[i - 1])
-    )
-      throw Error("Invalid pair document order");
-    this.index = view(bytes.subarray(32 + dn, 32 + dn + ix));
-    this.spans = bytes.subarray(32 + dn + ix);
+    let body: Members, title: Members;
+    if (external) {
+      this.a = external.a;
+      this.b = external.b;
+      body = external.body;
+      title = external.title;
+      this.contextBytes = bytes;
+    } else {
+      const v = view(bytes);
+      if (bytes.length < 24 || v.getUint32(0, true) !== PACKET)
+        throw Error("Invalid pair packet");
+      this.a = v.getUint32(4, true);
+      this.b = v.getUint32(8, true);
+      const bn = v.getUint32(12, true),
+        tn = v.getUint32(16, true),
+        cn = v.getUint32(20, true);
+      if (24 + bn + tn + cn !== bytes.length)
+        throw Error("Invalid pair directory");
+      const bd = bn ? unpack(bytes.subarray(24, 24 + bn)) : new Uint32Array(),
+        td = tn
+          ? unpack(bytes.subarray(24 + bn, 24 + bn + tn))
+          : new Uint32Array();
+      for (const docs of [bd, td])
+        if (docs.some((d, i) => i > 0 && d <= docs[i - 1]))
+          throw Error("Invalid pair document order");
+      body = arrayMembers(bd);
+      title = arrayMembers(td);
+      this.contextBytes = bytes.subarray(24 + bn + tn);
+    }
+    const ctx = this.contextBytes,
+      v = view(ctx);
+    if (ctx.length < 12 || v.getUint32(0, true) !== CONTEXT)
+      throw Error("Invalid pair context");
+    const bn = v.getUint32(4, true),
+      tn = v.getUint32(8, true);
+    if (12 + bn + tn !== ctx.length)
+      throw Error("Invalid pair context sections");
+    this.fields = [
+      new ContextField(ctx.subarray(12, 12 + bn), body),
+      new ContextField(ctx.subarray(12 + bn), title),
+    ];
+    const merged = new Uint32Array(body.count + title.count),
+      bi = body.values()[Symbol.iterator](),
+      ti = title.values()[Symbol.iterator]();
+    let x = bi.next(),
+      y = ti.next(),
+      n = 0;
+    while (!x.done || !y.done) {
+      const d = Math.min(
+        x.done ? Infinity : x.value,
+        y.done ? Infinity : y.value,
+      );
+      merged[n++] = d;
+      if (!x.done && x.value === d) x = bi.next();
+      if (!y.done && y.value === d) y = ti.next();
+    }
+    this.docs = merged.subarray(0, n);
+    if (!n || (external && n !== external.df))
+      throw Error("Pair context identity mismatch");
   }
-  count(row: number, field: number) {
+  private raw(row: number, field: number) {
     if (
       !Number.isInteger(row) ||
       row < 0 ||
@@ -166,48 +274,33 @@ export class PairPacket {
       (field !== 0 && field !== 1)
     )
       throw Error("Invalid pair row");
-    return this.index.getUint32(row * 24 + field * 12 + 8, true);
+    return this.fields[field].raw(this.docs[row]);
+  }
+  count(row: number, field: number) {
+    const raw = this.raw(row, field);
+    return raw ? readVarint(raw, 0).value : 0;
   }
   occurrences(row: number, field: number) {
-    const count = this.count(row, field),
-      p = row * 24 + field * 12,
-      at = this.index.getUint32(p, true),
-      n = this.index.getUint32(p + 4, true);
-    if (at + n > this.spans.length || (count === 0 ? n !== 0 : n < 12))
-      throw Error("Invalid pair occurrence span");
-    this.decoded?.(row, field, count, n);
-    if (!count)
+    const raw = this.raw(row, field);
+    if (!raw)
       return {
         positions: new Uint32Array(),
         previous: new Uint32Array(),
         next: new Uint32Array(),
       };
-    if (count === 1) {
-      if (n !== 12) throw Error("Invalid singleton pair context");
-      const v = view(this.spans.subarray(at, at + n));
-      return {
-        positions: Uint32Array.of(v.getUint32(0, true)),
-        previous: Uint32Array.of(v.getUint32(4, true)),
-        next: Uint32Array.of(v.getUint32(8, true)),
-      };
-    }
-    const raw = this.spans.subarray(at, at + n),
-      v = view(raw),
-      arrays: Uint32Array[] = [];
-    let offset = 12;
-    for (let i = 0; i < 3; i++) {
-      const length = v.getUint32(i * 4, true);
-      if (offset + length > raw.length) throw Error("Truncated pair context");
-      arrays.push(unpack(raw.subarray(offset, offset + length)));
-      offset += length;
-    }
-    if (
-      offset !== raw.length ||
-      arrays.some((a) => a.length !== count) ||
-      arrays[0].some((p, i) => i > 0 && p <= arrays[0][i - 1])
-    )
-      throw Error("Invalid pair context columns");
-    return { positions: arrays[0], previous: arrays[1], next: arrays[2] };
+    const { value: count, next: at } = readVarint(raw, 0);
+    if (!count || count > raw.length * 32)
+      throw Error("Invalid pair occurrence count");
+    const positions = decodeSpan(raw, at, count, true),
+      previous = decodeSpan(raw, positions.next, count),
+      next = decodeSpan(raw, previous.next, count);
+    if (next.next !== raw.length) throw Error("Invalid pair context columns");
+    this.decoded?.(row, field, count, raw.length);
+    return {
+      positions: positions.values,
+      previous: previous.values,
+      next: next.values,
+    };
   }
   /** Every phrase occurrence must contain this indexed adjacent pair. Short
    * context proves 2–4-token phrases; longer phrases retain unknown candidates. */
@@ -233,51 +326,26 @@ export class PairPacket {
     };
   }
 }
-/** Merge disjoint document ranges without decoding occurrence/context integers.
- * Native fan-in keeps the complete packet below its selected size budget. */
+/** Construction fan-in is bounded by the selected packet byte budget. */
 export function mergePairPackets(packets: PairPacket[]) {
   if (!packets.length) throw Error("Pair merge requires packets");
   const sorted = [...packets].sort((a, b) => a.docs[0] - b.docs[0]),
     a = sorted[0].a,
     b = sorted[0].b,
-    count = sorted.reduce((n, p) => n + p.docs.length, 0),
-    docs = new Uint32Array(count),
-    index = new Uint8Array(count * 24),
-    v = view(index);
-  let row = 0,
-    offset = 0,
-    previous = -1;
+    rows: PairColumnRow[] = [];
+  let previous = -1;
   for (const p of sorted) {
     if (p.a !== a || p.b !== b || p.docs[0] <= previous)
       throw Error("Pair merge document overlap or ID mismatch");
-    docs.set(p.docs, row);
-    for (let r = 0; r < p.docs.length; r++)
-      for (let field = 0; field < 2; field++) {
-        const from = r * 24 + field * 12,
-          to = (row + r) * 24 + field * 12,
-          at = p.index.getUint32(from, true),
-          n = p.index.getUint32(from + 4, true),
-          count = p.index.getUint32(from + 8, true);
-        if (
-          at + n > p.spans.length ||
-          (count === 0 ? n !== 0 : count === 1 ? n !== 12 : n < 12)
-        )
-          throw Error("Invalid merged pair span");
-        v.setUint32(to, at + offset, true);
-        v.setUint32(to + 4, n, true);
-        v.setUint32(to + 8, count, true);
-      }
-    row += p.docs.length;
-    offset += p.spans.length;
+    for (let i = 0; i < p.docs.length; i++)
+      rows.push({
+        doc: p.docs[i],
+        body: p.occurrences(i, 0),
+        title: p.occurrences(i, 1),
+      });
     previous = p.docs.at(-1)!;
   }
-  const encoded = pack(docs, true);
-  return concat([
-    u32([0x33505043, a, b, count, encoded.length, index.length, offset, 1]),
-    encoded,
-    index,
-    ...sorted.map((p) => p.spans),
-  ]);
+  return encodePairColumns(a, b, rows);
 }
 /** Mandatory pair intersections retain a document only when all pair anchors
  * coexist in one allowed field. This is a filter, never phrase proof by itself. */

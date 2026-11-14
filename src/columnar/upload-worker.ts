@@ -88,7 +88,7 @@ export default {
       return Response.json({ deleted: keys.length });
     }
     if (
-      !/^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+|metadata)\.bin$/.test(
+      !/^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+|presence-\d+|metadata)\.bin$/.test(
         key,
       )
     )

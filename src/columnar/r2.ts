@@ -2,24 +2,34 @@ import type { Source } from "./storage.js";
 /** Generation and range identity come with the same R2 response. */
 export class ColumnarR2 implements Source {
   constructor(readonly bucket: R2Bucket) {}
-  async readNamed(key: string, bytes: number) {
+  async readNamed(address: string, bytes: number) {
+    const match = /^([a-f0-9]{64}\/pairs-\d+\.bin)@(\d+)$/.exec(address),
+      key = match ? match[1] : address,
+      offset = match ? Number(match[2]) : 0;
     if (
-      !/^[a-f0-9]{64}\/(?:pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+|metadata)\.bin$/.test(
-        key,
-      ) ||
+      (!match && !/^[a-f0-9]{64}\/(?:presence-\d+|metadata)\.bin$/.test(key)) ||
+      !Number.isSafeInteger(offset) ||
+      offset < 0 ||
+      offset > 0xffffffff ||
       bytes > 32 * 1048576
     )
-      throw Error("Invalid pair object");
-    const object = await this.bucket.get(key);
+      throw Error("Invalid named packet address");
+    const object = await this.bucket.get(
+      key,
+      match ? { range: { offset, length: bytes } } : undefined,
+    );
     if (
       !object ||
-      object.size !== bytes ||
+      object.size < offset + bytes ||
+      (!match && object.size !== bytes) ||
       object.customMetadata?.generation !== key.split("/")[0] ||
       (key.endsWith("/metadata.bin") &&
         object.customMetadata.sha256 !== key.split("/")[0])
     )
       throw Error("Pair object generation mismatch");
-    return new Uint8Array(await object.arrayBuffer());
+    const data = new Uint8Array(await object.arrayBuffer());
+    if (data.length !== bytes) throw Error("Truncated named packet");
+    return data;
   }
   async readWhole(
     key: string,

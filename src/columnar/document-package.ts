@@ -1,5 +1,6 @@
 import { concat, u32, view, pack, unpack, type Ref } from "./format.js";
 import { scanText } from "./construction/text.js";
+import { encodeTextChunks, TextChunks } from "./text-chunks.js";
 async function gzip(value: unknown) {
   return new Uint8Array(
     await new Response(
@@ -36,7 +37,6 @@ export async function encodeDocumentPackage(
     bodyIds: number[] = [],
     titleIds: number[] = [],
     starts: number[] = [],
-    ends: number[] = [],
     frequencies = new Map<number, [number, number]>();
   const add = (word: string, field: number) => {
     const id = ids.get(word);
@@ -50,7 +50,6 @@ export async function encodeDocumentPackage(
   for (const t of body.tokens()) {
     bodyIds.push(add(t.word, 0));
     starts.push(t.start);
-    ends.push(t.end);
   }
   for (const t of scanText(document.title ?? "", analysis).tokens())
     titleIds.push(add(t.word, 1));
@@ -60,24 +59,7 @@ export async function encodeDocumentPackage(
       pack(names.map((id) => frequencies.get(id)![0])),
       pack(names.map((id) => frequencies.get(id)![1])),
     ],
-    frames: Uint8Array[] = [],
-    directory: number[] = [];
-  let offset = 0;
-  for (let first = 0; first < Math.max(1, bodyIds.length); first += 256) {
-    const lo = Math.max(0, first - 32),
-      hi = Math.min(bodyIds.length, first + 288),
-      start = starts[lo] ?? 0,
-      end = ends[hi - 1] ?? body.text.length,
-      frame = await gzip({
-        first: lo,
-        text: body.text.slice(start, end),
-        starts: starts.slice(lo, hi).map((n) => n - start),
-        ends: ends.slice(lo, hi).map((n) => n - start),
-      });
-    directory.push(lo, hi - lo, offset, frame.length);
-    frames.push(frame);
-    offset += frame.length;
-  }
+    text = await encodeTextChunks(body.text, starts);
   const sections = [
       concat([u32(stats.map((b) => b.length)), ...stats]),
       pack(bodyIds),
@@ -87,19 +69,19 @@ export async function encodeDocumentPackage(
         title: document.title,
         metadata: document.metadata,
       }),
-      u32(directory),
-      concat(frames),
+      text.directory,
+      text.data,
     ],
     header = new Uint8Array(64),
     v = view(header);
   for (const [i, n] of [
-    0x32504443,
+    0x33504443,
     document.doc,
     bodyIds.length,
     titleIds.length,
   ].entries())
     v.setUint32(i * 4, n, true);
-  offset = 64;
+  let offset = 64;
   sections.forEach((s, i) => {
     v.setUint32(16 + i * 8, offset, true);
     v.setUint32(20 + i * 8, s.length, true);
@@ -139,7 +121,7 @@ export class DocumentPackage {
     this.data = view(bytes);
     if (
       bytes.length < 64 ||
-      this.data.getUint32(0, true) !== 0x32504443 ||
+      this.data.getUint32(0, true) !== 0x33504443 ||
       this.data.getUint32(4, true) !== doc
     )
       throw Error("Invalid document package");
@@ -262,25 +244,8 @@ export class DocumentPackage {
     if (titleOnly)
       return String((await this.display()).title ?? "").slice(0, 400);
     if (first === undefined) first = this.firstBodyToken(wanted);
-    const directory = view(this.section(4)),
-      frame = Math.floor((first ?? 0) / 256),
-      at = frame * 16;
-    if (directory.byteLength % 16 || at + 16 > directory.byteLength)
-      throw Error("Invalid passage directory");
-    const start = directory.getUint32(at + 8, true),
-      n = directory.getUint32(at + 12, true),
-      raw = this.section(5);
-    if (start + n > raw.length) throw Error("Invalid passage address");
-    const passage = await json(raw.subarray(start, start + n), (n) =>
-      this.observe?.("inflated", 6 + frame, n),
-    );
-    const p = first === undefined ? -1 : first - passage.first,
-      from = p >= 0 ? Math.max(0, passage.starts[p] - 160) : 0,
-      end = p >= 0 ? passage.ends[p] + 240 : 400;
-    return (
-      (passage.first || from ? "…" : "") +
-      passage.text.slice(from, end).trim() +
-      (end < passage.text.length ? "…" : "")
-    );
+    return new TextChunks(this.section(4), this.section(5), (chunk, bytes) =>
+      this.observe?.("inflated", 6 + chunk, bytes),
+    ).snippet(first);
   }
 }

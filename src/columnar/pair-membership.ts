@@ -1,9 +1,10 @@
 import { concat, lower, pack, unpack, u32, view } from "./format.js";
 import { PairPacket } from "./pair-packet.js";
+import { encodeVarints, readVarint } from "./compact-integers.js";
 
 const encoder = new TextEncoder(),
   decoder = new TextDecoder();
-export const PAIR_PACKET_MAGIC = 0x314d5043;
+export const PAIR_PACKET_MAGIC = 0x324d5043;
 /** Hashes route only. Exact normalized UTF-8 keys always establish identity. */
 export function pairStringHash(s: string) {
   let h = 2166136261;
@@ -117,9 +118,12 @@ export class Membership {
     this.observe?.(i, docs.length, docs.byteLength);
     return (this.column = docs);
   }
-  has(doc: number) {
-    if (doc < 0 || doc >= this.corpusCount) return false;
-    if (this.docs) return this.docs[lower(this.docs, doc)] === doc;
+  indexOf(doc: number) {
+    if (doc < 0 || doc >= this.corpusCount) return -1;
+    if (this.docs) {
+      const row = lower(this.docs, doc);
+      return this.docs[row] === doc ? row : -1;
+    }
     let lo = 0,
       hi = this.blocks;
     while (lo < hi) {
@@ -127,9 +131,13 @@ export class Membership {
       if (this.index!.getUint32(4 + m * 12, true) < doc) lo = m + 1;
       else hi = m;
     }
-    if (lo === this.blocks) return false;
-    const docs = this.block(lo);
-    return docs[lower(docs, doc)] === doc;
+    if (lo === this.blocks) return -1;
+    const docs = this.block(lo),
+      row = lower(docs, doc);
+    return docs[row] === doc ? lo * 128 + row : -1;
+  }
+  has(doc: number) {
+    return this.indexOf(doc) >= 0;
   }
   *values(): Generator<number> {
     if (this.docs) {
@@ -179,9 +187,12 @@ export function encodePairMembership(
 ) {
   const b = encodeMembership(record.body, corpusCount),
     t = encodeMembership(record.title, corpusCount),
-    context = record.context ?? new Uint8Array();
+    context = record.context
+      ? new PairPacket(record.context).contextBytes
+      : new Uint8Array();
   return concat([
-    u32([
+    Uint8Array.of(4),
+    encodeVarints([
       record.a,
       record.b,
       record.df,
@@ -214,32 +225,39 @@ export class PairMembership {
     observe?: ConstructorParameters<typeof PairPacket>[1],
     observeMembership?: ObserveMembership,
   ) {
-    if (bytes.length < 44) throw Error("Truncated pair record");
-    const v = view(bytes),
-      bn = v.getUint32(28, true),
-      tn = v.getUint32(32, true),
-      cn = v.getUint32(36, true),
-      flags = v.getUint32(40, true);
-    if (44 + bn + tn + cn !== bytes.length || flags > 15)
+    if (bytes.length < 12 || bytes[0] !== 4)
+      throw Error("Invalid pair record version");
+    const header: number[] = [];
+    let at = 1;
+    for (let i = 0; i < 11; i++) {
+      const item = readVarint(bytes, at);
+      header.push(item.value);
+      at = item.next;
+    }
+    const bn = header[7],
+      tn = header[8],
+      cn = header[9],
+      flags = header[10];
+    if (at + bn + tn + cn !== bytes.length || flags > 15)
       throw Error("Invalid pair record sections");
-    this.a = v.getUint32(0, true);
-    this.b = v.getUint32(4, true);
-    this.df = v.getUint32(8, true);
-    this.bodyOccurrences = v.getUint32(20, true);
-    this.titleOccurrences = v.getUint32(24, true);
+    this.a = header[0];
+    this.b = header[1];
+    this.df = header[2];
+    this.bodyOccurrences = header[5];
+    this.titleOccurrences = header[6];
     this.body = new Membership(
-      bytes.subarray(44, 44 + bn),
+      bytes.subarray(at, at + bn),
       flags & 3,
-      v.getUint32(12, true),
+      header[3],
       count,
       observeMembership
         ? (block, n, bytes) => observeMembership(0, block, n, bytes)
         : undefined,
     );
     this.title = new Membership(
-      bytes.subarray(44 + bn, 44 + bn + tn),
+      bytes.subarray(at + bn, at + bn + tn),
       flags >>> 2,
-      v.getUint32(16, true),
+      header[4],
       count,
       observeMembership
         ? (block, n, bytes) => observeMembership(1, block, n, bytes)
@@ -251,7 +269,13 @@ export class PairMembership {
     )
       throw Error("Invalid pair DF");
     if (cn) {
-      this.context = new PairPacket(bytes.subarray(44 + bn + tn), observe);
+      this.context = new PairPacket(bytes.subarray(at + bn + tn), observe, {
+        a: this.a,
+        b: this.b,
+        body: this.body,
+        title: this.title,
+        df: this.df,
+      });
       if (
         this.context.a !== this.a ||
         this.context.b !== this.b ||

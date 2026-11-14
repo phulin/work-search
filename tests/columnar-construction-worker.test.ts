@@ -258,7 +258,7 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
     expect(groupReader.stats.requests).toBe(5);
     const packetRoot = {
       ...root,
-      objects: [] as any[],
+      objects: [...root.objects],
       documents: [],
       hot: {},
       dictionaries: [],

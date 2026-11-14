@@ -1,6 +1,6 @@
 // Bounded deployment transport. This module is never bundled into search Workers.
 export const publicationKey =
-  /^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+|metadata)\.bin$/;
+  /^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+|presence-\d+|metadata)\.bin$/;
 export const MAX_PUBLICATION_BYTES = 8 * 1048576;
 export type PublicationRecord = { key: string; size: number; sha256: string };
 

@@ -1,3 +1,4 @@
+import { encodePositions } from "./positions.js";
 import { DatabaseSync } from "node:sqlite";
 import { OfflineObjects } from "./offline.js";
 import { mkdir, readFile, writeFile, rm } from "node:fs/promises";
@@ -229,13 +230,6 @@ export async function buildColumnarPairs(
       };
       const flushRows = () => {
         if (!batch.length) return;
-        const payload: Uint8Array[] = [],
-          offsets = [0];
-        for (const r of batch) {
-          const b = concat([u32([r.bp.length]), r.bp, r.tp]);
-          payload.push(b);
-          offsets.push(offsets.at(-1)! + b.length);
-        }
         const n = batch.length;
         push({
           first: batch[0].doc,
@@ -249,12 +243,14 @@ export async function buildColumnarPairs(
               batch.map((r) => r.doc),
               batch.map((r) => r.bf),
               batch.map((r) => r.tf),
-              new Array(n).fill(0),
-              new Array(n).fill(0),
+              batch.map((r) => r.bf),
+              batch.map((r) => r.tf),
             ),
           ),
           positions: positions.put(
-            concat([u32([n]), u32(offsets), ...payload]),
+            encodePositions(
+              batch.map((r) => ({ body: unpack(r.bp), title: unpack(r.tp) })),
+            ),
           ),
           locators: locators.put(
             concat(batch.map((r) => concat([r.record, r.forward, r.head]))),
