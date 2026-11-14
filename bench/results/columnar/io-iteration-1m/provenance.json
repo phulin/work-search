@@ -1,0 +1,214 @@
+{
+  "implementationCommit": "30a040c5e72181a4905a5abbcf35f31e14c043ff",
+  "controlCommit": "3129497",
+  "measuredImplementationSha256": "e38f37caf94a8c84e1c25d49e64b5a5891763895f62e5251d3d97f1158ec2dfc",
+  "finalHealth": {
+    "work-search-cws-1m": {
+      "format": "CWS1",
+      "analysis": "nfkc-lower-porter2-v1",
+      "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+      "documents": 1000000,
+      "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+      "directoryBytes": 14836106,
+      "metadataFields": [
+        "date_filed",
+        "precedential_status",
+        "opinion_id",
+        "cluster_id"
+      ],
+      "metadataGeneration": "54382e2cf6bef016cef8271491990574a9b49ec1dc314699f64ad51447e32c48",
+      "pairGeneration": "a4b591520b45473a7d3d5e10ac623ee208c33a5474550e4387de5b2776df45ab",
+      "commonWordAnchorsExcluded": 100,
+      "commonPairAnchorsExcluded": 1000,
+      "pairRouterBytes": 6504782,
+      "isolate": "8c484d75-6059-451c-be2c-196484f523d3",
+      "sequence": 1,
+      "cacheNamespace": "work-search-cws-1m",
+      "pageBytes": 262144,
+      "version": {
+        "id": "177b51f3-545b-4a15-b95b-31147bd9f142",
+        "tag": "",
+        "timestamp": "2026-11-14T14:31:54.793846Z"
+      }
+    },
+    "work-search-cws-1m-next": {
+      "format": "CWS1",
+      "analysis": "nfkc-lower-porter2-v1",
+      "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+      "documents": 1000000,
+      "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+      "directoryBytes": 14836106,
+      "metadataFields": [
+        "date_filed",
+        "precedential_status",
+        "opinion_id",
+        "cluster_id"
+      ],
+      "metadataGeneration": "54382e2cf6bef016cef8271491990574a9b49ec1dc314699f64ad51447e32c48",
+      "pairGeneration": "a4b591520b45473a7d3d5e10ac623ee208c33a5474550e4387de5b2776df45ab",
+      "commonWordAnchorsExcluded": 100,
+      "commonPairAnchorsExcluded": 1000,
+      "pairRouterBytes": 6504782,
+      "isolate": "9ba5bdaa-7ca5-4bed-ad00-fdebaac79ec0",
+      "sequence": 1,
+      "cacheNamespace": "work-search-cws-1m-next",
+      "pageBytes": 262144,
+      "version": {
+        "id": "987b805f-1c41-4d30-a7c6-7092b4a0aa24",
+        "tag": "",
+        "timestamp": "2026-11-14T16:12:15.786411Z"
+      }
+    }
+  },
+  "configuration": {
+    "placement": {
+      "region": "aws:us-east-1"
+    },
+    "limits": {
+      "cpu_ms": 300000
+    },
+    "compatibility_date": "2026-11-01",
+    "responseCaching": false,
+    "pageBytes": 262144,
+    "commonWords": 100,
+    "commonPairs": 1000
+  },
+  "immutableData": [
+    {
+      "file": "root.json",
+      "localSha256": "08a08d01377be933cd0d8a6713cc17ce68913da4c557336939db7fa0da92c913",
+      "deployedSha256": "debfe6bbb1ce5dc69b1702120e30588e02d213afaf17ca6ee394b7fe0f6b9668",
+      "deployedControlSha256": "debfe6bbb1ce5dc69b1702120e30588e02d213afaf17ca6ee394b7fe0f6b9668",
+      "localEqualsDeployedAfterRemovingUnusedChecksums": true,
+      "note": "Existing deploy preparation omits obsolete checksum arrays. Runtime CRC verification was removed before this iteration.",
+      "deployedControlIdentical": true
+    },
+    {
+      "file": "directory.bin",
+      "sha256": "30c94cbee0038c9e94a123db654ace47342c11c261012cd7b72f4ccfe2fe9b58"
+    },
+    {
+      "file": "documents.bin",
+      "sha256": "9726e4999421ca275b9db6f0ca3467722396cdbd15d828bbb31044d5fc1eb13c"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "correctness-200.json.gz",
+      "sha256": "d390003a6c346657f529036692dadab684a72cae8838210770135f399e0757db"
+    },
+    {
+      "file": "correctness-contract-200.json.gz",
+      "sha256": "60bd27d40821ceb43ca57973c6f527548c1a639fe8fe51a4da797c37366c3f7f"
+    },
+    {
+      "file": "filter-check.json.gz",
+      "sha256": "54ff9b1986edb268f79bfd35aea8d51ac3dcf6e3091465b8d6f97a4b19a0d577"
+    },
+    {
+      "file": "live-broad-pilot-cpu.json.gz",
+      "sha256": "9dd3e6d1612cab5fadfd89e4ec6ce49e65ba474883c7659583c7e8f6e85d871c"
+    },
+    {
+      "file": "live-broad-pilot.json.gz",
+      "sha256": "523a05a0f05d5598ac2013f0a96efc9b4c988982bdf9d99e9efaac47ffe80a7f"
+    },
+    {
+      "file": "live-contract.json",
+      "sha256": "80ad4ece9992e8fa2e4d968f19cf604f529a00cfea0689cc148de07fd8f77f7c"
+    },
+    {
+      "file": "live-final-cpu.json.gz",
+      "sha256": "6058a787cbfba4ab66d74c942fc60615f29f595414407e740ce10ad00bfad14f"
+    },
+    {
+      "file": "live-final.json.gz",
+      "sha256": "e7f880e3fc450fc8cec6cbcfb27e3ac32e9e542890dcca68861ea2edfa4e3254"
+    },
+    {
+      "file": "live-unfamiliar-cpu.json.gz",
+      "sha256": "b0764ce201ef6df45a57a200c50fb2a4156a02036afc72acb4b7540b5d4daf59"
+    },
+    {
+      "file": "live-unfamiliar.json.gz",
+      "sha256": "0c35c00c7af43fee46494289c1701101ba8763fcc09f5b8b6397ae9dc3f85979"
+    },
+    {
+      "file": "local-arbitration-empty.json.gz",
+      "sha256": "56c8d5366269ccf8e03d4f46d149bebc65a7ecfbe34b849318961be163f3be64"
+    },
+    {
+      "file": "local-arbitration-warm.json.gz",
+      "sha256": "0558428315ac90a1b961ddc4ffbd60dd4d6f7ea8c40274dd43d63954cc59d063"
+    },
+    {
+      "file": "local-contract.json",
+      "sha256": "e4951e615eaddead41e27a5c6bccf15dda710b8d087adad671386896b58dac5d"
+    },
+    {
+      "file": "local-empty.json.gz",
+      "sha256": "18ed310a36cd7baacdc55a7aa664a51e6fcfcf56ee851fe58b6fd7fab4e36591"
+    },
+    {
+      "file": "local-warm.json.gz",
+      "sha256": "58502807ab60a2986b8c3806f49675d9d9ff49bc23b50889c243069ce6638126"
+    },
+    {
+      "file": "oracle-160.json.gz",
+      "sha256": "c26606eb88af53f998ae436eff563f87baefde24688475fd277062fa000876a3"
+    },
+    {
+      "file": "summary.json",
+      "sha256": "d6e3d55b0abe35aced9f2ea7a6b212b9704bc1e8aa68f389f572de314e2787d6"
+    },
+    {
+      "file": "usage.json",
+      "sha256": "0608bde7d564480203c3472d8ea310e8fe4ed03959ea1596f1ab4455f2373cc8"
+    },
+    {
+      "file": "tests.log.gz",
+      "sha256": "208383bbc4af79b0828119c4df57ddbb1e4322a5dbca3634458101980de1845c"
+    },
+    {
+      "file": "oracle.log.gz",
+      "sha256": "f119f39d0d50e97c343382e79515f7086a24b5b6908e021e7a94ef3e0e3628be"
+    }
+  ],
+  "validation": {
+    "tests": 293,
+    "testFiles": 79,
+    "typecheck": "passed",
+    "formatting": "passed",
+    "independentOracleQueries": 160,
+    "controlComparisonQueries": 200,
+    "controlComparisonResponses": 400,
+    "semanticDifferences": 0,
+    "filterCursorLiveResponses": 9
+  },
+  "notes": [
+    "Final candidate differs from broad pilot by omitting a unigram read already proved by selected pair evidence. Worker versions and per-run manifests distinguish them.",
+    "No index uploads or construction. Serving Worker unchanged. Temporary candidate retired after measurements.",
+    "900 shared-operation budget, page/range policy, context and excerpt algorithms unchanged. Native retained/peak memory and cumulative allocations were not established.",
+    "Account-wide usage includes unrelated activity; native request-ID joins, not account totals, establish this run outcomes."
+  ],
+  "cleanup": {
+    "time": "2026-11-14T16:23:26.189Z",
+    "removed": "work-search-cws-1m-next",
+    "controlPlaneGetStatus": 404,
+    "servingVersion": {
+      "id": "177b51f3-545b-4a15-b95b-31147bd9f142",
+      "tag": "",
+      "timestamp": "2026-11-14T14:31:54.793846Z"
+    },
+    "servingGeneration": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+    "r2ObjectsDeleted": 0
+  },
+  "nativeOutcomes": {
+    "live-final-cpu.json.gz": {
+      "ok": 106
+    },
+    "live-unfamiliar-cpu.json.gz": {
+      "ok": 14
+    }
+  }
+}
