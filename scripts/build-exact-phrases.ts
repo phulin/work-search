@@ -8,12 +8,15 @@ import {
   open,
   appendFile,
   rm,
+  symlink,
+  lstat,
 } from "node:fs/promises";
+import { resolve } from "node:path";
 import { openSync, readSync, closeSync } from "node:fs";
 import { deserialize } from "node:v8";
 import { createHash } from "node:crypto";
-import { pathToFileURL } from "node:url";
-import { resolve } from "node:path";
+import { PairRouter } from "../src/columnar/pair-router.js";
+import { PairMembershipPacket } from "../src/columnar/pair-membership.js";
 import {
   pairPositionChunks,
   encodePairPositionDirectory,
@@ -30,29 +33,40 @@ import {
   type PairColumnRow,
   pairPacketByteBound,
 } from "../src/columnar/pair-packet.js";
-const [input, output, control, index, budgetArg = "65536"] =
-  process.argv.slice(2);
+const [input, output, index, budgetArg = "65536"] = process.argv.slice(2);
 if (!index)
   throw Error(
-    "Usage: build-exact-phrases.ts COMPLETE_PAIRS OUTPUT FROZEN_SOURCE BASE_INDEX [BUDGET_MIB]",
+    "Usage: build-exact-phrases.ts COMPLETE_PAIRS OUTPUT BASE_INDEX [BUDGET_MIB] [--verify-selection]",
   );
 await mkdir(output + "/position-scratch", { recursive: true });
 await mkdir(output + "/objects", { recursive: true });
 const budget = Number(budgetArg) * 1048576,
   started = performance.now(),
-  load = (n: string) =>
-    import(pathToFileURL(resolve(control + "/src/columnar/" + n + ".ts")).href),
-  { PairRouter, pairObjectKey } = await load("pair-router"),
-  { PairMembershipPacket } = await load("pair-membership"),
-  router = new PairRouter(await readFile(input + "/router.bin")),
+  sourceMetadata = JSON.parse(
+    await readFile(input + "/specification.json", "utf8"),
+  ),
+  sourceStatistics = JSON.parse(
+    await readFile(input + "/statistics.json", "utf8"),
+  ),
+  namespaces = new Map<string, number>(
+    sourceMetadata.namespaces.map((s: string, i: number) => [s, i + 1]),
+  ),
+  router = new PairRouter(await readFile(index + "/router.bin")),
   vocab = deserialize(await readFile(input + "/vocabulary.bin")),
   common = JSON.parse(await readFile(input + "/common-pairs.json", "utf8")),
   root = JSON.parse(await readFile(index + "/root.json", "utf8")),
   wanted = new Set<string>(common.flatMap((p: any) => [p.a, p.b])),
   ids = new Map<string, number>();
-if (vocab.generation !== router.metadata.baseGeneration)
+if (
+  vocab.generation !== sourceMetadata.baseGeneration ||
+  sourceStatistics.baseGeneration !== vocab.generation
+)
   throw Error("Pair source generation mismatch");
-if (root.count !== router.metadata.documents)
+if (
+  root.count !== sourceMetadata.documents ||
+  root.count !== router.metadata.documents ||
+  router.metadata.baseGeneration !== root.generation
+)
   throw Error("Pair document count mismatch");
 if (root.generation !== vocab.generation) {
   for (const stage of ["documents", "terms"]) {
@@ -72,13 +86,31 @@ for (let i = 0; i < vocab.words.length; i++)
   if (wanted.has(vocab.words[i])) ids.set(vocab.words[i], i);
 const plans: any[] = [];
 for (const p of common) {
-  const leaf = router.route(p.a, p.b),
-    key = pairObjectKey(router.metadata.generation, leaf),
-    packet = new PairMembershipPacket(
-      await readFile(input + "/objects/" + key.split("/")[1]),
-    ),
-    r = packet.lookup(p.a, p.b, router.metadata.documents),
-    occ = r.bodyOccurrences + r.titleOccurrences,
+  const leaf = router.route(p.a, p.b);
+  if (!leaf) throw Error("Missing source pair membership");
+  const file = await open(index + `/objects/pairs-${leaf.object}.bin`, "r"),
+    raw = new Uint8Array(leaf.bytes);
+  try {
+    let at = 0;
+    while (at < raw.length) {
+      const { bytesRead } = await file.read(
+        raw,
+        at,
+        raw.length - at,
+        leaf.offset + at,
+      );
+      if (!bytesRead) throw Error("Truncated source membership packet");
+      at += bytesRead;
+    }
+  } finally {
+    await file.close();
+  }
+  const packet = new PairMembershipPacket(raw),
+    r = packet.lookup(p.a, p.b, router.metadata.documents);
+  if (!r) throw Error("Missing selected pair in authoritative packet");
+  if (r.a !== ids.get(p.a) || r.b !== ids.get(p.b))
+    throw Error("Pair term IDs differ from occurrence source");
+  const occ = r.bodyOccurrences + r.titleOccurrences,
     estimate = pairPacketByteBound(r.df, occ),
     work = r.df * 512,
     ratio = work / estimate;
@@ -105,7 +137,7 @@ const selected = plans.filter((p) => {
 const generation = createHash("sha256")
     .update(
       "exact-phrases-1:" +
-        router.metadata.generation +
+        sourceStatistics.generation +
         ":" +
         root.generation +
         ":" +
@@ -114,7 +146,7 @@ const generation = createHash("sha256")
     .digest("hex"),
   files = new Map<string, any[]>();
 for (const p of selected) {
-  const ns = router.route(p.a, p.b).namespace,
+  const ns = namespaces.get(p.a) ?? 0,
     h = ns
       ? pairStringHash(p.b)
       : pairHash(pairStringHash(p.a), pairStringHash(p.b)),
@@ -130,11 +162,25 @@ console.log(
   "bytes; source partitions",
   files.size,
 );
+if (process.argv.includes("--verify-selection")) {
+  const existing = JSON.parse(
+    await readFile(output + "/position-selection.json", "utf8"),
+  );
+  if (
+    existing.generation !== generation ||
+    JSON.stringify(existing.selected) !== JSON.stringify(selected)
+  )
+    throw Error("Construction selection differs from existing generation");
+  console.log(
+    "Existing selection and generation match current membership data",
+  );
+  process.exit(0);
+}
 await writeFile(
   output + "/position-selection.json",
   JSON.stringify(
     {
-      sourceGeneration: router.metadata.baseGeneration,
+      sourceGeneration: sourceMetadata.baseGeneration,
       generation,
       budget,
       reserved,
@@ -299,7 +345,7 @@ for (const p of selected) {
 }
 await store.flush();
 const report = {
-  sourceGeneration: router.metadata.baseGeneration,
+  sourceGeneration: sourceMetadata.baseGeneration,
   generation,
   budget,
   reserved,
@@ -336,6 +382,47 @@ const binary = encodeExactPhraseDirectory(
 );
 new ExactPhraseDirectory(binary);
 await writeFile(output + "/exact-phrases.bin", binary);
+// A deployable local view shares immutable base assets instead of duplicating
+// the corpus or requiring a legacy runtime. New positional objects stay owned
+// by this generation. Never replace an existing output file with a link.
+const baseAssets = [
+  "root.json",
+  "directory.bin",
+  "documents.bin",
+  "router.bin",
+  "presence.json",
+  "presence",
+  "metadata",
+  "packs",
+  "documents-report.json",
+  "terms-report.json",
+];
+async function link(from: string, to: string) {
+  if (
+    await lstat(to).then(
+      () => true,
+      (e) => {
+        if (e.code !== "ENOENT") throw e;
+        return false;
+      },
+    )
+  )
+    return;
+  if (
+    await lstat(from).then(
+      () => true,
+      (e) => {
+        if (e.code !== "ENOENT") throw e;
+        return false;
+      },
+    )
+  )
+    await symlink(resolve(from), to);
+}
+for (const name of baseAssets)
+  await link(index + "/" + name, output + "/" + name);
+for (const name of await readdir(index + "/objects"))
+  await link(index + "/objects/" + name, output + "/objects/" + name);
 console.log(
   "Complete",
   catalog.length,

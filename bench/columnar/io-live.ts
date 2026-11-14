@@ -6,6 +6,13 @@ import { gzipSync } from "node:zlib";
 import { strict as assert } from "node:assert";
 import { benchmarkToken } from "./token.js";
 const [before, after, contractPath, output] = process.argv.slice(2);
+const requestTimeoutMs = Number(process.env.CWS_REQUEST_TIMEOUT_MS ?? 60000);
+if (
+  !Number.isFinite(requestTimeoutMs) ||
+  requestTimeoutMs < 1000 ||
+  requestTimeoutMs > 300000
+)
+  throw Error("Request timeout must be between 1 and 300 seconds");
 if (!output)
   throw Error(
     "Usage: io-live.ts CONTROL_URL CANDIDATE_URL CONTRACT OUTPUT.json.gz",
@@ -34,6 +41,11 @@ for (const [variant, h] of Object.entries(health) as [string, any][]) {
   assert.equal(h.analysis, contract.analysis);
   if (contract.metadataGenerations)
     assert.equal(h.metadataGeneration, contract.metadataGenerations[variant]);
+  if (contract.exactPhraseGenerations)
+    assert.equal(
+      h.exactPhraseGeneration,
+      contract.exactPhraseGenerations[variant],
+    );
 }
 let seed = 20261114;
 const random = () => {
@@ -55,6 +67,7 @@ const manifest = {
   urls,
   health,
   seed,
+  requestTimeoutMs,
   completedAt: undefined as string | undefined,
   notes: [
     "Fresh application and shared namespaces per query/session/variant. Shared-warm requests reset application memory in the request; immediate-repeat and load requests permit reuse, with actual isolate IDs recorded. Opaque R2 caches uncontrolled.",
@@ -89,7 +102,7 @@ async function request(
         cacheNamespace: namespace,
         resetMemory: !["immediate-repeat", "load"].includes(condition),
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(requestTimeoutMs),
     });
     body = await r.text();
   } catch (error) {

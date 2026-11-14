@@ -44,6 +44,13 @@ rounds, occurrence decoding and scoring, and recognizes application-resident
 ranges. It compares complete word data and candidate-document alternatives.
 These costs select execution only; they never discard matches.
 
+A standalone covered phrase whose alternative is broad selects its source
+before optional membership or common-word-filter I/O. Its exact context stream
+already supplies those necessary conditions. Selective document plans and
+compound expressions retain candidate intersections when they can avoid a
+global scan. Singleton context rows are checked directly in their existing
+encoding, without allocating three decoded columns per document.
+
 Existing cheap candidate discovery remains useful. If its actual candidate set
 selects document verification, the executor retains that continuation rather
 than replacing it with a global pair scan. For broader continuations, a covered
@@ -78,6 +85,37 @@ blocks and integers, score blocks/postings/waves, winner reads and active-buffer
 estimates. Buffer accounting is not a native heap-peak measurement. New local
 and live comparisons must distinguish application reuse from shared-page reuse
 and a genuinely new isolate.
+
+## Reproduce the retained 1M experiment
+
+The context builder consumes the complete-pair construction's streaming
+occurrence partitions, vocabulary and corpus statistics, and the current base
+index's membership packets. It does not require an obsolete serving decoder.
+Its output links immutable base assets locally and owns its new positional
+objects. Retain the base index while using that local view.
+
+```sh
+yarn node --import tsx scripts/build-exact-phrases.ts \
+  work/columnar-complete-pairs-1m work/exact-phrases-all-1m work/verification-1m
+
+# Validate selection against an already-built generation without rebuilding.
+yarn node --import tsx scripts/build-exact-phrases.ts \
+  work/columnar-complete-pairs-1m work/exact-phrases-all-1m work/verification-1m \
+  65536 --verify-selection
+
+CWS_EXACT_LABEL=exact-phrases-final \
+  yarn node --import tsx bench/columnar/run-exact-phrases.ts
+
+# Publish only this independent context generation, then deploy an isolated trial.
+yarn node --import tsx scripts/publish-exact-phrases.ts work/exact-phrases-all-1m
+CWS_MEMBERSHIP_DIR=work/exact-phrases-all-1m \
+  yarn node --import tsx scripts/deploy-columnar.ts \
+  work/exact-phrases-all-1m work-search-cws-phrase-1m --deploy-only
+```
+
+Local comparisons expect the separately frozen pre-change source and base index
+views described in the benchmark report. The builder and serving runtime have no
+dependency on that benchmark control.
 
 ## Rejected experiments and remaining costs
 

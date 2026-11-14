@@ -71,7 +71,10 @@ records are unknown and use the exact ordinary verification path. Selected
 chunks are fetched together and feed evidence directly into the Boolean
 continuation. Context can prove covered two-, three-, and four-token phrases;
 uncovered phrase/proximity conditions still require exact positions. Ranking
-continues to use constituent-word scores.
+continues to use constituent-word scores. This budget applies to optional
+candidate enrichment. The [complete phrase executor](EXACT-PHRASES.md) can
+instead select a whole context stream as a primary matching source, with an
+active-memory bound rather than a cumulative 4 MiB transfer cutoff.
 
 The offline positional builder selects from corpus pair statistics, without
 reading benchmark queries. It streams existing occurrence partitions, reserves
@@ -100,6 +103,7 @@ separate control and candidate roots on identical corpus input.
 Rejected approaches: fetching full document text for rejected candidates;
 retaining a second legacy production decoder; scanning complete token arrays
 for selective verification; fetching an arbitrary number of context chunks
-before deciding whether they are economical. Broad buffered pair-position scans,
-selected phrase postings, document reordering, and a new word-membership layer
-are not implemented by this iteration.
+before deciding whether they are economical. Broad buffered pair-position scans
+are now implemented by the complete phrase executor. Separate selected phrase
+postings, document reordering and a new word-membership layer remain future
+experiments.

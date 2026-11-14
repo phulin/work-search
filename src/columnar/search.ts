@@ -1,5 +1,9 @@
 import { positionSpan } from "./positions.js";
-import { ExactPhraseExecution, planExactPhrases } from "./exact-phrase.js";
+import {
+  ExactPhraseExecution,
+  planExactPhrases,
+  filteredPhraseWork,
+} from "./exact-phrase.js";
 import { scoreParameters } from "./scoring.js";
 import { filterDocuments, type DocumentFilter } from "./document-filter.js";
 import { scoreLookahead } from "./score-lookahead.js";
@@ -591,9 +595,26 @@ export class ColumnarIndex {
       // alternative. Do not replace a cheap, actually filtered set with a
       // corpus-wide context scan just because its unigram forecast was broad.
       if (exactPlans.length && (primaryExact || planned.kind !== "documents")) {
-        const useful = exactPlans.filter(
-          (p) => !loadedMembership?.covered(p.words),
-        );
+        const useful = exactPlans.filter((p) => {
+          if (loadedMembership?.covered(p.words)) return false;
+          if (!primaryExact && loadedMembership) {
+            const work = filteredPhraseWork(
+              p,
+              loadedMembership.count,
+              terms as Map<string, DirectoryTerm>,
+              field,
+            );
+            if (work.preferFiltered) {
+              reader.stats.exactPhraseFilteredAlternatives.push({
+                words: p.words,
+                candidates: loadedMembership.count,
+                ...work,
+              });
+              return false;
+            }
+          }
+          return true;
+        });
         if (useful.length) {
           exact = new ExactPhraseExecution(useful, reader, field);
           reader.stats.exactPhrasePlans = describeExactPlans().filter((p) =>

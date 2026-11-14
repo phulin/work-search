@@ -20,6 +20,42 @@ export interface ExactPhrasePlan {
   cost: number;
   alternativeCost: number;
 }
+/** Reprice a global stream after another Boolean branch has supplied actual
+ * candidates. These proportional estimates choose execution, never prune it.
+ * If both encoded work and occurrence work favor targeted verification, retain
+ * the existing filtered block plan rather than scan unrelated pair occurrences.
+ */
+export function filteredPhraseWork(
+  plan: ExactPhrasePlan,
+  candidates: number,
+  terms: ReadonlyMap<string, DirectoryTerm>,
+  field: "all" | "body" | "title",
+) {
+  let bytes = 0,
+    occurrences = 0;
+  for (const name of new Set(plan.words)) {
+    const t = terms.get(name)!;
+    const fraction = Math.min(1, candidates / Math.max(1, t.df));
+    bytes +=
+      [t.positional, ...(t.positionalParts ?? [])].reduce(
+        (n, r) => n + r[2],
+        0,
+      ) * fraction;
+    occurrences +=
+      ((field !== "title" ? t.bodyOccurrences : 0) +
+        (field !== "body" ? t.titleOccurrences : 0)) *
+      fraction;
+  }
+  const completeOccurrences =
+    (field !== "title" ? plan.pair.bodyOccurrences : 0) +
+    (field !== "body" ? plan.pair.titleOccurrences : 0);
+  return {
+    bytes,
+    occurrences,
+    completeOccurrences,
+    preferFiltered: bytes < plan.bytes && occurrences < completeOccurrences,
+  };
+}
 /** Stable contiguous extents, independent of query matches and application
  * cache state. Chunk boundaries remain the decoding/restart unit. */
 function groups(pair: ExactPairDescriptor) {

@@ -69,7 +69,11 @@ for (const r of runs) {
             CWS_LOCAL_DATA: index,
             CWS_PAIR_INDEX: index,
             CWS_PLANS: r.plans ?? "control-N100-M1000,auto-N100-M1000",
-            CWS_REPEATS: String(r.repeats),
+            CWS_REPEATS: String(
+              r.contract === "work/exact-phrases-contract.json"
+                ? Number(process.env.CWS_REPRESENTATIVE_REPEATS ?? r.repeats)
+                : r.repeats,
+            ),
             CWS_PRIME_PASSES: String(r.primes),
             CWS_LABEL: r.label,
             CWS_ISOLATE_SCENARIOS: "1",
