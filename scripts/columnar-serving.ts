@@ -15,6 +15,7 @@ import { ColumnarIndex } from "../src/columnar/search.js";
 import { TermDirectory } from "../src/columnar/term-directory.js";
 import { DocumentDirectory } from "../src/columnar/document-directory.js";
 import { PairRouter } from "../src/columnar/pair-router.js";
+import { ExactPhraseDirectory } from "../src/columnar/exact-phrase-directory.js";
 import {
   MetadataIndex,
   type MetadataManifest,
@@ -74,6 +75,7 @@ export async function loadServingAssets(
     documents = await binary("documents.bin", root.documentPackages?.locators);
   let membership: MembershipSettings | undefined,
     router: Uint8Array | undefined,
+    exactPhrases: Uint8Array | undefined,
     metadata: MetadataManifest | undefined;
   const membershipDir = options.membershipDir ?? join(indexDir, "membership"),
     metadataDir = options.metadataDir ?? join(indexDir, "metadata");
@@ -106,6 +108,17 @@ export async function loadServingAssets(
       N: options.N ?? 100,
       M: options.M ?? 1000,
     };
+    if (await exists(join(membershipDir, "exact-phrases.bin"))) {
+      exactPhrases = await readFile(join(membershipDir, "exact-phrases.bin"));
+      const phrases = new ExactPhraseDirectory(exactPhrases);
+      membership.exactPhrases = phrases;
+      for (const o of phrases.metadata.objects)
+        auxiliary.push({
+          key: `${phrases.metadata.generation}/positions-${o.id}.bin`,
+          size: o.bytes,
+          path: join(membershipDir, "objects", `positions-${o.id}.bin`),
+        });
+    }
     for (const o of routing.objects())
       auxiliary.push({
         key: o.key,
@@ -160,6 +173,7 @@ export async function loadServingAssets(
     documents,
     membership,
     router,
+    exactPhrases,
     metadata,
     auxiliary,
   };
@@ -173,6 +187,8 @@ export function matchesServingHealth(a: ServingAssets, health: any) {
     health.analysis === a.root.analysis &&
     health.metadataGeneration === a.metadata?.generation &&
     health.pairGeneration === a.membership?.router.metadata.generation &&
+    health.exactPhraseGeneration ===
+      a.membership?.exactPhrases?.metadata.generation &&
     (!a.membership ||
       (health.commonWordAnchorsExcluded === a.membership.N &&
         health.commonPairAnchorsExcluded === a.membership.M))
@@ -248,12 +264,14 @@ export function servingRoot(root: Root): Root {
   };
 }
 export function servingImports(a: ServingAssets, dir: string) {
-  return `${a.router ? `import routerData from ${JSON.stringify(join(dir, "router.bin"))};import presence from ${JSON.stringify(join(dir, "presence.json"))};import{PairRouter}from ${JSON.stringify(join(dir, "src/columnar/pair-router.ts"))};` : ""}${a.metadata ? `import metadataManifest from ${JSON.stringify(join(dir, "metadata.json"))};` : ""}`;
+  return `${a.router ? `import routerData from ${JSON.stringify(join(dir, "router.bin"))};import presence from ${JSON.stringify(join(dir, "presence.json"))};import{PairRouter}from ${JSON.stringify(join(dir, "src/columnar/pair-router.ts"))};` : ""}${a.exactPhrases ? `import exactPhraseData from ${JSON.stringify(join(dir, "exact-phrases.bin"))};import{ExactPhraseDirectory}from ${JSON.stringify(join(dir, "src/columnar/exact-phrase-directory.ts"))};` : ""}${a.metadata ? `import metadataManifest from ${JSON.stringify(join(dir, "metadata.json"))};` : ""}`;
 }
 export function servingArguments(a: ServingAssets) {
-  return `undefined,${a.membership ? `{router:new PairRouter(new Uint8Array(routerData)),presence,N:${a.membership.N},M:${a.membership.M}}` : "undefined"},${a.metadata ? "metadataManifest as any" : "undefined"}`;
+  return `undefined,${a.membership ? `{router:new PairRouter(new Uint8Array(routerData)),presence,N:${a.membership.N},M:${a.membership.M}${a.exactPhrases ? ",exactPhrases:new ExactPhraseDirectory(new Uint8Array(exactPhraseData))" : ""}}` : "undefined"},${a.metadata ? "metadataManifest as any" : "undefined"}`;
 }
 export async function copyServingExtras(a: ServingAssets, dir: string) {
+  if (a.exactPhrases)
+    await writeFile(join(dir, "exact-phrases.bin"), a.exactPhrases);
   if (a.router) {
     await writeFile(join(dir, "router.bin"), a.router);
     await writeFile(
@@ -333,6 +351,7 @@ export async function prepareServing(
     a.directory.length +
     a.documents.length +
     (a.router?.length ?? 0) +
+    (a.exactPhrases?.length ?? 0) +
     Buffer.byteLength(JSON.stringify(a.metadata ?? {})) +
     Buffer.byteLength(JSON.stringify(a.membership?.presence ?? {}));
   if (bundleDataBytes >= 64 * 1048576)

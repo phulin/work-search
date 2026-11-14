@@ -21,6 +21,7 @@ import {
   NO_PAIR_PARTITION,
 } from "../src/columnar/pair-router.js";
 import { encodePairMembershipPacket } from "../src/columnar/pair-membership.js";
+import { encodeExactPhraseDirectory } from "../src/columnar/exact-phrase-directory.js";
 import { buildMetadata } from "../scripts/build-columnar-metadata.js";
 import type { Root } from "../src/columnar/format.js";
 it("prepares a coherent replacement Worker locally and refuses mixed metadata generations or damaged bundled roots", async () => {
@@ -94,6 +95,18 @@ it("prepares a coherent replacement Worker locally and refuses mixed metadata ge
     );
     await writeFile(dir + "/membership/router.bin", router);
     await writeFile(
+      dir + "/membership/exact-phrases.bin",
+      encodeExactPhraseDirectory(
+        {
+          generation: "f".repeat(64),
+          baseGeneration: generation,
+          documents: 2,
+          objects: [],
+        },
+        [],
+      ),
+    );
+    await writeFile(
       dir + "/membership/presence.json",
       JSON.stringify({ generation: "e".repeat(64), entries: [] }),
     );
@@ -140,6 +153,7 @@ it("prepares a coherent replacement Worker locally and refuses mixed metadata ge
     expect(fetch).not.toHaveBeenCalled();
     const entry = await readFile(dir + "/prepared/entry.ts", "utf8");
     expect(entry).toContain("new PairRouter");
+    expect(entry).toContain("new ExactPhraseDirectory");
     expect(entry).toContain("metadataManifest as any");
     expect(
       JSON.parse(await readFile(dir + "/prepared/root.json", "utf8"))
@@ -154,10 +168,14 @@ it("prepares a coherent replacement Worker locally and refuses mixed metadata ge
       documents: 2,
       metadataGeneration: m.generation,
       pairGeneration: "e".repeat(64),
+      exactPhraseGeneration: "f".repeat(64),
       commonWordAnchorsExcluded: 100,
       commonPairAnchorsExcluded: 1000,
     };
     expect(matchesServingHealth(a, health)).toBe(true);
+    expect(
+      matchesServingHealth(a, { ...health, exactPhraseGeneration: undefined }),
+    ).toBe(false);
     expect(
       matchesServingHealth(a, { ...health, metadataGeneration: undefined }),
     ).toBe(false);

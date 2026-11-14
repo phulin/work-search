@@ -143,6 +143,24 @@ export class Reader {
   sharedWrites = new Set<Promise<void>>();
   sharedWriteBytes = 0;
   stats = {
+    exactPhrasePlans: [] as {
+      words: string[];
+      anchor: string[];
+      at: number;
+      occurrences: number;
+      bytes: number;
+      gets: number;
+      cost: number;
+      alternativeCost: number;
+    }[],
+    exactPhraseReads: 0,
+    exactPhraseBytes: 0,
+    exactPhraseOccurrences: 0,
+    exactPhraseMatches: 0,
+    peakExactPhraseBufferBytes: 0,
+    wordPositionIntegers: 0,
+    wordPositionBlocks: 0,
+    wordPositionBytes: 0,
     metadataFilterIOWaves: 0,
     metadataFilterCandidates: 0,
     metadataFilterRejected: 0,
@@ -712,6 +730,11 @@ export class Reader {
     } finally {
       this.pending.delete(key);
     }
+  }
+  namedResident(address: string, length: number) {
+    return this.memory.pages.entries.has(
+      `${this.root.generation}/${this.namespace}/named/${address}:${length}`,
+    );
   }
   async document(
     generation: string,

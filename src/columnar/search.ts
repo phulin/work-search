@@ -1,4 +1,5 @@
 import { positionSpan } from "./positions.js";
+import { ExactPhraseExecution, planExactPhrases } from "./exact-phrase.js";
 import { scoreParameters } from "./scoring.js";
 import { filterDocuments, type DocumentFilter } from "./document-filter.js";
 import { scoreLookahead } from "./score-lookahead.js";
@@ -223,6 +224,10 @@ export class ColumnarIndex {
       membership &&
       (membership.router.metadata.baseGeneration !== root.generation ||
         membership.router.metadata.documents !== root.count ||
+        (membership.exactPhrases &&
+          (membership.exactPhrases.metadata.baseGeneration !==
+            root.generation ||
+            membership.exactPhrases.metadata.documents !== root.count)) ||
         !Number.isInteger(membership.N) ||
         membership.N < 0 ||
         membership.N > 200 ||
@@ -279,6 +284,7 @@ export class ColumnarIndex {
     options: Options = {},
     pairs?: { root: PairRoot; reader: Reader },
   ) {
+    let exact: ExactPhraseExecution | undefined;
     if (this.heads && !this.directory && !options.documentFilter) {
       const ast = parse(q, options.mode, tokenizerFor(this.root.analysis)),
         started = performance.now();
@@ -339,6 +345,15 @@ export class ColumnarIndex {
               basePackages ? { ...basePackages, excludedWords } : undefined,
             )
           : undefined,
+      exactPlans = planExactPhrases(
+        original,
+        this.membership?.exactPhrases,
+        bundled,
+        preliminary,
+        basePackages?.averageBytes ?? 16384,
+        options.field ?? "all",
+        reader,
+      ),
       membershipRead = this.membership
         ? planMembershipAnchor(
             original,
@@ -421,6 +436,17 @@ export class ColumnarIndex {
       field = options.field ?? "all",
       heap = new Heap(limit);
     reader.stats.optionalReadAlternative = preliminary?.kind ?? "cold-metadata";
+    const describeExactPlans = () =>
+      exactPlans.map((p) => ({
+        words: p.words,
+        anchor: [p.pair.a, p.pair.b],
+        at: p.at,
+        occurrences: p.pair.bodyOccurrences + p.pair.titleOccurrences,
+        bytes: p.bytes,
+        gets: p.groups.length,
+        cost: p.cost,
+        alternativeCost: p.alternativeCost,
+      }));
     reader.stats.plannedPairPackets = membershipRead?.pairs.length ?? 0;
     reader.stats.plannedPresenceLists = presenceRanks.length;
     reader.stats.estimatedPairCandidates =
@@ -548,15 +574,31 @@ export class ColumnarIndex {
         packages,
         plan: planned,
       });
-      const result = await executePackets(
-        ast,
-        terms as Map<string, DirectoryTerm>,
-        queryRoot,
-        reader,
-        options,
-        packages,
-        planned,
-      );
+      // The measured candidate-document continuation remains a complete
+      // alternative. Do not replace a cheap, actually filtered set with a
+      // corpus-wide context scan just because its unigram forecast was broad.
+      if (exactPlans.length && planned.kind !== "documents") {
+        const useful = exactPlans.filter(
+          (p) => !loadedMembership?.covered(p.words),
+        );
+        if (useful.length) {
+          exact = new ExactPhraseExecution(useful, reader, field);
+          reader.stats.exactPhrasePlans = describeExactPlans().filter((p) =>
+            useful.some((s) => s.words === p.words),
+          );
+        }
+      }
+      const result = exact
+        ? undefined
+        : await executePackets(
+            ast,
+            terms as Map<string, DirectoryTerm>,
+            queryRoot,
+            reader,
+            options,
+            packages,
+            planned,
+          );
       if (result) return result;
     }
     const scoring = names
@@ -576,7 +618,14 @@ export class ColumnarIndex {
     // Four document-directory windows per numeric batch amortize the two score
     // phases without adding another remote stage per 4096 documents.
     const BAND = 16384,
-      LOOKAHEAD = 8;
+      LOOKAHEAD = exact ? 1 : 8;
+    const covered = (words: string[]) =>
+      !!exact?.covered(words) || !!loadedMembership?.covered(words);
+    if (exact) {
+      wantedPositions.clear();
+      for (const name of positionalTerms(ast, covered))
+        wantedPositions.add(name);
+    }
     if (packetCandidates) {
       reader.stats.anchorBufferBytes += packetCandidates.buffer.byteLength;
       for (const doc of packetCandidates) {
@@ -586,7 +635,7 @@ export class ColumnarIndex {
     }
     if (loadedMembership) {
       wantedPositions.clear();
-      for (const name of positionalTerms(ast, loadedMembership.covered))
+      for (const name of positionalTerms(ast, covered))
         wantedPositions.add(name);
       const cursor = loadedMembership.cursor();
       for (let doc = cursor.next(); doc !== Infinity; doc = cursor.next()) {
@@ -594,7 +643,7 @@ export class ColumnarIndex {
         if (bands.at(-1) !== band) bands.push(band);
       }
     }
-    if (pairs && !pairCandidates) {
+    if (pairs && !pairCandidates && !exact) {
       if (
         pairs.root.baseGeneration !== this.root.generation ||
         pairs.root.count !== this.root.count
@@ -677,7 +726,12 @@ export class ColumnarIndex {
             );
       }
     }
-    if (!loadedMembership && !pairCandidates && queryRoot.positionalPairs) {
+    if (
+      !loadedMembership &&
+      !pairCandidates &&
+      !exact &&
+      queryRoot.positionalPairs
+    ) {
       const ids = new Map([...terms].map(([name, t]) => [name, t.id])),
         selected = planPairAnchor(ast, ids, queryRoot);
       if (selected) {
@@ -776,7 +830,14 @@ export class ColumnarIndex {
         size = hi - lo;
       const cells = new Uint8Array(Math.ceil(size / 128)).fill(1);
       let candidateMask: Uint8Array | undefined;
+      if (exact) {
+        await exact.window(lo, hi);
+        candidateMask = exact.mask(ast, field);
+        cells.fill(0);
+        for (let d = 0; d < size; d++) if (candidateMask[d]) cells[d >>> 7] = 1;
+      }
       if (loadedMembership) {
+        const previousMask = candidateMask;
         candidateMask = new Uint8Array(size);
         cells.fill(0);
         // Bands advance in document order. Reuse the membership cursor rather
@@ -784,8 +845,10 @@ export class ColumnarIndex {
         while (membershipDoc < lo) membershipDoc = membershipCursor!.next();
         while (membershipDoc < hi) {
           const d = membershipDoc - lo;
-          candidateMask[d] = 1;
-          cells[d >>> 7] = 1;
+          if (!previousMask || previousMask[d]) {
+            candidateMask[d] = 1;
+            cells[d >>> 7] = 1;
+          }
           membershipDoc = membershipCursor!.next();
         }
       }
@@ -850,7 +913,7 @@ export class ColumnarIndex {
     const candidateLookahead =
       (positions || !!options.documentFilter) &&
       scoring.length > 0 &&
-      !!(loadedMembership || pairCandidates || options.documentFilter);
+      !!(exact || loadedMembership || pairCandidates || options.documentFilter);
     let lookaheadRefs: Ref[][] = [],
       prefetchedThrough = 0;
     for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
@@ -1056,6 +1119,7 @@ export class ColumnarIndex {
         pruneCells(cells, localBounds, scoring, lo, heap.threshold);
       if (
         loadedMembership ||
+        exact ||
         pairCandidates ||
         options.documentFilter ||
         heap.threshold
@@ -1213,6 +1277,11 @@ export class ColumnarIndex {
           }
         }
         const beforeIO = reader.stats.requests + reader.stats.sharedGets;
+        reader.stats.wordPositionBlocks += refs.size;
+        reader.stats.wordPositionBytes += [...refs.values()].reduce(
+          (n, r) => n + r[2],
+          0,
+        );
         const raw = await reader.many([...refs.values()]);
         if (reader.stats.requests + reader.stats.sharedGets > beforeIO)
           reader.stats.positionIOWaves++;
@@ -1248,6 +1317,7 @@ export class ColumnarIndex {
             },
           );
           reader.stats.positionIntegers += s.fields[f]!.length;
+          reader.stats.wordPositionIntegers += s.fields[f]!.length;
         }
         return s.fields[f];
       };
@@ -1273,9 +1343,16 @@ export class ColumnarIndex {
               scratchSpans: 1048576,
               checks: 100000000,
             },
-            loadedMembership?.evidence ?? context?.evidence,
+            (words, doc, f) =>
+              exact?.evidence(words, doc, f) ??
+              loadedMembership?.evidence(words, doc, f) ??
+              context?.evidence(words, doc, f),
           )
         : undefined;
+      const exactStandalone =
+        ast.kind === "phrase" && exact?.covered(ast.terms)
+          ? ast.terms
+          : undefined;
       for (let i = 0; i < nc; i++) {
         if (positions && i % 256 === 0)
           await loadPositions(i, Math.min(nc, i + 256));
@@ -1283,7 +1360,13 @@ export class ColumnarIndex {
           score = values[i];
         if (!options.exactTotal && !heap.accepts(doc, score)) continue;
         if (forward && forward[i] === -1) continue;
-        if (match && (!forward || forward[i] === -2) && !match(doc)) continue;
+        if (
+          match &&
+          !exactStandalone &&
+          (!forward || forward[i] === -2) &&
+          !match(doc)
+        )
+          continue;
         total++;
         if (!heap.accepts(doc, score)) continue;
         let selected = -1;
@@ -1302,13 +1385,15 @@ export class ColumnarIndex {
           r = c ? c.handle[doc - lo] - 1 : -1;
         let first: number | undefined =
           forward && forward[i] >= 0 ? forward[i] : undefined;
+        if (exactStandalone && field !== "title")
+          first = exact!.evidence(exactStandalone, doc, 0)?.[0];
         if (
           first === undefined &&
           match &&
           field !== "title" &&
           options.snippets !== false
         ) {
-          if (ast.kind === "phrase" && !context) {
+          if (ast.kind === "phrase" && !context && !covered(ast.terms)) {
             const ps = ast.terms.map((n) => direct(n, doc, 0) ?? []);
             let anchor = 0;
             for (let j = 1; j < ps.length; j++)
@@ -1403,15 +1488,17 @@ export class ColumnarIndex {
           : undefined,
         positionalPairCandidates:
           loadedMembership?.count ?? context?.candidates.length,
-        executor: loadedMembership
-          ? "membership-blocks"
-          : context
-            ? "pair-blocks"
-            : pairAnchor
-              ? "positional-pair"
-              : anchor && anchor.df < this.root.count / 16
-                ? "selective"
-                : "block-max-maxscore",
+        executor: exact
+          ? "exact-phrase-blocks"
+          : loadedMembership
+            ? "membership-blocks"
+            : context
+              ? "pair-blocks"
+              : pairAnchor
+                ? "positional-pair"
+                : anchor && anchor.df < this.root.count / 16
+                  ? "selective"
+                  : "block-max-maxscore",
         wallMs: performance.now() - started,
         retainedPageBytes: reader.memory.pages.bytes,
         retainedDecodedBytes: reader.memory.decoded.bytes,

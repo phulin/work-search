@@ -848,6 +848,7 @@ export async function executePackets(
       if (!x.fields[field]) {
         x.fields[field] = c.position(row, field, (ref) => resolve(name, ref));
         reader.stats.positionIntegers += x.fields[field]!.length;
+        reader.stats.wordPositionIntegers += x.fields[field]!.length;
       }
       return x.fields[field];
     };

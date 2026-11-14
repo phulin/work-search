@@ -17,6 +17,7 @@ import { LocalObjects } from "./local-storage.js";
 import { SimulatedIO } from "./latency-model.js";
 import { benchmarkToken } from "./token.js";
 import { PairRouter } from "../../src/columnar/pair-router.js";
+import { ExactPhraseDirectory } from "../../src/columnar/exact-phrase-directory.js";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 async function implementationDigest() {
@@ -99,6 +100,14 @@ const raw = await readFile(dir + "/directory.bin"),
 const commonPresence = process.env.CWS_PAIR_INDEX
   ? JSON.parse(
       await readFile(process.env.CWS_PAIR_INDEX + "/presence.json", "utf8"),
+    )
+  : undefined;
+const exactPhraseRaw = process.env.CWS_PAIR_INDEX
+  ? await readFile(process.env.CWS_PAIR_INDEX + "/exact-phrases.bin").catch(
+      (e) => {
+        if (e.code !== "ENOENT") throw e;
+        return undefined;
+      },
     )
   : undefined;
 if (
@@ -209,6 +218,10 @@ const runtimes = new Map(
               N: Number(setting[1]),
               M: Number(setting[2]),
               presence: assets?.presence ?? commonPresence,
+              exactPhrases:
+                !plan.startsWith("control-") && exactPhraseRaw
+                  ? new ExactPhraseDirectory(exactPhraseRaw)
+                  : undefined,
             }
           : undefined;
     if (setting && !membership)

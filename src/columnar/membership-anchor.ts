@@ -14,6 +14,7 @@ import type { PairPacket } from "./pair-packet.js";
 import { intersectCursors, unionCursors } from "./numeric-cursor.js";
 
 export interface MembershipSettings {
+  exactPhrases?: import("./exact-phrase-directory.js").ExactPhraseDirectory;
   router: PairRouter;
   N: number;
   M: number;
