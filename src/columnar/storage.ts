@@ -724,6 +724,7 @@ export class Reader {
       prefixLength?: number;
     },
     wanted?: Set<number>,
+    presentation = false,
   ) {
     if (
       !Number.isInteger(doc) ||
@@ -753,7 +754,12 @@ export class Reader {
     };
     const decoded = (raw: Uint8Array) => new DocumentPackage(raw, doc, observe);
     if (locator?.prefixLength !== undefined) {
-      const prefix = locator.prefixLength;
+      // A small winner can finish in one read. Candidate verification never
+      // opts into this: its prefix remains strictly numeric.
+      const prefix =
+        presentation && locator.length <= 65536
+          ? locator.length
+          : locator.prefixLength;
       if (
         !Number.isSafeInteger(prefix) ||
         prefix < 64 ||
@@ -770,7 +776,11 @@ export class Reader {
           prefixBytes.byteLength,
         ).getUint32(16, true);
       this.stats.documentVerificationRanges++;
-      this.stats.documentVerificationBytes += prefix;
+      this.stats.documentVerificationBytes += Math.min(prefix, verificationEnd);
+      if (prefix > verificationEnd) {
+        this.stats.documentPresentationRanges++;
+        this.stats.documentPresentationBytes += prefix - verificationEnd;
+      }
       const read = (at: number, n: number) => {
         if (at + n <= verificationEnd) {
           this.stats.documentVerificationRanges++;

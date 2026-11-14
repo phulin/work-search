@@ -48,6 +48,7 @@ const dir = process.argv[2],
   primeSharedBudget = Number(
     process.env.CWS_PRIME_SHARED_BUDGET ?? sharedBudget,
   ),
+  primePasses = Number(process.env.CWS_PRIME_PASSES ?? 1),
   plans = [
     ...(process.env.CWS_PLANS ?? "auto,complete-terms,documents,blocks").split(
       ",",
@@ -67,6 +68,9 @@ if (
   sharedBudget < 0 ||
   !Number.isInteger(primeSharedBudget) ||
   primeSharedBudget < 0 ||
+  !Number.isInteger(primePasses) ||
+  primePasses < 1 ||
+  primePasses > 10 ||
   !Number.isInteger(repeats) ||
   repeats < 1 ||
   plans.some(
@@ -471,25 +475,29 @@ async function query(
 // Resolve pagination using this executor's exact score bits, after checking the
 // independent predecessor. Do this outside timed measurements for every plan.
 async function resolveCursors() {
-  const { index, memory } = runtimes.values().next().value!;
   for (const [i, s] of selected.entries()) {
     if (!s.options?.after) continue;
-    const predecessor = await index.search(
-        s.q,
-        new Reader(root, source, memory),
-        { ...s.options, after: undefined },
-      ),
-      last = predecessor.results.at(-1)!,
-      expected = s.cursorPredecessor ?? s.options.after;
-    if (
-      !last ||
-      last.doc !== expected.doc ||
-      Math.abs(last.score - expected.score) >
-        1e-11 * Math.max(1, Math.abs(expected.score))
-    )
-      throw Error("Local cursor predecessor mismatch");
-    for (const plan of plans)
+    for (const [plan, runtime] of runtimes) {
+      const predecessor = await runtime.index.search(
+          s.q,
+          new runtime.ReaderClass(
+            runtime.root,
+            runtime.io.source,
+            runtime.memory,
+          ),
+          { ...s.options, after: undefined },
+        ),
+        last = predecessor.results.at(-1)!,
+        expected = s.cursorPredecessor ?? s.options.after;
+      if (
+        !last ||
+        last.doc !== expected.doc ||
+        Math.abs(last.score - expected.score) >
+          1e-11 * Math.max(1, Math.abs(expected.score))
+      )
+        throw Error("Local cursor predecessor mismatch");
       cursors.set(plan + ":" + i, { doc: last.doc, score: last.score });
+    }
   }
 }
 source.remoteEnabled = !!source.remote;
@@ -542,6 +550,7 @@ const manifest = {
   sharedCacheMiB,
   sharedBudget,
   primeSharedBudget,
+  primePasses,
   artificialDelays: process.env.CWS_NO_DELAY !== "1",
   cacheIsolation:
     process.env.CWS_ISOLATE_SCENARIOS === "1"
@@ -594,7 +603,10 @@ for (let repeat = 0; repeat < repeats; repeat++) {
       if (condition !== "fresh-namespace") {
         const delayed = runtime.io.delaysEnabled;
         runtime.io.delaysEnabled = false;
-        await query(scenario, plan, false, "simulation", primeSharedBudget);
+        for (let pass = 0; pass < primePasses; pass++) {
+          reset(plan);
+          await query(scenario, plan, false, "simulation", primeSharedBudget);
+        }
         runtime.io.delaysEnabled = delayed;
       }
     }

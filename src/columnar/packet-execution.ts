@@ -48,7 +48,11 @@ export interface CandidatePackages {
   excludedWords?: ReadonlySet<string>;
   averageBytes: number;
   byteLength?(doc: number): number;
-  load(doc: number, wanted?: Set<number>): Promise<DocumentPackage>;
+  load(
+    doc: number,
+    wanted?: Set<number>,
+    presentation?: boolean,
+  ): Promise<DocumentPackage>;
 }
 interface Columns {
   docs: Uint32Array;
@@ -924,7 +928,7 @@ export async function executePackets(
           group.items.map(async (h) => {
             const pkg =
               packageHits.get(h.doc) ??
-              (await packages!.load(h.doc, positiveIds));
+              (await packages!.load(h.doc, positiveIds, true));
             return { h, pkg };
           }),
         );
@@ -964,7 +968,7 @@ export async function executePackets(
               ranked.map(async (h) =>
                 packageResult(
                   packageHits.get(h.doc) ??
-                    (await packages.load(h.doc, positiveIds)),
+                    (await packages.load(h.doc, positiveIds, true)),
                   h,
                   positiveIds,
                   options,

@@ -319,12 +319,13 @@ export class ColumnarIndex {
                 ? (doc: number) =>
                     this.documentDirectory!.lookup(doc).verificationBytes
                 : undefined,
-              load: (doc: number, wanted?: Set<number>) =>
+              load: (doc: number, wanted?: Set<number>, presentation = false) =>
                 reader.document(
                   this.root.documentPackages!.generation,
                   doc,
                   this.documentDirectory?.lookup(doc),
                   wanted,
+                  presentation,
                 ),
             }
           : undefined),
@@ -1366,7 +1367,7 @@ export class ColumnarIndex {
         ? await Promise.all(
             ranked.map(async (h) =>
               packageResult(
-                await packages.load(h.doc, positiveIds),
+                await packages.load(h.doc, positiveIds, true),
                 h,
                 positiveIds,
                 options,

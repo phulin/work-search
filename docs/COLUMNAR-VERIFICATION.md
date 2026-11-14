@@ -46,6 +46,10 @@ and retained winners; cumulative transferred bytes do not determine eligibility.
 Small winner presentation tails (up to 64 KiB) are coalesced into one range;
 larger tails retain selective passage reads. This adds no display reads for
 rejected candidates and does not change excerpt selection.
+When result retrieval first opens a winner whose entire record is at most
+64 KiB, it requests that complete record in one range. This avoids a numeric
+prefix followed by a second small display read. Candidate verification never
+opts into that policy.
 Readers share generation-scoped bounded raw-range caches and in-flight reads.
 Decoded term and position arrays remain query-local. Winner retention drops
 decoded arrays and shares the validated raw buffers.

@@ -3,12 +3,62 @@ import { dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { gzip } from "node:zlib";
 import { promisify } from "node:util";
+import { request as httpsRequest, Agent } from "node:https";
 import type { AuxiliaryObject } from "./columnar-serving.js";
 import {
   MAX_PUBLICATION_BYTES,
   type PublicationRecord,
 } from "../src/columnar/publication.js";
 const compress = promisify(gzip);
+const agent = new Agent({ keepAlive: true, maxSockets: 12 });
+// Node 26 fetch negotiates HTTP/2; concurrent immutable uploads can hit stream
+// resets. Match the deployer's bounded HTTP/1 transport for both PUT and POST.
+function transport(
+  url: string,
+  method: string,
+  body: Uint8Array | string,
+  headers: Record<string, string>,
+) {
+  return new Promise<{ status: number; text: string }>((yes, no) => {
+    const request = httpsRequest(
+      url,
+      {
+        method,
+        agent,
+        headers: {
+          ...headers,
+          "content-length": String(
+            typeof body === "string" ? Buffer.byteLength(body) : body.length,
+          ),
+        },
+      },
+      (response) => {
+        const chunks: Buffer[] = [];
+        let bytes = 0;
+        response.on("data", (b) => {
+          bytes += b.length;
+          if (bytes > 1048576) {
+            response.destroy(Error("Oversized publication acknowledgment"));
+            return;
+          }
+          chunks.push(b);
+        });
+        response.once("error", no);
+        response.once("end", () =>
+          yes({
+            status: response.statusCode ?? 0,
+            text: Buffer.concat(chunks).toString(),
+          }),
+        );
+      },
+    );
+    request.setTimeout(180000, () =>
+      request.destroy(Error("Publication timeout")),
+    );
+    request.once("error", no);
+    request.end(body);
+  });
+}
 type Head = { status: number; headers: Record<string, string> };
 async function post(
   url: string,
@@ -18,14 +68,12 @@ async function post(
 ) {
   for (let attempt = 0; ; attempt++) {
     try {
-      const r = await fetch(url, {
-        method: "POST",
-        headers: { authorization: `Bearer ${token}`, ...extra },
-        body: body as BodyInit,
-        signal: AbortSignal.timeout(180000),
-      });
-      const text = await r.text();
-      if (!r.ok)
+      const r = await transport(url, "POST", body, {
+          authorization: `Bearer ${token}`,
+          ...extra,
+        }),
+        text = r.text;
+      if (r.status < 200 || r.status >= 300)
         throw Error("Publication HTTP " + r.status + ": " + text.slice(0, 500));
       return JSON.parse(text);
     } catch (error) {
@@ -164,9 +212,11 @@ export async function publishAuxiliary(
           body = await compress(raw, { level: 6 });
         for (let attempt = 0; ; attempt++) {
           try {
-            const response = await fetch(url + "/" + item.key, {
-              method: "PUT",
-              headers: {
+            const response = await transport(
+              url + "/" + item.key,
+              "PUT",
+              body,
+              {
                 authorization: `Bearer ${token}`,
                 "x-sha256": record.sha256,
                 "x-raw-length": String(item.size),
@@ -177,17 +227,14 @@ export async function publishAuxiliary(
                       "x-package-end": String(item.packageEnd),
                     }),
               },
-              body,
-              signal: AbortSignal.timeout(180000),
-            });
-            if (!response.ok)
+            );
+            if (response.status < 200 || response.status >= 300)
               throw Error(
                 "Publication HTTP " +
                   response.status +
                   ": " +
-                  (await response.text()).slice(0, 300),
+                  response.text.slice(0, 300),
               );
-            await response.text();
             break;
           } catch (error) {
             if (attempt === 7) throw error;

@@ -8,6 +8,63 @@ import {
 import { encodeTextChunks } from "../src/columnar/text-chunks.js";
 import { Reader, Memory } from "../src/columnar/storage.js";
 import { view } from "../src/columnar/format.js";
+it("finishes a small winner in one read while keeping rejected candidates text-free", async () => {
+  const bytes = await encodeDocumentPackage(
+      { doc: 0, id: "small", body: "alpha beta ".repeat(500) },
+      new Map([
+        ["alpha", 0],
+        ["beta", 1],
+      ]),
+    ),
+    generation = "a".repeat(64),
+    reads: number[] = [],
+    makeReader = () =>
+      new Reader(
+        { generation, objects: [] },
+        {
+          read: async () => {
+            throw Error("Unexpected posting read");
+          },
+          readWhole: async () => {
+            throw Error("Unexpected whole-object read");
+          },
+          readNamed: async (address, n) => {
+            const at = Number(address.split("@")[1]);
+            reads.push(n);
+            return bytes.slice(at, at + n);
+          },
+        },
+        new Memory(),
+      ),
+    locator = {
+      key: generation + "/plan-0.bin",
+      offset: 0,
+      length: bytes.length,
+      first: 0,
+      prefixLength: documentPrefix(bytes),
+    },
+    wanted = new Set([0]),
+    candidateReader = makeReader(),
+    candidate = await candidateReader.document(generation, 0, locator, wanted);
+  expect(reads).toEqual([documentPrefix(bytes)]);
+  expect(candidateReader.stats.documentPresentationBytes).toBe(0);
+  expect([...candidate.positions(wanted, 0).get(0)!]).toHaveLength(500);
+  reads.length = 0;
+  const winnerReader = makeReader(),
+    winner = await winnerReader.document(generation, 0, locator, wanted, true),
+    full = new DocumentPackage(bytes, 0);
+  await winner.preparePresentation();
+  expect(await winner.display()).toEqual(await full.display());
+  expect(await winner.snippet(wanted)).toEqual(await full.snippet(wanted));
+  expect(reads).toEqual([bytes.length]);
+  expect(winnerReader.stats.documentVerificationBytes).toBe(
+    documentPrefix(bytes),
+  );
+  expect(winnerReader.stats.documentPresentationBytes).toBe(
+    bytes.length - documentPrefix(bytes),
+  );
+});
+
 it("coalesces small winner presentation sections without changing rendering", async () => {
   const bytes = await encodeDocumentPackage(
       {

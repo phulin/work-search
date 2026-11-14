@@ -53,7 +53,7 @@ const manifest = {
   seed,
   completedAt: undefined as string | undefined,
   notes: [
-    "Fresh application and shared namespaces per query/session/variant; warm requests reset application memory in the request. Opaque R2 caches uncontrolled.",
+    "Fresh application and shared namespaces per query/session/variant. Shared-warm requests reset application memory in the request; immediate-repeat and load requests permit reuse, with actual isolate IDs recorded. Opaque R2 caches uncontrolled.",
     "Query/session and variant order randomized. Three diagnostic samples per query/condition, not traffic percentiles.",
   ],
 };
@@ -83,7 +83,7 @@ async function request(
         metadata: true,
         snippets: true,
         cacheNamespace: namespace,
-        resetMemory: true,
+        resetMemory: !["immediate-repeat", "load"].includes(condition),
       }),
       signal: AbortSignal.timeout(60000),
     });
@@ -174,7 +174,11 @@ for (const { s, session } of jobs) {
     control: "io-" + randomUUID(),
     candidate: "io-" + randomUUID(),
   };
-  for (const condition of ["fresh-namespace", "shared-warm-memory-empty"])
+  for (const condition of [
+    "fresh-namespace",
+    ...(process.env.CWS_REUSE === "1" ? ["immediate-repeat"] : []),
+    "shared-warm-memory-empty",
+  ])
     for (const variant of shuffled(["control", "candidate"] as const)) {
       try {
         await request(variant, s, condition, session, namespaces[variant]);
@@ -184,7 +188,11 @@ for (const { s, session } of jobs) {
     }
 }
 if (process.env.CWS_LOAD === "1") {
-  const workload = contract.scenarios.filter((s: any) => s.kind === "load"),
+  const workload = contract.scenarios.filter(
+      (s: any) =>
+        s.kind === "load" ||
+        process.env.CWS_LOAD_QUERIES?.split("|").some((q) => s.q.includes(q)),
+    ),
     count = Number(process.env.CWS_LOAD_COUNT ?? 20);
   assert(workload.length);
   for (const rate of [0.5, 2])

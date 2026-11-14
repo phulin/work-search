@@ -4,12 +4,14 @@ import { gzipSync } from "node:zlib";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
-import { LocalObjects } from "./local-storage.js";
 import { SimulatedIO } from "./latency-model.js";
 const [dir, pairDir, contractsFile, out] = process.argv.slice(2);
 if (!out)
   throw Error("Usage: profile-warm-cpu.ts INDEX PAIRS CONTRACTS OUTPUT");
 const base = process.env.CWS_PROFILE_SOURCE ?? ".",
+  { LocalObjects } = await import(
+    pathToFileURL(resolve(base, "bench/columnar/local-storage.ts")).href
+  ),
   module = (file: string) =>
     import(
       pathToFileURL(
