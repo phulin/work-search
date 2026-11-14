@@ -57,6 +57,34 @@ for (const [source, name] of [
   ["work/verification-results/summary.json", "local-summary.json"],
 ])
   await writeFile(`${out}/${name}.gz`, gzipSync(await readFile(source)));
+for (const [source, name] of [
+  ["work/columnar-bench/verification-live.json.gz", "live.json.gz"],
+  ["work/columnar-bench/verification-live-cpu.json.gz", "live-cpu.json.gz"],
+  ["work/verification-live-summary.json", "live-summary.json.gz"],
+  [
+    "work/columnar-deploy/work-search-cws-verification-1m-manifest.json",
+    "deployment.json.gz",
+  ],
+  [
+    "work/columnar-deploy/work-search-cws-1m-manifest.json",
+    "live-control-deployment.json.gz",
+  ],
+  [
+    "work/columnar-deploy/work-search-cws-verification-1m-first-search.json",
+    "deployment-first-search.json.gz",
+  ],
+  [
+    "work/verification-first-search-check.json",
+    "first-search-validation.json.gz",
+  ],
+  ["work/verification-usage-sanitized.json", "usage.json.gz"],
+]) {
+  const bytes = await readFile(source);
+  await writeFile(
+    `${out}/${name}`,
+    source.endsWith(".gz") ? bytes : gzipSync(bytes),
+  );
+}
 const quantiles = (values: number[]) => {
   values.sort((a, b) => a - b);
   return Object.fromEntries(
@@ -125,24 +153,53 @@ const manifest = {
   initialImplementationCommit: "614141e",
   servingEngineCommit: "c9a35ce",
   metadataBindingToolCommit: "cea43dc",
+  liveControl: {
+    url: "https://work-search-cws-1m.phulin.workers.dev",
+    generation:
+      "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+    version: "177b51f3-545b-4a15-b95b-31147bd9f142",
+    differsFromLocalControl: true,
+  },
+  liveCandidate: {
+    url: "https://work-search-cws-verification-1m.phulin.workers.dev",
+    version: "ba6c009f-31b7-47cc-8be4-e9192830bbef",
+    sourceHash:
+      "fd77120273b35b27aea1573fdbebbadb381cc946b588487b62942400303a7335",
+    colo: "BOS",
+    uploadedObjects: 8420,
+    uploadedRawBytes: 22217938010,
+    publicationElapsedSeconds: 3481.8,
+  },
   notes: [
     "Local control uses identical candidate passage bytes in the frozen CDP3 arrangement.",
     "Local complete-response simulation and CPU diagnostics are not live Worker measurements.",
     "Workload quantiles weight each query equally and are not production traffic percentiles.",
     "Heap samples estimate cumulative allocation including collected objects, not retained or peak memory.",
+    "Live control predates the local control; live gains include earlier planner/compact-format changes and cannot be attributed solely to this redesign.",
+    "Immediate repeats do not guarantee application-memory reuse: only 5/108 paired requests reached the same isolate.",
   ],
   population,
   profiles,
   artifacts: [] as { name: string; bytes: number; sha256: string }[],
 };
-for (const name of (await readdir(out)).sort()) {
-  if (name === "provenance.json" || name === "profiles") continue;
-  const raw = await readFile(out + "/" + name);
-  manifest.artifacts.push({
-    name,
-    bytes: raw.length,
-    sha256: createHash("sha256").update(raw).digest("hex"),
-  });
+async function inventory(relative = "") {
+  for (const entry of (
+    await readdir(out + "/" + relative, { withFileTypes: true })
+  ).sort((a, b) => a.name.localeCompare(b.name))) {
+    const name = relative + entry.name;
+    if (name === "provenance.json") continue;
+    if (entry.isDirectory()) {
+      await inventory(name + "/");
+      continue;
+    }
+    const raw = await readFile(out + "/" + name);
+    manifest.artifacts.push({
+      name,
+      bytes: raw.length,
+      sha256: createHash("sha256").update(raw).digest("hex"),
+    });
+  }
 }
+await inventory();
 await writeFile(out + "/provenance.json", JSON.stringify(manifest, null, 2));
 console.log(JSON.stringify({ population, profiles }, null, 2));
