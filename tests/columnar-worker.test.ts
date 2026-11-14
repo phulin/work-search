@@ -1,3 +1,12 @@
+import { ColumnarIndex } from "../src/columnar/search.js";
+import { Reader } from "../src/columnar/storage.js";
+import { OfflineObjects } from "../src/columnar/offline.js";
+import {
+  encodePairMembership,
+  encodePairMembershipPacket,
+} from "../src/columnar/pair-membership.js";
+import { encodePairRouter } from "../src/columnar/pair-router.js";
+import { u32 } from "../src/columnar/format.js";
 import { it, expect } from "vitest";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -6,7 +15,7 @@ import { spawnSync } from "node:child_process";
 import { Miniflare } from "miniflare";
 import "../scripts/workerd-runtime.js";
 import { buildColumnar } from "../bench/columnar/control/offline-build.js";
-it.each(["bundled", "metadata", "absent"])(
+it.each(["bundled", "metadata", "absent", "boolean"])(
   "serves exact complete responses with %s checksum directories through workerd R2 and generation-scoped shared pages",
   async (integrity) => {
     const dir = await mkdtemp(join(tmpdir(), "cws-worker-"));
@@ -28,6 +37,96 @@ it.each(["bundled", "metadata", "absent"])(
         ).join("\n"),
       );
       const root = await buildColumnar({ input, out: dir + "/index" });
+      let membershipEntry = "",
+        membershipArgument = "",
+        membershipPacket: Uint8Array | undefined;
+      const pairGeneration = "f".repeat(64);
+      if (integrity === "boolean") {
+        const objects = new OfflineObjects(dir + "/index", root),
+          terms = await new ColumnarIndex(root).terms(
+            ["clear", "gap", "and", "convincing", "evidence"],
+            new Reader(root, objects.source),
+          );
+        await objects.close();
+        const rows = new Map<
+          string,
+          { a: string; b: string; docs: number[] }
+        >();
+        for (let doc = 0; doc < 600; doc++) {
+          const words = (
+            doc % 3
+              ? "clear and convincing evidence"
+              : "clear gap and convincing evidence"
+          ).split(" ");
+          for (let i = 0; i + 1 < words.length; i++) {
+            const a = words[i],
+              b = words[i + 1],
+              key = a + ":" + b;
+            let entry = rows.get(key);
+            if (!entry) {
+              entry = { a, b, docs: [] };
+              rows.set(key, entry);
+            }
+            entry.docs.push(doc);
+          }
+        }
+        const data = [...rows.values()];
+        membershipPacket = encodePairMembershipPacket(
+          data.map((p) => ({
+            a: p.a,
+            b: p.b,
+            data: encodePairMembership(
+              {
+                a: terms.get(p.a)!.id,
+                b: terms.get(p.b)!.id,
+                df: p.docs.length,
+                body: Uint32Array.from(p.docs),
+                title: new Uint32Array(),
+                bodyOccurrences: p.docs.length,
+                titleOccurrences: 0,
+              },
+              600,
+            ),
+          })),
+        );
+        const router = encodePairRouter(
+          {
+            generation: pairGeneration,
+            baseGeneration: root.generation,
+            documents: 600,
+            targetBytes: 131072,
+            contextBytes: 0,
+            namespaces: [],
+            roots: [-1],
+            commonWords: [],
+          },
+          [],
+          [
+            {
+              namespace: 0,
+              bits: 0,
+              prefix: 0,
+              bytes: membershipPacket.length,
+              crc32: 0,
+              pairs: data.length,
+            },
+          ],
+          encodePairMembershipPacket(
+            data.map((p) => ({
+              a: p.a,
+              b: p.b,
+              data: u32([p.docs.length, p.docs.length, 0, 100, 0]),
+            })),
+          ),
+        );
+        await writeFile(dir + "/router.bin", router);
+        membershipEntry =
+          'import routerBytes from "./router.bin";import {PairRouter}from ' +
+          JSON.stringify(resolve("src/columnar/pair-router.ts")) +
+          ";";
+        membershipArgument =
+          ",undefined,undefined,undefined,undefined,undefined,{router:new PairRouter(new Uint8Array(routerBytes)),N:0,M:0}";
+      }
       const crc = new Map(
         root.objects.map((o) => [
           o.name,
@@ -40,7 +139,7 @@ it.each(["bundled", "metadata", "absent"])(
       }
       await writeFile(
         dir + "/entry.ts",
-        `import root from './index/root.json';import {createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};export default createColumnarWorker(root);`,
+        `import root from './index/root.json';import {createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};${membershipEntry}export default createColumnarWorker(root${membershipArgument});`,
       );
       await writeFile(
         dir + "/wrangler.json",
@@ -48,6 +147,7 @@ it.each(["bundled", "metadata", "absent"])(
           name: "cws-worker-test",
           main: dir + "/entry.ts",
           compatibility_date: "2026-11-01",
+          rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
         }),
       );
       const dry = spawnSync(
@@ -68,6 +168,7 @@ it.each(["bundled", "metadata", "absent"])(
         compatibilityDate: "2026-11-01",
         compatibilityFlags: ["nodejs_compat"],
         modules: true,
+        modulesRules: [{ type: "Data", include: ["**/*.bin"] }],
         modulesRoot: dir,
         scriptPath: dir + "/dist/entry.js",
         r2Buckets: ["INDEX"],
@@ -88,6 +189,12 @@ it.each(["bundled", "metadata", "absent"])(
                 : { crc32: crc.get(object.name)! }),
             },
           },
+        );
+      if (membershipPacket)
+        await bucket.put(
+          pairGeneration + "/pairs-0-0-0-0.bin",
+          membershipPacket,
+          { customMetadata: { generation: pairGeneration } },
         );
       const call = async (body: unknown, auth = true) => {
         const r = await mf!.dispatchFetch("http://test/search", {
@@ -139,6 +246,22 @@ it.each(["bundled", "metadata", "absent"])(
       expect(repeated.body.telemetry.requestId).not.toBe(
         first.body.telemetry.requestId,
       );
+      if (integrity === "boolean")
+        for (const q of [
+          '"clear and" AND ("convincing evidence" OR "gap and")',
+          '"clear and" /5 ("gap and" OR "convincing evidence")',
+        ]) {
+          const r = await call({ q, exactTotal: true, limit: 7 });
+          expect(r.status).toBe(200);
+          expect(r.body.total).toBe(400);
+          expect(r.body.results).toHaveLength(7);
+          expect(r.body.diagnostics.plannedPairPackets).toBeGreaterThan(1);
+          expect(
+            r.body.results.every((h: any) =>
+              h.snippet.includes("clear and convincing evidence"),
+            ),
+          ).toBe(true);
+        }
       const cursor = first.body.results.at(-1),
         next = await call({
           q: '"clear and convincing evidence"',

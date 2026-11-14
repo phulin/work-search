@@ -44,6 +44,10 @@ const dir = process.argv[2],
   store = process.env.CWS_LOCAL_DATA ?? "work/columnar-local-data",
   condition = process.env.CWS_CONDITION ?? "memory-reuse",
   repeats = Number(process.env.CWS_REPEATS ?? 3),
+  sharedBudget = Number(process.env.CWS_SHARED_BUDGET ?? 900),
+  primeSharedBudget = Number(
+    process.env.CWS_PRIME_SHARED_BUDGET ?? sharedBudget,
+  ),
   plans = [
     ...(process.env.CWS_PLANS ?? "auto,complete-terms,documents,blocks").split(
       ",",
@@ -59,6 +63,10 @@ if (
   !["memory-reuse", "shared-warm-memory-empty", "fresh-namespace"].includes(
     condition,
   ) ||
+  !Number.isInteger(sharedBudget) ||
+  sharedBudget < 0 ||
+  !Number.isInteger(primeSharedBudget) ||
+  primeSharedBudget < 0 ||
   !Number.isInteger(repeats) ||
   repeats < 1 ||
   plans.some(
@@ -130,6 +138,22 @@ const [controlSearch, controlStorage, controlDirectory, controlDocuments] =
         ),
       )
     : [];
+const [autoSearch, autoStorage, autoDirectory, autoDocuments] = process.env
+  .CWS_AUTO_SOURCE
+  ? await Promise.all(
+      ["search", "storage", "term-directory", "document-directory"].map(
+        (name) =>
+          import(
+            pathToFileURL(
+              resolve(
+                process.env.CWS_AUTO_SOURCE!,
+                "src/columnar/" + name + ".ts",
+              ),
+            ).href
+          ),
+      ),
+    )
+  : [];
 // Older instrumented controls intentionally use today's Reader counters. The
 // untouched CPU control freezes the entire runtime explicitly.
 const freezeRuntime = process.env.CWS_CONTROL_RUNTIME === "frozen";
@@ -151,19 +175,21 @@ const runtimes = new Map(
       Store: typeof import("../../src/columnar/storage.js") =
         frozen && freezeRuntime
           ? controlStorage
-          : ({ Reader, Memory, Lru } as any),
+          : autoSearch && !frozen
+            ? autoStorage
+            : ({ Reader, Memory, Lru } as any),
       ReaderClass = Store.Reader,
       Index: typeof ColumnarIndex = frozen
         ? controlSearch.ColumnarIndex
-        : ColumnarIndex,
+        : (autoSearch?.ColumnarIndex ?? ColumnarIndex),
       Directory: typeof TermDirectory =
         frozen && freezeRuntime
           ? controlDirectory.TermDirectory
-          : TermDirectory,
+          : (autoDirectory?.TermDirectory ?? TermDirectory),
       Documents: typeof DocumentDirectory =
         frozen && freezeRuntime
           ? controlDocuments.DocumentDirectory
-          : DocumentDirectory,
+          : (autoDocuments?.DocumentDirectory ?? DocumentDirectory),
       memory = new Store.Memory(),
       directory = new Directory(raw, root.count),
       documents = new Documents(documentRaw),
@@ -211,6 +237,7 @@ async function query(
   plan: string,
   prepare: boolean,
   namespace: string,
+  budget = sharedBudget,
 ) {
   const { memory, directory, documents, index, blockIndex, io, ReaderClass } =
     runtimes.get(plan)!;
@@ -224,6 +251,7 @@ async function query(
       (p) => {
         deferred.push(p);
       },
+      { remaining: budget },
     ),
     options = { ...scenario.options },
     callsBefore = { ...io.calls },
@@ -407,11 +435,18 @@ for (const runtime of runtimes.values()) runtime.io.delaysEnabled = false;
 for (const scenario of selected)
   for (const plan of plans) {
     reset(plan);
-    const warmed = await query(scenario, plan, false, "simulation");
+    const warmed = await query(
+      scenario,
+      plan,
+      false,
+      "simulation",
+      primeSharedBudget,
+    );
     console.log("Warmed", plan, scenario.q, Math.round(warmed.wallMs), "ms");
   }
 reset();
-for (const runtime of runtimes.values()) runtime.io.delaysEnabled = true;
+for (const runtime of runtimes.values())
+  runtime.io.delaysEnabled = process.env.CWS_NO_DELAY !== "1";
 let seed = model.seed;
 const random = () => {
   seed ^= seed << 13;
@@ -429,6 +464,9 @@ const manifest = {
   model,
   comparisonSeed: model.seed,
   sharedCacheMiB,
+  sharedBudget,
+  primeSharedBudget,
+  artificialDelays: process.env.CWS_NO_DELAY !== "1",
   cacheIsolation:
     "Independent application and shared caches per plan; common immutable disk backing",
   condition,
@@ -449,10 +487,11 @@ const manifest = {
   preparedDownloads: source.downloads,
   preparedBytes: source.downloadedBytes,
   warmup:
-    "Production execution and bounded cache population without artificial delays; all modeled delays enabled for measured responses",
+    "Bounded cache population without artificial delays, using primeSharedBudget; measured delays follow artificialDelays",
   startedAt: new Date().toISOString(),
   implementationSha256,
   controlSource: process.env.CWS_CONTROL_SOURCE,
+  autoSource: process.env.CWS_AUTO_SOURCE,
   controlRuntime: freezeRuntime ? "frozen" : "current-reader-instrumentation",
 };
 await mkdir("work/columnar-bench", { recursive: true });

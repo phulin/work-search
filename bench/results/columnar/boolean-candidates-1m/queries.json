@@ -1,0 +1,1456 @@
+{
+  "sourceSha256": "452cd34da68858d18b4adf910aca41bf7fa19bac1a02dbe5babfb7542189d483",
+  "expansions": {
+    "seal": "(seal OR sealed OR sealing)",
+    "sanction": "(sanction OR sanctions OR sanctioned OR sanctioning)",
+    "retaliat": "(retaliate OR retaliated OR retaliating OR retaliation OR retaliatory)",
+    "proportion": "(proportion OR proportional OR proportionality)",
+    "withdraw": "(withdraw OR withdrawal OR withdrawn OR withdrawing)",
+    "amend": "(amend OR amended OR amendment OR amending)",
+    "competit": "(competition OR competitive OR competitor)",
+    "enforce": "(enforce OR enforced OR enforcement OR enforcing OR enforceable)",
+    "redact": "(redact OR redacted OR redaction OR redacting)"
+  },
+  "queries": [
+    {
+      "brief_id": "rb_ecdf6b6a3e75",
+      "original": "copyright AND (\"machine learning\" OR \"artificial intelligence\") AND \"fair use\"",
+      "query": "copyright AND (\"machine learning\" OR \"artificial intelligence\") AND \"fair use\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_b0d2eacad5e5",
+      "original": "\"discovery letter\" AND sealing AND \"good cause\"",
+      "query": "\"discovery letter\" AND sealing AND \"good cause\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_06a4565a6956",
+      "original": "\"4247\" W/P (\"reasonable cause\" OR extension)",
+      "query": "\"4247\" W/P (\"reasonable cause\" OR extension)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_6840622307ea",
+      "original": "(\"direct evidence\" W/10 \"anticompetitive effects\") AND \"market definition\"",
+      "query": "(\"direct evidence\" W/10 \"anticompetitive effects\") AND \"market definition\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_a0f21d95106b",
+      "original": "\"pretrial motions\" AND (extension OR continuance) AND \"good cause\"",
+      "query": "\"pretrial motions\" AND (extension OR continuance) AND \"good cause\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_00fccafec547",
+      "original": "habeas AND (\"bail conditions\" W/P travel)",
+      "query": "habeas AND (\"bail conditions\" W/P travel)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_c05d87f7c36e",
+      "original": "\"fair use\" AND \"market dilution\" AND (evidence OR speculation)",
+      "query": "\"fair use\" AND \"market dilution\" AND (evidence OR speculation)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_b188a7350789",
+      "original": "\"administrative record\" AND (\"extra record discovery\" OR \"bad faith\")",
+      "query": "\"administrative record\" AND (\"extra record discovery\" OR \"bad faith\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_6933411b1d9c",
+      "original": "\"permit transfer\" AND \"takings claim\"",
+      "query": "\"permit transfer\" AND \"takings claim\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_f357602c7d7a",
+      "original": "\"1407\" AND centralization AND (competitors OR \"different defendants\")",
+      "query": "\"1407\" AND centralization AND (competitors OR \"different defendants\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_6f665b0dcfd3",
+      "original": "\"scope of employment\" W/P (certification AND \"malicious prosecution\")",
+      "query": "\"scope of employment\" W/P (certification AND \"malicious prosecution\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_adbe168d809a",
+      "original": "\"363(b)\" AND \"business judgment\" AND stipulation",
+      "query": "\"363(b)\" AND \"business judgment\" AND stipulation",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_7d9455250b22",
+      "original": "\"18 U.S.C. 611\" AND (enforcement OR injunction)",
+      "query": "\"18 U.S.C. 611\" AND (enforcement OR injunction)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_a033c42bbe9c",
+      "original": "\"1988\" W/P (fees AND \"criminal defense\")",
+      "query": "\"1988\" W/P (fees AND \"criminal defense\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_377462f3bf34",
+      "original": "\"sanctuary\" AND (\"administrative warrants\" OR \"information sharing\") AND preemption",
+      "query": "\"sanctuary\" AND (\"administrative warrants\" OR \"information sharing\") AND preemption",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_bc74d783a38f",
+      "original": "\"1325(a)(9)\" AND \"tax returns\" AND confirmation",
+      "query": "\"1325(a)(9)\" AND \"tax returns\" AND confirmation",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_dd184a289d43",
+      "original": "\"sensitive places\" W/P (parks OR airports)",
+      "query": "\"sensitive places\" W/P (parks OR airports)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_e068089a8057",
+      "original": "FIFRA AND preemption AND (advertising OR \"non-label\")",
+      "query": "FIFRA AND preemption AND (advertising OR \"non-label\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_2cae4da34895",
+      "original": "\"court order\" W/P (\"collateral attack\" OR forfeiture)",
+      "query": "\"court order\" W/P (\"collateral attack\" OR forfeiture)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_70ac8d518268",
+      "original": "\"facial challenge\" AND (hypothetical OR imaginary) AND \"First Amendment\"",
+      "query": "\"facial challenge\" AND (hypothetical OR imaginary) AND \"First Amendment\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_9670f7c58fc5",
+      "original": "\"securities fraud\" W/P (bribery AND scienter)",
+      "query": "\"securities fraud\" W/P (bribery AND scienter)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_a4df62bb0c0a",
+      "original": "\"civil contempt\" AND (ambiguous OR \"specific and definite\") AND order",
+      "query": "\"civil contempt\" AND (ambiguous OR \"specific and definite\") AND order",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_e4fd761fb1fe",
+      "original": "\"leave to amend\" AND futility AND (\"frivolous claims\" OR \"claim preclusion\")",
+      "query": "\"leave to amend\" AND futility AND (\"frivolous claims\" OR \"claim preclusion\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_cd62176b7f8d",
+      "original": "attachment W/P (\"6212\" AND priority)",
+      "query": "attachment W/P (\"6212\" AND priority)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_46018d0f8f8c",
+      "original": "\"12601\" AND (\"state law\" OR \"facial challenge\") AND firearms",
+      "query": "\"12601\" AND (\"state law\" OR \"facial challenge\") AND firearms",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_41b006df770c",
+      "original": "\"temporary protected status\" AND \"judicial review\" AND \"constitutional claims\"",
+      "query": "\"temporary protected status\" AND \"judicial review\" AND \"constitutional claims\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_9ec192092213",
+      "original": "JASTA W/P (charity AND \"aiding and abetting\")",
+      "query": "JASTA W/P (charity AND \"aiding and abetting\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_0a402ae62f23",
+      "original": "copyright W/P (\"confirmatory assignment\" AND standing)",
+      "query": "copyright W/P (\"confirmatory assignment\" AND standing)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_39284c5b9229",
+      "original": "\"special master\" AND disqualification AND reconsideration",
+      "query": "\"special master\" AND disqualification AND reconsideration",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_4cb939a93b4b",
+      "original": "TANF W/P (\"Privacy Act\" OR disclosure)",
+      "query": "TANF W/P (\"Privacy Act\" OR disclosure)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_cac765f979aa",
+      "original": "\"criminal forfeiture\" W/P (\"judgment lien\" AND \"bona fide purchaser\")",
+      "query": "\"criminal forfeiture\" W/P (\"judgment lien\" AND \"bona fide purchaser\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_4800d5fa6908",
+      "original": "centralization AND (\"individualized claims\" OR \"informal coordination\") AND \"1407\"",
+      "query": "centralization AND (\"individualized claims\" OR \"informal coordination\") AND \"1407\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_9b3dea5cdfc5",
+      "original": "\"fair use\" AND \"intermediate copying\" AND (training OR \"reverse engineering\")",
+      "query": "\"fair use\" AND \"intermediate copying\" AND (training OR \"reverse engineering\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_e1061226eb12",
+      "original": "\"Rule 62.1\" AND \"dissolve\" AND \"preliminary injunction\"",
+      "query": "\"Rule 62.1\" AND \"dissolve\" AND \"preliminary injunction\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_ccf988696901",
+      "original": "\"deposition transcript\" W/P (certification AND \"30(f)\")",
+      "query": "\"deposition transcript\" W/P (certification AND \"30(f)\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_ed20b0c58693",
+      "original": "\"Rule 15\" AND \"undue prejudice\" AND \"leave to amend\"",
+      "query": "\"Rule 15\" AND \"undue prejudice\" AND \"leave to amend\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_b1b4646ff178",
+      "original": "\"Rule 16\" AND \"good cause\" AND (\"additional depositions\" OR discovery)",
+      "query": "\"Rule 16\" AND \"good cause\" AND (\"additional depositions\" OR discovery)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_608704eda3bf",
+      "original": "\"intergovernmental immunity\" W/P (standing AND \"local officials\")",
+      "query": "\"intergovernmental immunity\" W/P (standing AND \"local officials\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_90438c851354",
+      "original": "\"intervening cause\" AND contract AND \"New York\"",
+      "query": "\"intervening cause\" AND contract AND \"New York\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_0ee265594ac1",
+      "original": "\"sealing\" W/P (provisional AND \"confidentiality order\")",
+      "query": "\"sealing\" W/P (provisional AND \"confidentiality order\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_911ecbed2f5c",
+      "original": "\"discovery deadline\" AND \"new evidence\" AND \"motion to compel\"",
+      "query": "\"discovery deadline\" AND \"new evidence\" AND \"motion to compel\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_1f49091f8d1d",
+      "original": "\"entrapment by estoppel\" W/P (\"voter registration\" OR noncitizen)",
+      "query": "\"entrapment by estoppel\" W/P (\"voter registration\" OR noncitizen)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_67a5e4a3b341",
+      "original": "FLSA AND decertification AND (\"representative testimony\" OR \"similarly situated\")",
+      "query": "FLSA AND decertification AND (\"representative testimony\" OR \"similarly situated\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_4a2bc47fd850",
+      "original": "\"conditional remand\" AND (\"advisory opinion\" OR severance)",
+      "query": "\"conditional remand\" AND (\"advisory opinion\" OR severance)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_aef7d955b0bd",
+      "original": "\"1509\" W/P (summons AND suppression)",
+      "query": "\"1509\" W/P (summons AND suppression)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_e52424ac7de2",
+      "original": "Medicaid AND \"medically frail\" AND (exclusion OR eligibility)",
+      "query": "Medicaid AND \"medically frail\" AND (exclusion OR eligibility)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_a79e67e4b955",
+      "original": "\"protective order\" AND (\"confidential financial\" OR \"burden of proof\")",
+      "query": "\"protective order\" AND (\"confidential financial\" OR \"burden of proof\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_ba05c4442fd1",
+      "original": "Bivens AND \"ultra vires\" AND \"scope of employment\"",
+      "query": "Bivens AND \"ultra vires\" AND \"scope of employment\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_b414971e1363",
+      "original": "\"arbitration deposition\" W/P (confidentiality OR sealing)",
+      "query": "\"arbitration deposition\" W/P (confidentiality OR sealing)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_4c177d81db35",
+      "original": "\"1782\" AND (\"letters rogatory\" OR \"Hague Evidence Convention\")",
+      "query": "\"1782\" AND (\"letters rogatory\" OR \"Hague Evidence Convention\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_567a72cd3e99",
+      "original": "\"claim construction\" W/P \"wherein clause\"",
+      "query": "\"claim construction\" W/P \"wherein clause\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_ddbaf3a5c431",
+      "original": "\"terminating sanctions\" AND (\"discovery order\" OR spoliation) AND willful",
+      "query": "\"terminating sanctions\" AND (\"discovery order\" OR spoliation) AND willful",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_361c9cc29c69",
+      "original": "sealing AND (\"good cause\" OR \"compelling reasons\") AND \"discovery letter\"",
+      "query": "sealing AND (\"good cause\" OR \"compelling reasons\") AND \"discovery letter\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_7e8f7b61ef61",
+      "original": "\"Sherman Act\" AND \"information exchange\" AND \"concerted action\"",
+      "query": "\"Sherman Act\" AND \"information exchange\" AND \"concerted action\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_b9da49be36be",
+      "original": "\"1292(b)\" AND \"controlling question\" AND \"citizen suit\"",
+      "query": "\"1292(b)\" AND \"controlling question\" AND \"citizen suit\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_1bbdcbb97803",
+      "original": "\"Title VII\" W/P (\"joint employer\" OR \"single employer\")",
+      "query": "\"Title VII\" W/P (\"joint employer\" OR \"single employer\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_b6217e7f7518",
+      "original": "\"denial of intervention\" AND (\"divest jurisdiction\" OR \"stay pending appeal\")",
+      "query": "\"denial of intervention\" AND (\"divest jurisdiction\" OR \"stay pending appeal\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_c7d6824df7c4",
+      "original": "\"stay pending appeal\" W/P (\"school names\" OR \"permanent injunction\")",
+      "query": "\"stay pending appeal\" W/P (\"school names\" OR \"permanent injunction\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_d144e3ccba4a",
+      "original": "patent AND \"preliminary injunction\" AND \"irreparable harm\"",
+      "query": "patent AND \"preliminary injunction\" AND \"irreparable harm\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_d41f74eaa000",
+      "original": "\"preliminary injunction\" W/P (delay AND \"irreparable harm\")",
+      "query": "\"preliminary injunction\" W/P (delay AND \"irreparable harm\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_af52d4cbeb98",
+      "original": "\"1254a\" AND \"judicial review\" AND \"equal protection\"",
+      "query": "\"1254a\" AND \"judicial review\" AND \"equal protection\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_13a8e8f66350",
+      "original": "\"consent decree\" AND monitor AND (interpretation OR compliance)",
+      "query": "\"consent decree\" AND monitor AND (interpretation OR compliance)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_9760b7062528",
+      "original": "\"stay discovery\" AND \"motion to dismiss\" AND (\"good cause\" OR prejudice)",
+      "query": "\"stay discovery\" AND \"motion to dismiss\" AND (\"good cause\" OR prejudice)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_9349e3ef7268",
+      "original": "\"Speedy Trial Act\" W/P (complexity AND \"ends of justice\")",
+      "query": "\"Speedy Trial Act\" W/P (complexity AND \"ends of justice\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_e46af2cd59ec",
+      "original": "\"protective order\" AND deposition AND \"bad faith filing\"",
+      "query": "\"protective order\" AND deposition AND \"bad faith filing\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_0bd4fe75e5e7",
+      "original": "\"ex parte\" W/P (counterfeiting AND \"asset freeze\")",
+      "query": "\"ex parte\" W/P (counterfeiting AND \"asset freeze\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_e2b61ca74675",
+      "original": "\"forum selection clause\" AND \"closely related\" AND nonsignatory",
+      "query": "\"forum selection clause\" AND \"closely related\" AND nonsignatory",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_87f81e82f327",
+      "original": "\"Rule 54(b)\" AND \"secondary liability\" AND \"same underlying\"",
+      "query": "\"Rule 54(b)\" AND \"secondary liability\" AND \"same underlying\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_8f038a128422",
+      "original": "\"54(b)\" W/P (\"no just reason\" AND moot)",
+      "query": "\"54(b)\" W/P (\"no just reason\" AND moot)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_6fa902e2c4d3",
+      "original": "arson AND (\"proximate cause\" OR \"fire suppression\") AND instruction",
+      "query": "arson AND (\"proximate cause\" OR \"fire suppression\") AND instruction",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_c16a5e769905",
+      "original": "\"1407(a)\" W/P (remand AND \"pretrial proceedings\")",
+      "query": "\"1407(a)\" W/P (remand AND \"pretrial proceedings\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_e1a073e98823",
+      "original": "\"Rule 408\" AND (\"another purpose\" OR retaliation) AND settlement",
+      "query": "\"Rule 408\" AND (\"another purpose\" OR retaliation) AND settlement",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_5bb161dc7cc7",
+      "original": "TPS AND termination AND (\"jurisdiction stripping\" OR \"equal protection\")",
+      "query": "TPS AND termination AND (\"jurisdiction stripping\" OR \"equal protection\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_17f329d69c31",
+      "original": "\"227\" W/P (\"text messages\" AND \"residential subscriber\")",
+      "query": "\"227\" W/P (\"text messages\" AND \"residential subscriber\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_37b116fa4b7e",
+      "original": "\"Rule 6(b)\" AND \"excusable neglect\" AND \"late opposition\"",
+      "query": "\"Rule 6(b)\" AND \"excusable neglect\" AND \"late opposition\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_775c379ec9ae",
+      "original": "\"Rule 37(c)\" AND (harmless OR surprise) AND \"treating physician\"",
+      "query": "\"Rule 37(c)\" AND (harmless OR surprise) AND \"treating physician\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_ad782d37b788",
+      "original": "\"municipal indemnification\" W/P (ripeness AND \"constitutional claim\")",
+      "query": "\"municipal indemnification\" W/P (ripeness AND \"constitutional claim\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_02c75f6017ea",
+      "original": "\"Rule 41(b)\" AND (\"lesser sanctions\" OR \"missed deadline\")",
+      "query": "\"Rule 41(b)\" AND (\"lesser sanctions\" OR \"missed deadline\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_471ae978928c",
+      "original": "\"Monsanto hearing\" W/P (assets AND counsel)",
+      "query": "\"Monsanto hearing\" W/P (assets AND counsel)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_1afcdfdd8355",
+      "original": "\"1201\" AND circumvention AND \"valid credentials\"",
+      "query": "\"1201\" AND circumvention AND \"valid credentials\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_700e21835f7d",
+      "original": "\"arbitration agreement\" W/P (minor AND disaffirmance)",
+      "query": "\"arbitration agreement\" W/P (minor AND disaffirmance)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_fd6826dc2460",
+      "original": "\"bankruptcy court\" AND (contempt OR \"show cause\") AND subpoena",
+      "query": "\"bankruptcy court\" AND (contempt OR \"show cause\") AND subpoena",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_a752a9553661",
+      "original": "\"stay pending appeal\" W/P (\"irreparable injury\" AND enforcement)",
+      "query": "\"stay pending appeal\" W/P (\"irreparable injury\" AND enforcement)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_8186fa24c1f1",
+      "original": "IDEA AND \"attorneys fees\" AND (intervenor OR \"bad faith\")",
+      "query": "IDEA AND \"attorneys fees\" AND (intervenor OR \"bad faith\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_3a72ec04a670",
+      "original": "\"flight evidence\" W/P (\"consciousness of guilt\" OR prejudice)",
+      "query": "\"flight evidence\" W/P (\"consciousness of guilt\" OR prejudice)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_c3bf539c467b",
+      "original": "counterclaim AND \"amended complaint\" AND (\"Rule 15\" OR \"responsive pleading\")",
+      "query": "counterclaim AND \"amended complaint\" AND (\"Rule 15\" OR \"responsive pleading\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_d2dce64b74a7",
+      "original": "\"false advertising\" AND \"clinical guidelines\" AND (opinion OR fact)",
+      "query": "\"false advertising\" AND \"clinical guidelines\" AND (opinion OR fact)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_46911e6c7c18",
+      "original": "\"Second Amendment\" W/P (\"one handgun\" OR \"purchase limits\")",
+      "query": "\"Second Amendment\" W/P (\"one handgun\" OR \"purchase limits\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "factual_analogy"
+    },
+    {
+      "brief_id": "rb_25d7f655547b",
+      "original": "\"Clayton Act\" AND \"Section 12\" AND \"personal jurisdiction\"",
+      "query": "\"Clayton Act\" AND \"Section 12\" AND \"personal jurisdiction\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_868d8e34c122",
+      "original": "\"875(c)\" AND (\"true threat\" OR \"mental state\") AND \"115\"",
+      "query": "\"875(c)\" AND (\"true threat\" OR \"mental state\") AND \"115\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_1c90b2a27777",
+      "original": "reconsideration AND \"summary judgment\" AND \"new arguments\"",
+      "query": "reconsideration AND \"summary judgment\" AND \"new arguments\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_df94f07c973e",
+      "original": "\"Rooker Feldman\" W/P (\"independent injury\" OR \"third party conduct\")",
+      "query": "\"Rooker Feldman\" W/P (\"independent injury\" OR \"third party conduct\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_bb06d06079b7",
+      "original": "\"Rule 11\" W/P (\"safe harbor\" AND \"21 days\")",
+      "query": "\"Rule 11\" W/P (\"safe harbor\" AND \"21 days\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_4a0ee5840d31",
+      "original": "\"statute of limitations\" AND \"fraudulent concealment\" AND \"motion to dismiss\"",
+      "query": "\"statute of limitations\" AND \"fraudulent concealment\" AND \"motion to dismiss\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_6347736543ad",
+      "original": "\"expert testimony\" AND \"undisclosed assumption\" AND prejudice",
+      "query": "\"expert testimony\" AND \"undisclosed assumption\" AND prejudice",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_a271bfc57729",
+      "original": "\"Section 230\" AND (\"product design\" OR \"failure to warn\") AND grooming",
+      "query": "\"Section 230\" AND (\"product design\" OR \"failure to warn\") AND grooming",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_29ae24e87517",
+      "original": "\"expert testimony\" W/P (cumulative AND \"403\")",
+      "query": "\"expert testimony\" W/P (cumulative AND \"403\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_81cd1e3cd446",
+      "original": "wiretap AND consent AND (cookie OR identifiers)",
+      "query": "wiretap AND consent AND (cookie OR identifiers)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_5210d29f6850",
+      "original": "\"CIPA\" W/P (\"Section 4\" AND \"ex parte\")",
+      "query": "\"CIPA\" W/P (\"Section 4\" AND \"ex parte\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_bbcb09d0f532",
+      "original": "\"mandate rule\" AND (discovery OR \"law of the case\") AND timeliness",
+      "query": "\"mandate rule\" AND (discovery OR \"law of the case\") AND timeliness",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_e2749f3f9cfb",
+      "original": "\"contract interpretation\" W/P (\"parol evidence\" AND \"Rule 50\")",
+      "query": "\"contract interpretation\" W/P (\"parol evidence\" AND \"Rule 50\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_3ea9d38b62c7",
+      "original": "\"expert testimony\" AND \"executive compensation\" AND scienter",
+      "query": "\"expert testimony\" AND \"executive compensation\" AND scienter",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_9c19041cdc3e",
+      "original": "\"intervention as of right\" AND (timeliness OR \"inadequate representation\")",
+      "query": "\"intervention as of right\" AND (timeliness OR \"inadequate representation\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_96749a599977",
+      "original": "\"Title IX\" W/P (\"Spending Clause\" AND \"clear notice\")",
+      "query": "\"Title IX\" W/P (\"Spending Clause\" AND \"clear notice\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_18fafc4bd073",
+      "original": "\"fraud on the court\" AND (nonparty OR intervenor) AND appeal",
+      "query": "\"fraud on the court\" AND (nonparty OR intervenor) AND appeal",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_abfedf455df7",
+      "original": "restitution W/P (apportionment AND \"forfeited assets\")",
+      "query": "restitution W/P (apportionment AND \"forfeited assets\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_9a4769e65c6e",
+      "original": "\"Second Amendment\" AND \"irreparable harm\" AND ammunition",
+      "query": "\"Second Amendment\" AND \"irreparable harm\" AND ammunition",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_0fb48dfa7f4a",
+      "original": "\"Price Anderson Act\" AND (preemption OR waiver) AND contamination",
+      "query": "\"Price Anderson Act\" AND (preemption OR waiver) AND contamination",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_16c0bae5f7f4",
+      "original": "\"2461(c)\" W/P (forfeiture AND \"wire fraud\")",
+      "query": "\"2461(c)\" W/P (forfeiture AND \"wire fraud\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_1ee468f5ed4e",
+      "original": "\"Bankruptcy Rule 3007\" AND \"omnibus objection\" AND notice",
+      "query": "\"Bankruptcy Rule 3007\" AND \"omnibus objection\" AND notice",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_f2811656e373",
+      "original": "\"Rule 106\" W/P (\"self serving\" OR interview)",
+      "query": "\"Rule 106\" W/P (\"self serving\" OR interview)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_f99b37702112",
+      "original": "\"admiralty jurisdiction\" AND \"maritime contract\" AND formation",
+      "query": "\"admiralty jurisdiction\" AND \"maritime contract\" AND formation",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_2770dd47c930",
+      "original": "\"Landis stay\" AND (\"parallel appeal\" OR \"duplicative trials\")",
+      "query": "\"Landis stay\" AND (\"parallel appeal\" OR \"duplicative trials\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_e5d5fb2bd403",
+      "original": "\"1359\" AND (collusive OR feigned) AND \"Article III\"",
+      "query": "\"1359\" AND (collusive OR feigned) AND \"Article III\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_2368dd76073b",
+      "original": "\"Indiana Tort Claims Act\" W/P (brownfield OR \"acts of another\")",
+      "query": "\"Indiana Tort Claims Act\" W/P (brownfield OR \"acts of another\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_13d524722684",
+      "original": "\"dismissal sanction\" AND \"government\" AND \"discovery violations\"",
+      "query": "\"dismissal sanction\" AND \"government\" AND \"discovery violations\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_6ae3d0d838af",
+      "original": "\"Arlington Heights\" W/P (immigration AND \"equal protection\")",
+      "query": "\"Arlington Heights\" W/P (immigration AND \"equal protection\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_12069710fead",
+      "original": "\"appeal bond\" W/P (\"Rule 7\" AND \"Rule 39\")",
+      "query": "\"appeal bond\" W/P (\"Rule 7\" AND \"Rule 39\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_0328f748681c",
+      "original": "\"evidentiary sanctions\" AND \"investigative ruse\" AND attorney",
+      "query": "\"evidentiary sanctions\" AND \"investigative ruse\" AND attorney",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_bb2d1cc07e1f",
+      "original": "\"Endangered Species Act\" AND \"national security\" AND \"judicial review\"",
+      "query": "\"Endangered Species Act\" AND \"national security\" AND \"judicial review\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_f6498d0cc6b5",
+      "original": "\"12601\" AND \"pattern or practice\" AND \"statutory enforcement\"",
+      "query": "\"12601\" AND \"pattern or practice\" AND \"statutory enforcement\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_213cc5d5c3ec",
+      "original": "\"deposition testimony\" W/P \"public access\" AND seal!",
+      "query": "\"deposition testimony\" W/P \"public access\" AND (seal OR sealed OR sealing)",
+      "rewritten": true,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_0ba768d74fb8",
+      "original": "\"Rule 11\" AND (collusive OR nonadverse) AND sanction!",
+      "query": "\"Rule 11\" AND (collusive OR nonadverse) AND (sanction OR sanctions OR sanctioned OR sanctioning)",
+      "rewritten": true,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_d95eeecb1dea",
+      "original": "\"qualified immunity\" W/P \"First Amendment\" AND retaliat!",
+      "query": "\"qualified immunity\" W/P \"First Amendment\" AND (retaliate OR retaliated OR retaliating OR retaliation OR retaliatory)",
+      "rewritten": true,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_c948d025aa20",
+      "original": "(\"filter team\" OR \"taint team\") AND \"special master\" AND privilege",
+      "query": "(\"filter team\" OR \"taint team\") AND \"special master\" AND privilege",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_844a131e5069",
+      "original": "\"collateral estoppel\" AND patent AND (\"unadjudicated claims\" OR \"patentable distinction\")",
+      "query": "\"collateral estoppel\" AND patent AND (\"unadjudicated claims\" OR \"patentable distinction\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_7585120e358e",
+      "original": "\"Rule 37(e)\" W/P (discovery OR proportion!) AND \"deleted messages\"",
+      "query": "\"Rule 37(e)\" W/P (discovery OR (proportion OR proportional OR proportionality)) AND \"deleted messages\"",
+      "rewritten": true,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_41312309fc1b",
+      "original": "HIPAA AND \"embedded federal question\" AND (remand OR Grable)",
+      "query": "HIPAA AND \"embedded federal question\" AND (remand OR Grable)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "contrary_authority"
+    },
+    {
+      "brief_id": "rb_6617a144ca91",
+      "original": "withdraw! W/P counsel AND (\"fundamental disagreement\" OR \"breakdown in communication\") AND sentencing",
+      "query": "(withdraw OR withdrawal OR withdrawn OR withdrawing) W/P counsel AND (\"fundamental disagreement\" OR \"breakdown in communication\") AND sentencing",
+      "rewritten": true,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_c3c501190336",
+      "original": "\"Rule 16\" AND \"nonparty fault\" AND (amend! OR diligence)",
+      "query": "\"Rule 16\" AND \"nonparty fault\" AND ((amend OR amended OR amendment OR amending) OR diligence)",
+      "rewritten": true,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_76ec40e3382e",
+      "original": "\"discovery misconduct\" W/P (dismissal OR \"bad faith\") AND \"late production\"",
+      "query": "\"discovery misconduct\" W/P (dismissal OR \"bad faith\") AND \"late production\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_f56a01a4e394",
+      "original": "\"statute of limitations\" AND \"affirmative defense\" AND \"Rule 16\" AND diligence",
+      "query": "\"statute of limitations\" AND \"affirmative defense\" AND \"Rule 16\" AND diligence",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_502e30d4663c",
+      "original": "\"attorneys eyes only\" W/P (pricing OR competit!) AND \"protective order\"",
+      "query": "\"attorneys eyes only\" W/P (pricing OR (competition OR competitive OR competitor)) AND \"protective order\"",
+      "rewritten": true,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_9d66fe1c9da8",
+      "original": "\"forum non conveniens\" AND copyright AND Japan AND \"adequate alternative forum\"",
+      "query": "\"forum non conveniens\" AND copyright AND Japan AND \"adequate alternative forum\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_0f8a154dd44c",
+      "original": "\"Rule 26(f)\" AND (defer OR stay) AND \"motion to dismiss\"",
+      "query": "\"Rule 26(f)\" AND (defer OR stay) AND \"motion to dismiss\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_ee2de856b76b",
+      "original": "\"compelling reasons\" AND sealing AND (\"non-dispositive\" OR \"more than tangential\")",
+      "query": "\"compelling reasons\" AND sealing AND (\"non-dispositive\" OR \"more than tangential\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_33e7be171578",
+      "original": "\"civil contempt\" W/P (compliance OR ambiguity) AND \"turnover order\"",
+      "query": "\"civil contempt\" W/P (compliance OR ambiguity) AND \"turnover order\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_fab21a8a3e23",
+      "original": "\"citizen suit\" AND \"Clean Air Act\" AND (\"Article II\" OR \"executive power\")",
+      "query": "\"citizen suit\" AND \"Clean Air Act\" AND (\"Article II\" OR \"executive power\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_1e66160a88da",
+      "original": "clickwrap W/10 \"conspicuous notice\" AND arbitration",
+      "query": "clickwrap W/10 \"conspicuous notice\" AND arbitration",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_f8fe3b5a6542",
+      "original": "\"motion to seal\" AND \"pretrial brief\" AND \"competitive harm\"",
+      "query": "\"motion to seal\" AND \"pretrial brief\" AND \"competitive harm\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_73c43272fa4e",
+      "original": "\"dismissal without prejudice\" AND \"statutory standing\" AND \"Rule 17\"",
+      "query": "\"dismissal without prejudice\" AND \"statutory standing\" AND \"Rule 17\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_26b49f10fde4",
+      "original": "\"limited public forum\" AND (\"viewpoint neutral\" OR reasonable) AND \"stay pending appeal\"",
+      "query": "\"limited public forum\" AND (\"viewpoint neutral\" OR reasonable) AND \"stay pending appeal\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_55964da40bae",
+      "original": "\"beneficial owner\" W/P (bonds OR \"registered holder\") AND enforce!",
+      "query": "\"beneficial owner\" W/P (bonds OR \"registered holder\") AND (enforce OR enforced OR enforcement OR enforcing OR enforceable)",
+      "rewritten": true,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_8cea41b4dfc5",
+      "original": "\"Fair Housing Act\" AND \"United States\" AND (\"private right of action\" OR \"sovereign immunity\")",
+      "query": "\"Fair Housing Act\" AND \"United States\" AND (\"private right of action\" OR \"sovereign immunity\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_fbdef3fdcfe3",
+      "original": "\"juror privacy\" W/P (sealing OR redaction) AND \"less drastic\"",
+      "query": "\"juror privacy\" W/P (sealing OR redaction) AND \"less drastic\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_596a2eb4c07b",
+      "original": "\"1115A\" AND Medicare AND (\"major questions\" OR nondelegation)",
+      "query": "\"1115A\" AND Medicare AND (\"major questions\" OR nondelegation)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_79a94d09018c",
+      "original": "\"Rule 53\" AND \"special master\" AND FOIA AND \"de novo\"",
+      "query": "\"Rule 53\" AND \"special master\" AND FOIA AND \"de novo\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_3a9ad60464d4",
+      "original": "\"appeal bond\" W/P (objector OR \"access to courts\") AND \"Rule 7\"",
+      "query": "\"appeal bond\" W/P (objector OR \"access to courts\") AND \"Rule 7\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_cf4bc4960cdd",
+      "original": "prosecutor AND \"false confession\" AND (\"absolute immunity\" OR \"investigative function\")",
+      "query": "prosecutor AND \"false confession\" AND (\"absolute immunity\" OR \"investigative function\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_83e1b0b801a0",
+      "original": "\"Housekeeping Statute\" AND \"Touhy\" AND (reviewability OR \"agency discretion\")",
+      "query": "\"Housekeeping Statute\" AND \"Touhy\" AND (reviewability OR \"agency discretion\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_36f3f7f62f22",
+      "original": "\"domestic injury\" W/P RICO AND \"foreign plaintiff\"",
+      "query": "\"domestic injury\" W/P RICO AND \"foreign plaintiff\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_4ba03ffb5376",
+      "original": "\"motion to seal\" AND \"previously public\" AND \"confidentiality\"",
+      "query": "\"motion to seal\" AND \"previously public\" AND \"confidentiality\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "contrary_authority"
+    },
+    {
+      "brief_id": "rb_557972703cf8",
+      "original": "\"anti SLAPP\" W/P \"public interest\" AND (shareholder OR defamation)",
+      "query": "\"anti SLAPP\" W/P \"public interest\" AND (shareholder OR defamation)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_7c7caa50d4fd",
+      "original": "\"Civil Rights Act of 1960\" AND \"voter records\" AND \"statement of the basis\"",
+      "query": "\"Civil Rights Act of 1960\" AND \"voter records\" AND \"statement of the basis\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_08a5459d4d8f",
+      "original": "\"disparate impact\" AND \"prior salary\" AND (causation OR standing)",
+      "query": "\"disparate impact\" AND \"prior salary\" AND (causation OR standing)",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_ccc53a6663e2",
+      "original": "\"deliberative process\" W/P \"government misconduct\" AND discovery",
+      "query": "\"deliberative process\" W/P \"government misconduct\" AND discovery",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_e4ef0db05271",
+      "original": "\"voluntary cessation\" AND \"nonenforcement policy\" AND \"organizational members\"",
+      "query": "\"voluntary cessation\" AND \"nonenforcement policy\" AND \"organizational members\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "contrary_authority"
+    },
+    {
+      "brief_id": "rb_29785f940eca",
+      "original": "\"public access\" W/P \"summary judgment hearing\" AND closure",
+      "query": "\"public access\" W/P \"summary judgment hearing\" AND closure",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_ed830e7809cb",
+      "original": "\"Section 504\" AND contractor AND \"recipient of federal funds\" AND housing",
+      "query": "\"Section 504\" AND contractor AND \"recipient of federal funds\" AND housing",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_a89b542934de",
+      "original": "\"deliberative process privilege\" W/P (\"government intent\" OR \"post decisional\")",
+      "query": "\"deliberative process privilege\" W/P (\"government intent\" OR \"post decisional\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_c496e567d87e",
+      "original": "\"organizational standing\" AND \"core business activities\" AND \"diversion of resources\"",
+      "query": "\"organizational standing\" AND \"core business activities\" AND \"diversion of resources\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_6df878d3ff46",
+      "original": "corporation AND \"client file\" AND (\"pro se\" OR \"ancillary jurisdiction\")",
+      "query": "corporation AND \"client file\" AND (\"pro se\" OR \"ancillary jurisdiction\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_e2ab215f45ea",
+      "original": "\"Rule 37(e)\" W/P \"lost emails\" AND (\"adverse inference\" OR \"intent to deprive\")",
+      "query": "\"Rule 37(e)\" W/P \"lost emails\" AND (\"adverse inference\" OR \"intent to deprive\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_74073d3d9367",
+      "original": "\"20703\" AND (\"electronic records\" OR \"voter registration\") AND \"privacy\"",
+      "query": "\"20703\" AND (\"electronic records\" OR \"voter registration\") AND \"privacy\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_5c3f2e297eee",
+      "original": "\"Rule 37(d)\" W/P \"failure to appear\" AND deposition",
+      "query": "\"Rule 37(d)\" W/P \"failure to appear\" AND deposition",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_37abd99c3c9b",
+      "original": "\"fail safe class\" AND (\"strike class allegations\" OR \"Rule 23(b)(2)\")",
+      "query": "\"fail safe class\" AND (\"strike class allegations\" OR \"Rule 23(b)(2)\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_bdb0b7ba0183",
+      "original": "\"privilege log\" W/P (overdesignation OR sanctions OR waiver)",
+      "query": "\"privilege log\" W/P (overdesignation OR sanctions OR waiver)",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_53081e64b4ef",
+      "original": "HIPAA AND (\"embedded federal question\" OR Grable) AND remand",
+      "query": "HIPAA AND (\"embedded federal question\" OR Grable) AND remand",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_64736620b33a",
+      "original": "\"judicial records\" W/P (redact! OR seal!) AND \"employment information\"",
+      "query": "\"judicial records\" W/P ((redact OR redacted OR redaction OR redacting) OR (seal OR sealed OR sealing)) AND \"employment information\"",
+      "rewritten": true,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_3396680caab9",
+      "original": "\"requests for admission\" AND (\"application of law to fact\" OR \"legal conclusions\")",
+      "query": "\"requests for admission\" AND (\"application of law to fact\" OR \"legal conclusions\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_d8f087484157",
+      "original": "\"Sarbanes Oxley\" AND \"credit union\" AND \"covered employer\"",
+      "query": "\"Sarbanes Oxley\" AND \"credit union\" AND \"covered employer\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_1a02009cd521",
+      "original": "(apex OR \"high ranking\") W/5 deposition AND \"unique knowledge\"",
+      "query": "(apex OR \"high ranking\") W/5 deposition AND \"unique knowledge\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_e8c88e244c61",
+      "original": "\"price impact\" W/P \"class certification\" AND \"Affiliated Ute\"",
+      "query": "\"price impact\" W/P \"class certification\" AND \"Affiliated Ute\"",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_cfd0dd0e543e",
+      "original": "\"Exemption 7(E)\" W/P (\"Vaughn index\" OR \"agency declaration\")",
+      "query": "\"Exemption 7(E)\" W/P (\"Vaughn index\" OR \"agency declaration\")",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_29e9cdd36ca3",
+      "original": "\"Rule 408\" AND \"attorney fees\" AND \"settlement negotiations\"",
+      "query": "\"Rule 408\" AND \"attorney fees\" AND \"settlement negotiations\"",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "procedure"
+    },
+    {
+      "brief_id": "rb_b3b978c2d3dd",
+      "original": "\"Small Business Administration\" AND \"sovereign immunity\" AND (injunction OR \"declaratory relief\")",
+      "query": "\"Small Business Administration\" AND \"sovereign immunity\" AND (injunction OR \"declaratory relief\")",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_e1d1fbb6c44b",
+      "original": "\"patent ownership\" W/P (\"exceptional case\" OR \"attorney fees\") AND knowledge",
+      "query": "\"patent ownership\" W/P (\"exceptional case\" OR \"attorney fees\") AND knowledge",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_db65c4816b61",
+      "original": "\"public duty doctrine\" AND \"legislative intent\" AND (tribe OR tribal) AND Washington",
+      "query": "\"public duty doctrine\" AND \"legislative intent\" AND (tribe OR tribal) AND Washington",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "legal_standard"
+    },
+    {
+      "brief_id": "rb_a87559b48b34",
+      "original": "\"pharmacy benefit manager\" AND \"learned intermediary\" AND Pennsylvania AND opioids",
+      "query": "\"pharmacy benefit manager\" AND \"learned intermediary\" AND Pennsylvania AND opioids",
+      "rewritten": false,
+      "query_style": "boolean",
+      "research_purpose": "statutory_interpretation"
+    },
+    {
+      "brief_id": "rb_ebfc954ccebd",
+      "original": "\"expert opinion\" W/P (\"legal conclusion\" OR undisclosed) AND exclude",
+      "query": "\"expert opinion\" W/P (\"legal conclusion\" OR undisclosed) AND exclude",
+      "rewritten": false,
+      "query_style": "proximity",
+      "research_purpose": "procedure"
+    }
+  ]
+}

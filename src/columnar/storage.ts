@@ -2,6 +2,7 @@ import { DocumentPackage } from "./document-package.js";
 import {
   PAGE,
   type Ref,
+  type Branch,
   type Root,
   concat,
   decodeBranches,
@@ -108,6 +109,12 @@ function packetGroups(refs: Ref[]) {
 }
 const EMPTY_PACKET = new Uint8Array(0);
 export class Reader {
+  /** Optional benchmark hook; no candidate scans or retained state in serving. */
+  inspectCandidateBlocks?: (
+    blocks: Branch[][],
+    mask: Uint8Array,
+    first: number,
+  ) => void;
   private inline = new Map<number, { ref: Ref; data: Uint8Array }[]>();
   /** A validated dictionary shard can carry its own complete small postings. */
   seed(ref: Ref, data: Uint8Array) {
@@ -191,6 +198,7 @@ export class Reader {
     coalescedReads: 0,
     coalescedExtraBytes: 0,
     prefetchWindows: 0,
+    maxPrefetchFootprintBytes: 0,
     prefetchTransferBytes: 0,
     prefetchOriginBytes: 0,
     pairDirectoryRanges: 0,

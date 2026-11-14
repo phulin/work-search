@@ -1,3 +1,4 @@
+import { scoreLookahead } from "./score-lookahead.js";
 import { Heap } from "./top-k.js";
 import { intersectCursors } from "./numeric-cursor.js";
 import { tokenizerFor } from "../query/analysis.js";
@@ -50,14 +51,16 @@ import {
 } from "./maxscore.js";
 import { lookupRemotePairs } from "./pair-lookup.js";
 import {
-  planMembershipAnchor,
-  readMembershipAnchor,
   planCommonPresence,
-  membershipAnchor,
   commonWordExclusions,
   loadCommonPresence,
   type MembershipSettings,
 } from "./membership-anchor.js";
+import {
+  planBooleanMembership as planMembershipAnchor,
+  readBooleanMembership as readMembershipAnchor,
+  booleanMembershipAnchor as membershipAnchor,
+} from "./boolean-membership.js";
 export interface Options {
   mode?: "and" | "or";
   limit?: number;
@@ -322,9 +325,7 @@ export class ColumnarIndex {
             options.exactTotal,
           )
         : undefined,
-      provedWords = new Set(
-        membershipRead?.pairs.flatMap((pair) => [pair.a, pair.b]) ?? [],
-      ),
+      provedWords = membershipRead?.provedWords ?? new Set<string>(),
       filterAlternative =
         preliminary && membershipRead
           ? {
@@ -648,168 +649,16 @@ export class ColumnarIndex {
         ? intersectCursors(presence.map((record) => record.cursor(field)))
         : undefined;
     let presenceDoc = presenceCursor?.next() ?? Infinity;
-    for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
-      const band = bands[bandIndex];
-      // Score lookahead is independent of positional decoding. Restrict new
-      // positional lookahead to broad scans without selective candidate masks.
-      if (
-        (!positions ||
-          (scoring.length > 0 && !loadedMembership && !pairCandidates)) &&
-        bands.length >= 8 &&
-        bandIndex % LOOKAHEAD === 0
-      ) {
-        const nextBands = bands.slice(bandIndex, bandIndex + LOOKAHEAD);
-        if (nextBands.at(-1)! - nextBands[0] === nextBands.length - 1) {
-          const combined = await Promise.all(
-            names.map((name) =>
-              leaves(
-                reader,
-                terms.get(name)!.tree,
-                nextBands[0] * BAND,
-                Math.min(this.root.count, (nextBands.at(-1)! + 1) * BAND),
-              ),
-            ),
-          );
-          window = nextBands.map((next) =>
-            combined.map((bs) =>
-              bs.filter(
-                (b) =>
-                  b.last >= next * BAND &&
-                  b.first < Math.min(this.root.count, (next + 1) * BAND),
-              ),
-            ),
-          );
-        } else {
-          window = await Promise.all(
-            nextBands.map((next) =>
-              Promise.all(
-                names.map((name) =>
-                  leaves(
-                    reader,
-                    terms.get(name)!.tree,
-                    next * BAND,
-                    Math.min(this.root.count, (next + 1) * BAND),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-        const refs = window.flatMap((bs, i) => {
-          if (
-            coarse(ast, (name) => (bs[names.indexOf(name)].length ? 2 : 0)) ===
-            0
-          )
-            return [];
-          let upper = 0;
-          for (const j of scoring) {
-            let b = 0,
-              t = 0;
-            for (const block of bs[j]) {
-              b = Math.max(b, block.b);
-              t = Math.max(t, block.t);
-            }
-            upper +=
-              (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0);
-          }
-          upper *= 1 + Number.EPSILON * 32;
-          const first = bands[bandIndex + i] * BAND;
-          if (
-            !options.exactTotal &&
-            heap.threshold &&
-            (upper < heap.threshold.score ||
-              (upper === heap.threshold.score && first > heap.threshold.doc))
-          )
-            return [];
-          const perTermBounds = bs.map((blocks) => {
-            let b = 0,
-              t = 0;
-            for (const block of blocks) {
-              b = Math.max(b, block.b);
-              t = Math.max(t, block.t);
-            }
-            return (
-              (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0)
-            );
-          });
-          // Use the same current verified threshold/cell proof as execution.
-          // Later stronger thresholds can make this speculative, never required.
-          const cells = new Uint8Array(
-            Math.ceil(Math.min(BAND, this.root.count - first) / 128),
-          ).fill(1);
-          if (!options.exactTotal && heap.threshold)
-            pruneCells(
-              cells,
-              cellBounds(
-                bs,
-                first,
-                Math.min(BAND, this.root.count - first),
-                field,
-                boost,
-              ),
-              scoring,
-              first,
-              heap.threshold,
-            );
-          const selected = blocksInCells(bs, cells, first),
-            essential = essentialTerms(
-              selected,
-              perTermBounds,
-              scoring,
-              requiredIndices,
-              BAND,
-              heap.threshold?.score,
-              options.exactTotal ?? false,
-            );
-          const lazy = deferScoreFetch(selected, essential, BAND, (ref) =>
-            reader.resident(ref),
-          );
-          return (
-            lazy ? essential!.flatMap((j) => selected[j]) : selected.flat()
-          ).map((block) => block.score);
-        });
-        const footprint = reader.packetFootprint(refs);
-        if (footprint <= Math.min(4 * 1048576, reader.memory.pages.limit / 3)) {
-          const before = reader.stats.bytes;
-          reader.stats.prefetchWindows++;
-          reader.stats.prefetchTransferBytes += footprint;
-          await reader.prefetchScores(refs);
-          reader.stats.prefetchOriginBytes += reader.stats.bytes - before;
-        }
-      }
+    const candidateWindows = new Map<
+      number,
+      { cells: Uint8Array; mask: Uint8Array | undefined }
+    >();
+    const candidateWindow = (band: number) => {
+      const old = candidateWindows.get(band);
+      if (old) return old;
       const lo = band * BAND,
         hi = Math.min(this.root.count, lo + BAND),
         size = hi - lo;
-      const blocks =
-        window[bandIndex % LOOKAHEAD] ??
-        (await Promise.all(
-          names.map((n) => leaves(reader, terms.get(n)!.tree, lo, hi)),
-        ));
-      if (coarse(ast, (n) => (blocks[names.indexOf(n)].length ? 2 : 0)) === 0) {
-        reader.stats.skippedRanges++;
-        continue;
-      }
-      const bounds = blocks.map((bs) => {
-        let b = 0,
-          t = 0;
-        for (const x of bs) {
-          b = Math.max(b, x.b);
-          t = Math.max(t, x.t);
-        }
-        return (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0);
-      });
-      // Round the sum outward: equality is always visited, preserving deterministic ties.
-      const upper =
-        scoring.reduce((s, j) => s + bounds[j], 0) * (1 + Number.EPSILON * 32);
-      if (
-        !options.exactTotal &&
-        heap.threshold &&
-        (upper < heap.threshold.score ||
-          (upper === heap.threshold.score && lo > heap.threshold.doc))
-      ) {
-        reader.stats.skippedRanges++;
-        continue;
-      }
       const cells = new Uint8Array(Math.ceil(size / 128)).fill(1);
       let candidateMask: Uint8Array | undefined;
       if (loadedMembership) {
@@ -861,6 +710,213 @@ export class ColumnarIndex {
           }
         }
       }
+
+      const value = { cells, mask: candidateMask };
+      candidateWindows.set(band, value);
+      return value;
+    };
+    const candidateLookahead =
+      positions && scoring.length > 0 && !!(loadedMembership || pairCandidates);
+    let lookaheadRefs: Ref[][] = [],
+      prefetchedThrough = 0;
+    for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
+      const band = bands[bandIndex];
+      // Candidate masks are generated in document order and reused by exact
+      // execution. Lookahead may fetch scores, never positional payloads.
+      if (
+        (!positions || scoring.length > 0) &&
+        (bands.length >= 8 || candidateLookahead) &&
+        bandIndex % LOOKAHEAD === 0
+      ) {
+        const nextBands = bands.slice(bandIndex, bandIndex + LOOKAHEAD);
+        if (nextBands.at(-1)! - nextBands[0] === nextBands.length - 1) {
+          const combined = await Promise.all(
+            names.map((name) =>
+              leaves(
+                reader,
+                terms.get(name)!.tree,
+                nextBands[0] * BAND,
+                Math.min(this.root.count, (nextBands.at(-1)! + 1) * BAND),
+              ),
+            ),
+          );
+          window = nextBands.map((next) =>
+            combined.map((bs) =>
+              bs.filter(
+                (b) =>
+                  b.last >= next * BAND &&
+                  b.first < Math.min(this.root.count, (next + 1) * BAND),
+              ),
+            ),
+          );
+        } else {
+          window = await Promise.all(
+            nextBands.map((next) =>
+              Promise.all(
+                names.map((name) =>
+                  leaves(
+                    reader,
+                    terms.get(name)!.tree,
+                    next * BAND,
+                    Math.min(this.root.count, (next + 1) * BAND),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+        if (candidateLookahead)
+          for (const next of nextBands) candidateWindow(next);
+        const groups = window.map((bs, i) => {
+          if (
+            coarse(ast, (name) => (bs[names.indexOf(name)].length ? 2 : 0)) ===
+            0
+          )
+            return [];
+          let upper = 0;
+          for (const j of scoring) {
+            let b = 0,
+              t = 0;
+            for (const block of bs[j]) {
+              b = Math.max(b, block.b);
+              t = Math.max(t, block.t);
+            }
+            upper +=
+              (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0);
+          }
+          upper *= 1 + Number.EPSILON * 32;
+          const first = bands[bandIndex + i] * BAND;
+          if (
+            !options.exactTotal &&
+            heap.threshold &&
+            (upper < heap.threshold.score ||
+              (upper === heap.threshold.score && first > heap.threshold.doc))
+          )
+            return [];
+          const perTermBounds = bs.map((blocks) => {
+            let b = 0,
+              t = 0;
+            for (const block of blocks) {
+              b = Math.max(b, block.b);
+              t = Math.max(t, block.t);
+            }
+            return (
+              (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0)
+            );
+          });
+          // Use the same current verified threshold/cell proof as execution.
+          // Later stronger thresholds can make this speculative, never required.
+          const cells = candidateLookahead
+            ? candidateWindow(bands[bandIndex + i]).cells
+            : new Uint8Array(
+                Math.ceil(Math.min(BAND, this.root.count - first) / 128),
+              ).fill(1);
+          if (!options.exactTotal && heap.threshold)
+            pruneCells(
+              cells,
+              cellBounds(
+                bs,
+                first,
+                Math.min(BAND, this.root.count - first),
+                field,
+                boost,
+              ),
+              scoring,
+              first,
+              heap.threshold,
+            );
+          const selected = blocksInCells(bs, cells, first),
+            essential = essentialTerms(
+              selected,
+              perTermBounds,
+              scoring,
+              requiredIndices,
+              BAND,
+              heap.threshold?.score,
+              options.exactTotal ?? false,
+            );
+          const lazy = deferScoreFetch(selected, essential, BAND, (ref) =>
+            reader.resident(ref),
+          );
+          return (
+            lazy ? essential!.flatMap((j) => selected[j]) : selected.flat()
+          ).map((block) => block.score);
+        });
+        if (candidateLookahead) lookaheadRefs = groups;
+        else {
+          const refs = groups.flat(),
+            footprint = reader.packetFootprint(refs);
+          if (
+            footprint <= Math.min(4 * 1048576, reader.memory.pages.limit / 3)
+          ) {
+            const before = reader.stats.bytes;
+            reader.stats.prefetchWindows++;
+            reader.stats.prefetchTransferBytes += footprint;
+            reader.stats.maxPrefetchFootprintBytes = Math.max(
+              reader.stats.maxPrefetchFootprintBytes,
+              footprint,
+            );
+            await reader.prefetchScores(refs);
+            reader.stats.prefetchOriginBytes += reader.stats.bytes - before;
+          }
+        }
+      }
+      if (candidateLookahead && bandIndex >= prefetchedThrough) {
+        const batch = scoreLookahead(
+          lookaheadRefs.slice(bandIndex % LOOKAHEAD),
+          Math.min(4 * 1048576, reader.memory.pages.limit / 3),
+          (refs) => reader.packetFootprint(refs),
+        );
+        prefetchedThrough = bandIndex + Math.max(1, batch.windows);
+        if (batch.refs.length && !batch.partial && batch.windows > 1) {
+          const before = reader.stats.bytes;
+          reader.stats.prefetchWindows++;
+          reader.stats.prefetchTransferBytes += batch.bytes;
+          reader.stats.maxPrefetchFootprintBytes = Math.max(
+            reader.stats.maxPrefetchFootprintBytes,
+            batch.bytes,
+          );
+          await reader.prefetchScores(batch.refs);
+          reader.stats.prefetchOriginBytes += reader.stats.bytes - before;
+        }
+      }
+      const lo = band * BAND,
+        hi = Math.min(this.root.count, lo + BAND),
+        size = hi - lo;
+      const blocks =
+        window[bandIndex % LOOKAHEAD] ??
+        (await Promise.all(
+          names.map((n) => leaves(reader, terms.get(n)!.tree, lo, hi)),
+        ));
+      if (coarse(ast, (n) => (blocks[names.indexOf(n)].length ? 2 : 0)) === 0) {
+        reader.stats.skippedRanges++;
+        candidateWindows.delete(band);
+        continue;
+      }
+      const bounds = blocks.map((bs) => {
+        let b = 0,
+          t = 0;
+        for (const x of bs) {
+          b = Math.max(b, x.b);
+          t = Math.max(t, x.t);
+        }
+        return (field !== "title" ? b : 0) + (field !== "body" ? boost * t : 0);
+      });
+      // Round the sum outward: equality is always visited, preserving deterministic ties.
+      const upper =
+        scoring.reduce((s, j) => s + bounds[j], 0) * (1 + Number.EPSILON * 32);
+      if (
+        !options.exactTotal &&
+        heap.threshold &&
+        (upper < heap.threshold.score ||
+          (upper === heap.threshold.score && lo > heap.threshold.doc))
+      ) {
+        reader.stats.skippedRanges++;
+        candidateWindows.delete(band);
+        continue;
+      }
+      const { cells, mask: candidateMask } = candidateWindow(band);
+      candidateWindows.delete(band);
       const localBounds = cellBounds(blocks, lo, size, field, boost);
       if (!options.exactTotal && heap.threshold)
         pruneCells(cells, localBounds, scoring, lo, heap.threshold);
@@ -868,6 +924,8 @@ export class ColumnarIndex {
         const filtered = blocksInCells(blocks, cells, lo);
         for (let j = 0; j < blocks.length; j++) blocks[j] = filtered[j];
       }
+      if (candidateMask)
+        reader.inspectCandidateBlocks?.(blocks, candidateMask, lo);
       const essential = essentialTerms(
           blocks,
           bounds,

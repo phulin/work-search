@@ -1,0 +1,5 @@
+{
+  "revision": "0a72b2c116d42082523b928493a640df832bab2b",
+  "searchSha256": "1d256e90be76c8e78feb8d34c52adfd1875f2c480edbea89cf56472054ac998f",
+  "changes": "None. Reader, caches, directory and executor all use the frozen source."
+}
