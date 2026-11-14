@@ -152,6 +152,21 @@ export class PairRouter {
       rank: v.getUint32(16, true) - 1,
     };
   }
+  /** Enumerate immutable packets for publication without a second dictionary. */
+  *objects() {
+    for (let at = 0; at < this.leaves.byteLength; at += 28) {
+      const leaf = {
+        namespace: this.leaves.getUint32(at, true),
+        bits: this.leaves.getUint32(at + 4, true),
+        prefix: this.leaves.getUint32(at + 8, true),
+        suffix: this.leaves.getUint32(at + 24, true),
+      };
+      yield {
+        key: pairObjectKey(this.metadata.generation, leaf),
+        bytes: this.leaves.getUint32(at + 12, true),
+      };
+    }
+  }
   /** Corpus-derived prior for pairs outside the ranked hot table. This is a
    * planning estimate, never a matching or pruning bound. No wire-format change. */
   unknownDfEstimate() {

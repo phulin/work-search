@@ -119,5 +119,14 @@ export class DocumentDirectory {
       length: this.offsets[doc - first + 1] - this.offsets[doc - first],
     };
   }
+  *groups() {
+    for (let i = 0; i < this.firsts.length; i++) {
+      const first = this.firsts[i],
+        end = i + 1 < this.firsts.length ? this.firsts[i + 1] : this.count;
+      const start = this.lookup(first),
+        last = this.lookup(end - 1);
+      yield { first, end, key: start.key, bytes: last.offset + last.length };
+    }
+  }
 }
 export { pack };

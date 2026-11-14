@@ -4,7 +4,7 @@ export class ColumnarR2 implements Source {
   constructor(readonly bucket: R2Bucket) {}
   async readNamed(key: string, bytes: number) {
     if (
-      !/^[a-f0-9]{64}\/(?:pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+)\.bin$/.test(
+      !/^[a-f0-9]{64}\/(?:pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+|metadata)\.bin$/.test(
         key,
       ) ||
       bytes > 32 * 1048576
@@ -14,7 +14,9 @@ export class ColumnarR2 implements Source {
     if (
       !object ||
       object.size !== bytes ||
-      object.customMetadata?.generation !== key.split("/")[0]
+      object.customMetadata?.generation !== key.split("/")[0] ||
+      (key.endsWith("/metadata.bin") &&
+        object.customMetadata.sha256 !== key.split("/")[0])
     )
       throw Error("Pair object generation mismatch");
     return new Uint8Array(await object.arrayBuffer());

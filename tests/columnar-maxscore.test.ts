@@ -206,6 +206,53 @@ it("matches independent exhaustive ranks across lazy blocks, false positional le
           );
           expect(full.total, q + field).toBe(expected.length);
           expect(full.diagnostics.lazyScoreWindows).toBe(0);
+          if (
+            field === "all" &&
+            [
+              "rare OR common OR filler",
+              '"rare common"',
+              'common NOT "rare common"',
+            ].includes(q)
+          ) {
+            const allowed = (doc: number) => doc >= 100000 && doc % 7 === 0,
+              want = expected.filter((h) => allowed(h.doc));
+            const documentFilter = {
+              prepare: async (ids: Uint32Array) => {
+                const lo = ids[0],
+                  hi = ids.at(-1)!;
+                await Promise.resolve();
+                return (doc: number) => doc >= lo && doc <= hi && allowed(doc);
+              },
+            };
+            for (const exactTotal of [false, true]) {
+              const filtered = await index.search(
+                q,
+                new Reader(root, objects.source),
+                { ...options, documentFilter, exactTotal },
+              );
+              expect(
+                filtered.results.map((h) => h.id),
+                q + " late metadata windows",
+              ).toEqual(want.slice(0, 7).map((h) => h.id));
+              if (exactTotal) expect(filtered.total).toBe(want.length);
+              const last = filtered.results.at(-1);
+              if (last) {
+                const after = await index.search(
+                  q,
+                  new Reader(root, objects.source),
+                  {
+                    ...options,
+                    documentFilter,
+                    exactTotal,
+                    after: { doc: last.doc, score: last.score },
+                  },
+                );
+                expect(after.results.map((h) => h.id)).toEqual(
+                  want.slice(7, 14).map((h) => h.id),
+                );
+              }
+            }
+          }
           lazy += r.stats.lazyScoreWindows;
           rejected += r.stats.partialScoreRejected;
           skipped += r.stats.scoreBlocksFetched - r.stats.scoreBlocksDecoded;

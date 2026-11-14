@@ -211,3 +211,17 @@ benchmark controls while adoption is evaluated. The old serving formats are not
 accepted by the replacement. Historical commands and architecture are preserved
 in the Git history and the existing `bench` reports; new build/search/dev/deploy
 commands use the replacement engine.
+
+## Filtered replacement serving
+
+The replacement supports generic typed metadata filters before top-K selection,
+including exact totals and filtered search-after. Use `yarn columnar:metadata` to
+build aligned metadata columns, then `yarn prepare-deploy` to generate a complete
+Worker entry and configuration locally. Pass `--membership DIR --metadata DIR`
+to preparation, bundling and deployment so the complete-pair planner and metadata
+filter source are included. Direct API consumers can instead supply a batched
+`Options.documentFilter` provider over their existing internal-ID-aligned data.
+
+See [metadata filters and deployment](bench/METADATA-FILTERS.md) for the request
+contract, commands, 1M validation results, publication checks and remaining
+Casework/full-corpus integration work. Preparation does not deploy or upload.

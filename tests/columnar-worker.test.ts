@@ -1,3 +1,6 @@
+import { gunzipSync } from "node:zlib";
+import { view, refAt } from "../src/columnar/format.js";
+import { buildMetadata } from "../scripts/build-columnar-metadata.js";
 import { ColumnarIndex } from "../src/columnar/search.js";
 import { Reader } from "../src/columnar/storage.js";
 import { OfflineObjects } from "../src/columnar/offline.js";
@@ -127,6 +130,30 @@ it.each(["bundled", "metadata", "absent", "boolean"])(
         membershipArgument =
           ",undefined,undefined,undefined,undefined,undefined,{router:new PairRouter(new Uint8Array(routerBytes)),N:0,M:0}";
       }
+      const metadataManifest = await buildMetadata(
+        root,
+        { i: "number" },
+        (async function* () {
+          const files = new OfflineObjects(dir + "/index", root);
+          try {
+            const table = view(await files.read(root.documents[0]));
+            for (let doc = 0; doc < 600; doc++)
+              yield {
+                doc,
+                metadata: JSON.parse(
+                  gunzipSync(
+                    await files.read(refAt(table, doc * 36)),
+                  ).toString(),
+                ).metadata,
+              };
+          } finally {
+            await files.close();
+          }
+        })(),
+        dir + "/metadata",
+        128,
+      );
+      await writeFile(dir + "/metadata.json", JSON.stringify(metadataManifest));
       const crc = new Map(
         root.objects.map((o) => [
           o.name,
@@ -139,7 +166,7 @@ it.each(["bundled", "metadata", "absent", "boolean"])(
       }
       await writeFile(
         dir + "/entry.ts",
-        `import root from './index/root.json';import {createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};${membershipEntry}export default createColumnarWorker(root${membershipArgument});`,
+        `import root from './index/root.json';import metadataManifest from './metadata.json';import {createColumnarWorker}from ${JSON.stringify(resolve("src/columnar/worker.ts"))};${membershipEntry}export default createColumnarWorker(root${membershipArgument || ",undefined,undefined,undefined,undefined,undefined,undefined"},metadataManifest);`,
       );
       await writeFile(
         dir + "/wrangler.json",
@@ -196,6 +223,20 @@ it.each(["bundled", "metadata", "absent", "boolean"])(
           membershipPacket,
           { customMetadata: { generation: pairGeneration } },
         );
+      for (const b of metadataManifest.blocks)
+        for (const c of Object.values(b.columns))
+          await bucket.put(
+            c.key,
+            await readFile(
+              dir + "/metadata/objects/" + c.key.split("/")[0] + ".bin",
+            ),
+            {
+              customMetadata: {
+                generation: c.key.split("/")[0],
+                sha256: c.key.split("/")[0],
+              },
+            },
+          );
       const call = async (body: unknown, auth = true) => {
         const r = await mf!.dispatchFetch("http://test/search", {
           method: "POST",
@@ -215,6 +256,66 @@ it.each(["bundled", "metadata", "absent", "boolean"])(
       expect(first.status).toBe(200);
       expect(first.body.results).toHaveLength(20);
       expect(first.body.total).toBe(400);
+      const filtered = await call({
+        q: '"clear and convincing evidence"',
+        exactTotal: true,
+        filter: { field: "i", op: "gte", value: 590 },
+      });
+      expect(filtered.status).toBe(200);
+      expect(filtered.body.total).toBe(7);
+      expect(filtered.body.results.every((h: any) => h.metadata.i >= 590)).toBe(
+        true,
+      );
+      expect(filtered.body.diagnostics.metadataFilterRejected).toBeGreaterThan(
+        0,
+      );
+      expect(filtered.body.metadataGeneration).toBe(
+        metadataManifest.generation,
+      );
+      const lastFiltered = filtered.body.results.at(-1),
+        filteredCursor = { doc: lastFiltered.doc, score: lastFiltered.score };
+      expect(
+        (
+          await call({
+            q: '"clear and convincing evidence"',
+            filter: { field: "i", op: "gte", value: 590 },
+            after: filteredCursor,
+            generation: root.generation,
+            metadataGeneration: "wrong",
+          })
+        ).status,
+      ).toBe(409);
+      expect(
+        (
+          await call({
+            q: '"clear and convincing evidence"',
+            filter: { field: "i", op: "gte", value: 590 },
+            after: filteredCursor,
+            generation: root.generation,
+            metadataGeneration: metadataManifest.generation,
+          })
+        ).body.results,
+      ).toHaveLength(0);
+      const excluded = await call({
+        q: "clear",
+        filter: { field: "i", op: "gt", value: 1000 },
+        exactTotal: true,
+      });
+      expect(excluded.body.total).toBe(0);
+      expect(excluded.body.diagnostics.scoreBlocksFetched).toBe(0);
+      const get = await mf!.dispatchFetch(
+        "http://test/search?q=clear&filter=" +
+          encodeURIComponent(
+            JSON.stringify({ field: "i", op: "gte", value: 590 }),
+          ),
+      );
+      expect(get.status).toBe(200);
+      expect(((await get.json()) as any).results).toHaveLength(10);
+      const badFilter = await call({
+        q: "clear",
+        filter: { field: "unknown", op: "eq", value: 1 },
+      });
+      expect(badFilter.status).toBe(400);
       const negative = await call({
         q: 'clear AND NOT "clear and"',
         exactTotal: true,

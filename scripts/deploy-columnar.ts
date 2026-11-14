@@ -16,6 +16,18 @@ import { benchmarkToken } from "../bench/columnar/token.js";
 import { gzip } from "node:zlib";
 import { promisify } from "node:util";
 import { request as httpsRequest, Agent } from "node:https";
+import {
+  loadServingAssets,
+  servingOptions,
+  servingImports,
+  servingArguments,
+  copyServingExtras,
+  prepareServing,
+  servingRoot,
+  verifyDocumentPublication,
+  bundleServing,
+  matchesServingHealth,
+} from "./columnar-serving.js";
 const uploadConcurrency = Number(process.env.CWS_UPLOAD_CONCURRENCY ?? 8);
 if (
   !Number.isInteger(uploadConcurrency) ||
@@ -95,6 +107,26 @@ if (!out || !/^[a-z0-9-]{1,48}$/.test(name ?? ""))
   );
 if (!name.startsWith("work-search-cws-"))
   throw Error("Benchmark Worker name must begin work-search-cws-");
+if (process.argv.includes("--prepare-only")) {
+  console.log(
+    JSON.stringify(
+      await prepareServing(
+        resolve(out),
+        resolve(`work/columnar-deploy/${name}-prepared`),
+        name,
+        servingOptions(),
+      ),
+      null,
+      2,
+    ),
+  );
+  process.exit(0);
+}
+// Finish and size-check the actual Worker before credentials or remote writes.
+const prepared = resolve(`work/columnar-deploy/${name}-prepared`);
+await prepareServing(resolve(out), prepared, name, servingOptions());
+await bundleServing(prepared);
+const serving = await loadServingAssets(out, servingOptions());
 const probeAt = process.argv.indexOf("--first-search"),
   probeContract =
     probeAt === -1
@@ -129,7 +161,8 @@ await rm(sourceDir, { recursive: true, force: true });
 await mkdir(sourceDir, { recursive: true });
 for (const dir of ["columnar", "query", "format", "storage"])
   await cp(`src/${dir}`, `${sourceDir}/src/${dir}`, { recursive: true });
-await writeFile(sourceDir + "/root.json", JSON.stringify(root));
+await copyServingExtras(serving, sourceDir);
+await writeFile(sourceDir + "/root.json", JSON.stringify(servingRoot(root)));
 if (root.directory) {
   const data = await readFile(out + "/directory.bin");
   if (
@@ -210,14 +243,12 @@ if (process.argv.includes("--deploy-only")) {
         if (
           h.status !== 200 ||
           Number(h.headers["content-length"]) !== object.size ||
-          h.headers["x-sha256"] !== object.sha256 ||
-          (!object.checksums && !h.headers["x-page-crc32"])
+          h.headers["x-sha256"] !== object.sha256
         )
           throw Error("Unpublished immutable object " + object.name);
       }
     }),
   );
-  uploadAgent.destroy();
 }
 if (!process.argv.includes("--deploy-only")) {
   const objects = [
@@ -246,8 +277,7 @@ if (!process.argv.includes("--deploy-only")) {
             if (head.status === 200) {
               if (
                 Number(head.headers["content-length"]) !== object.size ||
-                head.headers["x-sha256"] !== object.sha256 ||
-                (!object.checksums && !head.headers["x-page-crc32"])
+                head.headers["x-sha256"] !== object.sha256
               )
                 throw Error("Immutable upload mismatch");
               break;
@@ -293,8 +323,7 @@ if (!process.argv.includes("--deploy-only")) {
           if (
             verified.status !== 200 ||
             Number(verified.headers["content-length"]) !== object.size ||
-            verified.headers["x-sha256"] !== object.sha256 ||
-            (!object.checksums && !verified.headers["x-page-crc32"])
+            verified.headers["x-sha256"] !== object.sha256
           )
             throw Error("Cannot reclaim unverified object " + object.name);
           await appendFile(
@@ -319,8 +348,58 @@ if (!process.argv.includes("--deploy-only")) {
       }
     }),
   );
-  uploadAgent.destroy();
 }
+// Complete pair packets, common-word lists and metadata columns are separate
+// immutable objects. They are required by the generated serving entry, too.
+await verifyDocumentPublication(
+  serving.documents,
+  (key) => headObject(`${url}/${key}`, token),
+  uploadConcurrency,
+);
+let auxiliaryNext = 0;
+await Promise.all(
+  Array.from({ length: uploadConcurrency }, async () => {
+    for (;;) {
+      const item = serving.auxiliary[auxiliaryNext++];
+      if (!item) return;
+      const data = await readFile(item.path);
+      if (data.length !== item.size)
+        throw Error("Auxiliary object size mismatch: " + item.key);
+      const sha256 = createHash("sha256").update(data).digest("hex"),
+        address = `${url}/${item.key}`;
+      if (
+        item.key.endsWith("/metadata.bin") &&
+        sha256 !== item.key.split("/")[0]
+      )
+        throw Error("Metadata digest mismatch");
+      const h = await headObject(address, token);
+      if (h.status === 200) {
+        if (
+          Number(h.headers["content-length"]) !== item.size ||
+          h.headers["x-sha256"] !== sha256
+        )
+          throw Error("Auxiliary immutable identity mismatch: " + item.key);
+        continue;
+      }
+      if (process.argv.includes("--deploy-only") || h.status !== 404)
+        throw Error("Unpublished auxiliary object: " + item.key);
+      const compressed = await compress(data, { level: 1 });
+      const result = await uploadObject(
+        address,
+        {
+          authorization: `Bearer ${token}`,
+          "content-length": String(compressed.length),
+          "x-sha256": sha256,
+          "x-raw-length": String(item.size),
+        },
+        compressed,
+      );
+      if (result.status < 200 || result.status >= 300)
+        throw Error("Auxiliary upload failed: " + result.status);
+    }
+  }),
+);
+uploadAgent.destroy();
 if (process.argv.includes("--publish-only")) {
   await writeFile(
     out + "/publication.json",
@@ -329,6 +408,9 @@ if (process.argv.includes("--publish-only")) {
         generation: root.generation,
         corpusHash: root.corpusHash,
         objects: root.objects.length,
+        auxiliaryObjects: serving.auxiliary.length,
+        pairGeneration: serving.membership?.router.metadata.generation,
+        metadataGeneration: serving.metadata?.generation,
         completedAt: new Date().toISOString(),
         immutableObjectsVerified: true,
       },
@@ -360,7 +442,7 @@ await writeFile(
   entry,
   packetBenchmark
     ? `${documentImport}import root from ${JSON.stringify(sourceDir + "/root.json")};import directory from ${JSON.stringify(sourceDir + "/directory.bin")};import {createPacketBenchmarkWorker} from ${JSON.stringify(sourceDir + "/bench/columnar/packet-worker.ts")};export default createPacketBenchmarkWorker(root as any,new Uint8Array(directory),${documentArgument});`
-    : `${documentImport}import root from ${JSON.stringify(sourceDir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(sourceDir + "/pairs-root.json")};` : ""}${heads ? `import heads from ${JSON.stringify(sourceDir + "/heads-root.json")};import data from ${JSON.stringify(sourceDir + "/heads.bin")};` : ""}${root.directory ? `import directory from ${JSON.stringify(sourceDir + "/directory.bin")};` : ""}import {createColumnarWorker} from ${JSON.stringify(sourceDir + "/src/columnar/worker.ts")};export default createColumnarWorker(root as any,${pairs ? "pairs as any" : "undefined"},${heads ? "{root:heads as any,data:new Uint8Array(data)}" : "undefined"},${root.directory ? "new Uint8Array(directory)" : "undefined"},${documentArgument});`,
+    : `${servingImports(serving, sourceDir)}${documentImport}import root from ${JSON.stringify(sourceDir + "/root.json")};${pairs ? `import pairs from ${JSON.stringify(sourceDir + "/pairs-root.json")};` : ""}${heads ? `import heads from ${JSON.stringify(sourceDir + "/heads-root.json")};import data from ${JSON.stringify(sourceDir + "/heads.bin")};` : ""}${root.directory ? `import directory from ${JSON.stringify(sourceDir + "/directory.bin")};` : ""}import {createColumnarWorker} from ${JSON.stringify(sourceDir + "/src/columnar/worker.ts")};export default createColumnarWorker(root as any,${pairs ? "pairs as any" : "undefined"},${heads ? "{root:heads as any,data:new Uint8Array(data)}" : "undefined"},${root.directory ? "new Uint8Array(directory)" : "undefined"},${documentArgument},${servingArguments(serving)});`,
 );
 await writeFile(
   config,
@@ -482,10 +564,13 @@ if (probeAt !== -1) {
 // Deployment acknowledgement can precede workers.dev route propagation.
 for (let attempt = 0; ; attempt++) {
   const healthy = await fetch(`https://${name}.phulin.workers.dev/health`)
-    .then(
-      async (r) =>
-        r.ok && ((await r.json()) as any).generation === root.generation,
-    )
+    .then(async (r) => {
+      if (!r.ok) return false;
+      const health = await r.json();
+      return packetBenchmark
+        ? (health as any).generation === root.generation
+        : matchesServingHealth(serving, health);
+    })
     .catch(() => false);
   if (healthy) break;
   if (attempt === 29) throw Error("Deployment health did not converge " + name);

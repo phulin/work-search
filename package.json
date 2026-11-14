@@ -42,7 +42,9 @@
     "bench:legacy:global:deploy-demo": "tsx scripts/deploy-global.ts",
     "bench:legacy:global:build-pairs": "tsx scripts/build-pair-index.ts",
     "bench:legacy:global:build-pair-costs": "tsx scripts/build-pair-costs.ts",
-    "bench:legacy:global:refine-bounds": "tsx scripts/refine-global-bounds.ts"
+    "bench:legacy:global:refine-bounds": "tsx scripts/refine-global-bounds.ts",
+    "prepare-deploy": "node --import tsx scripts/prepare-columnar-deploy.ts",
+    "columnar:metadata": "node --import tsx scripts/build-columnar-metadata.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261110.1",

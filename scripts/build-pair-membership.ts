@@ -45,14 +45,16 @@ const root: Root = JSON.parse(await readFile(input + "/root.json", "utf8")),
   target = Number(process.env.CWS_PAIR_PACKET_BYTES ?? 131072),
   contextLimit = Number(process.env.CWS_PAIR_CONTEXT_BYTES ?? 8192);
 if (
-  root.count !== 1000000 ||
+  !Number.isSafeInteger(root.count) ||
+  root.count < 1 ||
+  root.count > 0x7fffffff ||
   !Number.isSafeInteger(target) ||
   target < 16384 ||
   !Number.isSafeInteger(contextLimit) ||
   contextLimit < 0
 )
   throw Error(
-    "Experiments require the existing 1M generation and valid packet/context budgets",
+    "Pair construction requires a valid generation and packet/context budgets",
   );
 await mkdir(out, { recursive: true });
 await mkdir(out + "/scratch", { recursive: true });
@@ -822,7 +824,7 @@ const presenceCounts = await readFile(out + "/presence-counts.bin"),
   pv = view(presenceCounts),
   presenceEntries = [];
 await mkdir(out + "/presence", { recursive: true });
-for (let rank = 0; rank < 200; rank++) {
+for (let rank = 0; rank < commonWords.length; rank++) {
   const read = async (field: number) => {
       try {
         const bytes = await readFile(

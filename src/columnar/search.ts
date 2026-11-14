@@ -1,3 +1,4 @@
+import { filterDocuments, type DocumentFilter } from "./document-filter.js";
 import { scoreLookahead } from "./score-lookahead.js";
 import { leaves } from "./candidate-layout.js";
 import { priceDocuments } from "./continuation.js";
@@ -65,6 +66,7 @@ import {
   booleanMembershipAnchor as membershipAnchor,
 } from "./boolean-membership.js";
 export interface Options {
+  documentFilter?: DocumentFilter;
   mode?: "and" | "or";
   limit?: number;
   field?: "all" | "body" | "title";
@@ -271,7 +273,7 @@ export class ColumnarIndex {
     options: Options = {},
     pairs?: { root: PairRoot; reader: Reader },
   ) {
-    if (this.heads && !this.directory) {
+    if (this.heads && !this.directory && !options.documentFilter) {
       const ast = parse(q, options.mode, tokenizerFor(this.root.analysis)),
         started = performance.now();
       if (ast.kind === "term") {
@@ -690,7 +692,7 @@ export class ColumnarIndex {
       number,
       { cells: Uint8Array; mask: Uint8Array | undefined }
     >();
-    const candidateWindow = (band: number) => {
+    const candidateWindow = async (band: number) => {
       const old = candidateWindows.get(band);
       if (old) return old;
       const lo = band * BAND,
@@ -748,12 +750,31 @@ export class ColumnarIndex {
         }
       }
 
+      if (options.documentFilter) {
+        const possible = new Uint32Array(size);
+        let n = 0;
+        for (let d = 0; d < size; d++)
+          if (!candidateMask || candidateMask[d]) possible[n++] = lo + d;
+        const selected = await filterDocuments(
+          possible.subarray(0, n),
+          options.documentFilter,
+          reader.stats,
+        );
+        candidateMask = new Uint8Array(size);
+        cells.fill(0);
+        for (const doc of selected) {
+          candidateMask[doc - lo] = 1;
+          cells[(doc - lo) >>> 7] = 1;
+        }
+      }
       const value = { cells, mask: candidateMask };
       candidateWindows.set(band, value);
       return value;
     };
     const candidateLookahead =
-      positions && scoring.length > 0 && !!(loadedMembership || pairCandidates);
+      (positions || !!options.documentFilter) &&
+      scoring.length > 0 &&
+      !!(loadedMembership || pairCandidates || options.documentFilter);
     let lookaheadRefs: Ref[][] = [],
       prefetchedThrough = 0;
     for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
@@ -803,7 +824,7 @@ export class ColumnarIndex {
           );
         }
         if (candidateLookahead)
-          for (const next of nextBands) candidateWindow(next);
+          await Promise.all(nextBands.map((next) => candidateWindow(next)));
         const groups = window.map((bs, i) => {
           if (
             coarse(ast, (name) => (bs[names.indexOf(name)].length ? 2 : 0)) ===
@@ -844,7 +865,7 @@ export class ColumnarIndex {
           // Use the same current verified threshold/cell proof as execution.
           // Later stronger thresholds can make this speculative, never required.
           const cells = candidateLookahead
-            ? candidateWindow(bands[bandIndex + i]).cells
+            ? candidateWindows.get(bands[bandIndex + i])!.cells
             : new Uint8Array(
                 Math.ceil(Math.min(BAND, this.root.count - first) / 128),
               ).fill(1);
@@ -952,12 +973,17 @@ export class ColumnarIndex {
         candidateWindows.delete(band);
         continue;
       }
-      const { cells, mask: candidateMask } = candidateWindow(band);
+      const { cells, mask: candidateMask } = await candidateWindow(band);
       candidateWindows.delete(band);
       const localBounds = cellBounds(blocks, lo, size, field, boost);
       if (!options.exactTotal && heap.threshold)
         pruneCells(cells, localBounds, scoring, lo, heap.threshold);
-      if (loadedMembership || pairCandidates || heap.threshold) {
+      if (
+        loadedMembership ||
+        pairCandidates ||
+        options.documentFilter ||
+        heap.threshold
+      ) {
         const filtered = blocksInCells(blocks, cells, lo);
         for (let j = 0; j < blocks.length; j++) blocks[j] = filtered[j];
       }

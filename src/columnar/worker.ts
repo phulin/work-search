@@ -8,6 +8,7 @@ import { QueryResourceError } from "../query/evaluate.js";
 import type { Root, PairRoot } from "./format.js";
 import { Heads, type HeadRoot } from "./heads.js";
 import type { MembershipSettings } from "./membership-anchor.js";
+import { MetadataIndex, type MetadataManifest } from "./metadata-filter.js";
 interface Env {
   INDEX: R2Bucket;
   INTERNAL_TOKEN?: string;
@@ -27,7 +28,11 @@ export function createColumnarWorker(
     documents?: DocumentDirectory;
   },
   membership?: MembershipSettings,
+  metadataManifest?: MetadataManifest,
 ) {
+  const metadata = metadataManifest
+    ? new MetadataIndex(metadataManifest, root)
+    : undefined;
   if (pairs && pairs.baseGeneration !== root.generation)
     throw Error("Pair generation mismatch");
   if (
@@ -76,6 +81,8 @@ export function createColumnarWorker(
           documents: root.count,
           corpusHash: root.corpusHash,
           directoryBytes: root.directory?.bytes,
+          metadataFields: metadata ? Object.keys(metadata.manifest.schema) : [],
+          metadataGeneration: metadata?.manifest.generation,
           ...(membership
             ? {
                 pairGeneration: membership.router.metadata.generation,
@@ -127,6 +134,16 @@ export function createColumnarWorker(
         if (input.after && input.generation !== root.generation)
           return Response.json(
             { error: "Search generation changed; restart pagination" },
+            { status: 409 },
+          );
+        if (
+          input.after &&
+          input.filter !== undefined &&
+          metadata &&
+          input.metadataGeneration !== metadata.manifest.generation
+        )
+          return Response.json(
+            { error: "Metadata generation changed; restart pagination" },
             { status: 409 },
           );
         const options: Options = {
@@ -226,6 +243,18 @@ export function createColumnarWorker(
                 sharedBudget,
               )
             : undefined;
+          if (input.filter !== undefined) {
+            if (!metadata)
+              throw new QuerySyntaxError(
+                "No filterable document metadata configured",
+              );
+            options.documentFilter = metadata.filter(
+              typeof input.filter === "string"
+                ? JSON.parse(input.filter)
+                : input.filter,
+              reader,
+            );
+          }
           const result = await index.search(
             input.q,
             reader,
@@ -262,6 +291,9 @@ export function createColumnarWorker(
           {
             results: result.results,
             generation: result.generation,
+            ...(metadata
+              ? { metadataGeneration: metadata.manifest.generation }
+              : {}),
             ...(options.exactTotal ? { total: result.total } : {}),
             ...(authorized
               ? {

@@ -1,3 +1,4 @@
+import { filteredDocumentBatches } from "./document-filter.js";
 import {
   candidateDocuments,
   positionalMatcher,
@@ -658,7 +659,21 @@ export async function executePackets(
           positionBytes,
       );
     };
-    for (const group of packageBatches(selected(), packageSize)) {
+    // Prepare metadata before opening packages. Preserve bounded package batches
+    // by collecting only a small filtered prefix at a time.
+    async function* groups() {
+      if (!options.documentFilter) {
+        yield* packageBatches(selected(), packageSize);
+        return;
+      }
+      for await (const docs of filteredDocumentBatches(
+        selected(),
+        options.documentFilter,
+        reader.stats,
+      ))
+        yield* packageBatches(docs, packageSize);
+    }
+    for await (const group of groups()) {
       const beforeIO = reader.stats.requests + reader.stats.sharedGets;
       const docs = group.items,
         batch: (DocumentPackage | undefined)[] = await Promise.all(
@@ -829,44 +844,50 @@ export async function executePackets(
         field,
         positions ? direct : undefined,
       );
-    for (const doc of candidates) {
-      if (packages?.membership && !packages.membership.has(doc)) continue;
-      if (packages?.presenceFilter && !packages.presenceFilter(doc)) continue;
-      reader.stats.candidates++;
-      let score = 0,
-        body = false;
-      for (let j = 0; j < names.length; j++)
-        if (positive.has(names[j])) {
-          const c = cols[j],
-            row = lower(c.docs, doc);
-          if (c.docs[row] === doc) {
-            score +=
-              (field !== "title" ? c.b[row] : 0) +
-              (field !== "body" ? boost * c.t[row] : 0);
-            body ||= c.body[row] > 0;
+    for await (const filtered of filteredDocumentBatches(
+      candidates,
+      options.documentFilter,
+      reader.stats,
+    )) {
+      for (const doc of filtered) {
+        if (packages?.membership && !packages.membership.has(doc)) continue;
+        if (packages?.presenceFilter && !packages.presenceFilter(doc)) continue;
+        reader.stats.candidates++;
+        let score = 0,
+          body = false;
+        for (let j = 0; j < names.length; j++)
+          if (positive.has(names[j])) {
+            const c = cols[j],
+              row = lower(c.docs, doc);
+            if (c.docs[row] === doc) {
+              score +=
+                (field !== "title" ? c.b[row] : 0) +
+                (field !== "body" ? boost * c.t[row] : 0);
+              body ||= c.body[row] > 0;
+            }
           }
-        }
-      if (!admitted(doc, score) || !match(doc)) continue;
-      total++;
-      if (!heap.accepts(doc, score)) continue;
-      let first: number | undefined;
-      if (positions && field !== "title") first = firstSpan(match, doc);
-      heap.add({
-        doc,
-        score,
-        row: doc % 4096,
-        first,
-        titleOnly:
-          field === "title" ||
-          (field === "all" && ast.kind === "phrase" && first === undefined) ||
-          (positive.size > 0 && !body),
-      });
-      if (
-        !options.exactTotal &&
-        positive.size === 0 &&
-        heap.values.length === limit
-      )
-        break;
+        if (!admitted(doc, score) || !match(doc)) continue;
+        total++;
+        if (!heap.accepts(doc, score)) continue;
+        let first: number | undefined;
+        if (positions && field !== "title") first = firstSpan(match, doc);
+        heap.add({
+          doc,
+          score,
+          row: doc % 4096,
+          first,
+          titleOnly:
+            field === "title" ||
+            (field === "all" && ast.kind === "phrase" && first === undefined) ||
+            (positive.size > 0 && !body),
+        });
+        if (
+          !options.exactTotal &&
+          positive.size === 0 &&
+          heap.values.length === limit
+        )
+          break;
+      }
     }
   }
   const ranked = heap.values.sort((a, b) => b.score - a.score || a.doc - b.doc),

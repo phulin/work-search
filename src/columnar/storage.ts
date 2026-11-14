@@ -143,6 +143,11 @@ export class Reader {
   sharedWrites = new Set<Promise<void>>();
   sharedWriteBytes = 0;
   stats = {
+    metadataFilterIOWaves: 0,
+    metadataFilterCandidates: 0,
+    metadataFilterRejected: 0,
+    metadataFilterBlocks: 0,
+    metadataFilterBytes: 0,
     inlinePostingBytes: 0,
     termDirectoryRanges: 0,
     termDirectoryBytes: 0,

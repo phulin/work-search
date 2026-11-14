@@ -1,3 +1,10 @@
+import {
+  loadServingAssets,
+  servingOptions,
+  localServingSource,
+} from "./columnar-serving.js";
+import { MetadataIndex } from "../src/columnar/metadata-filter.js";
+import { LocalObjects } from "../bench/columnar/local-storage.js";
 import { readFile } from "node:fs/promises";
 import { ColumnarIndex } from "../src/columnar/search.js";
 import { Reader, Memory } from "../src/columnar/storage.js";
@@ -9,7 +16,8 @@ import { benchmarkToken } from "../bench/columnar/token.js";
 const [dir, q, opts] = process.argv.slice(2);
 if (!dir || !q)
   throw Error("Usage: yarn search-local INDEX_DIR QUERY [OPTIONS_JSON]");
-const root = JSON.parse(await readFile(dir + "/root.json", "utf8")),
+const assets = await loadServingAssets(dir, servingOptions()),
+  root = assets.root,
   pairs = await readFile(dir + "/pairs-root.json", "utf8").then(
     JSON.parse,
     () => undefined,
@@ -30,27 +38,43 @@ const root = JSON.parse(await readFile(dir + "/root.json", "utf8")),
     root.documentPackages?.locators
       ? new DocumentDirectory(await readFile(dir + "/documents.bin"))
       : undefined,
+    assets.membership,
   ),
-  remote = process.env.CWS_REMOTE_URL
-    ? { url: process.env.CWS_REMOTE_URL, token: await benchmarkToken() }
-    : undefined,
+  remote =
+    !process.env.CWS_LOCAL_DATA && process.env.CWS_REMOTE_URL
+      ? { url: process.env.CWS_REMOTE_URL, token: await benchmarkToken() }
+      : undefined,
   objects = new OfflineObjects(dir, root, remote),
   pairObjects = pairs
     ? new OfflineObjects(dir + "/pairs", pairs, remote)
     : undefined,
   memory = new Memory();
-const source = (o: OfflineObjects) => o.source;
+const source = localServingSource(
+  process.env.CWS_LOCAL_DATA
+    ? new LocalObjects(root, process.env.CWS_LOCAL_DATA)
+    : objects.source,
+  assets,
+);
+const reader = new Reader(root, source, memory),
+  options = opts ? JSON.parse(opts) : {};
+if (options.filter !== undefined) {
+  if (!assets.metadata) throw Error("No filterable metadata configured");
+  options.documentFilter = new MetadataIndex(assets.metadata, root).filter(
+    options.filter,
+    reader,
+  );
+}
 try {
   console.log(
     JSON.stringify(
       await index.search(
         q,
-        new Reader(root, source(objects), memory),
-        opts ? JSON.parse(opts) : {},
+        reader,
+        options,
         pairs && pairObjects
           ? {
               root: pairs,
-              reader: new Reader(pairs, source(pairObjects), memory),
+              reader: new Reader(pairs, pairObjects.source, memory),
             }
           : undefined,
       ),

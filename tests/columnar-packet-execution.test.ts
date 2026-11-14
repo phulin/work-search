@@ -385,6 +385,94 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
           }
         }
       }
+    // Independent reference: enumerate the unfiltered ranking completely, then
+    // apply metadata to that full list. Never filter an already truncated top-K.
+    for (const q of [
+      "alpha OR beta",
+      "rare alpha",
+      '"alpha beta"',
+      'NOT "alpha beta"',
+      'alpha AND NOT "rare alpha"',
+    ]) {
+      const all: { doc: number; id: string; score: number }[] = [];
+      let after: Options["after"];
+      for (;;) {
+        const page = await control.search(
+          q,
+          new Reader(before, original.source),
+          { limit: 100, after, metadata: false, snippets: false },
+        );
+        all.push(...page.results);
+        if (page.results.length < 100) break;
+        const last = page.results.at(-1)!;
+        after = { doc: last.doc, score: last.score };
+      }
+      const allowed = (doc: number) => doc > 100 && doc % 7 === 2;
+      const expected = all.filter((h) => allowed(h.doc)),
+        ast = parse(q),
+        terms = await directory.lookup(queryTerms(ast));
+      const documentFilter = { prepare: async () => allowed };
+      for (const strategy of [
+        "blocks",
+        "complete-terms",
+        "documents",
+      ] as const) {
+        const run = async (opts: Options) =>
+          strategy === "blocks"
+            ? control.search(q, new Reader(before, original!.source), opts)
+            : executePackets(
+                ast,
+                terms,
+                root,
+                new Reader(root, objects!.source),
+                opts,
+                candidate.packages,
+                strategy === "documents"
+                  ? {
+                      ...packetPlan(
+                        ast,
+                        terms,
+                        root,
+                        opts,
+                        candidate.packages,
+                        "documents",
+                      ),
+                      kind: "documents",
+                      membershipAnchor: membership,
+                    }
+                  : strategy,
+              );
+        for (const exactTotal of [false, true]) {
+          const options: Options = {
+            limit: 7,
+            documentFilter,
+            exactTotal,
+            metadata: false,
+            snippets: false,
+          };
+          const got = (await run(options))!;
+          expect(
+            got.results.map((h) => h.id),
+            q + strategy,
+          ).toEqual(expected.slice(0, 7).map((h) => h.id));
+          if (exactTotal) expect(got.total).toBe(expected.length);
+          got.results.forEach((h, i) =>
+            expect(h.score).toBeCloseTo(expected[i].score, 11),
+          );
+          const last = got.results.at(-1);
+          if (last) {
+            const next = (await run({
+              ...options,
+              after: { doc: last.doc, score: last.score },
+            }))!;
+            expect(next.results.map((h) => h.id)).toEqual(
+              expected.slice(7, 14).map((h) => h.id),
+            );
+          }
+          expect(got.diagnostics.metadataFilterRejected).toBeGreaterThan(0);
+        }
+      }
+    }
     expect(executors.has("complete-terms")).toBe(true);
     expect(executors.has("documents")).toBe(true);
     const a = ids.get("alpha")!,

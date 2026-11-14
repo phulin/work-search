@@ -41,6 +41,7 @@ export class Heads {
     )
       return;
     if (
+      options.documentFilter ||
       options.after ||
       options.exactTotal ||
       (options.limit ?? 20) > this.root.depth

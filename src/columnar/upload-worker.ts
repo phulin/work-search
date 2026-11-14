@@ -46,7 +46,11 @@ export default {
       await env.INDEX.delete(keys);
       return Response.json({ deleted: keys.length });
     }
-    if (!/^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64})\.bin$/.test(key))
+    if (
+      !/^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+-\d+-[a-f0-9]+-[a-f0-9]+|presence-\d+|metadata)\.bin$/.test(
+        key,
+      )
+    )
       return new Response("Invalid key", { status: 400 });
     const generation = key.split("/")[0],
       old = await env.INDEX.head(key);
