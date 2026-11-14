@@ -1,3 +1,5 @@
+import { positionSpan } from "./positions.js";
+import { scoreParameters, type ScoreParameters } from "./scoring.js";
 import { filteredDocumentBatches } from "./document-filter.js";
 import {
   candidateDocuments,
@@ -60,10 +62,15 @@ interface Columns {
     data: Uint8Array | ((ref: Ref) => Uint8Array),
   ): Uint32Array;
 }
-function columns(raw: Uint8Array, id: number, positionBase: Ref): Columns {
-  if (view(raw).getUint32(0, true) === 0x33465443)
-    return decodeTermPacket(Uint8Array.from(raw), id, positionBase);
-  const s = decodeScores(raw),
+function columns(
+  raw: Uint8Array,
+  id: number,
+  positionBase: Ref,
+  parameters: ScoreParameters,
+): Columns {
+  if (view(raw).getUint32(0, true) === 0x34465443)
+    return decodeTermPacket(Uint8Array.from(raw), id, positionBase, parameters);
+  const s = decodeScores(raw, parameters),
     b = new Float64Array(s.docs.length),
     t = new Float64Array(s.docs.length);
   for (let i = 0; i < b.length; i++) {
@@ -78,21 +85,7 @@ function columns(raw: Uint8Array, id: number, positionBase: Ref): Columns {
     t,
     position(row, field, data) {
       if (typeof data === "function") data = data(positionBase);
-      const v = view(data),
-        n = v.getUint32(0, true),
-        base = 4 + (n + 1) * 4;
-      if (n !== s.docs.length || row < 0 || row >= n)
-        throw Error("Invalid leaf position row");
-      const from = base + v.getUint32(4 + row * 4, true),
-        end = base + v.getUint32(8 + row * 4, true),
-        bn = v.getUint32(from, true);
-      if (from + 4 + bn > end || end > data.length)
-        throw Error("Invalid leaf position span");
-      return unpack(
-        field
-          ? data.subarray(from + 4 + bn, end)
-          : data.subarray(from + 4, from + 4 + bn),
-      );
+      return positionSpan(data, row, field, field ? s.title[row] : s.body[row]);
     },
   };
 }
@@ -113,8 +106,9 @@ export async function readAnchorDocuments(
   terms: Map<string, DirectoryTerm>,
   reader: Reader,
   field: "all" | "body" | "title",
+  root: Root,
 ) {
-  const { cols } = await readTerms(names, terms, reader, new Set());
+  const { cols } = await readTerms(names, terms, reader, new Set(), root);
   reader.stats.postings += cols.reduce((n, c) => n + c.docs.length, 0);
   const candidates = new Uint32Array(cols[0].docs.length);
   let n = 0;
@@ -138,13 +132,15 @@ function completeColumns(
   term: DirectoryTerm,
   raw: Uint8Array[],
   reader: Reader,
+  root: Root,
 ): Columns {
+  const parameters = scoreParameters(term.df, root);
   const refs = frequencyRefs(term),
     parts = raw.map((data, i) =>
       reader.decoded(
         refs[i],
         data,
-        (bytes) => columns(bytes, term.id, term.positional),
+        (bytes) => columns(bytes, term.id, term.positional, parameters),
         data.length + (term.df * 28) / refs.length,
         "packet:",
       ),
@@ -199,6 +195,7 @@ async function readTerms(
   terms: Map<string, DirectoryTerm>,
   reader: Reader,
   wantedPositions: Set<string>,
+  root: Root,
 ) {
   const refs: Ref[] = [],
     frequencyData = new Map<string, number[]>(),
@@ -226,6 +223,7 @@ async function readTerms(
         terms.get(name)!,
         frequencyData.get(name)!.map((i) => data[i]),
         reader,
+        root,
       ),
     );
   return {
@@ -612,6 +610,7 @@ export async function executePackets(
         terms,
         reader,
         field,
+        root,
       );
     }
     const selected = function* () {
@@ -810,6 +809,7 @@ export async function executePackets(
       terms,
       reader,
       wantedPositions,
+      root,
     );
     const lists = new Map<string, DecodedPostings>(
         names.map((n, i) => [

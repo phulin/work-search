@@ -1,3 +1,4 @@
+import { scoreParameters } from "../src/columnar/scoring.js";
 import { readFile, writeFile, open } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import { createHash } from "node:crypto";
@@ -70,7 +71,7 @@ try {
       const s = reader.decoded(
         branch.score,
         await reader.read(branch.score),
-        decodeScores,
+        (data) => decodeScores(data, scoreParameters(plan.df, root)),
       );
       for (let r = 0; r < s.docs.length; r++)
         for (let c = 0; c < configs.length; c++) {

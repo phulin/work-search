@@ -43,7 +43,7 @@ export async function* packageMetadata(
         v = view(packet);
       if (
         packet.length < 64 ||
-        v.getUint32(0, true) !== 0x32504443 ||
+        v.getUint32(0, true) !== 0x33504443 ||
         v.getUint32(4, true) !== doc
       )
         throw Error("Metadata source document identity mismatch");

@@ -17,7 +17,7 @@ import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import { Miniflare } from "miniflare";
 import "../scripts/workerd-runtime.js";
-import { buildColumnar } from "../bench/columnar/control/offline-build.js";
+import { buildColumnar } from "../bench/columnar/build-fixture.js";
 it.each(["bundled", "metadata", "absent", "boolean"])(
   "serves exact complete responses with %s checksum directories through workerd R2 and generation-scoped shared pages",
   async (integrity) => {
@@ -106,6 +106,8 @@ it.each(["bundled", "metadata", "absent", "boolean"])(
           [],
           [
             {
+              object: 0,
+              offset: 0,
               namespace: 0,
               bits: 0,
               prefix: 0,
@@ -218,11 +220,9 @@ it.each(["bundled", "metadata", "absent", "boolean"])(
           },
         );
       if (membershipPacket)
-        await bucket.put(
-          pairGeneration + "/pairs-0-0-0-0.bin",
-          membershipPacket,
-          { customMetadata: { generation: pairGeneration } },
-        );
+        await bucket.put(pairGeneration + "/pairs-0.bin", membershipPacket, {
+          customMetadata: { generation: pairGeneration },
+        });
       for (const b of metadataManifest.blocks)
         for (const c of Object.values(b.columns))
           await bucket.put(

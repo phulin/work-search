@@ -16,6 +16,8 @@ export interface PairRoutingMetadata {
   commonWords: { word: string; id: number; df: number }[];
 }
 export interface PairLeaf {
+  object: number;
+  offset: number;
   namespace: number;
   bits: number;
   prefix: number;
@@ -26,9 +28,9 @@ export interface PairLeaf {
 }
 export function pairObjectKey(
   generation: string,
-  leaf: Pick<PairLeaf, "namespace" | "bits" | "prefix" | "suffix">,
+  leaf: Pick<PairLeaf, "object" | "offset">,
 ) {
-  return `${generation}/pairs-${leaf.namespace}-${leaf.bits}-${leaf.prefix.toString(16)}-${(leaf.suffix ?? 0).toString(16)}.bin`;
+  return `${generation}/pairs-${leaf.object}.bin@${leaf.offset}`;
 }
 export function encodePairRouter(
   metadata: PairRoutingMetadata,
@@ -38,29 +40,23 @@ export function encodePairRouter(
 ) {
   const json = new TextEncoder().encode(JSON.stringify(metadata)),
     header = u32([
-      0x31525043,
+      0x32525043,
       json.length,
       nodes.length,
       leaves.length,
       common.length,
     ]),
     tree = new Uint8Array(nodes.length * 8),
-    table = new Uint8Array(leaves.length * 28),
+    table = new Uint8Array(leaves.length * 16),
     tv = view(tree),
     lv = view(table);
   nodes.forEach((node, i) =>
     node.forEach((n, j) => tv.setInt32(i * 8 + j * 4, n, true)),
   );
   leaves.forEach((leaf, i) =>
-    [
-      leaf.namespace,
-      leaf.bits,
-      leaf.prefix,
-      leaf.bytes,
-      leaf.crc32,
-      leaf.pairs,
-      leaf.suffix ?? 0,
-    ].forEach((n, j) => lv.setUint32(i * 28 + j * 4, n, true)),
+    [leaf.object, leaf.offset, leaf.bytes, leaf.pairs].forEach((n, j) =>
+      lv.setUint32(i * 16 + j * 4, n, true),
+    ),
   );
   return concat([header, json, tree, table, common]);
 }
@@ -75,14 +71,14 @@ export class PairRouter {
   private tailDf?: number;
   constructor(readonly bytes: Uint8Array) {
     const v = view(bytes);
-    if (bytes.length < 20 || v.getUint32(0, true) !== 0x31525043)
+    if (bytes.length < 20 || v.getUint32(0, true) !== 0x32525043)
       throw Error("Invalid pair router");
     const j = v.getUint32(4, true),
       n = v.getUint32(8, true),
       l = v.getUint32(12, true),
       c = v.getUint32(16, true),
       at = 20 + j;
-    if (at + n * 8 + l * 28 + c !== bytes.length)
+    if (at + n * 8 + l * 16 + c !== bytes.length)
       throw Error("Invalid pair router spans");
     this.metadata = JSON.parse(
       new TextDecoder().decode(bytes.subarray(20, at)),
@@ -90,8 +86,8 @@ export class PairRouter {
     if (this.metadata.roots.length !== this.metadata.namespaces.length + 1)
       throw Error("Invalid pair namespaces");
     this.nodes = view(bytes.subarray(at, at + n * 8));
-    this.leaves = view(bytes.subarray(at + n * 8, at + n * 8 + l * 28));
-    this.common = new PairMembershipPacket(bytes.subarray(at + n * 8 + l * 28));
+    this.leaves = view(bytes.subarray(at + n * 8, at + n * 8 + l * 16));
+    this.common = new PairMembershipPacket(bytes.subarray(at + n * 8 + l * 16));
     this.namespaces = new Map(
       this.metadata.namespaces.map((s, i) => [s, i + 1]),
     );
@@ -119,25 +115,20 @@ export class PairRouter {
       depth++;
     }
     if (node === NO_PAIR_PARTITION) return;
-    const at = (-node - 1) * 28;
-    if (at + 28 > this.leaves.byteLength)
+    const at = (-node - 1) * 16;
+    if (at + 16 > this.leaves.byteLength)
       throw Error("Invalid pair route leaf");
-    const leaf = {
-      namespace: this.leaves.getUint32(at, true),
-      bits: this.leaves.getUint32(at + 4, true),
-      prefix: this.leaves.getUint32(at + 8, true),
-      bytes: this.leaves.getUint32(at + 12, true),
-      crc32: this.leaves.getUint32(at + 16, true),
-      pairs: this.leaves.getUint32(at + 20, true),
-      suffix: this.leaves.getUint32(at + 24, true),
+    const leaf: PairLeaf = {
+      namespace: ns,
+      bits: depth,
+      prefix: depth === 0 ? 0 : depth < 32 ? h >>> (32 - depth) : h,
+      suffix: depth <= 32 ? 0 : depth < 64 ? h2 >>> (64 - depth) : h2,
+      object: this.leaves.getUint32(at, true),
+      offset: this.leaves.getUint32(at + 4, true),
+      bytes: this.leaves.getUint32(at + 8, true),
+      pairs: this.leaves.getUint32(at + 12, true),
+      crc32: 0,
     };
-    if (
-      leaf.namespace !== ns ||
-      leaf.bits !== depth ||
-      (depth === 0 ? 0 : depth < 32 ? h >>> (32 - depth) : h) !== leaf.prefix ||
-      (depth <= 32 ? 0 : depth < 64 ? h2 >>> (64 - depth) : h2) !== leaf.suffix
-    )
-      throw Error("Pair route identity mismatch");
     return leaf;
   }
   statistics(a: string, b: string) {
@@ -152,20 +143,26 @@ export class PairRouter {
       rank: v.getUint32(16, true) - 1,
     };
   }
-  /** Enumerate immutable packets for publication without a second dictionary. */
-  *objects() {
-    for (let at = 0; at < this.leaves.byteLength; at += 28) {
-      const leaf = {
-        namespace: this.leaves.getUint32(at, true),
-        bits: this.leaves.getUint32(at + 4, true),
-        prefix: this.leaves.getUint32(at + 8, true),
-        suffix: this.leaves.getUint32(at + 24, true),
-      };
+  /** Logical packet addresses, each reached by one directly routed range read. */
+  *packets() {
+    for (let at = 0; at < this.leaves.byteLength; at += 16)
       yield {
-        key: pairObjectKey(this.metadata.generation, leaf),
-        bytes: this.leaves.getUint32(at + 12, true),
+        object: this.leaves.getUint32(at, true),
+        offset: this.leaves.getUint32(at + 4, true),
+        bytes: this.leaves.getUint32(at + 8, true),
+        pairs: this.leaves.getUint32(at + 12, true),
       };
-    }
+  }
+  /** Physical publication inventory; shared containers appear only once. */
+  *objects() {
+    const objects = new Map<number, number>();
+    for (const p of this.packets())
+      objects.set(
+        p.object,
+        Math.max(objects.get(p.object) ?? 0, p.offset + p.bytes),
+      );
+    for (const [id, bytes] of objects)
+      yield { key: `${this.metadata.generation}/pairs-${id}.bin`, bytes };
   }
   /** Corpus-derived prior for pairs outside the ranked hot table. This is a
    * planning estimate, never a matching or pruning bound. No wire-format change. */

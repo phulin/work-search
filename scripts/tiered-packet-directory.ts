@@ -1,3 +1,4 @@
+import { packetRootProjector } from "./construction-packet-root.js";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { gzipSync, gunzipSync } from "node:zlib";
@@ -161,23 +162,23 @@ export async function tieredPacketDirectory(
   await pool(state.tieredTerms, async (job, i) => {
     if (job.output) return;
     const source = state.terms[job.source],
-      root: Root = {
-        ...original,
-        hot: {},
-        dictionaries: [],
-        documents: [],
-        objects: source.objects,
-        objectIds: source.objects.map(
-          (_: any, n: number) => job.source * OBJECT_GROUP + n,
-        ),
-      };
+      root = packetRootProjector(original)(source.fences);
     job.output = await call("/tiered-terms", `tiered-terms-${i}`, {
       root,
       blocks: source.blocks
         .slice(job.part * 8, (job.part + 1) * 8)
         .map((b: any) => b.ref),
       hot: state.hotSelection,
-      objectBase: (state.terms.length + i) * OBJECT_GROUP,
+      objectBase:
+        (Math.floor(
+          (original.objectIds ?? original.objects.map((_, i) => i)).reduce(
+            (a, b) => Math.max(a, b),
+            0,
+          ) / OBJECT_GROUP,
+        ) +
+          1 +
+          i) *
+        OBJECT_GROUP,
     });
     await save();
     if (i % 64 === 0)
@@ -225,7 +226,18 @@ export async function tieredPacketDirectory(
     }
     result.objects.forEach((o: any, n: number) => {
       objects.push(o);
-      objectIds.push((state.terms.length + i) * OBJECT_GROUP + n);
+      objectIds.push(
+        (Math.floor(
+          (original.objectIds ?? original.objects.map((_, i) => i)).reduce(
+            (a, b) => Math.max(a, b),
+            0,
+          ) / OBJECT_GROUP,
+        ) +
+          1 +
+          i) *
+          OBJECT_GROUP +
+          n,
+      );
     });
   }
   flush();

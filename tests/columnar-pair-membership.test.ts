@@ -46,6 +46,8 @@ it("compares optional membership work with the existing plan before reading, ret
         [],
         [
           {
+            object: 0,
+            offset: 0,
             namespace: 0,
             bits: 0,
             prefix: 0,
@@ -340,6 +342,8 @@ it("routes normalized strings without any term-ID lookup and treats an empty par
   const hash = pairHash(pairStringHash("rare"), pairStringHash("word")),
     bit = hash >>> 31,
     leaf = {
+      object: 0,
+      offset: 0,
       namespace: 0,
       bits: 1,
       prefix: bit,
@@ -366,7 +370,11 @@ it("routes normalized strings without any term-ID lookup and treats an empty par
       encodePairMembershipPacket([]),
     ),
   );
-  expect(router.route("rare", "word")).toEqual({ ...leaf, suffix: 0 });
+  expect(router.route("rare", "word")).toEqual({
+    ...leaf,
+    suffix: 0,
+    crc32: 0,
+  });
   const absent = Array.from({ length: 100 }, (_, i) => String(i)).find(
     (s) => pairHash(pairStringHash(s), pairStringHash("word")) >>> 31 !== bit,
   )!;
@@ -386,6 +394,8 @@ it("uses the secondary hash when the primary prefix is exhausted", () => {
       ((depth < 32 ? h : h2) >>> (depth < 32 ? 31 - depth : 63 - depth)) & 1
     ] = depth === 32 ? -1 : depth + 1;
   const leaf = {
+      object: 0,
+      offset: 0,
       namespace: 0,
       bits: 33,
       prefix: h,
@@ -411,7 +421,7 @@ it("uses the secondary hash when the primary prefix is exhausted", () => {
         encodePairMembershipPacket([]),
       ),
     );
-  expect(router.route(a, b)).toEqual(leaf);
+  expect(router.route(a, b)).toEqual({ ...leaf, crc32: 0 });
 });
 it("starts two unknown memberships together and rejects cross-field intersections", async () => {
   const a = "alpha",
@@ -444,6 +454,8 @@ it("starts two unknown memberships together and rejects cross-field intersection
       packet = encodePairMembershipPacket([{ a: first, b: second, data: raw }]),
       prefix = pairHash(pairStringHash(first), pairStringHash(second)) >>> 31,
       leaf = {
+        object: 0,
+        offset: 0,
         namespace: 0,
         bits: 1,
         prefix,
@@ -452,6 +464,7 @@ it("starts two unknown memberships together and rejects cross-field intersection
         pairs: 1,
       };
     nodes[0][prefix] = -leaves.length - 1;
+    leaf.object = leaves.length;
     leaves.push(leaf);
     objects.set(pairObjectKey(generation, leaf), packet);
   }

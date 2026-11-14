@@ -65,7 +65,7 @@ const original: Root = JSON.parse(
     sourceGeneration: original.generation,
     analysis: original.analysis,
     code: groupHealth.code,
-    format: "grouped-CDP2",
+    format: "grouped-CDP3",
   }),
   file = out + "/build.json",
   state = await readFile(file, "utf8").then(JSON.parse, () => ({
@@ -326,12 +326,8 @@ const groups = state.packages
     .sort((a: any, b: any) => a.first - b.first),
   documentDirectory = encodeDocumentDirectory(groups, original.count);
 await writeFile(out + "/documents.bin", documentDirectory);
-state.terms.forEach((j: any, i: number) => {
-  j.objects.forEach((o: any, n: number) => {
-    objects.push(o);
-    objectIds.push(i * OBJECT_GROUP + n);
-  });
-});
+objects.push(...original.objects);
+objectIds.push(...(original.objectIds ?? original.objects.map((_, i) => i)));
 objects.push(...tiered.objects);
 objectIds.push(...tiered.objectIds);
 const root: Root = {

@@ -57,6 +57,8 @@ function fixture(bytes?: number) {
       [],
       [
         {
+          object: 0,
+          offset: 0,
           namespace: 0,
           bits: 0,
           prefix: 0,

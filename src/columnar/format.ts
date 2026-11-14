@@ -1,6 +1,7 @@
-// CWS1: immutable, independently addressed numeric streams. No gzip in postings.
+import { contribution, type ScoreParameters } from "./scoring.js";
+// Immutable, independently addressed numeric streams. No gzip in postings.
 export const PAGE = 256 * 1024,
-  OBJECT = 64 * 1024 * 1024,
+  OBJECT = 32 * 1024 * 1024,
   BLOCK = 128;
 export type Ref = [number, number, number];
 export interface Branch {
@@ -249,48 +250,86 @@ export function encodeScores(
   docs: number[],
   body: number[],
   title: number[],
-  b: number[],
-  t: number[],
+  bodyLengths: number[],
+  titleLengths: number[],
 ) {
+  const n = docs.length;
+  if (
+    !n ||
+    n > BLOCK ||
+    [body, title, bodyLengths, titleLengths].some((a) => a.length !== n)
+  )
+    throw Error("Invalid scoring columns");
   const columns = [
     pack(docs, true),
     pack(body),
     pack(title),
-    bytes(Float64Array.from(b)),
-    bytes(Float64Array.from(t)),
+    pack(bodyLengths.map((length, i) => (body[i] ? length : 0))),
+    pack(titleLengths.map((length, i) => (title[i] ? length : 0))),
   ];
-  return concat([u32(columns.map((c) => c.length)), ...columns]);
+  // An absent field is represented by an omitted integer column, never a
+  // floating-point zero for every document. Frequencies identify those rows.
+  for (let i = 1; i < columns.length; i++)
+    if (view(columns[i]).getUint8(8) === 0) columns[i] = new Uint8Array();
+  return concat([
+    u32([0x34534343, ...columns.map((c) => c.length)]),
+    ...columns,
+  ]);
 }
-export function decodeScores(a: Uint8Array): Scores {
-  // Cached DataViews must own compact storage, rather than retaining a 256-KiB
-  // physical page for every tiny scoring leaf after page-LRU eviction.
-  a = Uint8Array.from(a);
+export function decodeScoreColumns(a: Uint8Array) {
+  if (a.length < 36 || view(a).getUint32(0, true) !== 0x34534343)
+    throw Error("Invalid scoring block");
   const v = view(a),
     columns: Uint8Array[] = [];
-  let p = 20;
+  let p = 24;
   for (let i = 0; i < 5; i++) {
-    const n = v.getUint32(i * 4, true);
+    const n = v.getUint32(4 + i * 4, true);
+    if (p + n > a.length) throw Error("Truncated scoring block");
     columns.push(a.subarray(p, p + n));
     p += n;
   }
   if (p !== a.length) throw Error("Truncated scoring block");
-  const docs = unpack(columns[0]),
-    body = unpack(columns[1]),
-    title = unpack(columns[2]);
-  if (
-    body.length !== docs.length ||
-    title.length !== docs.length ||
-    columns[3].length !== docs.length * 8 ||
-    columns[4].length !== docs.length * 8
-  )
-    throw Error("Invalid scoring columns");
+  const docs = unpack(columns[0]);
   if (
     !docs.length ||
     docs.length > BLOCK ||
     docs.some((d, i) => i > 0 && d <= docs[i - 1])
   )
     throw Error("Unsorted scoring documents");
-  return { docs, body, title, b: view(columns[3]), t: view(columns[4]) };
+  const values = columns
+    .slice(1)
+    .map((c) => (c.length ? unpack(c) : new Uint32Array(docs.length)));
+  if (values.some((a) => a.length !== docs.length))
+    throw Error("Invalid scoring columns");
+  const [body, title, bodyLengths, titleLengths] = values;
+  for (let i = 0; i < docs.length; i++)
+    if (body[i] > bodyLengths[i] || title[i] > titleLengths[i])
+      throw Error("Invalid field length");
+  return { docs, body, title, bodyLengths, titleLengths };
+}
+export function decodeScores(
+  a: Uint8Array,
+  parameters: ScoreParameters,
+): Scores {
+  const { docs, body, title, bodyLengths, titleLengths } =
+      decodeScoreColumns(a),
+    b = new Float64Array(docs.length),
+    t = new Float64Array(docs.length);
+  for (let i = 0; i < docs.length; i++) {
+    b[i] = contribution(
+      body[i],
+      bodyLengths[i],
+      parameters.avgBody,
+      parameters.idf,
+    );
+    t[i] = contribution(
+      title[i],
+      titleLengths[i],
+      parameters.avgTitle,
+      parameters.idf,
+    );
+  }
+  return { docs, body, title, b: view(bytes(b)), t: view(bytes(t)) };
 }
 export function lower(a: ArrayLike<number>, n: number) {
   let l = 0,

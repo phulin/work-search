@@ -3,7 +3,7 @@ import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { buildColumnar } from "../bench/columnar/control/offline-build.js";
+import { buildColumnar } from "../bench/columnar/build-fixture.js";
 import { ColumnarIndex } from "../src/columnar/search.js";
 import { Heads, headKey } from "../src/columnar/heads.js";
 import { Reader } from "../src/columnar/storage.js";

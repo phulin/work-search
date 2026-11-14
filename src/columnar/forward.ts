@@ -1,3 +1,4 @@
+import { positionSpan } from "./positions.js";
 import {
   type Ref,
   type Branch,
@@ -51,14 +52,12 @@ export async function verifyForward(
     if (pair.title[r]) first[i] = -2;
     const b = pair.branches[pair.handles[r] >>> 8],
       row = pair.handles[r] & 255,
-      p = view(data.get(pairReader.key(b.positions))!),
-      n = p.getUint32(0, true),
-      base = 4 + (n + 1) * 4,
-      from = base + p.getUint32(4 + row * 4, true),
-      bl = p.getUint32(from, true);
-    const positions = unpack(
-      new Uint8Array(p.buffer, p.byteOffset + from + 4, bl),
-    );
+      positions = positionSpan(
+        data.get(pairReader.key(b.positions))!,
+        row,
+        0,
+        pair.body[r],
+      );
     pairReader.stats.positionIntegers += positions.length;
     starts.push(positions);
     const l = view(data.get(pairReader.key(b.locators))!);

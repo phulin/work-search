@@ -2,7 +2,7 @@ import { it, expect } from "vitest";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildColumnar } from "../bench/columnar/control/offline-build.js";
+import { buildColumnar } from "../bench/columnar/build-fixture.js";
 import { pack, unpack } from "../src/columnar/format.js";
 import { Reader, Memory } from "../src/columnar/storage.js";
 import { ColumnarIndex } from "../src/columnar/search.js";
@@ -112,7 +112,7 @@ it("preserves JavaScript unpaired UTF-16 strings, metadata keys, normalized pass
     );
     await expect(
       buildColumnar({ input, out: dir + "/duplicate" }),
-    ).rejects.toThrow("Native index builder exited");
+    ).rejects.toThrow("UNIQUE constraint failed: docs.id");
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

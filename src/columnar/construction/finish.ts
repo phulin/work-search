@@ -1,3 +1,6 @@
+import { encodeTermPacket, type PacketBlock } from "../term-packet.js";
+import type { DirectoryTerm } from "../term-directory.js";
+import { encodePositions } from "../positions.js";
 import { crc32 } from "../../format/codec.js";
 import { bm25 } from "../../query/engine.js";
 import {
@@ -24,12 +27,25 @@ import {
   termHeader,
 } from "./runs.js";
 const zero: Ref = [0, 0, 0],
-  SIZE = 8 * 1048576;
+  SIZE = 32 * 1048576;
 export const OBJECT_GROUP = 16384;
 type Objects = Root["objects"];
 export class ObjectStore {
   next: number;
   objects: Objects = [];
+  readonly writers = new Set<PackedWriter>();
+  async reserve(requester: PackedWriter, bytes: number) {
+    while (
+      [...this.writers].reduce((n, w) => n + w.buffer.length, 0) + bytes >
+      SIZE
+    ) {
+      const others = [...this.writers]
+        .filter((w) => w !== requester && w.at > 0)
+        .sort((a, b) => b.at - a.at);
+      if (!others.length) break;
+      await others[0].flush();
+    }
+  }
   constructor(
     readonly store: BuildStore,
     readonly base: number,
@@ -42,10 +58,12 @@ export class ObjectStore {
 /** A small construction buffer; serving still addresses 256-KiB pages. Object
  * numbers are assigned before writing references, so no relocation pass exists. */
 export class PackedWriter {
-  buffer = new Uint8Array(SIZE);
+  buffer = new Uint8Array(0);
   at = 0;
   object = -1;
-  constructor(readonly target: ObjectStore) {}
+  constructor(readonly target: ObjectStore) {
+    target.writers.add(this);
+  }
   async put(data: Uint8Array): Promise<Ref> {
     if (!data.length || data.length > SIZE)
       throw Error("Invalid packed construction blob");
@@ -63,6 +81,16 @@ export class PackedWriter {
       )
         throw Error("Construction object group exhausted");
       this.object = this.target.next++;
+    }
+    if (at + data.length > this.buffer.length) {
+      const size = Math.min(
+        SIZE,
+        2 ** Math.ceil(Math.log2(Math.max(65536, at + data.length))),
+      );
+      await this.target.reserve(this, size - this.buffer.length);
+      const buffer = new Uint8Array(size);
+      buffer.set(this.buffer.subarray(0, this.at));
+      this.buffer = buffer;
     }
     this.buffer.set(data, at);
     this.at = at + data.length;
@@ -82,7 +110,7 @@ export class PackedWriter {
       sha256: chunk.sha256,
       checksums,
     };
-    this.buffer.fill(0);
+    this.buffer = new Uint8Array(0);
     this.at = 0;
     this.object = -1;
   }
@@ -96,9 +124,13 @@ export interface FinishState {
     id: number;
     visited: number;
     levels: Branch[][];
+    frequencyParts: Ref[];
+    positionalParts: Ref[];
+    bodyOccurrences: number;
+    titleOccurrences: number;
   };
   nextTerm: number;
-  entries: [string, Term][];
+  entries: [string, DirectoryTerm][];
   dictionaries: Fence[][];
   ids: { entries: [string, number][]; dictionaries: Fence[][] };
   hot: [string, Term][];
@@ -163,6 +195,38 @@ export async function finishPostings(
       await push(p, level + 1);
     }
   };
+  let pending: PacketBlock[] = [],
+    pendingPositions: Ref[] = [],
+    pendingBytes = 24;
+  const appendPosition = (ref: Ref) => {
+    const list = state.term!.positionalParts,
+      last = list.at(-1);
+    if (last && last[0] === ref[0] && last[1] + last[2] <= ref[1])
+      last[2] = ref[1] + ref[2] - last[1];
+    else list.push([...ref]);
+  };
+  const flushFrequency = async () => {
+    if (!pending.length) return;
+    const packet = encodeTermPacket(state.term!.id, pending, pendingPositions),
+      ref = await scores.put(packet.frequencies),
+      v = view(packet.frequencies);
+    state.term!.frequencyParts.push(ref);
+    for (let i = 0; i < pending.length; i++) {
+      const p = 24 + i * 48;
+      await push({
+        ...pending[i].branch,
+        score: [
+          ref[0],
+          ref[1] + v.getUint32(p + 12, true),
+          v.getUint32(p + 16, true),
+        ],
+        positions: pendingPositions[i],
+      });
+    }
+    pending = [];
+    pendingPositions = [];
+    pendingBytes = 24;
+  };
   const fenceParent = async (list: Fence[], lane = plans): Promise<Fence> => ({
     first: list[0].first,
     last: list.at(-1)!.last,
@@ -222,7 +286,17 @@ export async function finishPostings(
       }
       const { word, df } = termHeader(record);
       if (!df) throw Error("Empty construction term");
-      state.term = { word, df, id: state.nextTerm++, visited: 0, levels: [] };
+      state.term = {
+        word,
+        df,
+        id: state.nextTerm++,
+        visited: 0,
+        levels: [],
+        frequencyParts: [],
+        positionalParts: [],
+        bodyOccurrences: 0,
+        titleOccurrences: 0,
+      };
       reader.consume(record);
       processed += record.length;
     }
@@ -231,7 +305,9 @@ export async function finishPostings(
       tf: number[] = [],
       b: number[] = [],
       t: number[] = [],
-      pos: Uint8Array[] = [],
+      bls: number[] = [],
+      tls: number[] = [],
+      pos: { body: Uint32Array; title: Uint32Array }[] = [],
       offsets = [0];
     while (docs.length < BLOCK) {
       record = await reader.peek();
@@ -257,10 +333,11 @@ export async function finishPostings(
         tp = record.slice(28 + bn),
         bc = view(bp).getUint32(0, true),
         tc = view(tp).getUint32(0, true);
-      const packed = concat([u32([bn]), bp, tp]);
-      pos.push(packed);
-      offsets.push(offsets.at(-1)! + packed.length);
+      pos.push({ body: unpack(bp), title: unpack(tp) });
+      offsets.push(offsets.at(-1)! + bn + tn);
       docs.push(doc);
+      bls.push(bl);
+      tls.push(tl);
       bf.push(bc);
       tf.push(tc);
       b.push(bm25(bc, state.term.df, stats.count, bl, stats.avgBody));
@@ -269,23 +346,35 @@ export async function finishPostings(
       reader.consume(record);
     }
     if (docs.length) {
-      await push({
-        first: docs[0],
-        last: docs.at(-1)!,
-        count: docs.length,
-        height: 0,
-        b: Math.max(...b),
-        t: Math.max(...t),
-        score: await scores.put(encodeScores(docs, bf, tf, b, t)),
-        positions: await positions.put(
-          concat([u32([docs.length]), u32(offsets), ...pos]),
-        ),
-        locators: zero,
+      const score = encodeScores(docs, bf, tf, bls, tls),
+        positional = await positions.put(encodePositions(pos));
+      if (pending.length && pendingBytes + score.length + 48 > 4 * 1048576)
+        await flushFrequency();
+      pending.push({
+        branch: {
+          first: docs[0],
+          last: docs.at(-1)!,
+          count: docs.length,
+          height: 0,
+          b: Math.max(...b),
+          t: Math.max(...t),
+          score: zero,
+          positions: positional,
+          locators: zero,
+        },
+        scores: score,
+        positions: new Uint8Array(),
       });
+      pendingPositions.push(positional);
+      pendingBytes += score.length + 48;
+      appendPosition(positional);
+      state.term.bodyOccurrences += bf.reduce((n, f) => n + f, 0);
+      state.term.titleOccurrences += tf.reduce((n, f) => n + f, 0);
       state.term.visited += docs.length;
     }
     record = await reader.peek();
     if (!record || view(record).getUint32(4, true) === 1) {
+      await flushFrequency();
       const term = state.term;
       if (term.visited !== term.df)
         throw Error("Final document frequency mismatch");
@@ -296,7 +385,21 @@ export async function finishPostings(
         }
       const list = term.levels.at(-1)!,
         tree = list.length === 1 ? list[0] : await parent(list),
-        plan: Term = { id: term.id, df: term.df, tree };
+        plan: DirectoryTerm = {
+          id: term.id,
+          df: term.df,
+          tree,
+          frequencies: term.frequencyParts[0],
+          positional: term.positionalParts[0],
+          bodyOccurrences: term.bodyOccurrences,
+          titleOccurrences: term.titleOccurrences,
+          ...(term.frequencyParts.length > 1
+            ? { frequencyParts: term.frequencyParts.slice(1) }
+            : {}),
+          ...(term.positionalParts.length > 1
+            ? { positionalParts: term.positionalParts.slice(1) }
+            : {}),
+        };
       state.entries.push([term.word, plan]);
       state.ids.entries.push([term.word, term.id]);
       if (state.entries.length === 256) await flushDictionary();
@@ -308,6 +411,7 @@ export async function finishPostings(
       state.term = undefined;
     }
   }
+  await flushFrequency();
   if (state.done) {
     await flushDictionary();
     for (const levels of [state.dictionaries, state.ids.dictionaries])
