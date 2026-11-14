@@ -10,7 +10,17 @@ import {
   type PublicationRecord,
 } from "../src/columnar/publication.js";
 const compress = promisify(gzip);
-const agent = new Agent({ keepAlive: true, maxSockets: 12 });
+const largeConcurrency = Number(process.env.CWS_UPLOAD_CONCURRENCY ?? 4);
+if (
+  !Number.isInteger(largeConcurrency) ||
+  largeConcurrency < 1 ||
+  largeConcurrency > 16
+)
+  throw Error("Publication concurrency must be 1..16");
+const agent = new Agent({
+  keepAlive: true,
+  maxSockets: Math.max(12, largeConcurrency),
+});
 // Node 26 fetch negotiates HTTP/2; concurrent immutable uploads can hit stream
 // resets. Match the deployer's bounded HTTP/1 transport for both PUT and POST.
 function transport(
@@ -194,7 +204,7 @@ export async function publishAuxiliary(
   );
   let largeNext = 0;
   await Promise.all(
-    Array.from({ length: 4 }, async () => {
+    Array.from({ length: largeConcurrency }, async () => {
       for (;;) {
         const item = large[largeNext++];
         if (!item) return;

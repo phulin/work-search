@@ -1,0 +1,68 @@
+[
+  {
+    "start": "2026-11-14T22:17:49.794Z",
+    "end": "2026-11-14T23:17:49.793Z",
+    "scriptCount": 19,
+    "scriptLimit": 500,
+    "workers": {
+      "requests": 1415,
+      "errors": 0,
+      "cpuMs": 31029.817
+    },
+    "construction": {
+      "requests": 0,
+      "errors": 0,
+      "maxReportedMemoryP99Bytes": 0
+    },
+    "unattributedWorkerRequests": 0,
+    "resourceErrors": [],
+    "bucket": {
+      "reads": 0,
+      "writes": 0,
+      "readBytes": 0,
+      "storage": {
+        "metadataSize": 40672504,
+        "objectCount": 197170,
+        "payloadSize": 133089088954
+      }
+    },
+    "notes": [
+      "Account and bucket totals include other work; adaptive analytics can lag and contain unattributed scripts.",
+      "Memory quantiles sample isolate memory at invocation, not peak memory or cumulative allocation.",
+      "Paid usage allowances are billing thresholds, not hard request limits. This is not an invoice."
+    ]
+  },
+  {
+    "start": "2026-11-14T22:37:03.083Z",
+    "end": "2026-11-14T23:37:03.082Z",
+    "scriptCount": 19,
+    "scriptLimit": 500,
+    "workers": {
+      "requests": 1613,
+      "errors": 0,
+      "cpuMs": 30228.639
+    },
+    "construction": {
+      "requests": 0,
+      "errors": 0,
+      "maxReportedMemoryP99Bytes": 0
+    },
+    "unattributedWorkerRequests": 0,
+    "resourceErrors": [],
+    "bucket": {
+      "reads": 246,
+      "writes": 82,
+      "readBytes": 0,
+      "storage": {
+        "metadataSize": 40672504,
+        "objectCount": 197170,
+        "payloadSize": 133089088954
+      }
+    },
+    "notes": [
+      "Account and bucket totals include other work; adaptive analytics can lag and contain unattributed scripts.",
+      "Memory quantiles sample isolate memory at invocation, not peak memory or cumulative allocation.",
+      "Paid usage allowances are billing thresholds, not hard request limits. This is not an invoice."
+    ]
+  }
+]
