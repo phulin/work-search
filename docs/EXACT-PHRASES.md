@@ -110,7 +110,7 @@ CWS_CONTEXT_CONCURRENCY=4 yarn node --import tsx scripts/build-exact-phrases.ts 
 
 yarn node --import tsx scripts/validate-pair-context.ts work/complete-context-v2-1m
 
-CWS_EXACT_LABEL=exact-phrases-final \
+CWS_EXACT_LABEL=complete-context CWS_REPRESENTATIVE_REPEATS=3 \
   yarn node --import tsx bench/columnar/run-exact-phrases.ts
 
 # Publish only this independent context generation, then deploy an isolated trial.

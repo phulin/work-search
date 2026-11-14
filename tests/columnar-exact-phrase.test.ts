@@ -11,6 +11,7 @@ import { Packer } from "../src/columnar/packer.js";
 import { encodeTermPacket } from "../src/columnar/term-packet.js";
 import {
   decodeScoreColumns,
+  type Root,
   type Term,
   concat,
 } from "../src/columnar/format.js";
@@ -265,6 +266,124 @@ function product(
     ),
   };
 }
+it("answers an authoritatively empty phrase field without reading its nonempty body anchor", async () => {
+  const count = 40000,
+    { catalog } = product(
+      [
+        {
+          doc: 10,
+          body: { positions: [1], previous: [0], next: [0] },
+          title: empty(),
+        },
+      ],
+      0,
+      1,
+      generation,
+    ),
+    terms = ["b", "c"].map(
+      (word, id) =>
+        [
+          word,
+          {
+            id,
+            df: 1,
+            bodyOccurrences: 1,
+            titleOccurrences: 0,
+            frequencies: [0, 0, 10000000],
+            positional: [0, 0, 10000000],
+            tree: {
+              first: 0,
+              last: count - 1,
+              b: 1,
+              t: 0,
+              height: 1,
+              score: [0, 0, 64],
+              positions: [0, 0, 64],
+            },
+          },
+        ] as [string, DirectoryTerm],
+    ),
+    directory = new TermDirectory(
+      assembleTermDirectory([
+        {
+          first: "b",
+          count: terms.length,
+          data: gzipSync(encodeDirectoryBlock(terms)),
+        },
+      ]),
+      count,
+    ),
+    root: Root = {
+      format: "CWS1",
+      generation,
+      count,
+      avgBody: 2,
+      avgTitle: 1,
+      corpusHash: generation,
+      hot: {},
+      dictionaries: [],
+      objects: [],
+      documents: Array.from({ length: Math.ceil(count / 4096) }, () => [
+        0, 0, 64,
+      ]),
+    },
+    packet = encodePairMembershipPacket([]),
+    router = new PairRouter(
+      encodePairRouter(
+        {
+          generation,
+          baseGeneration: generation,
+          documents: count,
+          targetBytes: 131072,
+          contextBytes: 8192,
+          namespaces: [],
+          roots: [-1],
+          commonWords: [],
+        },
+        [],
+        [
+          {
+            object: 0,
+            offset: 0,
+            bytes: packet.length,
+            pairs: 0,
+            namespace: 0,
+            bits: 0,
+            prefix: 0,
+            crc32: 0,
+          },
+        ],
+        packet,
+      ),
+    ),
+    index = new ColumnarIndex(
+      root,
+      undefined,
+      directory,
+      undefined,
+      undefined,
+      {
+        router,
+        N: 0,
+        M: 0,
+        exactPhrases: catalog,
+      },
+    ),
+    reader = new Reader(root, {
+      read: async () => {
+        throw Error("Unnecessary score/position read");
+      },
+    });
+  const result = await index.search('"b c"', reader, {
+    field: "title",
+    exactTotal: true,
+  });
+  expect(result.results).toEqual([]);
+  expect(result.total).toBe(0);
+  expect(result.diagnostics.requests).toBe(0);
+  expect(result.diagnostics.scorePostingsDecoded).toBe(0);
+  expect(result.diagnostics.exactPhraseReads).toBe(0);
+});
 it("streams split rows and exact 2–4 word evidence through bounded windows, without truncating total transfer", async () => {
   const rows: PairColumnRow[] = Array.from({ length: 17000 }, (_, doc) => ({
     doc,

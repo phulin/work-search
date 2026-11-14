@@ -817,7 +817,21 @@ export class ColumnarIndex {
         }
       }
     }
+    // A standalone phrase with an empty selected field is already disproved by
+    // authoritative pair counts. Do not open a body-frequency anchor or walk
+    // score-tree windows just to rediscover that empty result.
+    const emptyExactPhrase =
+      ast.kind === "phrase" &&
+      exact?.plans.some(
+        (p) =>
+          (field === "body"
+            ? p.pair.bodyDf
+            : field === "title"
+              ? p.pair.titleDf
+              : p.pair.df) === 0,
+      );
     if (
+      !emptyExactPhrase &&
       !pairCandidates &&
       ast.kind !== "empty" &&
       anchor &&
@@ -856,7 +870,12 @@ export class ColumnarIndex {
       if (selectedDocs)
         pairCandidates = selectedDocs.subarray(0, selectedCount);
       bands = [...selected].sort((a, b) => a - b);
-    } else if (!loadedMembership && !pairCandidates && ast.kind !== "empty")
+    } else if (
+      !emptyExactPhrase &&
+      !loadedMembership &&
+      !pairCandidates &&
+      ast.kind !== "empty"
+    )
       bands = Array.from(
         { length: Math.ceil(this.root.count / BAND) },
         (_, i) => i,

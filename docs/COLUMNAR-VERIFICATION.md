@@ -76,12 +76,11 @@ candidate enrichment. The [complete phrase executor](EXACT-PHRASES.md) can
 instead select a whole context stream as a primary matching source, with an
 active-memory bound rather than a cumulative 4 MiB transfer cutoff.
 
-The offline positional builder selects from corpus pair statistics, without
-reading benchmark queries. It streams existing occurrence partitions, reserves
-a conservative encoded-size bound under a storage budget, and writes sorted
-context chunks into immutable 32 MiB containers. This initial selection pool is
-the corpus's 1,000 most frequent pairs whose context was not already inline;
-expanding the pool is separate from changing the packet format.
+The complete context builder streams existing occurrence partitions and writes
+sorted context chunks into immutable 32 MiB containers for every pair without
+inline context. It has no frequency-rank or storage-budget coverage cutoff.
+The [complete phrase design](EXACT-PHRASES.md) describes routed EPR1 extents,
+bounded construction, coverage validation and independently executable phrases.
 
 ## Construction and experiments
 
@@ -92,9 +91,10 @@ tree, not retained in production. Its document conversion is bounded to one
 source container and one output document group, plus one document's working
 arrays. Term conversion uses bounded caches and an on-disk SQLite directory.
 
-`scripts/build-pair-positions.ts` builds supplemental context.
-`bench/columnar/attach-pair-positions.ts` rewrites affected membership packets and
-publishes their positional object inventory in the bundled router.
+`scripts/build-exact-phrases.ts` builds complete context and rewrites routed
+membership packets with direct extents. The obsolete subset-only builder was
+removed. `bench/columnar/attach-pair-positions.ts` remains a historical conversion
+tool for frozen benchmark data.
 `bench/columnar/build-verification-control.ts` reconstructs the frozen CDP3
 arrangement with exactly the candidate's compressed passage bytes, so format
 comparisons do not measure an excerpt change. The simulation harness supports
