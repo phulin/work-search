@@ -12,6 +12,7 @@ import {
   executePackets,
   packageResult,
   packetPlan,
+  readAnchorDocuments,
   type PacketPlan,
   type CandidatePackages,
 } from "./packet-execution.js";
@@ -58,6 +59,7 @@ import {
   planCommonPresence,
   commonWordExclusions,
   loadCommonPresence,
+  intersectMembershipAnchor,
   type MembershipSettings,
 } from "./membership-anchor.js";
 import {
@@ -342,6 +344,9 @@ export class ColumnarIndex {
           )
         : undefined,
       provedWords = membershipRead?.provedWords ?? new Set<string>(),
+      unigramAnchors = preliminary?.anchors?.filter(
+        (name) => !provedWords.has(name),
+      ),
       filterAlternative =
         preliminary && membershipRead
           ? {
@@ -378,7 +383,7 @@ export class ColumnarIndex {
             return terms;
           })
         : this.terms(requested, reader),
-      [terms, selection, presence] = await Promise.all([
+      [terms, selection, presence, unigramCandidates] = await Promise.all([
         termRequest,
         membershipRead && this.membership
           ? readMembershipAnchor(membershipRead, reader, this.membership)
@@ -386,6 +391,17 @@ export class ColumnarIndex {
         this.membership
           ? loadCommonPresence(presenceRanks, reader, this.membership)
           : [],
+        membershipRead &&
+        preliminary?.kind === "documents" &&
+        unigramAnchors?.length &&
+        bundled
+          ? readAnchorDocuments(
+              unigramAnchors,
+              bundled,
+              reader,
+              options.field ?? "all",
+            )
+          : undefined,
       ]),
       ast = simplify(original, (t) => terms.has(t)),
       names = queryTerms(ast),
@@ -402,12 +418,23 @@ export class ColumnarIndex {
     reader.stats.estimatedPairCandidates =
       membershipRead?.expectedCandidates ?? 0;
     const loadedMembership = selection
-      ? membershipAnchor(
-          selection,
-          new Map([...terms].map(([name, t]) => [name, t.id])),
-          field,
+      ? intersectMembershipAnchor(
+          membershipAnchor(
+            selection,
+            new Map([...terms].map(([name, t]) => [name, t.id])),
+            field,
+          ),
+          unigramCandidates,
         )
       : undefined;
+    if (unigramCandidates) {
+      reader.stats.anchorUnigramCandidates = unigramCandidates.length;
+      reader.stats.anchorIntersectionCandidates = loadedMembership?.count ?? 0;
+      reader.stats.anchorBufferBytes +=
+        unigramCandidates.buffer.byteLength +
+        (loadedMembership?.count ?? 0) * 4;
+    }
+    reader.stats.membershipCandidates = loadedMembership?.count ?? 0;
     const presenceFilter = presence.length
       ? (doc: number) => {
           for (let i = 0; i < presence.length; i++)

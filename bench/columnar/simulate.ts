@@ -324,6 +324,12 @@ async function query(
   if (result) {
     const want = scenario.oracle;
     if (
+      options.exactTotal &&
+      typeof scenario.total === "number" &&
+      result.total !== scenario.total
+    )
+      throw Error("Exact total mismatch: " + scenario.q + ":" + plan);
+    if (
       result.results.length !== want.length ||
       result.results.some(
         (h, i) =>
@@ -380,6 +386,17 @@ async function query(
                 Object.entries(result).filter(([k]) => k !== "diagnostics"),
               ),
             ),
+          )
+          .digest("hex")
+      : undefined,
+    semanticSha256: result
+      ? createHash("sha256")
+          .update(
+            JSON.stringify({
+              generation: result.generation,
+              total: result.total,
+              results: result.results.map(({ score: _score, ...hit }) => hit),
+            }),
           )
           .digest("hex")
       : undefined,
@@ -468,7 +485,9 @@ const manifest = {
   primeSharedBudget,
   artificialDelays: process.env.CWS_NO_DELAY !== "1",
   cacheIsolation:
-    "Independent application and shared caches per plan; common immutable disk backing",
+    process.env.CWS_ISOLATE_SCENARIOS === "1"
+      ? "Independent caches per measured query/plan/repeat; one untimed same-query priming pass for warm conditions"
+      : "Independent application and shared caches per plan; common immutable disk backing",
   condition,
   plans,
   repeats,
@@ -507,6 +526,17 @@ for (let repeat = 0; repeat < repeats; repeat++) {
     )
     .sort((a: any, b: any) => a.random - b.random);
   for (const { scenario, plan } of jobs) {
+    if (process.env.CWS_ISOLATE_SCENARIOS === "1") {
+      const runtime = runtimes.get(plan)!;
+      runtime.io.sharedBytes.clear();
+      reset(plan);
+      if (condition !== "fresh-namespace") {
+        const delayed = runtime.io.delaysEnabled;
+        runtime.io.delaysEnabled = false;
+        await query(scenario, plan, false, "simulation", primeSharedBudget);
+        runtime.io.delaysEnabled = delayed;
+      }
+    }
     if (condition !== "memory-reuse") reset(plan);
     try {
       const row = await query(

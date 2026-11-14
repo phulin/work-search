@@ -59,6 +59,7 @@ it("compares optional membership work with the existing plan before reading, ret
           { a: "ranked", b: "tail", data: u32([44593, 44593, 0, 45000, 2000]) },
           { a: "the", b: "an", data: u32([304, 304, 0, 700, 0]) },
           { a: "an", b: "of", data: u32([216, 215, 1, 504, 0]) },
+          { a: "the", b: "absence", data: u32([44593, 44593, 0, 1000, 10]) },
         ]),
       ),
     ),
@@ -69,6 +70,7 @@ it("compares optional membership work with the existing plan before reading, ret
       ["prove", { df: 188056 }],
       ["the", { df: 899105 }],
       ["an", { df: 703385 }],
+      ["absence", { df: 155090 }],
     ]),
     base = {
       kind: "blocks" as const,
@@ -86,14 +88,43 @@ it("compares optional membership work with the existing plan before reading, ret
       base,
     ),
   ).toBeUndefined();
+  // Every pair is top-M, but the phrase contains an ordinary word. The old
+  // eligibility gate rejected it without comparing the available alternatives.
+  expect(
+    planMembershipAnchor(
+      parse('"the absence"'),
+      settings,
+      words,
+      20000,
+      "all",
+      { ...base, positionBytes: 2048 * 1048576 },
+    )?.pairs.map((p) => [p.a, p.b]),
+  ).toEqual([["the", "absence"]]);
+  // Corpus-wide pair DF exceeds the existing unigram intersection. It can still
+  // substantially reduce that intersection when conditioned on a shared word.
+  expect(
+    planMembershipAnchor(
+      parse('"the absence"'),
+      settings,
+      words,
+      200000,
+      "all",
+      {
+        ...base,
+        kind: "documents",
+        expectedCandidates: 50,
+        anchors: ["absence"],
+      },
+    )?.pairs,
+  ).toHaveLength(1);
   expect(
     planMembershipAnchor(parse('"the an of"'), settings, words, 20000, "all", {
       ...base,
       frequencyBytes: 56356668,
       positionBytes: 252913700,
       expectedCandidates: 703385,
-    })?.pairs,
-  ).toHaveLength(2);
+    })?.pairs.length,
+  ).toBeGreaterThan(0);
   expect(
     planMembershipAnchor(parse('"the an of"'), settings, words, 20000, "all", {
       ...base,

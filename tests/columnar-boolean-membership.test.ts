@@ -1,4 +1,7 @@
-import { planMembershipAnchor } from "../src/columnar/membership-anchor.js";
+import {
+  planMembershipAnchor,
+  intersectMembershipAnchor,
+} from "../src/columnar/membership-anchor.js";
 import { it, expect } from "vitest";
 import {
   planBooleanMembership,
@@ -124,6 +127,36 @@ it("intersects evidence with unions across Boolean branches before any score rea
     0, 4,
   ]);
   expect(await candidates('"a b" AND ("c d" OR "e f")', "title")).toEqual([]);
+});
+it("reuses the exact sorted intersection with necessary unigrams for both continuation paths", async () => {
+  const { settings, reader } = fixture(),
+    ast = parse('"a b" AND ("c d" OR "e f")'),
+    plan = planBooleanMembership(
+      ast,
+      settings,
+      undefined,
+      16384,
+      "all",
+      alternative,
+    )!,
+    original = booleanMembershipAnchor(
+      await readBooleanMembership(plan, reader, settings),
+      ids,
+      "all",
+    ),
+    selected = intersectMembershipAnchor(original, Uint32Array.of(1, 3, 4));
+  expect(selected.count).toBe(2);
+  expect([...selected.values()]).toEqual([1, 4]);
+  const cursor = selected.cursor();
+  expect([cursor.next(), cursor.next(), cursor.next()]).toEqual([
+    1,
+    4,
+    Infinity,
+  ]);
+  expect([0, 1, 2, 3, 4, 5].filter((d) => selected.has(d))).toEqual([1, 4]);
+  expect(selected.evidence).toBe(original.evidence);
+  expect(selected.covered).toBe(original.covered);
+  expect(intersectMembershipAnchor(original, new Uint32Array()).count).toBe(0);
 });
 it("only skips common-word filters proved on every surviving OR branch", () => {
   const { settings } = fixture();

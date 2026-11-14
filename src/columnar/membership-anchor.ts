@@ -1,5 +1,6 @@
 import type { Node } from "../query/parser.js";
 import type { Reader } from "./storage.js";
+import { lower } from "./format.js";
 import {
   mandatoryPhrases,
   pairKey,
@@ -25,6 +26,7 @@ export interface FilterAlternative {
   frequencyBytes: number;
   positionBytes: number;
   expectedCandidates: number;
+  anchors?: string[];
 }
 export interface PairReadPlan {
   words: string[];
@@ -160,6 +162,40 @@ export interface MembershipAnchor {
   evidence: ReturnType<typeof pairPhraseEvidence>;
   covered: (words: string[]) => boolean;
 }
+/** Restrict conservative pair evidence by independently necessary unigrams.
+ * Preserve phrase/context evidence while sharing one sorted numeric result
+ * across pricing, document verification and block fallback. */
+export function intersectMembershipAnchor(
+  anchor: MembershipAnchor,
+  ids?: Uint32Array,
+): MembershipAnchor {
+  if (!ids) return anchor;
+  const docs = new Uint32Array(Math.min(ids.length, anchor.count));
+  let at = 0,
+    count = 0;
+  const source = anchor.cursor();
+  for (
+    let doc = source.next();
+    doc !== Infinity && at < ids.length;
+    doc = source.next()
+  ) {
+    while (at < ids.length && ids[at] < doc) at++;
+    if (ids[at] === doc) docs[count++] = doc;
+  }
+  const selected = docs.subarray(0, count);
+  return {
+    ...anchor,
+    count,
+    values: function* () {
+      yield* selected;
+    },
+    has: (doc) => selected[lower(selected, doc)] === doc,
+    cursor: () => {
+      let row = 0;
+      return { next: () => (row < count ? selected[row++] : Infinity) };
+    },
+  };
+}
 export function planMembershipAnchor(
   ast: Node,
   settings: MembershipSettings,
@@ -171,7 +207,6 @@ export function planMembershipAnchor(
 ): PairReadPlan | undefined {
   const { router, M } = settings,
     documents = router.metadata.documents,
-    excluded = commonWordExclusions(settings),
     choices: PairReadPlan[] = [];
   for (const words of mandatoryPhrases(ast).values()) {
     const all = words.slice(1).map((b, at) => {
@@ -214,19 +249,21 @@ export function planMembershipAnchor(
     // Cold metadata is fetched in the same initial wave. Avoid speculating on
     // optional filters until a comparable bundled alternative is available.
     if (!alternative && wordStats) continue;
-    const ordinary = all.filter((p) => !p.excluded),
-      usable = ordinary.length
-        ? ordinary
-        : words.every((w) => excluded.has(w))
-          ? all
-          : [];
-    const unique = usable
-      .filter(
-        (p, i) => usable.findIndex((q) => p.a === q.a && p.b === q.b) === i,
-      )
-      .sort((a, b) => a.df - b.df || a.bytes - b.bytes || a.at - b.at);
+    // N/M describe preferred anchors, not eligibility. In particular a phrase
+    // containing an ordinary word can still have only top-M adjacent pairs.
+    // Price those pairs against the alternative instead of rejecting them.
+    const unique = all
+      .filter((p, i) => all.findIndex((q) => p.a === q.a && p.b === q.b) === i)
+      .sort(
+        (a, b) =>
+          a.df - b.df ||
+          a.bytes - b.bytes ||
+          Number(a.excluded) - Number(b.excluded) ||
+          a.at - b.at,
+      );
     if (!unique.length) continue;
-    const estimate = (pairs: typeof unique) => {
+    const estimate = (pairs: typeof unique): PairReadPlan => {
+      const primary = pairs.length > 1 ? estimate([pairs[0]]) : undefined;
       let count = pairs[0].df;
       for (const p of pairs.slice(1)) {
         const lead = pairs[0],
@@ -234,11 +271,21 @@ export function planMembershipAnchor(
           denominator = shared
             ? (wordStats?.get(shared)?.df ?? documents)
             : documents;
-        count = Math.min(
-          count,
-          p.df,
-          Math.ceil((count * p.df) / Math.max(1, denominator)),
-        );
+        // Preserve useful supplementary filters on an already profitable
+        // anchor. Otherwise do not manufacture a profitable top-M combination
+        // from independence across a ubiquitous connector ("burden of" /
+        // "of proving"). Common pairs remain eligible on their own.
+        count =
+          shared &&
+          (lead.excluded || p.excluded) &&
+          denominator > documents / 2 &&
+          primary!.savedWork <= primary!.readWork
+            ? Math.min(count, p.df)
+            : Math.min(
+                count,
+                p.df,
+                Math.ceil((count * p.df) / Math.max(1, denominator)),
+              );
       }
       const requests = new Map(
         pairs.map((p) => [
@@ -250,8 +297,33 @@ export function planMembershipAnchor(
         [...requests.values()].reduce((n, b) => n + b, 0) +
         pairs.reduce((n, p) => n + p.df * 4, 0) +
         1048576;
+      // Pair DF is corpus-wide. A document plan has already intersected its
+      // unigram anchors: estimate the pair's incremental selectivity there,
+      // conditioning on a shared anchor when available. This affects cost only;
+      // actual memberships, never this estimate, restrict execution.
+      const sharedDf = Math.min(
+        ...words
+          .filter((w) => alternative?.anchors?.includes(w))
+          .map((w) => wordStats?.get(w)?.df ?? documents),
+      );
+      const filtered =
+        alternative?.kind === "documents"
+          ? Math.min(
+              count,
+              Math.ceil(
+                (alternative.expectedCandidates * count) /
+                  Math.max(1, Number.isFinite(sharedDf) ? sharedDf : documents),
+              ),
+            )
+          : count;
       const gain = alternative
-        ? savedWork(alternative, count, documents, candidateBytes, exactTotal)
+        ? savedWork(
+            alternative,
+            filtered,
+            documents,
+            candidateBytes,
+            exactTotal,
+          )
         : Infinity;
       return {
         words,
@@ -273,15 +345,6 @@ export function planMembershipAnchor(
         choice = next;
     }
     if (alternative && choice.savedWork <= choice.readWork) continue;
-    // An excluded pair may filter a worthwhile ordinary anchor, without
-    // becoming the primary candidate generator itself.
-    if (choice.pairs.length === 1 && ordinary.length) {
-      for (const second of all.filter((p) => p.excluded)) {
-        const next = estimate([unique[0], second]);
-        if (next.savedWork - next.readWork > choice.savedWork - choice.readWork)
-          choice = next;
-      }
-    }
     choices.push(choice);
   }
   return choices.sort(

@@ -250,8 +250,12 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
           pkgs = {
             averageBytes: 500,
             byteLength: (doc: number) => packages.get(doc)!.length,
-            load: async (doc: number) =>
-              new DocumentPackage(packages.get(doc)!, doc),
+            load: async (doc: number) => {
+              // Later IDs finish first. Exact totals, ties and search-after
+              // must remain independent of network completion order.
+              if (doc % 6 === 0) await new Promise((r) => setTimeout(r, 1));
+              return new DocumentPackage(packages.get(doc)!, doc);
+            },
             membership,
           },
           plan = {

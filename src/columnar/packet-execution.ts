@@ -26,7 +26,12 @@ import { planPairAnchor, pairPhraseEvidence } from "./pair-evidence.js";
 import { decodeTermPacket } from "./term-packet.js";
 import type { DirectoryTerm } from "./term-directory.js";
 import { DocumentPackage } from "./document-package.js";
-import { packageBatches, PACKAGE_WINNER_BYTES } from "./package-batches.js";
+import {
+  packageBatches,
+  packagePipeline,
+  PACKAGE_BATCH_BYTES,
+  PACKAGE_WINNER_BYTES,
+} from "./package-batches.js";
 import { priceDocuments } from "./continuation.js";
 import type { Reader } from "./storage.js";
 import type { Options } from "./search.js";
@@ -101,6 +106,34 @@ const positionRefs = (term: DirectoryTerm) => [
   term.positional,
   ...(term.positionalParts ?? []),
 ];
+/** Read complete selective anchors once, producing a sorted numeric candidate
+ * set reusable by both document execution and its block fallback. */
+export async function readAnchorDocuments(
+  names: string[],
+  terms: Map<string, DirectoryTerm>,
+  reader: Reader,
+  field: "all" | "body" | "title",
+) {
+  const { cols } = await readTerms(names, terms, reader, new Set());
+  reader.stats.postings += cols.reduce((n, c) => n + c.docs.length, 0);
+  const candidates = new Uint32Array(cols[0].docs.length);
+  let n = 0;
+  for (let row = 0; row < cols[0].docs.length; row++)
+    if (field === "all" || cols[0][field][row])
+      candidates[n++] = cols[0].docs[row];
+  for (const c of cols.slice(1)) {
+    let write = 0,
+      row = 0;
+    for (let i = 0; i < n; i++) {
+      const doc = candidates[i];
+      while (row < c.docs.length && c.docs[row] < doc) row++;
+      if (c.docs[row] === doc && (field === "all" || c[field][row]))
+        candidates[write++] = doc;
+    }
+    n = write;
+  }
+  return candidates.subarray(0, n);
+}
 function completeColumns(
   term: DirectoryTerm,
   raw: Uint8Array[],
@@ -574,30 +607,12 @@ export async function executePackets(
       }
       candidates = pair.candidates;
     } else {
-      const { cols } = await readTerms(
+      candidates = await readAnchorDocuments(
         plan.anchors ?? [plan.anchor!],
         terms,
         reader,
-        new Set(),
+        field,
       );
-      reader.stats.postings += cols.reduce((n, c) => n + c.docs.length, 0);
-      const candidateBuffer = new Uint32Array(cols[0].docs.length);
-      let n = 0;
-      for (let row = 0; row < cols[0].docs.length; row++)
-        if (field === "all" || cols[0][field][row])
-          candidateBuffer[n++] = cols[0].docs[row];
-      for (const c of cols.slice(1)) {
-        let write = 0,
-          row = 0;
-        for (let i = 0; i < n; i++) {
-          const doc = candidateBuffer[i];
-          while (row < c.docs.length && c.docs[row] < doc) row++;
-          if (c.docs[row] === doc && (field === "all" || c[field][row]))
-            candidateBuffer[write++] = doc;
-        }
-        n = write;
-      }
-      candidates = candidateBuffer.subarray(0, n);
     }
     const selected = function* () {
       for (const doc of candidates) {
@@ -632,15 +647,14 @@ export async function executePackets(
     let candidateBytes = 0;
     const packageSize = (doc: number) =>
       packages!.byteLength?.(doc) ?? Math.ceil(packages!.averageBytes);
-    const active = (
-      batch: (DocumentPackage | undefined)[],
-      current?: DocumentPackage,
-      positionBytes = 0,
-    ) => {
+    let reservations: ReadonlyMap<number, { item: number; bytes: number }> =
+      new Map();
+    const active = (current?: DocumentPackage, positionBytes = 0) => {
       const raw = new Map(
         [...packageHits].map(([doc, pkg]) => [doc, pkg.bytes.length]),
       );
-      for (const pkg of batch) if (pkg) raw.set(pkg.doc, pkg.bytes.length);
+      for (const entry of reservations.values())
+        raw.set(entry.item, entry.bytes);
       if (current) raw.set(current.doc, current.bytes.length);
       const numeric = current?.numericBytes ?? 0;
       reader.stats.peakPackageNumericBytes = Math.max(
@@ -659,11 +673,11 @@ export async function executePackets(
           positionBytes,
       );
     };
-    // Prepare metadata before opening packages. Preserve bounded package batches
-    // by collecting only a small filtered prefix at a time.
-    async function* groups() {
+    // Metadata remains bounded; package reads run continuously across its
+    // filtered prefixes rather than waiting for each six-package batch.
+    async function* documents() {
       if (!options.documentFilter) {
-        yield* packageBatches(selected(), packageSize);
+        yield* selected();
         return;
       }
       for await (const docs of filteredDocumentBatches(
@@ -671,124 +685,124 @@ export async function executePackets(
         options.documentFilter,
         reader.stats,
       ))
-        yield* packageBatches(docs, packageSize);
+        yield* docs;
     }
-    for await (const group of groups()) {
-      const beforeIO = reader.stats.requests + reader.stats.sharedGets;
-      const docs = group.items,
-        batch: (DocumentPackage | undefined)[] = await Promise.all(
-          docs.map((doc) => packages!.load(doc)),
-        ),
-        batchBytes = batch.reduce((n, pkg) => n + pkg!.bytes.length, 0);
-      reader.stats.packageCandidates += docs.length;
-      reader.stats.packageFetchWaves++;
-      if (reader.stats.requests + reader.stats.sharedGets > beforeIO)
-        reader.stats.packageIOWaves++;
-      reader.stats.oversizedPackageBatches += Number(group.oversized);
-      reader.stats.peakPackageBatchBytes = Math.max(
-        reader.stats.peakPackageBatchBytes,
-        batchBytes,
+    reader.stats.stages++;
+    for await (const { item: doc, value: pkg } of packagePipeline(
+      documents(),
+      packageSize,
+      (d) => packages!.load(d),
+      (state) => {
+        reservations = state.reserved;
+        reader.stats.packagePipelineLoads = state.loads;
+        reader.stats.packagePipelineWaits = state.waits;
+        reader.stats.peakPackagePipelinePending = Math.max(
+          reader.stats.peakPackagePipelinePending,
+          state.pending,
+        );
+        reader.stats.peakPackageBatchBytes = Math.max(
+          reader.stats.peakPackageBatchBytes,
+          [...reservations.values()].reduce((n, e) => n + e.bytes, 0),
+        );
+        active();
+      },
+    )) {
+      reader.stats.packageCandidates++;
+      reader.stats.oversizedPackageBatches += Number(
+        pkg!.bytes.length > PACKAGE_BATCH_BYTES,
       );
-      candidateBytes += batchBytes;
+      candidateBytes += pkg!.bytes.length;
       reader.stats.candidatePackageBytes = candidateBytes;
-      reader.stats.stages++;
-      active(batch);
-      for (let i = 0; i < batch.length; i++) {
-        const pkg = batch[i]!,
-          doc = docs[i],
-          f = pkg.frequencies(),
-          lists = new Map<string, DecodedPostings>();
-        batch[i] = undefined;
-        active(batch, pkg);
-        let score = 0;
-        for (const name of names) {
-          const t = terms.get(name)!,
-            row = lower(f.ids, t.id),
-            present = f.ids[row] === t.id,
-            b = present ? f.body[row] : 0,
-            title = present ? f.title[row] : 0;
-          lists.set(name, {
-            docs: present ? Uint32Array.of(doc) : new Uint32Array(),
-            body: Uint32Array.of(b),
-            title: Uint32Array.of(title),
-            bytes: new Uint8Array(),
-          });
-          if (positive.has(name))
-            score +=
-              (field !== "title"
-                ? bm25(b, t.df, root.count, pkg.bodyLength, root.avgBody)
-                : 0) +
-              (field !== "body"
-                ? boost *
-                  bm25(title, t.df, root.count, pkg.titleLength, root.avgTitle)
-                : 0);
-        }
-        reader.stats.candidates++;
-        if (!admitted(doc, score)) continue;
-        const bodies =
-            positionalIds.size && field !== "title"
-              ? pkg.positions(positionalIds, 0)
-              : undefined,
-          titles =
-            positionalIds.size && field !== "body"
-              ? pkg.positions(positionalIds, 1)
-              : undefined;
-        const direct = (name: string, _doc: number, f: number) =>
-            (f ? titles : bodies)?.get(terms.get(name)!.id),
-          match = positionalMatcher(
-            ast,
-            lists,
-            field,
-            direct,
-            {},
-            phraseEvidence,
-          );
-        active(
-          batch,
-          pkg,
-          [...(bodies?.values() ?? []), ...(titles?.values() ?? [])].reduce(
-            (n, a) => n + a.length * 8,
-            0,
-          ),
-        );
-        if (!match(doc)) continue;
-        total++;
-        reader.stats.packageMatches++;
-        if (!heap.accepts(doc, score)) continue;
-        let first: number | undefined;
-        if (positions && field !== "title") first = firstSpan(match, doc);
-        const titleOnly =
-          field === "title" ||
-          (field === "all" && ast.kind === "phrase" && first === undefined) ||
-          (positive.size > 0 &&
-            [...positive].every((n) => {
-              const row = lower(f.ids, terms.get(n)!.id);
-              return f.ids[row] !== terms.get(n)!.id || !f.body[row];
-            }));
-        heap.add({ doc, score, row: doc % 4096, first, titleOnly });
-        // Retain raw winner data only, releasing decoded token/frequency arrays
-        // with this iteration. Rendering uses the existing package implementation.
-        packageHits.set(
-          doc,
-          new DocumentPackage(pkg.bytes, pkg.doc, pkg.observe),
-        );
-        const surviving = new Set(heap.values.map((h) => h.doc));
-        for (const key of packageHits.keys())
-          if (!surviving.has(key)) packageHits.delete(key);
-        let retained = [...packageHits.values()].reduce(
-          (n, pkg) => n + pkg.bytes.length,
-          0,
-        );
-        for (const [key, pkg] of packageHits) {
-          if (retained <= PACKAGE_WINNER_BYTES) break;
-          packageHits.delete(key);
-          retained -= pkg.bytes.length;
-        }
-        reader.stats.peakWinnerPackageBytes = Math.max(
-          reader.stats.peakWinnerPackageBytes,
-          retained,
-        );
+      const f = pkg!.frequencies(),
+        lists = new Map<string, DecodedPostings>();
+      active(pkg);
+      let score = 0;
+      for (const name of names) {
+        const t = terms.get(name)!,
+          row = lower(f.ids, t.id),
+          present = f.ids[row] === t.id,
+          b = present ? f.body[row] : 0,
+          title = present ? f.title[row] : 0;
+        lists.set(name, {
+          docs: present ? Uint32Array.of(doc) : new Uint32Array(),
+          body: Uint32Array.of(b),
+          title: Uint32Array.of(title),
+          bytes: new Uint8Array(),
+        });
+        if (positive.has(name))
+          score +=
+            (field !== "title"
+              ? bm25(b, t.df, root.count, pkg.bodyLength, root.avgBody)
+              : 0) +
+            (field !== "body"
+              ? boost *
+                bm25(title, t.df, root.count, pkg.titleLength, root.avgTitle)
+              : 0);
       }
+      reader.stats.candidates++;
+      if (!admitted(doc, score)) continue;
+      const bodies =
+          positionalIds.size && field !== "title"
+            ? pkg.positions(positionalIds, 0)
+            : undefined,
+        titles =
+          positionalIds.size && field !== "body"
+            ? pkg.positions(positionalIds, 1)
+            : undefined;
+      const direct = (name: string, _doc: number, f: number) =>
+          (f ? titles : bodies)?.get(terms.get(name)!.id),
+        match = positionalMatcher(
+          ast,
+          lists,
+          field,
+          direct,
+          {},
+          phraseEvidence,
+        );
+      active(
+        pkg,
+        [...(bodies?.values() ?? []), ...(titles?.values() ?? [])].reduce(
+          (n, a) => n + a.length * 8,
+          0,
+        ),
+      );
+      if (!match(doc)) continue;
+      total++;
+      reader.stats.packageMatches++;
+      if (!heap.accepts(doc, score)) continue;
+      let first: number | undefined;
+      if (positions && field !== "title") first = firstSpan(match, doc);
+      const titleOnly =
+        field === "title" ||
+        (field === "all" && ast.kind === "phrase" && first === undefined) ||
+        (positive.size > 0 &&
+          [...positive].every((n) => {
+            const row = lower(f.ids, terms.get(n)!.id);
+            return f.ids[row] !== terms.get(n)!.id || !f.body[row];
+          }));
+      heap.add({ doc, score, row: doc % 4096, first, titleOnly });
+      // Retain raw winner data only, releasing decoded token/frequency arrays
+      // with this iteration. Rendering uses the existing package implementation.
+      packageHits.set(
+        doc,
+        new DocumentPackage(pkg.bytes, pkg.doc, pkg.observe),
+      );
+      const surviving = new Set(heap.values.map((h) => h.doc));
+      for (const key of packageHits.keys())
+        if (!surviving.has(key)) packageHits.delete(key);
+      let retained = [...packageHits.values()].reduce(
+        (n, pkg) => n + pkg.bytes.length,
+        0,
+      );
+      for (const [key, pkg] of packageHits) {
+        if (retained <= PACKAGE_WINNER_BYTES) break;
+        packageHits.delete(key);
+        retained -= pkg.bytes.length;
+      }
+      reader.stats.peakWinnerPackageBytes = Math.max(
+        reader.stats.peakWinnerPackageBytes,
+        retained,
+      );
     }
   } else {
     const { cols, resolve } = await readTerms(
