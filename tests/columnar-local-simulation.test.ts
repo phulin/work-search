@@ -116,7 +116,7 @@ it("prepares immutable ranges and packages once, replays offline, and rejects da
     await writeFile(dir + "/objects/" + groupKey, group);
     await expect(
       new Reader(root, offline).document("b".repeat(64), 1, locator),
-    ).rejects.toThrow("Invalid document package");
+    ).rejects.toThrow("Invalid document verification");
   } finally {
     vi.unstubAllGlobals();
     await rm(dir, { recursive: true, force: true });

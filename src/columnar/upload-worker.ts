@@ -88,7 +88,7 @@ export default {
       return Response.json({ deleted: keys.length });
     }
     if (
-      !/^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+|presence-\d+|metadata)\.bin$/.test(
+      !/^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+|positions-\d+|presence-\d+|metadata)\.bin$/.test(
         key,
       )
     )
@@ -149,6 +149,19 @@ export default {
     const sha = request.headers.get("x-sha256") ?? "",
       size = Number(request.headers.get("x-raw-length")),
       crc32 = request.headers.get("x-page-crc32");
+    const first = request.headers.get("x-package-first"),
+      end = request.headers.get("x-package-end");
+    if (
+      (first !== null || end !== null) &&
+      (!/^\d+$/.test(first ?? "") ||
+        !/^\d+$/.test(end ?? "") ||
+        !Number.isSafeInteger(Number(first)) ||
+        !Number.isSafeInteger(Number(end)) ||
+        Number(end) <= Number(first) ||
+        !key.endsWith("/plan-0.bin") ||
+        sha !== generation)
+    )
+      return new Response("Invalid package coverage", { status: 400 });
     if (
       request.method !== "PUT" ||
       !/^[a-f0-9]{64}$/.test(sha) ||
@@ -193,6 +206,7 @@ export default {
           generation,
           sha256: sha,
           ...(crc32 ? { crc32 } : {}),
+          ...(first === null ? {} : { packageFirst: first, packageEnd: end! }),
         },
       }),
       transfer,

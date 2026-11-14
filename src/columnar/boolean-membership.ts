@@ -22,6 +22,7 @@ import {
   type NumericCursor,
 } from "./numeric-cursor.js";
 import type { PairPacket } from "./pair-packet.js";
+import type { PairEvidence } from "./pair-positions.js";
 type Tree =
   | { kind: "phrase"; plan: PairReadPlan }
   | { kind: "and" | "or" | "near"; left: Tree; right: Tree };
@@ -239,11 +240,14 @@ export function booleanMembershipAnchor(
         };
   }
   const filter = compile(selection.tree, field),
-    packets = new Map<string, PairPacket>();
+    packets = new Map<string, PairEvidence>();
   for (const s of selection.selections.values())
     for (const record of s.records)
-      if (record.context)
-        packets.set(pairKey(record.a, record.b), record.context);
+      if (record.supplementalContext ?? record.context)
+        packets.set(
+          pairKey(record.a, record.b),
+          (record.supplementalContext ?? record.context)!,
+        );
   const cursor = filter.cursor;
   let count = 0;
   const c = cursor();

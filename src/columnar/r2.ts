@@ -3,7 +3,10 @@ import type { Source } from "./storage.js";
 export class ColumnarR2 implements Source {
   constructor(readonly bucket: R2Bucket) {}
   async readNamed(address: string, bytes: number) {
-    const match = /^([a-f0-9]{64}\/pairs-\d+\.bin)@(\d+)$/.exec(address),
+    const match =
+        /^([a-f0-9]{64}\/(?:pairs|plan|positions)-\d+\.bin)@(\d+)$/.exec(
+          address,
+        ),
       key = match ? match[1] : address,
       offset = match ? Number(match[2]) : 0;
     if (
@@ -23,7 +26,7 @@ export class ColumnarR2 implements Source {
       object.size < offset + bytes ||
       (!match && object.size !== bytes) ||
       object.customMetadata?.generation !== key.split("/")[0] ||
-      (key.endsWith("/metadata.bin") &&
+      ((key.endsWith("/metadata.bin") || /\/plan-\d+\.bin$/.test(key)) &&
         object.customMetadata.sha256 !== key.split("/")[0])
     )
       throw Error("Pair object generation mismatch");

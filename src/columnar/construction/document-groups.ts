@@ -1,6 +1,7 @@
 import { concat, pack, u32 } from "../format.js";
 import { crc32 } from "../../format/codec.js";
 import { finishPackageDocuments } from "./package-documents.js";
+import { documentPrefix } from "../document-package.js";
 import { digest, jsonBytes, BuildStore } from "./runs.js";
 import { readVocabulary } from "./vocabulary.js";
 import { CorpusSource, type SourceRoot } from "./source.js";
@@ -12,12 +13,22 @@ export async function finishDocumentGroup(
     throw Error("Document groups contain at most 128 documents");
   const packets: Uint8Array[] = [],
     offsets = [0],
+    prefixes: number[] = [],
+    budgets: number[] = [],
     crcs: number[] = [];
   const result = await finishPackageDocuments(
       ...(args.slice(0, 7) as [any, any, any, any, any, any, any]),
       async (_doc, packet) => {
         packets.push(packet);
         offsets.push(offsets.at(-1)! + packet.length);
+        prefixes.push(documentPrefix(packet));
+        budgets.push(
+          new DataView(
+            packet.buffer,
+            packet.byteOffset,
+            packet.byteLength,
+          ).getUint32(16, true),
+        );
         crcs.push(crc32(packet));
       },
     ),
@@ -46,6 +57,8 @@ export async function finishDocumentGroup(
       end: result.end,
       sha256,
       offsets: btoa(String.fromCharCode(...pack(offsets, true))),
+      prefixes: btoa(String.fromCharCode(...pack(prefixes))),
+      verificationBytes: btoa(String.fromCharCode(...pack(budgets))),
     },
   };
 }
@@ -66,7 +79,7 @@ export function createDocumentGroupHandler(root: SourceRoot, code: string) {
         return new Response("Not found", { status: 404 });
       const path = new URL(request.url).pathname;
       if (path === "/group-health")
-        return Response.json({ code, format: "grouped-CDP3" });
+        return Response.json({ code, format: "grouped-CDP4" });
       if (path !== "/grouped-documents" || request.method !== "POST")
         return new Response("Not found", { status: 404 });
       if (pending >= 4)

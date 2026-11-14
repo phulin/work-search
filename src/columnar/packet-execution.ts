@@ -48,7 +48,7 @@ export interface CandidatePackages {
   excludedWords?: ReadonlySet<string>;
   averageBytes: number;
   byteLength?(doc: number): number;
-  load(doc: number): Promise<DocumentPackage>;
+  load(doc: number, wanted?: Set<number>): Promise<DocumentPackage>;
 }
 interface Columns {
   docs: Uint32Array;
@@ -507,7 +507,13 @@ export async function packageResult(
   positive: Set<number>,
   options: Options,
 ) {
-  const record = await pkg.display();
+  await pkg.preparePresentation();
+  const [record, snippet] = await Promise.all([
+    pkg.display(),
+    options.snippets !== false
+      ? pkg.snippet(positive, hit.first, hit.titleOnly)
+      : undefined,
+  ]);
   return {
     id: record.id,
     doc: hit.doc,
@@ -515,9 +521,7 @@ export async function packageResult(
     ...(options.metadata !== false
       ? { title: record.title, metadata: record.metadata }
       : {}),
-    ...(options.snippets !== false
-      ? { snippet: await pkg.snippet(positive, hit.first, hit.titleOnly) }
-      : {}),
+    ...(options.snippets !== false ? { snippet } : {}),
   };
 }
 /** Complete coverage with one transfer phase for term data, followed by winner
@@ -650,11 +654,11 @@ export async function executePackets(
       new Map();
     const active = (current?: DocumentPackage, positionBytes = 0) => {
       const raw = new Map(
-        [...packageHits].map(([doc, pkg]) => [doc, pkg.bytes.length]),
+        [...packageHits].map(([doc, pkg]) => [doc, pkg.rawBytes]),
       );
       for (const entry of reservations.values())
         raw.set(entry.item, entry.bytes);
-      if (current) raw.set(current.doc, current.bytes.length);
+      if (current) raw.set(current.doc, current.rawBytes);
       const numeric = current?.numericBytes ?? 0;
       reader.stats.peakPackageNumericBytes = Math.max(
         reader.stats.peakPackageNumericBytes,
@@ -690,7 +694,8 @@ export async function executePackets(
     for await (const { item: doc, value: pkg } of packagePipeline(
       documents(),
       packageSize,
-      (d) => packages!.load(d),
+      (d) =>
+        packages!.load(d, new Set(names.map((name) => terms.get(name)!.id))),
       (state) => {
         reservations = state.reserved;
         reader.stats.packagePipelineLoads = state.loads;
@@ -708,9 +713,9 @@ export async function executePackets(
     )) {
       reader.stats.packageCandidates++;
       reader.stats.oversizedPackageBatches += Number(
-        pkg!.bytes.length > PACKAGE_BATCH_BYTES,
+        pkg!.rawBytes > PACKAGE_BATCH_BYTES,
       );
-      candidateBytes += pkg!.bytes.length;
+      candidateBytes += pkg!.rawBytes;
       reader.stats.candidatePackageBytes = candidateBytes;
       const f = pkg!.frequencies(),
         lists = new Map<string, DecodedPostings>();
@@ -782,21 +787,18 @@ export async function executePackets(
       heap.add({ doc, score, row: doc % 4096, first, titleOnly });
       // Retain raw winner data only, releasing decoded token/frequency arrays
       // with this iteration. Rendering uses the existing package implementation.
-      packageHits.set(
-        doc,
-        new DocumentPackage(pkg.bytes, pkg.doc, pkg.observe),
-      );
+      packageHits.set(doc, pkg.retain());
       const surviving = new Set(heap.values.map((h) => h.doc));
       for (const key of packageHits.keys())
         if (!surviving.has(key)) packageHits.delete(key);
       let retained = [...packageHits.values()].reduce(
-        (n, pkg) => n + pkg.bytes.length,
+        (n, pkg) => n + pkg.rawBytes,
         0,
       );
       for (const [key, pkg] of packageHits) {
         if (retained <= PACKAGE_WINNER_BYTES) break;
         packageHits.delete(key);
-        retained -= pkg.bytes.length;
+        retained -= pkg.rawBytes;
       }
       reader.stats.peakWinnerPackageBytes = Math.max(
         reader.stats.peakWinnerPackageBytes,
@@ -920,16 +922,18 @@ export async function executePackets(
         const beforeIO = reader.stats.requests + reader.stats.sharedGets;
         const batch = await Promise.all(
           group.items.map(async (h) => {
-            const pkg = packageHits.get(h.doc) ?? (await packages!.load(h.doc));
+            const pkg =
+              packageHits.get(h.doc) ??
+              (await packages!.load(h.doc, positiveIds));
             return { h, pkg };
           }),
         );
         if (reader.stats.requests + reader.stats.sharedGets > beforeIO)
           reader.stats.packageMetadataFetchWaves++;
         const live = new Map(
-          [...packageHits].map(([doc, pkg]) => [doc, pkg.bytes.length]),
+          [...packageHits].map(([doc, pkg]) => [doc, pkg.rawBytes]),
         );
-        for (const { pkg } of batch) live.set(pkg.doc, pkg.bytes.length);
+        for (const { pkg } of batch) live.set(pkg.doc, pkg.rawBytes);
         reader.stats.peakActiveBufferBytes = Math.max(
           reader.stats.peakActiveBufferBytes,
           reader.stats.anchorBufferBytes +
@@ -942,6 +946,13 @@ export async function executePackets(
             ),
           )),
         );
+        for (const { pkg } of batch)
+          live.set(pkg.doc, pkg.rawBytes + pkg.numericBytes);
+        reader.stats.peakActiveBufferBytes = Math.max(
+          reader.stats.peakActiveBufferBytes,
+          reader.stats.anchorBufferBytes +
+            [...live.values()].reduce((n, b) => n + b, 0),
+        );
       }
       return results;
     },
@@ -952,7 +963,8 @@ export async function executePackets(
           ? await Promise.all(
               ranked.map(async (h) =>
                 packageResult(
-                  packageHits.get(h.doc) ?? (await packages.load(h.doc)),
+                  packageHits.get(h.doc) ??
+                    (await packages.load(h.doc, positiveIds)),
                   h,
                   positiveIds,
                   options,

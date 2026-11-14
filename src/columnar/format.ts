@@ -62,6 +62,7 @@ export interface Root {
     count: number;
     averageBytes: number;
     bytes: number;
+    storedBytes?: number;
     locators?: { sha256: string; bytes: number; groups: number };
   };
 }

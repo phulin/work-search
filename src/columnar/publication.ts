@@ -1,8 +1,14 @@
 // Bounded deployment transport. This module is never bundled into search Workers.
 export const publicationKey =
-  /^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+|presence-\d+|metadata)\.bin$/;
+  /^[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64}|pairs-\d+|positions-\d+|presence-\d+|metadata)\.bin$/;
 export const MAX_PUBLICATION_BYTES = 8 * 1048576;
-export type PublicationRecord = { key: string; size: number; sha256: string };
+export type PublicationRecord = {
+  key: string;
+  size: number;
+  sha256: string;
+  packageFirst?: number;
+  packageEnd?: number;
+};
 
 export async function inspectPublication(bucket: R2Bucket, keys: unknown) {
   if (
@@ -100,6 +106,13 @@ export async function publishBatch(bucket: R2Bucket, data: Uint8Array) {
         !Number.isSafeInteger(r.size) ||
         r.size < 1 ||
         !/^[a-f0-9]{64}$/.test(r.sha256) ||
+        ((r.packageFirst !== undefined || r.packageEnd !== undefined) &&
+          (!Number.isSafeInteger(r.packageFirst) ||
+            !Number.isSafeInteger(r.packageEnd) ||
+            r.packageFirst! < 0 ||
+            r.packageEnd! <= r.packageFirst! ||
+            !r.key.endsWith("/plan-0.bin") ||
+            r.key.split("/")[0] !== r.sha256)) ||
         (r.key.endsWith("/metadata.bin") && r.key.split("/")[0] !== r.sha256),
     ) ||
     new Set(records.map((r) => r.key)).size !== records.length
@@ -127,7 +140,16 @@ export async function publishBatch(bucket: R2Bucket, data: Uint8Array) {
           {
             sha256: r.sha256,
             onlyIf: new Headers({ "If-None-Match": "*" }),
-            customMetadata: { generation, sha256: r.sha256 },
+            customMetadata: {
+              generation,
+              sha256: r.sha256,
+              ...(r.packageFirst === undefined
+                ? {}
+                : {
+                    packageFirst: String(r.packageFirst),
+                    packageEnd: String(r.packageEnd),
+                  }),
+            },
           },
         );
         if (object) stored++;
@@ -137,7 +159,10 @@ export async function publishBatch(bucket: R2Bucket, data: Uint8Array) {
             !old ||
             old.size !== r.size ||
             old.customMetadata?.sha256 !== r.sha256 ||
-            old.customMetadata?.generation !== generation
+            old.customMetadata?.generation !== generation ||
+            (r.packageFirst !== undefined &&
+              (old.customMetadata.packageFirst !== String(r.packageFirst) ||
+                old.customMetadata.packageEnd !== String(r.packageEnd)))
           )
             throw Error("Immutable conflict: " + r.key);
           existing++;

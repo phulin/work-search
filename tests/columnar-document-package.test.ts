@@ -6,7 +6,7 @@ import {
 import { tokenize } from "../src/query/tokenize.js";
 import { Reader, Memory } from "../src/columnar/storage.js";
 import { crc32 } from "../src/format/codec.js";
-it("renders the same relevant passage by scanning packed tokens without expanding the document", async () => {
+it("renders the same relevant passage from term-addressed positions without scanning forward tokens", async () => {
   for (const width of [0, 1, 7, 13, 24, 32]) {
     const id = width ? 2 ** width - 1 : 0,
       ids = new Map([
@@ -32,10 +32,7 @@ it("renders the same relevant passage by scanning packed tokens without expandin
       expect(await scanned.snippet(wanted)).toBe(
         await expanded.snippet(wanted, first),
       );
-      expect(observations.filter((o) => o.kind === "tokens")).toEqual([
-        { kind: "tokens", section: 1, n: first + 1 },
-      ]);
-      expect(observations.filter((o) => o.kind === "decoded")).toEqual([]);
+      expect(observations.filter((o) => o.kind === "tokens")).toEqual([]);
       expect(await scanned.snippet(new Set([id + 1]))).toBe(
         await expanded.snippet(new Set([id + 1])),
       );
@@ -78,7 +75,7 @@ it("finishes a document from one independently sectioned package, preserving exa
     const p = pkg.positions(wanted, field),
       tokens = field ? title : body;
     for (const id of wanted)
-      expect(p.get(id) ?? []).toEqual(
+      expect(Array.from(p.get(id) ?? [])).toEqual(
         tokens.flatMap((word, i) => (ids.get(word) === id ? [i] : [])),
       );
   }

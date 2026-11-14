@@ -193,8 +193,7 @@ if (mode !== "pack") {
         dv = view(data);
       for (let offset = 0; offset < data.length;) {
         const doc = dv.getUint32(offset + 4, true),
-          length =
-            dv.getUint32(offset + 56, true) + dv.getUint32(offset + 60, true),
+          length = dv.getUint32(offset + 60, true),
           pkg = new DocumentPackage(
             data.subarray(offset, offset + length),
             doc,

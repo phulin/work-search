@@ -237,6 +237,12 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
         offsets: Uint8Array.from(
           Buffer.from(group.output.group.offsets, "base64"),
         ),
+        prefixes: Uint8Array.from(
+          Buffer.from(group.output.group.prefixes, "base64"),
+        ),
+        verificationBytes: Uint8Array.from(
+          Buffer.from(group.output.group.verificationBytes, "base64"),
+        ),
       });
     }
     const docDirectory = new DocumentDirectory(
@@ -255,7 +261,8 @@ it("builds and searches from actual Worker R2 bindings, survives retry and refus
           "rare alpha beta",
         );
     }
-    expect(groupReader.stats.requests).toBe(5);
+    // Numeric verification and winner presentation are independent transfers.
+    expect(groupReader.stats.requests).toBe(12);
     const packetRoot = {
       ...root,
       objects: [...root.objects],

@@ -36,6 +36,7 @@ export async function finishPackageDocuments(
   let next = first,
     tokens = 0,
     bytes = 0;
+  let verificationBytes = 0;
   const writes = new Set<Promise<void>>();
   let writeError: unknown;
   let part = source.part(next),
@@ -98,6 +99,11 @@ export async function finishPackageDocuments(
       packet.byteLength,
     ).getUint32(8, true);
     bytes += packet.length;
+    verificationBytes += new DataView(
+      packet.buffer,
+      packet.byteOffset,
+      packet.byteLength,
+    ).getUint32(16, true);
     if (tokens >= 1048576 || performance.now() - started >= 15000) {
       next++;
       break;
@@ -111,6 +117,7 @@ export async function finishPackageDocuments(
     documents: next - first,
     tokens,
     bytes,
+    verificationBytes,
     generation,
     dictionaryRequests: reader.stats.requests,
     dictionaryBytes: reader.stats.bytes,

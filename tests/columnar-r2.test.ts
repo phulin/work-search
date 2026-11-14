@@ -54,7 +54,7 @@ it("serves R2 pages and grouped documents without CRC metadata, retaining genera
   new DataView(data.buffer).setUint32(4, 38, true);
   await expect(
     new Reader(root, source).document(root.generation, 37, locator),
-  ).rejects.toThrow("Invalid document package");
+  ).rejects.toThrow("Invalid document verification");
   objectGeneration = "c".repeat(64);
   await expect(source.readPage(key, 0, packet.length)).rejects.toThrow(
     "generation mismatch",

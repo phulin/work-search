@@ -5,7 +5,14 @@ import {
   publishBatch,
   inspectPublication,
 } from "../src/columnar/publication.js";
-function packet(rows: { key: string; data: string }[]) {
+function packet(
+  rows: {
+    key: string;
+    data: string;
+    packageFirst?: number;
+    packageEnd?: number;
+  }[],
+) {
   const bodies = rows.map((r) => Buffer.from(r.data));
   const manifest = Buffer.from(
     JSON.stringify(
@@ -13,6 +20,8 @@ function packet(rows: { key: string; data: string }[]) {
         key: r.key,
         size: bodies[i].length,
         sha256: createHash("sha256").update(bodies[i]).digest("hex"),
+        packageFirst: r.packageFirst,
+        packageEnd: r.packageEnd,
       })),
     ),
   );
@@ -76,6 +85,30 @@ it("publishes complete immutable batches, safely resumes partial publication, an
   await expect(
     inspectPublication(bucket, ["casework/catalog.json"]),
   ).rejects.toThrow("inspection");
+});
+it("preserves document coverage metadata during local immutable publication", async () => {
+  const data = "document-group",
+    sha = createHash("sha256").update(data).digest("hex"),
+    key = sha + "/plan-0.bin";
+  let saved: any;
+  const bucket = {
+    put: async (_k: string, b: Uint8Array, o: any) =>
+      (saved = { size: b.length, customMetadata: o.customMetadata }),
+    head: async () => saved,
+  } as unknown as R2Bucket;
+  await publishBatch(
+    bucket,
+    packet([{ key, data, packageFirst: 128, packageEnd: 256 }]),
+  );
+  const [head] = await inspectPublication(bucket, [key]);
+  expect(head.headers["x-package-first"]).toBe("128");
+  expect(head.headers["x-package-end"]).toBe("256");
+  await expect(
+    publishBatch(
+      bucket,
+      packet([{ key, data, packageFirst: 256, packageEnd: 128 }]),
+    ),
+  ).rejects.toThrow("records");
 });
 it("bounds expanded publication buffers and rejects truncated or oversized transport", async () => {
   const request = (s: string, n: number) =>

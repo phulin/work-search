@@ -4,6 +4,8 @@ export interface DocumentGroup {
   end: number;
   sha256: string;
   offsets: Uint8Array;
+  prefixes?: Uint8Array;
+  verificationBytes?: Uint8Array;
 }
 /** Complete direct package addresses: one restart per physical group and packed
  * byte offsets within it. The content-addressed group key needs no remote lookup. */
@@ -14,7 +16,7 @@ export function encodeDocumentDirectory(
   const header = new Uint8Array(16 + groups.length * 48),
     v = view(header),
     parts: Uint8Array[] = [header];
-  [0x31444443, count, groups.length, header.length].forEach((n, i) =>
+  [0x32444443, count, groups.length, header.length].forEach((n, i) =>
     v.setUint32(i * 4, n, true),
   );
   let at = header.length,
@@ -32,13 +34,35 @@ export function encodeDocumentDirectory(
       !/^[a-f0-9]{64}$/.test(g.sha256)
     )
       throw Error("Invalid document group coverage");
-    [g.first, g.end, at, g.offsets.length].forEach((n, j) =>
+    const prefixes =
+        g.prefixes ?? pack(offsets.slice(1).map((end, i) => end - offsets[i])),
+      budget = g.verificationBytes ?? prefixes,
+      payload = concat([
+        u32([g.offsets.length, prefixes.length]),
+        g.offsets,
+        prefixes,
+        budget,
+      ]);
+    const prefixValues = unpack(prefixes),
+      budgetValues = unpack(budget);
+    if (
+      prefixValues.length !== g.end - g.first ||
+      budgetValues.length !== prefixValues.length ||
+      prefixValues.some(
+        (n, i) =>
+          n < 64 ||
+          n > budgetValues[i] ||
+          budgetValues[i] > offsets[i + 1] - offsets[i],
+      )
+    )
+      throw Error("Invalid document verification locators");
+    [g.first, g.end, at, payload.length].forEach((n, j) =>
       v.setUint32(p + j * 4, n, true),
     );
     for (let j = 0; j < 32; j++)
       header[p + 16 + j] = parseInt(g.sha256.slice(j * 2, j * 2 + 2), 16);
-    parts.push(g.offsets);
-    at += g.offsets.length;
+    parts.push(payload);
+    at += payload.length;
     next = g.end;
   });
   if (next !== count) throw Error("Incomplete document directory");
@@ -49,10 +73,12 @@ export class DocumentDirectory {
   private firsts: Uint32Array;
   private last = -1;
   private offsets = new Uint32Array();
+  private prefixes = new Uint32Array();
+  private verificationBytes = new Uint32Array();
   readonly count: number;
   constructor(readonly bytes: Uint8Array) {
     this.data = view(bytes);
-    if (bytes.length < 16 || this.data.getUint32(0, true) !== 0x31444443)
+    if (bytes.length < 16 || this.data.getUint32(0, true) !== 0x32444443)
       throw Error("Invalid document directory");
     this.count = this.data.getUint32(4, true);
     const groups = this.data.getUint32(8, true),
@@ -99,14 +125,30 @@ export class DocumentDirectory {
     if (this.last !== group) {
       const at = this.data.getUint32(p + 8, true),
         n = this.data.getUint32(p + 12, true),
-        offsets = unpack(this.bytes.subarray(at, at + n));
+        size = this.data.getUint32(at, true),
+        prefixSize = this.data.getUint32(at + 4, true),
+        offsets = unpack(this.bytes.subarray(at + 8, at + 8 + size)),
+        prefixes = unpack(
+          this.bytes.subarray(at + 8 + size, at + 8 + size + prefixSize),
+        ),
+        budgets = unpack(
+          this.bytes.subarray(at + 8 + size + prefixSize, at + n),
+        );
       if (
         offsets.length !== end - first + 1 ||
         offsets[0] !== 0 ||
-        offsets.some((n, i) => i > 0 && n <= offsets[i - 1])
+        offsets.some((n, i) => i > 0 && n <= offsets[i - 1]) ||
+        prefixes.length !== end - first ||
+        budgets.length !== end - first ||
+        budgets.some(
+          (n, i) => n < prefixes[i] || n > offsets[i + 1] - offsets[i],
+        ) ||
+        prefixes.some((n, i) => n < 64 || n > offsets[i + 1] - offsets[i])
       )
         throw Error("Invalid package offsets");
       this.offsets = offsets;
+      this.prefixes = prefixes;
+      this.verificationBytes = budgets;
       this.last = group;
     }
     const sha256 = [...this.bytes.subarray(p + 16, p + 48)]
@@ -117,6 +159,8 @@ export class DocumentDirectory {
       first,
       offset: this.offsets[doc - first],
       length: this.offsets[doc - first + 1] - this.offsets[doc - first],
+      prefixLength: this.prefixes[doc - first],
+      verificationBytes: this.verificationBytes[doc - first],
     };
   }
   *groups() {

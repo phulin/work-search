@@ -157,16 +157,54 @@ const [autoSearch, autoStorage, autoDirectory, autoDocuments] = process.env
 // Older instrumented controls intentionally use today's Reader counters. The
 // untouched CPU control freezes the entire runtime explicitly.
 const freezeRuntime = process.env.CWS_CONTROL_RUNTIME === "frozen";
+const ControlObjects =
+  process.env.CWS_CONTROL_INDEX && freezeRuntime
+    ? (
+        await import(
+          pathToFileURL(
+            resolve(
+              process.env.CWS_CONTROL_SOURCE!,
+              "bench/columnar/local-storage.ts",
+            ),
+          ).href
+        )
+      ).LocalObjects
+    : LocalObjects;
+const controlAssets = process.env.CWS_CONTROL_INDEX
+  ? {
+      root: JSON.parse(
+        await readFile(process.env.CWS_CONTROL_INDEX + "/root.json", "utf8"),
+      ),
+      raw: await readFile(process.env.CWS_CONTROL_INDEX + "/directory.bin"),
+      documents: await readFile(
+        process.env.CWS_CONTROL_INDEX + "/documents.bin",
+      ),
+      pairs: await readFile(
+        process.env.CWS_CONTROL_INDEX + "/pairs/router.bin",
+      ),
+      presence: JSON.parse(
+        await readFile(
+          process.env.CWS_CONTROL_INDEX + "/pairs/presence.json",
+          "utf8",
+        ),
+      ),
+    }
+  : undefined;
 const runtimes = new Map(
   plans.map((plan) => {
+    const assets = plan.startsWith("control-") ? controlAssets : undefined,
+      runtimeRoot = assets?.root ?? root,
+      runtimeSource = assets ? new ControlObjects(runtimeRoot, store) : source;
+    if (assets)
+      runtimeSource.namedDirectory = process.env.CWS_CONTROL_INDEX + "/pairs";
     const setting = /^(?:auto|control)-N(\d+)-M(\d+)$/.exec(plan),
       membership =
         setting && pairRaw
           ? {
-              router: new PairRouter(pairRaw),
+              router: new PairRouter(assets?.pairs ?? pairRaw),
               N: Number(setting[1]),
               M: Number(setting[2]),
-              presence: commonPresence,
+              presence: assets?.presence ?? commonPresence,
             }
           : undefined;
     if (setting && !membership)
@@ -191,10 +229,10 @@ const runtimes = new Map(
           ? controlDocuments.DocumentDirectory
           : (autoDocuments?.DocumentDirectory ?? DocumentDirectory),
       memory = new Store.Memory(),
-      directory = new Directory(raw, root.count),
-      documents = new Documents(documentRaw),
+      directory = new Directory(assets?.raw ?? raw, runtimeRoot.count),
+      documents = new Documents(assets?.documents ?? documentRaw),
       index = new Index(
-        root,
+        runtimeRoot,
         undefined,
         directory,
         undefined,
@@ -202,19 +240,28 @@ const runtimes = new Map(
         membership,
       ),
       blockIndex = new ColumnarIndex(
-        root,
+        runtimeRoot,
         undefined,
         undefined,
         undefined,
         documents,
       ),
-      io = new SimulatedIO(source, model, sharedCacheMiB);
+      io = new SimulatedIO(runtimeSource, model, sharedCacheMiB);
     memory.pages = new Store.Lru(12 * 1048576);
     // Benchmark-only bypass of packet-plan selection, with identical addresses.
     blockIndex.terms = (names, reader) => directory.lookup(names, reader);
     return [
       plan,
-      { memory, directory, documents, index, blockIndex, io, ReaderClass },
+      {
+        memory,
+        directory,
+        documents,
+        index,
+        blockIndex,
+        io,
+        ReaderClass,
+        root: runtimeRoot,
+      },
     ] as const;
   }),
 );
@@ -239,8 +286,16 @@ async function query(
   namespace: string,
   budget = sharedBudget,
 ) {
-  const { memory, directory, documents, index, blockIndex, io, ReaderClass } =
-    runtimes.get(plan)!;
+  const {
+    memory,
+    directory,
+    documents,
+    index,
+    blockIndex,
+    io,
+    ReaderClass,
+    root,
+  } = runtimes.get(plan)!;
   const deferred: Promise<unknown>[] = [],
     reader = new ReaderClass(
       root,
@@ -262,12 +317,14 @@ async function query(
       cursors.get(plan + ":" + selected.indexOf(scenario)) ?? options.after;
   const packages = {
     averageBytes: root.documentPackages!.averageBytes,
-    byteLength: (doc: number) => documents.lookup(doc).length,
-    load: (doc: number) =>
+    byteLength: (doc: number) =>
+      documents.lookup(doc).verificationBytes ?? documents.lookup(doc).length,
+    load: (doc: number, wanted?: Set<number>) =>
       reader.document(
         root.documentPackages!.generation,
         doc,
         documents.lookup(doc),
+        wanted,
       ),
   };
   let result;
@@ -322,6 +379,8 @@ async function query(
   // Cache writes are not response latency; finish them before changing state.
   await Promise.all(deferred);
   if (result) {
+    if (result.generation !== root.generation)
+      throw Error("Result generation mismatch");
     const want = scenario.oracle;
     if (
       options.exactTotal &&
@@ -393,7 +452,7 @@ async function query(
       ? createHash("sha256")
           .update(
             JSON.stringify({
-              generation: result.generation,
+              corpusHash: root.corpusHash,
               total: result.total,
               results: result.results.map(({ score: _score, ...hit }) => hit),
             }),
@@ -510,6 +569,8 @@ const manifest = {
   startedAt: new Date().toISOString(),
   implementationSha256,
   controlSource: process.env.CWS_CONTROL_SOURCE,
+  controlIndex: process.env.CWS_CONTROL_INDEX,
+  controlGeneration: controlAssets?.root.generation,
   autoSource: process.env.CWS_AUTO_SOURCE,
   controlRuntime: freezeRuntime ? "frozen" : "current-reader-instrumentation",
 };

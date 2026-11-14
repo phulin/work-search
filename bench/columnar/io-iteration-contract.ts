@@ -24,10 +24,13 @@ const [
     "pair-router",
   ].map(load),
 );
-const dir = "work/columnar-worker-stem-1m",
-  pairs = "work/columnar-complete-pairs-1m",
+const dir = process.env.CWS_REFERENCE_INDEX ?? "work/columnar-worker-stem-1m",
+  pairs = process.env.CWS_REFERENCE_PAIRS ?? "work/columnar-complete-pairs-1m",
   root = JSON.parse(await readFile(dir + "/root.json", "utf8")),
-  source = new LocalObjects(root, "work/columnar-local-data"),
+  source = new LocalObjects(
+    root,
+    process.env.CWS_LOCAL_DATA ?? "work/columnar-local-data",
+  ),
   memory = new Memory(),
   directory = new TermDirectory(
     await readFile(dir + "/directory.bin"),

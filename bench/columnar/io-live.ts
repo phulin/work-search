@@ -23,9 +23,14 @@ const contract = JSON.parse(await readFile(contractPath, "utf8")),
       ]),
     ),
   );
-for (const h of Object.values(health) as any[]) {
-  assert.equal(h.generation, contract.generation);
+for (const [variant, h] of Object.entries(health) as [string, any][]) {
+  assert.equal(
+    h.generation,
+    contract.generations?.[variant] ?? contract.generation,
+  );
   assert.equal(h.documents, 1000000);
+  assert.equal(h.corpusHash, contract.corpusHash);
+  assert.equal(h.analysis, contract.analysis);
 }
 let seed = 20261114;
 const random = () => {
@@ -125,13 +130,14 @@ async function request(
   };
   rows.push(row);
   assert.equal(r.status, 200, result.error);
-  assert.equal(result.generation, contract.generation);
+  assert.equal(result.generation, (health as any)[variant].generation);
+  const oracle = s.oracleByVariant?.[variant] ?? s.oracle;
   assert.deepEqual(
     result.results.map((h: any) => h.id),
-    s.oracle.map((h: any) => h.id),
+    oracle.map((h: any) => h.id),
   );
   result.results.forEach((h: any, i: number) => {
-    const w = s.oracle[i];
+    const w = oracle[i];
     assert(
       Math.abs(h.score - w.score) <= 1e-8 * Math.max(1, Math.abs(w.score)),
     );

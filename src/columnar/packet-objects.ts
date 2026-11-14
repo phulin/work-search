@@ -6,7 +6,10 @@ export class PacketObjects {
   private object = 0;
   constructor(
     private readonly write: (object: number, data: Uint8Array) => Promise<void>,
-  ) {}
+    firstObject = 0,
+  ) {
+    this.object = firstObject;
+  }
   async append(data: Uint8Array) {
     if (!data.length || data.length > this.buffer.length)
       throw Error("Invalid packet size");

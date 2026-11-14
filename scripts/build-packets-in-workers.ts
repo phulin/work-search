@@ -65,7 +65,7 @@ const original: Root = JSON.parse(
     sourceGeneration: original.generation,
     analysis: original.analysis,
     code: groupHealth.code,
-    format: "grouped-CDP3",
+    format: "grouped-CDP4",
   }),
   file = out + "/build.json",
   state = await readFile(file, "utf8").then(JSON.parse, () => ({
@@ -308,6 +308,8 @@ await pool<any>(state.packages, async (job, i) => {
       throw Error("Invalid package continuation");
     job.next = result.end;
     job.bytes += result.bytes;
+    job.verificationBytes =
+      (job.verificationBytes ?? 0) + result.verificationBytes;
     (job.groups ??= []).push(result.group);
     job.tasks.push(task);
     await save();
@@ -316,12 +318,20 @@ await pool<any>(state.packages, async (job, i) => {
 });
 const objects: Root["objects"] = [],
   objectIds: number[] = [],
-  bytes = state.packages.reduce((n: number, j: any) => n + j.bytes, 0);
+  bytes = state.packages.reduce(
+    (n: number, j: any) => n + j.verificationBytes,
+    0,
+  ),
+  storedBytes = state.packages.reduce((n: number, j: any) => n + j.bytes, 0);
 const groups = state.packages
     .flatMap((j: any) => j.groups)
     .map((g: any) => ({
       ...g,
       offsets: Uint8Array.from(Buffer.from(g.offsets, "base64")),
+      prefixes: Uint8Array.from(Buffer.from(g.prefixes, "base64")),
+      verificationBytes: Uint8Array.from(
+        Buffer.from(g.verificationBytes, "base64"),
+      ),
     }))
     .sort((a: any, b: any) => a.first - b.first),
   documentDirectory = encodeDocumentDirectory(groups, original.count);
@@ -349,6 +359,7 @@ const root: Root = {
     count: original.count,
     averageBytes: bytes / original.count,
     bytes,
+    storedBytes,
     locators: {
       sha256: createHash("sha256").update(documentDirectory).digest("hex"),
       bytes: documentDirectory.length,

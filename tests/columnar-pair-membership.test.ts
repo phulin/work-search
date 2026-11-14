@@ -25,6 +25,69 @@ import {
 import { parse } from "../src/query/parser.js";
 import { pairObjectKey } from "../src/columnar/pair-router.js";
 import { u32 } from "../src/columnar/format.js";
+it("prices saved candidate request waves even when numeric verification records are small", () => {
+  const router = new PairRouter(
+      encodePairRouter(
+        {
+          generation: "a".repeat(64),
+          baseGeneration: "b".repeat(64),
+          documents: 1000000,
+          targetBytes: 131072,
+          contextBytes: 0,
+          namespaces: [],
+          roots: [-1],
+          commonWords: [],
+        },
+        [],
+        [
+          {
+            object: 0,
+            offset: 0,
+            bytes: 45582,
+            pairs: 100,
+            namespace: 0,
+            bits: 0,
+            prefix: 0,
+            crc32: 0,
+          },
+        ],
+        encodePairMembershipPacket([]),
+      ),
+    ),
+    alternative = {
+      kind: "documents" as const,
+      frequencyBytes: 297204,
+      positionBytes: 0,
+      expectedCandidates: 416,
+      anchors: ["rare"],
+    },
+    choice = planMembershipAnchor(
+      parse('"rare phrase"'),
+      { router, N: 100, M: 1000 },
+      new Map([
+        ["rare", { df: 64280 }],
+        ["phrase", { df: 900000 }],
+      ]),
+      4849,
+      "all",
+      alternative,
+    );
+  expect(choice).toBeDefined();
+  expect(choice!.savedWork).toBeGreaterThan(choice!.readWork);
+  expect(
+    planMembershipAnchor(
+      parse('"rare phrase"'),
+      { router, N: 100, M: 1000 },
+      new Map([
+        ["rare", { df: 64280 }],
+        ["phrase", { df: 900000 }],
+      ]),
+      4849,
+      "all",
+      { ...alternative, expectedCandidates: 1 },
+    ),
+  ).toBeUndefined();
+});
 it("compares optional membership work with the existing plan before reading, retaining sparse all-common anchors", () => {
   const router = new PairRouter(
       encodePairRouter(

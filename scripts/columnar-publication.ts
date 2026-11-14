@@ -114,12 +114,11 @@ export async function publishAuxiliary(
     }
   }
   const pending = objects.filter((o) => !acknowledged.has(o.key));
+  const large = pending.filter((o) => o.size + 65540 > MAX_PUBLICATION_BYTES);
   const batches: AuxiliaryObject[][] = [];
   let batch: AuxiliaryObject[] = [],
     bytes = 0;
-  for (const item of pending) {
-    if (item.size + 65540 > MAX_PUBLICATION_BYTES)
-      throw Error("Auxiliary object exceeds batch transport: " + item.key);
+  for (const item of pending.filter((o) => !large.includes(o))) {
     if (
       batch.length &&
       (batch.length === 128 || bytes + item.size > 4 * 1048576)
@@ -145,6 +144,87 @@ export async function publishAuxiliary(
     batches.length,
     "bounded batches",
   );
+  let largeNext = 0;
+  await Promise.all(
+    Array.from({ length: 4 }, async () => {
+      for (;;) {
+        const item = large[largeNext++];
+        if (!item) return;
+        if (item.size > 64 * 1048576)
+          throw Error("Object exceeds streaming publication: " + item.key);
+        const raw = await readFile(item.path);
+        if (raw.length !== item.size) throw Error("Publication size mismatch");
+        const record: PublicationRecord = {
+            key: item.key,
+            size: item.size,
+            sha256: createHash("sha256").update(raw).digest("hex"),
+            packageFirst: item.packageFirst,
+            packageEnd: item.packageEnd,
+          },
+          body = await compress(raw, { level: 6 });
+        for (let attempt = 0; ; attempt++) {
+          try {
+            const response = await fetch(url + "/" + item.key, {
+              method: "PUT",
+              headers: {
+                authorization: `Bearer ${token}`,
+                "x-sha256": record.sha256,
+                "x-raw-length": String(item.size),
+                ...(item.packageFirst === undefined
+                  ? {}
+                  : {
+                      "x-package-first": String(item.packageFirst),
+                      "x-package-end": String(item.packageEnd),
+                    }),
+              },
+              body,
+              signal: AbortSignal.timeout(180000),
+            });
+            if (!response.ok)
+              throw Error(
+                "Publication HTTP " +
+                  response.status +
+                  ": " +
+                  (await response.text()).slice(0, 300),
+              );
+            await response.text();
+            break;
+          } catch (error) {
+            if (attempt === 7) throw error;
+            await new Promise((r) =>
+              setTimeout(r, Math.min(10000, 500 * 2 ** attempt)),
+            );
+          }
+        }
+        const h = (await inspectObjects(url, token, [item.key])).get(item.key)!;
+        if (
+          h.status !== 200 ||
+          Number(h.headers["content-length"]) !== item.size ||
+          h.headers["x-sha256"] !== record.sha256
+        )
+          throw Error("Unverified large publication");
+        await appendFile(
+          receipt,
+          JSON.stringify({
+            inventory,
+            at: new Date().toISOString(),
+            keys: [item.key],
+            records: [record],
+            result: { objects: 1 },
+          }) + "\n",
+        );
+        done++;
+        transferred += body.length;
+        console.log(
+          "Published large object",
+          largeNext,
+          "/",
+          large.length,
+          item.key,
+        );
+      }
+    }),
+  );
   await Promise.all(
     Array.from({ length: 12 }, async () => {
       for (;;) {
@@ -158,6 +238,8 @@ export async function publishAuxiliary(
             key: o.key,
             size: o.size,
             sha256: createHash("sha256").update(buffers[i]).digest("hex"),
+            packageFirst: o.packageFirst,
+            packageEnd: o.packageEnd,
           };
         });
         const manifest = Buffer.from(JSON.stringify(records));

@@ -1,10 +1,14 @@
 import { PacketObjects } from "../../src/columnar/packet-objects.js";
 // Offline migration/measurement utility. Legacy readers are loaded solely from
 // an explicitly frozen checkout; no legacy serving decoder is retained.
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, unlink } from "node:fs/promises";
 import { readFileSync, createReadStream } from "node:fs";
 import { createGunzip, gunzipSync, gzipSync } from "node:zlib";
-import { createInterface } from "node:readline";
+import { jsonLines } from "../../src/builder/jsonl.js";
+import {
+  encodeDocumentParts,
+  documentPrefix,
+} from "../../src/columnar/document-package.js";
 import { createHash } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
@@ -62,10 +66,12 @@ const [input, store, pairs, corpus, output, control, stage] =
   process.argv.slice(2);
 if (
   !stage ||
-  !["lengths", "documents", "terms", "pairs", "finish"].includes(stage)
+  !["lengths", "documents", "terms", "pairs", "presence", "finish"].includes(
+    stage,
+  )
 )
   throw Error(
-    "Usage: yarn tsx bench/columnar/rebuild-compact.ts INDEX LOCAL_DATA PAIRS CORPUS.jsonl.gz OUTPUT FROZEN_CHECKOUT lengths|documents|terms|pairs|finish",
+    "Usage: yarn tsx bench/columnar/rebuild-compact.ts INDEX LOCAL_DATA PAIRS CORPUS.jsonl.gz OUTPUT FROZEN_CHECKOUT lengths|documents|terms|pairs|presence|finish",
   );
 if (
   [input, store, pairs, control].some(
@@ -101,7 +107,9 @@ const saveReport = async () => {
   );
   console.log(JSON.stringify(report));
 };
-const oldDocs = new DocumentDirectory(await readFile(input + "/documents.bin"));
+const { DocumentDirectory: OldDocuments } = await load("document-directory"),
+  { DocumentPackage: OldPackage } = await load("document-package"),
+  oldDocs = new OldDocuments(await readFile(input + "/documents.bin"));
 const physical = (key: string) => store + "/objects/" + key;
 const packageSource = (key: string) => readFile(physical(key));
 let groupKey = "",
@@ -130,12 +138,12 @@ if (stage === "lengths") {
   await saveReport();
 }
 if (stage === "documents") {
-  const raw = createReadStream(corpus),
-    z = raw.pipe(createGunzip()),
-    lines = createInterface({ input: z, crlfDelay: Infinity }),
+  const lines = jsonLines(corpus),
     groups: DocumentGroup[] = [],
     packets: Uint8Array[] = [],
-    offsets = [0];
+    offsets = [0],
+    prefixes: number[] = [],
+    budgets: number[] = [];
   let first = 0,
     doc = 0,
     bytes = 0;
@@ -151,8 +159,12 @@ if (stage === "documents") {
       end: doc,
       sha256: hash,
       offsets: pack(offsets, true),
+      prefixes: pack(prefixes),
+      verificationBytes: pack(budgets),
     });
     packets.length = 0;
+    prefixes.length = 0;
+    budgets.length = 0;
     offsets.length = 1;
     offsets[0] = 0;
     first = doc;
@@ -175,27 +187,20 @@ if (stage === "documents") {
       if (value.id !== display.id || starts.length !== v.getUint32(8, true))
         throw Error("Corpus/document mismatch at " + doc);
       const text = await encodeTextChunks(scanned.text, starts, (data) =>
-          gzipSync(data),
-        ),
-        sections = [
-          section(0),
-          section(1),
-          section(2),
-          section(3),
-          text.directory,
-          text.data,
-        ],
-        header = source.slice(0, 64),
-        h = view(header);
-      h.setUint32(0, 0x33504443, true);
-      let at = 64;
-      sections.forEach((s, i) => {
-        h.setUint32(16 + i * 8, at, true);
-        h.setUint32(20 + i * 8, s.length, true);
-        at += s.length;
-      });
-      const packet = concat([header, ...sections]);
+        gzipSync(data),
+      );
+      const prior = new OldPackage(source, doc),
+        packet = encodeDocumentParts({
+          doc,
+          body: prior.tokens(0),
+          title: prior.tokens(1),
+          display: section(3),
+          directory: text.directory,
+          text: text.data,
+        });
       packets.push(packet);
+      prefixes.push(documentPrefix(packet));
+      budgets.push(view(packet).getUint32(16, true));
       offsets.push(offsets.at(-1)! + packet.length);
       bytes += packet.length;
       doc++;
@@ -209,9 +214,7 @@ if (stage === "documents") {
         );
     }
   } finally {
-    lines.close();
-    z.destroy();
-    raw.destroy();
+    await lines.return(undefined);
   }
   await flush();
   if (doc !== old.count) throw Error("Incomplete corpus");
@@ -633,6 +636,44 @@ if (stage === "pairs") {
   report.contexts = contexts;
   await saveReport();
 }
+if (stage === "presence") {
+  const { PairMembership: OldMembership } = await load("pair-membership"),
+    presence = JSON.parse(await readFile(pairs + "/presence.json", "utf8")),
+    router = new PairRouter(await readFile(output + "/router.bin"));
+  await mkdir(output + "/presence", { recursive: true });
+  for (let rank = 0; rank < presence.entries.length; rank++) {
+    const record = new OldMembership(
+        await readFile(pairs + `/presence/${rank}.bin`),
+        old.count,
+      ),
+      data = encodePairMembership(
+        {
+          ...record,
+          body: Uint32Array.from(record.body.values()),
+          title: Uint32Array.from(record.title.values()),
+          context: undefined,
+        },
+        old.count,
+      );
+    await unlink(output + `/presence/${rank}.bin`).catch((e: any) => {
+      if (e.code !== "ENOENT") throw e;
+    });
+    await writeFile(output + `/presence/${rank}.bin`, data);
+    presence.entries[rank] = {
+      ...presence.entries[rank],
+      bytes: data.length,
+      crc32: undefined,
+    };
+  }
+  presence.generation = router.metadata.generation;
+  presence.bytes = presence.entries.reduce(
+    (n: number, e: any) => n + e.bytes,
+    0,
+  );
+  await writeFile(output + "/presence.json", JSON.stringify(presence));
+  report.bytes = presence.bytes;
+  await saveReport();
+}
 if (stage === "finish") {
   const objects: Root["objects"] = JSON.parse(
       await readFile(output + "/term-objects.json", "utf8"),
@@ -642,6 +683,10 @@ if (stage === "finish") {
     docReport = JSON.parse(
       await readFile(output + "/documents-report.json", "utf8"),
     );
+  const numericDirectory = new DocumentDirectory(documents);
+  let verificationBytes = 0;
+  for (let doc = 0; doc < old.count; doc++)
+    verificationBytes += numericDirectory.lookup(doc).verificationBytes;
   const root: Root = {
     ...old,
     generation: "",
@@ -658,11 +703,12 @@ if (stage === "finish") {
     },
     documentPackages: {
       generation: sha(
-        "compact-documents-3:" + old.documentPackages!.generation,
+        "verification-documents-1:" + old.documentPackages!.generation,
       ),
       count: old.count,
-      bytes: docReport.bytes,
-      averageBytes: docReport.bytes / old.count,
+      bytes: verificationBytes,
+      storedBytes: docReport.bytes,
+      averageBytes: verificationBytes / old.count,
       locators: {
         sha256: sha(documents),
         bytes: documents.length,

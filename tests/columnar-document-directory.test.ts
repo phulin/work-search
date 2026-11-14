@@ -22,6 +22,8 @@ it("directly locates every package across irregular physical groups and refuses 
         first,
         offset: offsets.at(-1)!,
         length,
+        prefixLength: length,
+        verificationBytes: length,
       });
       offsets.push(offsets.at(-1)! + length);
     }

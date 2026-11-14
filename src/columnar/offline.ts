@@ -102,7 +102,7 @@ export class OfflineObjects {
       throw Error("Offline package group identity mismatch");
     const data = bytes.subarray(offset, offset + length),
       v = new DataView(data.buffer, data.byteOffset, data.byteLength);
-    if (v.getUint32(0, true) !== 0x33504443 || v.getUint32(4, true) !== doc)
+    if (v.getUint32(0, true) !== 0x34504443 || v.getUint32(4, true) !== doc)
       throw Error("Offline document identity mismatch");
     return { data };
   }

@@ -63,6 +63,7 @@ import {
   commonWordExclusions,
   loadCommonPresence,
   intersectMembershipAnchor,
+  enrichMembershipPositions,
   type MembershipSettings,
 } from "./membership-anchor.js";
 import {
@@ -315,13 +316,15 @@ export class ColumnarIndex {
           ? {
               averageBytes: this.root.documentPackages.averageBytes,
               byteLength: this.documentDirectory
-                ? (doc: number) => this.documentDirectory!.lookup(doc).length
+                ? (doc: number) =>
+                    this.documentDirectory!.lookup(doc).verificationBytes
                 : undefined,
-              load: (doc: number) =>
+              load: (doc: number, wanted?: Set<number>) =>
                 reader.document(
                   this.root.documentPackages!.generation,
                   doc,
                   this.documentDirectory?.lookup(doc),
+                  wanted,
                 ),
             }
           : undefined),
@@ -421,7 +424,7 @@ export class ColumnarIndex {
     reader.stats.plannedPresenceLists = presenceRanks.length;
     reader.stats.estimatedPairCandidates =
       membershipRead?.expectedCandidates ?? 0;
-    const loadedMembership = selection
+    let loadedMembership = selection
       ? intersectMembershipAnchor(
           membershipAnchor(
             selection,
@@ -447,6 +450,40 @@ export class ColumnarIndex {
         }
       : undefined;
     let packetCandidates: Uint32Array | undefined;
+    if (
+      selection &&
+      loadedMembership &&
+      [...selection.selections.values()].some((s) =>
+        s.records.some((r) => r.positionDirectory),
+      )
+    ) {
+      const docs = Uint32Array.from(
+          [...loadedMembership.values()].filter(
+            (doc) => !presenceFilter || presenceFilter(doc),
+          ),
+        ),
+        verificationBytes = basePackages?.byteLength
+          ? docs.reduce((n, doc) => n + basePackages.byteLength!(doc), 0)
+          : docs.length * (basePackages?.averageBytes ?? 16384);
+      const selections = [...selection.selections.values()],
+        budget = Math.floor(
+          Math.min(4 * 1048576, verificationBytes / 2) / selections.length,
+        );
+      await Promise.all(
+        selections.map((s) =>
+          enrichMembershipPositions(s, docs, reader, budget),
+        ),
+      );
+      loadedMembership = intersectMembershipAnchor(
+        membershipAnchor(
+          selection,
+          new Map([...terms].map(([name, t]) => [name, t.id])),
+          field,
+        ),
+        unigramCandidates,
+      );
+      reader.stats.membershipCandidates = loadedMembership.count;
+    }
     const packages = basePackages
       ? {
           ...basePackages,
@@ -1329,7 +1366,7 @@ export class ColumnarIndex {
         ? await Promise.all(
             ranked.map(async (h) =>
               packageResult(
-                await packages.load(h.doc),
+                await packages.load(h.doc, positiveIds),
                 h,
                 positiveIds,
                 options,

@@ -12,8 +12,13 @@ type PackageMetadata = { first: number; checksums: number[] };
 export class LocalObjects implements Source {
   namedDirectory?: string;
   async readNamed(address: string, bytes: number) {
-    const match = /^([a-f0-9]{64}\/pairs-\d+\.bin)@(\d+)$/.exec(address),
+    const match =
+        /^([a-f0-9]{64}\/(?:pairs|plan|positions)-\d+\.bin)@(\d+)$/.exec(
+          address,
+        ),
       key = match ? match[1] : address;
+    if (match && key.includes("/plan-"))
+      return this.range(this.path(key), Number(match[2]), bytes);
     if (
       !this.namedDirectory ||
       (!match && !/^[a-f0-9]{64}\/presence-\d+\.bin$/.test(key))
@@ -250,12 +255,12 @@ export class LocalObjects implements Source {
       for (let at = 0; at < data.length;) {
         if (
           at + 64 > data.length ||
-          v.getUint32(at, true) !== 0x33504443 ||
+          v.getUint32(at, true) !== 0x34504443 ||
           v.getUint32(at + 4, true) !==
             metadata.first + metadata.checksums.length
         )
           throw Error("Invalid local document group");
-        const length = v.getUint32(at + 56, true) + v.getUint32(at + 60, true);
+        const length = v.getUint32(at + 60, true);
         if (length < 64 || at + length > data.length)
           throw Error("Invalid local package length");
         metadata.checksums.push(crc32(data.subarray(at, at + length)));

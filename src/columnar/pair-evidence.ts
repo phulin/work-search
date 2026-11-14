@@ -1,11 +1,12 @@
 import { lower, type Root, type PositionalPair } from "./format.js";
 import type { PairPacket } from "./pair-packet.js";
+import type { PairEvidence } from "./pair-positions.js";
 import type { Node } from "../query/parser.js";
 
 const EMPTY = new Uint32Array();
 export const pairKey = (a: number, b: number) => `${a}:${b}`;
 export function pairPhraseCovered(
-  packets: Map<string, PairPacket>,
+  packets: Map<string, PairEvidence>,
   ids: Map<string, number>,
   words: string[],
 ) {
@@ -81,14 +82,14 @@ export function planPairAnchor(
 /** Exact phrase occurrences from selected pairs and their token context. Missing
  * pairs are unknown. Multiple anchors can jointly cover a longer phrase. */
 export function pairPhraseEvidence(
-  packets: Map<string, PairPacket>,
+  packets: Map<string, PairEvidence>,
   ids: Map<string, number>,
 ) {
   const compiled = new WeakMap<
     string[],
     {
       words: number[];
-      anchors: { packet: PairPacket; at: number }[];
+      anchors: { packet: PairEvidence; at: number }[];
       covered: boolean;
       doc: number;
       fields: (Uint32Array | undefined)[];
@@ -103,7 +104,7 @@ export function pairPhraseEvidence(
     let plan = compiled.get(names);
     if (!plan) {
       const words = names.map((name) => ids.get(name) ?? -1),
-        anchors: { packet: PairPacket; at: number }[] = [],
+        anchors: { packet: PairEvidence; at: number }[] = [],
         covered = new Uint8Array(words.length);
       for (let at = 0; at + 1 < words.length; at++) {
         const packet = packets.get(pairKey(words[at], words[at + 1]));

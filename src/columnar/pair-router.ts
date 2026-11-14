@@ -14,6 +14,7 @@ export interface PairRoutingMetadata {
   namespaces: string[];
   roots: number[];
   commonWords: { word: string; id: number; df: number }[];
+  positionObjects?: { id: number; bytes: number; sha256: string }[];
 }
 export interface PairLeaf {
   object: number;
@@ -163,6 +164,11 @@ export class PairRouter {
       );
     for (const [id, bytes] of objects)
       yield { key: `${this.metadata.generation}/pairs-${id}.bin`, bytes };
+    for (const o of this.metadata.positionObjects ?? [])
+      yield {
+        key: `${this.metadata.generation}/positions-${o.id}.bin`,
+        bytes: o.bytes,
+      };
   }
   /** Corpus-derived prior for pairs outside the ranked hot table. This is a
    * planning estimate, never a matching or pruning bound. No wire-format change. */

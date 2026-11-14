@@ -43,12 +43,12 @@ export async function* packageMetadata(
         v = view(packet);
       if (
         packet.length < 64 ||
-        v.getUint32(0, true) !== 0x33504443 ||
+        v.getUint32(0, true) !== 0x34504443 ||
         v.getUint32(4, true) !== doc
       )
         throw Error("Metadata source document identity mismatch");
-      const offset = v.getUint32(40, true),
-        length = v.getUint32(44, true);
+      const offset = v.getUint32(32, true),
+        length = v.getUint32(36, true);
       if (offset < 64 || offset + length > packet.length)
         throw Error("Metadata source display range mismatch");
       const display = JSON.parse(

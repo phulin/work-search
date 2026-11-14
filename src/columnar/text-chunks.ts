@@ -64,8 +64,10 @@ export class TextChunks {
   readonly count: number;
   constructor(
     directory: Uint8Array,
-    private readonly data: Uint8Array,
+    private readonly data:
+      Uint8Array | ((offset: number, length: number) => Promise<Uint8Array>),
     private readonly inflated?: (chunk: number, bytes: number) => void,
+    private readonly dataLength = typeof data === "function" ? -1 : data.length,
   ) {
     this.directory = view(directory);
     if (directory.length < 24 || this.directory.getUint32(0, true) !== MAGIC)
@@ -85,13 +87,13 @@ export class TextChunks {
         (!i && first !== 0) ||
         at !== next ||
         !n ||
-        at + n > data.length
+        at + n > dataLength
       )
         throw Error("Invalid text chunk address");
       previous = first;
       next = at + n;
     }
-    if (next !== data.length) throw Error("Trailing text chunk bytes");
+    if (next !== dataLength) throw Error("Trailing text chunk bytes");
   }
   private async text(i: number) {
     const p = 8 + i * 16,
@@ -99,11 +101,16 @@ export class TextChunks {
       n = this.directory.getUint32(p + 8, true),
       shape = this.directory.getUint32(p + 12, true),
       characters = shape & 0x7fffffff;
+    const compressed =
+      typeof this.data === "function"
+        ? await this.data(at, n)
+        : this.data.subarray(at, at + n);
+    if (compressed.length !== n) throw Error("Truncated text chunk");
     const raw = new Uint8Array(
       await new Response(
-        new Response(
-          this.data.subarray(at, at + n) as BodyInit,
-        ).body!.pipeThrough(new DecompressionStream("gzip")),
+        new Response(compressed as BodyInit).body!.pipeThrough(
+          new DecompressionStream("gzip"),
+        ),
       ).arrayBuffer(),
     );
     this.inflated?.(i, raw.length);

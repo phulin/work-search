@@ -181,6 +181,8 @@ export class Reader {
     repeatedDecodedBytes: 0,
     positionIntegers: 0,
     pairContextIntegers: 0,
+    pairPositionChunks: 0,
+    pairPositionBytes: 0,
     pairMembershipIntegers: 0,
     pairMembershipDecodedBytes: 0,
     pairMembershipRepeatedDecodedBytes: 0,
@@ -201,6 +203,10 @@ export class Reader {
     resultMemoryHits: 0,
     candidatePackageBytes: 0,
     packageCandidates: 0,
+    documentVerificationRanges: 0,
+    documentVerificationBytes: 0,
+    documentPresentationRanges: 0,
+    documentPresentationBytes: 0,
     packageMatches: 0,
     packageFetchWaves: 0,
     packageIOWaves: 0,
@@ -648,9 +654,9 @@ export class Reader {
   /** Whole immutable pair packets use the same bounded cache and I/O slots as
    * posting pages. The bundled router supplies their exact length. */
   async named(address: string, length: number) {
-    if (!this.source.readNamed || length < 16 || length > 32 * 1048576)
+    if (!this.source.readNamed || length < 1 || length > 32 * 1048576)
       throw Error("Invalid named packet source");
-    const key = `${this.root.generation}/${this.namespace}/named/${address}`;
+    const key = `${this.root.generation}/${this.namespace}/named/${address}:${length}`;
     const validate = (data: Uint8Array) => {
       if (data.length !== length) throw Error("Truncated named packet");
       return data;
@@ -710,7 +716,14 @@ export class Reader {
   async document(
     generation: string,
     doc: number,
-    locator?: { key: string; offset: number; length: number; first: number },
+    locator?: {
+      key: string;
+      offset: number;
+      length: number;
+      first: number;
+      prefixLength?: number;
+    },
+    wanted?: Set<number>,
   ) {
     if (
       !Number.isInteger(doc) ||
@@ -721,21 +734,57 @@ export class Reader {
       throw Error("Invalid document package source");
     const address = locator?.key ?? `${generation}/plan-${doc}.bin`,
       key = `${this.root.generation}/${this.namespace}/whole/${generation}/${doc}`;
-    const decoded = (raw: Uint8Array) =>
-      new DocumentPackage(raw, doc, (kind, section, n) => {
-        const id = `${address}:${doc}:${kind}:${section}`;
-        if (kind === "tokens") this.stats.forwardIntegers += n;
-        else if (kind === "decoded") {
-          this.stats.decodedBytes += n;
-          if (this.seenPackageSections.has(id))
-            this.stats.repeatedDecodedBytes += n;
+    const observe: NonNullable<
+      ConstructorParameters<typeof DocumentPackage>[2]
+    > = (kind, section, n) => {
+      const id = `${address}:${doc}:${kind}:${section}`;
+      if (kind === "tokens") this.stats.forwardIntegers += n;
+      else if (kind === "decoded" || kind === "positions") {
+        if (kind === "positions") this.stats.positionIntegers += n / 4;
+        this.stats.decodedBytes += n;
+        if (this.seenPackageSections.has(id))
+          this.stats.repeatedDecodedBytes += n;
+      } else {
+        this.stats.inflatedBytes += n;
+        if (this.seenPackageSections.has(id))
+          this.stats.repeatedInflatedBytes += n;
+      }
+      this.seenPackageSections.add(id);
+    };
+    const decoded = (raw: Uint8Array) => new DocumentPackage(raw, doc, observe);
+    if (locator?.prefixLength !== undefined) {
+      const prefix = locator.prefixLength;
+      if (
+        !Number.isSafeInteger(prefix) ||
+        prefix < 64 ||
+        prefix > locator.length
+      )
+        throw Error("Invalid verification prefix");
+      const prefixBytes = await this.named(
+          `${address}@${locator.offset}`,
+          prefix,
+        ),
+        verificationEnd = new DataView(
+          prefixBytes.buffer,
+          prefixBytes.byteOffset,
+          prefixBytes.byteLength,
+        ).getUint32(16, true);
+      this.stats.documentVerificationRanges++;
+      this.stats.documentVerificationBytes += prefix;
+      const read = (at: number, n: number) => {
+        if (at + n <= verificationEnd) {
+          this.stats.documentVerificationRanges++;
+          this.stats.documentVerificationBytes += n;
         } else {
-          this.stats.inflatedBytes += n;
-          if (this.seenPackageSections.has(id))
-            this.stats.repeatedInflatedBytes += n;
+          this.stats.documentPresentationRanges++;
+          this.stats.documentPresentationBytes += n;
         }
-        this.seenPackageSections.add(id);
-      });
+        return this.named(`${address}@${locator.offset + at}`, n);
+      };
+      const pkg = new DocumentPackage(prefixBytes, doc, observe, read);
+      await pkg.prepare(wanted);
+      return pkg;
+    }
     let bytes = this.memory.pages.get(key);
     if (bytes) {
       this.stats.memoryHits++;

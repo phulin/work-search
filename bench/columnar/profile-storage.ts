@@ -68,10 +68,10 @@ export async function profileStorage(root: Root, dir: string, token: string) {
         let at = 0,
           first = -1;
         while (at < data.length) {
-          if (at + 64 > data.length || view.getUint32(at, true) !== 0x33504443)
+          if (at + 64 > data.length || view.getUint32(at, true) !== 0x34504443)
             throw Error("Invalid profiling package group");
           const doc = view.getUint32(at + 4, true),
-            n = view.getUint32(at + 56, true) + view.getUint32(at + 60, true);
+            n = view.getUint32(at + 60, true);
           if (first < 0) first = doc;
           if (
             doc !== first + checksums.length ||

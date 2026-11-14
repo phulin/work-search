@@ -73,14 +73,15 @@ class Probe extends ColumnarIndex {
         const raw = Buffer.alloc(80);
         await file.read(raw, 0, raw.length, loc.offset);
         if (
-          raw.readUInt32LE(0) !== 0x33504443 ||
+          raw.readUInt32LE(0) !== 0x34504443 ||
           raw.readUInt32LE(4) !== entry.doc
         )
           throw Error("Package header mismatch");
         Object.assign(entry, {
           bodyTokens: raw.readUInt32LE(8),
           titleTokens: raw.readUInt32LE(12),
-          distinctTerms: raw.readUInt32LE(76),
+          frequencyBlocks: raw.readUInt32LE(24),
+          verificationBytes: raw.readUInt32LE(16),
         });
       } finally {
         await file.close();

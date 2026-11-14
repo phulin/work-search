@@ -1,6 +1,7 @@
 import type { Node } from "../query/parser.js";
 import type { Reader } from "./storage.js";
 import { lower } from "./format.js";
+import { readPairPositionChunks, type PairEvidence } from "./pair-positions.js";
 import {
   mandatoryPhrases,
   pairKey,
@@ -49,7 +50,15 @@ function savedWork(
   const before = alternative.expectedCandidates,
     after = Math.min(before, candidates);
   if (!before) return 0;
-  if (alternative.kind === "documents") return (before - after) * documentBytes;
+  if (alternative.kind === "documents")
+    // Numeric-only records reduce bytes, but each candidate still occupies a
+    // request slot. Charge a conservative page-equivalent per six-read wave;
+    // otherwise cheaper records can perversely suppress a useful pair read
+    // and push the unfiltered continuation into a broad postings fallback.
+    return (
+      (before - after) * documentBytes +
+      Math.max(0, Math.ceil(before / 6) - Math.ceil(after / 6)) * 262144
+    );
   if (alternative.kind === "complete-terms") return 0;
   return (
     alternative.frequencyBytes *
@@ -435,6 +444,11 @@ export async function readMembershipAnchor(
         },
       );
     if (!record) return { words: choice.words, records: [], absent: true };
+    if (
+      record.positionDirectory &&
+      record.positionDirectory.generation !== router.metadata.generation
+    )
+      throw Error("Pair position generation mismatch");
     records.push(record);
     reader.stats.pairDirectoryMatches++;
   }
@@ -445,15 +459,21 @@ export function membershipAnchor(
   ids: Map<string, number>,
   field: "all" | "body" | "title",
 ): MembershipAnchor {
-  const packets = new Map<string, PairPacket>();
+  const packets = new Map<string, PairEvidence>();
   for (const record of selection.records)
-    if (record.context)
-      packets.set(pairKey(record.a, record.b), record.context);
+    if (record.supplementalContext ?? record.context)
+      packets.set(
+        pairKey(record.a, record.b),
+        (record.supplementalContext ?? record.context)!,
+      );
   const evidence = pairPhraseEvidence(packets, ids),
     covered = (words: string[]) => pairPhraseCovered(packets, ids, words),
     records = [...selection.records].sort((a, b) => a.df - b.df),
     direct =
-      !selection.absent && records.length === 1 && !records[0].context
+      !selection.absent &&
+      records.length === 1 &&
+      !records[0].context &&
+      !records[0].supplementalContext
         ? records[0]
         : undefined;
   const has = (doc: number) => {
@@ -510,4 +530,50 @@ export function membershipAnchor(
     while (c.next() !== Infinity) count++;
   }
   return { count, values, has, cursor, evidence, covered };
+}
+
+/** Price all required chunks before I/O. An unselected product is unknown. */
+export async function enrichMembershipPositions(
+  selection: MembershipSelection,
+  docs: Uint32Array,
+  reader: Reader,
+  budget: number,
+) {
+  const choices = selection.records
+    .filter((r) => r.positionDirectory)
+    .map((record) => ({
+      record,
+      bytes: record
+        .positionDirectory!.selected(docs)
+        .reduce((n, c) => n + c.length, 0),
+    }))
+    .sort((a, b) => a.bytes - b.bytes);
+  let remaining = budget;
+  const selected = choices.filter((c) => {
+    if (c.bytes > remaining) return false;
+    remaining -= c.bytes;
+    return true;
+  });
+  await Promise.all(
+    selected.map(async ({ record, bytes }) => {
+      const directory = record.positionDirectory!;
+      record.supplementalContext = await readPairPositionChunks(
+        directory,
+        docs,
+        (key, n) => {
+          reader.stats.pairPositionChunks++;
+          reader.stats.pairPositionBytes += n;
+          reader.stats.anchorBufferBytes += n;
+          return reader.named(key, n);
+        },
+        bytes,
+        (_row, _field, n, decoded) => {
+          reader.stats.positionIntegers += n;
+          reader.stats.pairContextIntegers += 2 * n;
+          reader.stats.decodedBytes += decoded;
+          reader.stats.anchorBufferBytes += decoded;
+        },
+      );
+    }),
+  );
 }

@@ -6,6 +6,7 @@ import {
   stat,
   rm,
   readdir,
+  open,
 } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { spawn } from "node:child_process";
@@ -21,7 +22,13 @@ import {
 import type { MembershipSettings } from "../src/columnar/membership-anchor.js";
 import type { Root } from "../src/columnar/format.js";
 import type { Source } from "../src/columnar/storage.js";
-export type AuxiliaryObject = { key: string; size: number; path: string };
+export type AuxiliaryObject = {
+  key: string;
+  size: number;
+  path: string;
+  packageFirst?: number;
+  packageEnd?: number;
+};
 export type ServingOptions = {
   membershipDir?: string;
   metadataDir?: string;
@@ -210,10 +217,25 @@ export function localServingSource(
     readPage: source.readPage?.bind(source),
     readWhole: source.readWhole?.bind(source),
     readNamed: async (key, bytes) => {
-      const o = objects.get(key);
-      if (!o || o.size !== bytes)
+      const match = /^(.+)@(\d+)$/.exec(key),
+        base = match?.[1] ?? key,
+        offset = match ? Number(match[2]) : 0,
+        o = objects.get(base);
+      if (!o && source.readNamed) return source.readNamed(key, bytes);
+      if (!o || (match ? offset + bytes > o.size : o.size !== bytes))
         throw Error("Unknown local serving object: " + key);
-      const data = await readFile(o.path);
+      const file = await open(o.path, "r"),
+        data = Buffer.alloc(bytes);
+      try {
+        let at = 0;
+        while (at < bytes) {
+          const r = await file.read(data, at, bytes - at, offset + at);
+          if (!r.bytesRead) throw Error("Truncated local serving object");
+          at += r.bytesRead;
+        }
+      } finally {
+        await file.close();
+      }
       if (data.length !== bytes) throw Error("Truncated local serving object");
       return data;
     },

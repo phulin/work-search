@@ -1,6 +1,11 @@
 import { concat, lower, pack, unpack, u32, view } from "./format.js";
 import { PairPacket } from "./pair-packet.js";
 import { encodeVarints, readVarint } from "./compact-integers.js";
+import {
+  PairPositionDirectory,
+  isPairPositionDirectory,
+  type PairEvidence,
+} from "./pair-positions.js";
 
 const encoder = new TextEncoder(),
   decoder = new TextDecoder();
@@ -188,7 +193,9 @@ export function encodePairMembership(
   const b = encodeMembership(record.body, corpusCount),
     t = encodeMembership(record.title, corpusCount),
     context = record.context
-      ? new PairPacket(record.context).contextBytes
+      ? isPairPositionDirectory(record.context)
+        ? record.context
+        : new PairPacket(record.context).contextBytes
       : new Uint8Array();
   return concat([
     Uint8Array.of(4),
@@ -219,6 +226,8 @@ export class PairMembership {
   readonly body: Membership;
   readonly title: Membership;
   readonly context?: PairPacket;
+  readonly positionDirectory?: PairPositionDirectory;
+  supplementalContext?: PairEvidence;
   constructor(
     readonly bytes: Uint8Array,
     count: number,
@@ -268,7 +277,16 @@ export class PairMembership {
       this.df > Math.min(count, this.body.count + this.title.count)
     )
       throw Error("Invalid pair DF");
-    if (cn) {
+    if (cn && isPairPositionDirectory(bytes.subarray(at + bn + tn))) {
+      this.positionDirectory = new PairPositionDirectory(
+        bytes.subarray(at + bn + tn),
+      );
+      if (
+        this.positionDirectory.a !== this.a ||
+        this.positionDirectory.b !== this.b
+      )
+        throw Error("Pair position directory identity mismatch");
+    } else if (cn) {
       this.context = new PairPacket(bytes.subarray(at + bn + tn), observe, {
         a: this.a,
         b: this.b,
