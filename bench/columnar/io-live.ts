@@ -31,6 +31,8 @@ for (const [variant, h] of Object.entries(health) as [string, any][]) {
   assert.equal(h.documents, 1000000);
   assert.equal(h.corpusHash, contract.corpusHash);
   assert.equal(h.analysis, contract.analysis);
+  if (contract.metadataGenerations)
+    assert.equal(h.metadataGeneration, contract.metadataGenerations[variant]);
 }
 let seed = 20261114;
 const random = () => {
@@ -79,7 +81,7 @@ async function request(
       },
       body: JSON.stringify({
         q: s.q,
-        ...s.options,
+        ...(s.optionsByVariant?.[variant] ?? s.options),
         metadata: true,
         snippets: true,
         cacheNamespace: namespace,

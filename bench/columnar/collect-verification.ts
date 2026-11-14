@@ -40,6 +40,14 @@ for (const name of [
     `work/verification-1m/${name}-report.json`,
     `${out}/${name}-report.json`,
   );
+await cp(
+  "work/verification-1m/metadata/reuse.json",
+  out + "/metadata-reuse.json",
+);
+await writeFile(
+  out + "/metadata.json.gz",
+  gzipSync(await readFile("work/verification-1m/metadata/metadata.json")),
+);
 for (const [source, name] of [
   ["work/io-iteration/contract.json", "local-contract.json"],
   ["work/io-iteration/expanded-contract.json", "research-contract.json"],
