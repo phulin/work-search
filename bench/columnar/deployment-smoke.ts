@@ -103,32 +103,39 @@ if (action === "prepare") {
   }
   const filtered = scenarios.at(-2),
     first = filtered.oracle.slice(0, 7),
-    last = first.at(-1);
+    last = first.at(-1),
+    nextExpected = filtered.oracle.slice(7, 14);
   filtered.options.limit = 7;
   filtered.oracle = first;
+  const after = { doc: last.doc, score: last.score },
+    reader = new Reader(assets.root, source, memory);
+  const next = await index.search(q, reader, {
+    limit: 7,
+    exactTotal: true,
+    metadata: true,
+    snippets: true,
+    after,
+    documentFilter: new MetadataIndex(assets.metadata!, assets.root).filter(
+      filter,
+      reader,
+    ),
+  });
+  // Existing API totals count matches after the cursor, rather than earlier pages.
+  assert.equal(next.total, filtered.total - first.length);
+  assert.deepEqual(
+    next.results.map((h) => h.id),
+    nextExpected.map((h: any) => h.id),
+  );
   scenarios.push({
     ...filtered,
     options: {
       ...filtered.options,
-      after: { doc: last.doc, score: last.score },
+      after,
       generation: assets.root.generation,
       metadataGeneration: assets.metadata!.generation,
     },
-    oracle: (
-      await (async () => {
-        const r = new Reader(assets.root, source, memory);
-        return index.search(q, r, {
-          limit: 14,
-          exactTotal: true,
-          metadata: true,
-          snippets: true,
-          documentFilter: new MetadataIndex(
-            assets.metadata!,
-            assets.root,
-          ).filter(filter, r),
-        });
-      })()
-    ).results.slice(7, 14),
+    oracle: nextExpected,
+    total: next.total,
   });
   await writeFile(
     output,
@@ -147,12 +154,47 @@ if (action === "prepare") {
 } else {
   const contract = JSON.parse(await readFile(contractPath, "utf8")),
     token = await benchmarkToken(),
-    namespace = "smoke-" + randomUUID();
+    previous = process.argv.includes("--public-only")
+      ? JSON.parse(await readFile(output, "utf8"))
+      : undefined,
+    namespace = previous?.namespace ?? "smoke-" + randomUUID();
   const health = await fetch(target + "/health").then((r) => r.json());
   assert(matchesServingHealth(assets, health));
   assert.equal(contract.generation, assets.root.generation);
-  const rows: any[] = [];
-  for (const condition of ["empty-application-fresh-namespace", "repeat"])
+  function validate(row: any) {
+    const result = row.result,
+      s = contract.scenarios[row.scenario];
+    assert.equal(row.status, 200, JSON.stringify(row));
+    assert.equal(result.generation, contract.generation);
+    assert.deepEqual(
+      result.results.map((h: any) => h.id),
+      s.oracle.map((h: any) => h.id),
+    );
+    result.results.forEach((h: any, j: number) => {
+      const want = s.oracle[j];
+      assert(
+        Math.abs(h.score - want.score) <=
+          1e-8 * Math.max(1, Math.abs(want.score)),
+      );
+      assert.deepEqual([h.title, h.metadata], [want.title, want.metadata]);
+      assert.equal(typeof h.snippet, "string");
+      assert(h.snippet.length > 0);
+    });
+    if (s.options.exactTotal) assert.equal(result.total, s.total);
+  }
+  const rows: any[] = previous?.rows ?? [];
+  if (previous) {
+    assert.equal(previous.health.version.id, (health as any).version.id);
+    assert.equal(rows.length, contract.scenarios.length * 2);
+    assert.equal(
+      new Set(rows.map((r) => r.condition + ":" + r.scenario)).size,
+      rows.length,
+    );
+    rows.forEach(validate);
+  }
+  for (const condition of previous
+    ? []
+    : ["empty-application-fresh-namespace", "repeat"])
     for (const [i, s] of contract.scenarios.entries()) {
       const requestId = randomUUID(),
         start = performance.now();
@@ -206,23 +248,7 @@ if (action === "prepare") {
           2,
         ),
       );
-      assert(r.ok, JSON.stringify(row));
-      assert.equal(result.generation, contract.generation);
-      assert.deepEqual(
-        result.results.map((h: any) => h.id),
-        s.oracle.map((h: any) => h.id),
-      );
-      result.results.forEach((h: any, j: number) => {
-        const want = s.oracle[j];
-        assert(
-          Math.abs(h.score - want.score) <=
-            1e-8 * Math.max(1, Math.abs(want.score)),
-        );
-        assert.deepEqual([h.title, h.metadata], [want.title, want.metadata]);
-        assert.equal(typeof h.snippet, "string");
-        assert(h.snippet.length > 0);
-      });
-      if (s.options.exactTotal) assert.equal(result.total, s.total);
+      validate(row);
       console.log(
         condition,
         i,
@@ -232,6 +258,7 @@ if (action === "prepare") {
       );
     }
   // Public, unauthenticated clients must receive the same complete result shape.
+  const publicStart = performance.now();
   const publicResponse = await fetch(target + "/search", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -242,13 +269,41 @@ if (action === "prepare") {
     }),
   });
   const publicResult: any = await publicResponse.json();
+  const publicMs = performance.now() - publicStart;
   assert(publicResponse.ok);
   assert.equal(publicResult.total, 94);
   assert.equal(publicResult.results.length, 20);
   assert.equal(publicResult.diagnostics, undefined);
-  assert(
-    publicResult.results.every(
-      (h: any) => h.metadata && h.title && typeof h.snippet === "string",
+  assert.equal(publicResult.generation, contract.generation);
+  assert.deepEqual(
+    publicResult.results.map((h: any) => h.id),
+    contract.scenarios[8].oracle.map((h: any) => h.id),
+  );
+  validate({
+    status: publicResponse.status,
+    scenario: 8,
+    result: publicResult,
+  });
+  const saved = JSON.parse(await readFile(output, "utf8"));
+  await writeFile(
+    output,
+    JSON.stringify(
+      {
+        ...saved,
+        completedAt: new Date().toISOString(),
+        allChecksPassed: true,
+        publicCheck: {
+          status: publicResponse.status,
+          ms: publicMs,
+          requestId: publicResponse.headers.get("x-request-id"),
+          cacheControl: publicResponse.headers.get("cache-control"),
+          total: publicResult.total,
+          results: publicResult.results.length,
+          complete: true,
+        },
+      },
+      null,
+      2,
     ),
   );
   console.log("All live smoke checks passed");

@@ -1,0 +1,252 @@
+{
+  "deployRequestedAt": "2026-11-14T14:31:39.600Z",
+  "q": "\"summary judgment\" AND arbitration AND \"third party beneficiary\"",
+  "options": {
+    "limit": 7,
+    "exactTotal": true,
+    "metadata": true,
+    "snippets": true
+  },
+  "attempts": [
+    {
+      "requestId": "d549747f-b64c-4248-8cf6-b575f1054f54",
+      "startedAt": "2026-11-14T14:31:55.081Z",
+      "ms": 9760.058250000002,
+      "status": 200,
+      "current": true,
+      "correct": true,
+      "result": {
+        "results": [
+          {
+            "id": "courtlistener-opinion:8877741",
+            "doc": 427517,
+            "score": 24.119369565966434,
+            "title": "Resilient Floor Decorators Insurance Fund v. Hay's Installation, Inc.",
+            "metadata": {
+              "opinion_id": 8877741,
+              "cluster_id": 8891483,
+              "date_filed": "1982-02-19",
+              "precedential_status": "Published",
+              "text_field": "html_with_citations",
+              "url": "https://www.courtlistener.com/opinion/8891483/",
+              "snapshot": "2026-09-30"
+            },
+            "snippet": "…he United Brotherhood of Carpenters (hereinafter “union”) knew of the arrangement from the start and acquiesced.\n\n\nI have already denied plaintiffs’ motion for summary judgment .since defendant’s *830assertion about the union’s acquiescence raises a question concerning the parties’ understanding of the reach of the contract. Their understanding, of course, governs the scope of the contract and binds the"
+          },
+          {
+            "id": "courtlistener-opinion:2957222",
+            "doc": 766817,
+            "score": 23.85684999917995,
+            "title": "Rita Murdock v. Trisun Healthcare, LLC D/B/A Park Place Health Center",
+            "metadata": {
+              "opinion_id": 2957222,
+              "cluster_id": 2957222,
+              "date_filed": "2013-05-09",
+              "precedential_status": "Published",
+              "text_field": "plain_text",
+              "url": "https://www.courtlistener.com/opinion/2957222/",
+              "snapshot": "2026-09-30"
+            },
+            "snippet": "…Trisun employees. Trisun\n\nfiled a motion to compel arbitration with the trial court alleging it was entitled to enforce the\n\nPM Leasing Agreement as a party or third-party beneficiary because it was an affiliate of\n\nPM Leasing. Trisun also noted that it had presented Murdock with the Plan’s arbitration agreement\n\nat the announcement meeting and attached the Acknowledgment Form to its motion to compel.…"
+          },
+          {
+            "id": "courtlistener-opinion:5093553",
+            "doc": 974282,
+            "score": 23.08241484339078,
+            "title": "Weil v. Kirn",
+            "metadata": {
+              "opinion_id": 5093553,
+              "cluster_id": 5266306,
+              "date_filed": "1997-09-30",
+              "precedential_status": "Published",
+              "text_field": "html_with_citations",
+              "url": "https://www.courtlistener.com/opinion/5266306/",
+              "snapshot": "2026-09-30"
+            },
+            "snippet": "CRANDALL, Judge.\n\nPlaintiff, Thomas A. Weil, appeals from the judgment of the trial court sustaining the motion for summary judgment of defendant, Kevin Kirn, on Weil’s action for breach of contract. We affirm.\n\n\nOn November 3; 1983, Coldwell Banker Commercial Real Estate Services, a division of Coldwell Banker Commercial Group, Inc., (“CB Commercial”) entered…"
+          },
+          {
+            "id": "courtlistener-opinion:4828134",
+            "doc": 777358,
+            "score": 22.86670223875393,
+            "title": "Ameriprise Financial Services, Inc. v. Jones",
+            "metadata": {
+              "opinion_id": 4828134,
+              "cluster_id": 5015259,
+              "date_filed": "2015-10-30",
+              "precedential_status": "Published",
+              "text_field": "html_with_citations",
+              "url": "https://www.courtlistener.com/opinion/5015259/",
+              "snapshot": "2026-09-30"
+            },
+            "snippet": "…gnized exceptions pursuant to which this Court has allowed a nonsignatory to an arbitration agreement to be compelled to arbitration, namely agency, alter ego, third-party beneficiary, and intertwining/equitable es-toppel, applied. See, generally, Custom Performance, Inc. v. Dawson, 57 So.3d 90, 97-99 (Ala.2010). The circuit court agreed, concluding that all claims except the tort-of"
+          },
+          {
+            "id": "courtlistener-opinion:11312394",
+            "doc": 616811,
+            "score": 22.71974190125096,
+            "title": "",
+            "metadata": {
+              "opinion_id": 11312394,
+              "cluster_id": 10845034,
+              "date_filed": "2026-03-16",
+              "precedential_status": "Unknown",
+              "text_field": "plain_text",
+              "url": "https://www.courtlistener.com/opinion/10845034/",
+              "snapshot": "2026-09-30"
+            },
+            "snippet": "…ubmit.” Id. (internal quotations omitted).  \n    In deciding a motion to compel arbitration, courts apply the same standard as is used in \ndeciding motions for summary judgment. See Tinder v. Pinkerton Sec., 305 F.3d 728, 735 (7th \nCir. 2002). Specifically, “[a] district court may conclude as a matter of law that parties did or did \nnot enter into an arbitration agreement only if no genuine dispute of ma…"
+          },
+          {
+            "id": "courtlistener-opinion:10667241",
+            "doc": 865757,
+            "score": 22.462393836388642,
+            "title": "BROOKS v. VALLEY FORGE EDUCATIONAL SERVICES",
+            "metadata": {
+              "opinion_id": 10667241,
+              "cluster_id": 10200651,
+              "date_filed": "2024-09-17",
+              "precedential_status": "Unknown",
+              "text_field": "plain_text",
+              "url": "https://www.courtlistener.com/opinion/10200651/",
+              "snapshot": "2026-09-30"
+            },
+            "snippet": "…re not obvious from the face of a \ncomplaint, then a “district court decides a motion to compel arbitration under the same \nstandard it applies to a motion for summary judgment.”      587           \nF.3d 616, 620 (3d Cir. 2009). Federal Rule of Civil Procedure 56(a) permits a party to seek, \nand a court to enter, summary judgment “if the movant shows that there is no genuine \n\ndispute as to any material…"
+          },
+          {
+            "id": "courtlistener-opinion:1087391",
+            "doc": 89181,
+            "score": 22.097169554299477,
+            "title": "Leibsohn Property Advisors Incorp., App/cr-resp. v. Colliers Inter. Realty Advisors, Resps/cr-apps",
+            "metadata": {
+              "opinion_id": 1087391,
+              "cluster_id": 1087391,
+              "date_filed": "2013-10-28",
+              "precedential_status": "Unpublished",
+              "text_field": "plain_text",
+              "url": "https://www.courtlistener.com/opinion/1087391/",
+              "snapshot": "2026-09-30"
+            },
+            "snippet": "…SeaTac and (2) the transaction here was a \"deed in lieu of foreclosure\"\n\nwithin the meaning of Leibsohn's listing agreement, the trial court properly granted\n\nsummary judgment dismissal in favor of SeaTac and properly denied Leibsohn's motion\n\nfor partial summary judgment. We affirm in part, reverse in part, remand with\n\ninstructions to confirm the arbitration decision, and award appellate attorney fees…"
+          }
+        ],
+        "generation": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
+        "metadataGeneration": "54382e2cf6bef016cef8271491990574a9b49ec1dc314699f64ad51447e32c48",
+        "total": 94,
+        "diagnostics": {
+          "metadataFilterIOWaves": 0,
+          "metadataFilterCandidates": 0,
+          "metadataFilterRejected": 0,
+          "metadataFilterBlocks": 0,
+          "metadataFilterBytes": 0,
+          "inlinePostingBytes": 0,
+          "termDirectoryRanges": 0,
+          "termDirectoryBytes": 0,
+          "termDirectoryMatches": 0,
+          "requests": 257,
+          "bytes": 78889693,
+          "sharedGets": 313,
+          "sharedPuts": 311,
+          "sharedBudgetBypasses": 0,
+          "memoryHits": 1597,
+          "deduplicated": 379,
+          "stages": 131,
+          "scoreBlocksFetched": 3157,
+          "scoreBlockVisits": 6378,
+          "scoreBlocksDecoded": 3232,
+          "scorePostingsDecoded": 413329,
+          "scoreFetchWaves": 73,
+          "scoreIOWaves": 14,
+          "anchorIOWaves": 0,
+          "positionIOWaves": 56,
+          "lazyScoreWindows": 0,
+          "eagerScoreWindows": 62,
+          "eagerScoreFetchWindows": 62,
+          "partialScoreRejected": 0,
+          "packetCopyBytes": 1009796,
+          "packetViewBytes": 7297828,
+          "decodedBytes": 9872308,
+          "repeatedDecodedBytes": 175272,
+          "positionIntegers": 16122,
+          "pairContextIntegers": 0,
+          "pairMembershipIntegers": 0,
+          "pairMembershipDecodedBytes": 0,
+          "pairMembershipRepeatedDecodedBytes": 0,
+          "commonPresenceIntegers": 186018,
+          "commonPresenceDecodedBytes": 744072,
+          "optionalReadAlternative": "documents",
+          "plannedPairPackets": 0,
+          "plannedPresenceLists": 1,
+          "estimatedPairCandidates": 0,
+          "forwardIntegers": 0,
+          "postings": 454706,
+          "candidates": 277,
+          "skippedRanges": 0,
+          "metadataMs": 170,
+          "resultRequests": 7,
+          "resultBytes": 405533,
+          "resultSharedGets": 7,
+          "resultMemoryHits": 0,
+          "candidatePackageBytes": 0,
+          "packageCandidates": 0,
+          "packageMatches": 0,
+          "packageFetchWaves": 0,
+          "packageIOWaves": 0,
+          "packageMetadataFetchWaves": 0,
+          "oversizedPackageBatches": 0,
+          "peakPackageBatchBytes": 0,
+          "peakPackageNumericBytes": 0,
+          "peakPackagePositionBytes": 0,
+          "peakWinnerPackageBytes": 0,
+          "inflatedBytes": 36034,
+          "repeatedInflatedBytes": 0,
+          "anchorBufferBytes": 56248,
+          "peakActiveBufferBytes": 4776500,
+          "peakPendingSharedBytes": 2097152,
+          "coalescedReads": 51,
+          "coalescedExtraBytes": 0,
+          "prefetchWindows": 11,
+          "maxPrefetchFootprintBytes": 4194304,
+          "prefetchTransferBytes": 40108032,
+          "prefetchOriginBytes": 24201344,
+          "pairDirectoryRanges": 0,
+          "pairDirectoryBytes": 0,
+          "pairDirectoryMatches": 0,
+          "plan": {
+            "kind": "blocks",
+            "frequencyBytes": 941284,
+            "positionBytes": 0,
+            "expectedCandidates": 385,
+            "expectedDocumentBytes": 7693447.46093,
+            "gets": 387,
+            "dependentStages": 2,
+            "anchor": "arbitr",
+            "anchors": ["arbitr", "beneficiari"],
+            "fallbackFrom": "documents"
+          },
+          "executor": "selective",
+          "wallMs": 8795,
+          "retainedPageBytes": 12531469,
+          "retainedDecodedBytes": 3190894,
+          "queueMs": 0,
+          "applicationReset": false,
+          "namespace": "work-search-cws-1m"
+        },
+        "telemetry": {
+          "requestId": "d549747f-b64c-4248-8cf6-b575f1054f54",
+          "isolate": "af3c0fb4-f650-4e23-8d9c-36ca10bbafde",
+          "requestNumber": 1,
+          "wallMs": 8795,
+          "version": {
+            "id": "177b51f3-545b-4a15-b95b-31147bd9f142",
+            "tag": "",
+            "timestamp": "2026-11-14T14:31:54.793846Z"
+          }
+        },
+        "colo": "BOS"
+      },
+      "bytes": 8287
+    }
+  ],
+  "condition": "Search before any health/warmup request after actual deployment; shared namespace as configured; opaque R2 caches uncontrolled"
+}
