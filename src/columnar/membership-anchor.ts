@@ -446,8 +446,10 @@ export async function readMembershipAnchor(
       );
     if (!record) return { words: choice.words, records: [], absent: true };
     if (
-      record.positionDirectory &&
-      record.positionDirectory.generation !== router.metadata.generation
+      (record.positionDirectory &&
+        record.positionDirectory.generation !== router.metadata.generation) ||
+      (record.completePositions &&
+        record.completePositions.generation !== router.metadata.generation)
     )
       throw Error("Pair position generation mismatch");
     records.push(record);

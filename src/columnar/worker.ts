@@ -86,6 +86,9 @@ export function createColumnarWorker(
           ...(membership
             ? {
                 pairGeneration: membership.router.metadata.generation,
+                pairContextCoverage: membership.router.metadata.completeContext
+                  ? "complete"
+                  : "partial",
                 exactPhraseGeneration:
                   membership.exactPhrases?.metadata.generation,
                 commonWordAnchorsExcluded: membership.N,

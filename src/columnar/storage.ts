@@ -143,6 +143,9 @@ export class Reader {
   sharedWrites = new Set<Promise<void>>();
   sharedWriteBytes = 0;
   stats = {
+    exactPhraseDiscoveryReads: 0,
+    exactPhraseDiscoveryBytes: 0,
+    exactPhraseDiscoveryWaves: 0,
     exactPhraseFilteredAlternatives: [] as {
       words: string[];
       candidates: number;

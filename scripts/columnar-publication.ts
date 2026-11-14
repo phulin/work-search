@@ -210,6 +210,8 @@ export async function publishAuxiliary(
             packageEnd: item.packageEnd,
           },
           body = await compress(raw, { level: 6 });
+        if (item.sha256 && item.sha256 !== record.sha256)
+          throw Error("Auxiliary manifest hash mismatch: " + item.key);
         for (let attempt = 0; ; attempt++) {
           try {
             const response = await transport(
@@ -281,6 +283,11 @@ export async function publishAuxiliary(
         const records: PublicationRecord[] = items.map((o, i) => {
           if (buffers[i].length !== o.size)
             throw Error("Auxiliary size mismatch: " + o.key);
+          if (
+            o.sha256 &&
+            createHash("sha256").update(buffers[i]).digest("hex") !== o.sha256
+          )
+            throw Error("Auxiliary manifest hash mismatch: " + o.key);
           return {
             key: o.key,
             size: o.size,

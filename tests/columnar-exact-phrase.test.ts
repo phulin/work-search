@@ -38,7 +38,13 @@ import {
 import {
   ExactPhraseExecution,
   planExactPhrases,
+  readExactPhrasePairs,
 } from "../src/columnar/exact-phrase.js";
+import {
+  encodeCompletePairRanges,
+  decodeCompletePairRanges,
+} from "../src/columnar/pair-ranges.js";
+import { encodePairPacket } from "../src/columnar/pair-packet.js";
 import { PairRouter, encodePairRouter } from "../src/columnar/pair-router.js";
 import {
   encodePairMembershipPacket,
@@ -49,6 +55,169 @@ import { tokenize } from "../src/query/tokenize.js";
 import { exhaustive } from "../bench/columnar/exhaustive.js";
 const generation = "b".repeat(64),
   empty = () => ({ positions: [], previous: [], next: [] });
+it("executes routed inline and complete external context without a bundled pair descriptor, including authoritative absence", async () => {
+  const docs = [
+      [
+        [0, 1, 2, 3],
+        [0, 1, 2],
+      ],
+      [[1, 2, 0, 1, 2, 3], []],
+      [
+        [0, 1, 4, 2, 3],
+        [1, 2, 3],
+      ],
+    ],
+    words = ["a", "b", "c", "d", "x"],
+    count = docs.length;
+  const rows = (a: number, b: number) =>
+    docs.flatMap((fields, doc) => {
+      const lists = fields.map((tokens) =>
+        tokens.flatMap((id, p) =>
+          id === a && tokens[p + 1] === b
+            ? [{ position: p, previous: tokens[p - 1], next: tokens[p + 2] }]
+            : [],
+        ),
+      );
+      return lists.some((x) => x.length)
+        ? [{ doc, body: lists[0], title: lists[1] }]
+        : [];
+    });
+  const positional = encodePairPacket(1, 2, rows(1, 2)),
+    ranges = {
+      a: 1,
+      b: 2,
+      generation,
+      ranges: [{ object: 0, offset: 0, length: positional.length }],
+    };
+  expect(decodeCompletePairRanges(encodeCompletePairRanges(ranges))).toEqual(
+    ranges,
+  );
+  const bad = encodeCompletePairRanges(ranges);
+  new DataView(bad.buffer).setUint32(56, 0, true);
+  expect(() => decodeCompletePairRanges(bad)).toThrow();
+  const entries = [];
+  for (let a = 0; a < words.length; a++)
+    for (let b = 0; b < words.length; b++) {
+      const r = rows(a, b);
+      if (!r.length) continue;
+      entries.push({
+        a: words[a],
+        b: words[b],
+        data: encodePairMembership(
+          {
+            a,
+            b,
+            df: r.length,
+            body: Uint32Array.from(
+              r.filter((x) => x.body.length).map((x) => x.doc),
+            ),
+            title: Uint32Array.from(
+              r.filter((x) => x.title.length).map((x) => x.doc),
+            ),
+            bodyOccurrences: r.reduce((n, x) => n + x.body.length, 0),
+            titleOccurrences: r.reduce((n, x) => n + x.title.length, 0),
+            context:
+              a === 1 && b === 2
+                ? encodeCompletePairRanges(ranges)
+                : encodePairPacket(a, b, r),
+          },
+          count,
+        ),
+      });
+    }
+  const members = encodePairMembershipPacket(entries),
+    router = new PairRouter(
+      encodePairRouter(
+        {
+          generation,
+          baseGeneration: generation,
+          documents: count,
+          targetBytes: 131072,
+          contextBytes: 8192,
+          namespaces: [],
+          roots: [-1],
+          commonWords: [],
+          completeContext: true,
+        },
+        [],
+        [
+          {
+            object: 0,
+            offset: 0,
+            bytes: members.length,
+            pairs: entries.length,
+            namespace: 0,
+            bits: 0,
+            prefix: 0,
+            crc32: 0,
+          },
+        ],
+        encodePairMembershipPacket([]),
+      ),
+    );
+  const root = { generation, count, objects: [], hot: {} } as any,
+    terms = new Map(
+      words.map((w, id) => [
+        w,
+        {
+          id,
+          df: count,
+          bodyOccurrences: 10,
+          titleOccurrences: 3,
+          frequencies: [0, 0, 0],
+          positional: [0, 0, 1000000],
+        } as any,
+      ]),
+    ),
+    alternative = {
+      kind: "blocks",
+      expectedCandidates: count,
+      frequencyBytes: 0,
+      positionBytes: 1000000,
+    } as any;
+  for (const text of ['"a b"', '"a b c"', '"a b c d"', '"b c a"', '"d a b"']) {
+    const reader = new Reader(root, {
+        read: async () => {
+          throw Error("Ordinary word read");
+        },
+        readNamed: async (key, n) =>
+          key.includes("/pairs-") ? members : positional,
+      }),
+      ast = parse(text),
+      catalog = await readExactPhrasePairs(
+        ast,
+        router,
+        undefined,
+        reader,
+        alternative,
+      );
+    expect(reader.stats.exactPhraseDiscoveryWaves).toBe(1);
+    expect(reader.stats.requests).toBe(1);
+    const plans = planExactPhrases(
+      ast,
+      { lookup: (a, b) => catalog.get(a + "\0" + b) },
+      terms,
+      alternative,
+      16384,
+      "all",
+      reader,
+    );
+    expect(plans).toHaveLength(1);
+    const execution = new ExactPhraseExecution(plans, reader, "all");
+    await execution.window(0, count);
+    const phrase = (ast as any).terms as string[],
+      ids = phrase.map((w) => words.indexOf(w));
+    for (let doc = 0; doc < count; doc++)
+      for (let field = 0; field < 2; field++) {
+        const tokens = docs[doc][field],
+          expected = tokens.flatMap((_, p) =>
+            ids.every((id, i) => tokens[p + i] === id) ? [p] : [],
+          );
+        expect([...execution.evidence(phrase, doc, field)!]).toEqual(expected);
+      }
+    expect(reader.stats.wordPositionIntegers).toBe(0);
+  }
+});
 function product(
   rows: PairColumnRow[],
   a: number,
@@ -195,18 +364,16 @@ it("exhausts a zero-hit phrase beyond the old total-transfer cutoff with bounded
   const { catalog, bytes } = product(rows, 1, 2, "a".repeat(64));
   expect(bytes.length).toBeGreaterThan(4 * 1048576);
   const terms = new Map(
-    "abcd"
-      .split("")
-      .map((w, id) => [
-        w,
-        {
-          id,
-          bodyOccurrences: 3000000,
-          titleOccurrences: 0,
-          frequencies: [0, 0, 1],
-          positional: [0, 0, 100000000],
-        } as unknown as DirectoryTerm,
-      ]),
+    "abcd".split("").map((w, id) => [
+      w,
+      {
+        id,
+        bodyOccurrences: 3000000,
+        titleOccurrences: 0,
+        frequencies: [0, 0, 1],
+        positional: [0, 0, 100000000],
+      } as unknown as DirectoryTerm,
+    ]),
   );
   const plans = planExactPhrases(
     parse('"a b c d"'),
@@ -451,6 +618,8 @@ it("executes exact pair phrases inside Boolean/proximity expressions with the or
       '"a b c d" OR rare',
       'other AND NOT "a b c d"',
       'NOT NOT "a b c d"',
+      'NOT "a b c d"',
+      'NOT ("a b c d" OR "b c x")',
       '"a b c d" W/3 other',
       '"a b c d" AND NOT rare',
       '"a b c d" OR "b c x"',

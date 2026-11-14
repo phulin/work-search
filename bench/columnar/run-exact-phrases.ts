@@ -2,7 +2,7 @@
  * publication, profiling or tests concurrently with this process. */
 import { spawn } from "node:child_process";
 import { open, mkdir } from "node:fs/promises";
-const index = "work/exact-phrases-all-1m";
+const index = process.env.CWS_EXACT_INDEX ?? "work/complete-context-v2-1m";
 await mkdir("work/columnar-bench", { recursive: true });
 const runs = [
   {

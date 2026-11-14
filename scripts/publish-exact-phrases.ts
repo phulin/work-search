@@ -11,10 +11,10 @@ if (!phrases) throw Error("Missing exact phrase directory");
 const objects = assets.auxiliary.filter((o) =>
   o.key.startsWith(phrases.metadata.generation + "/"),
 );
-if (objects.length !== phrases.metadata.objects.length)
-  throw Error("Incomplete exact phrase inventory");
+if (objects.length < phrases.metadata.objects.length)
+  throw Error("Incomplete pair context inventory");
 console.log(
-  "Publishing exact phrase objects",
+  "Publishing complete pair context generation",
   objects.length,
   objects.reduce((n, o) => n + o.size, 0),
 );

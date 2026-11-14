@@ -3,6 +3,7 @@ import {
   ExactPhraseExecution,
   planExactPhrases,
   filteredPhraseWork,
+  readExactPhrasePairs,
 } from "./exact-phrase.js";
 import { scoreParameters } from "./scoring.js";
 import { filterDocuments, type DocumentFilter } from "./document-filter.js";
@@ -349,7 +350,7 @@ export class ColumnarIndex {
               basePackages ? { ...basePackages, excludedWords } : undefined,
             )
           : undefined,
-      exactPlans = planExactPhrases(
+      bundledExactPlans = planExactPhrases(
         original,
         this.membership?.exactPhrases,
         bundled,
@@ -365,7 +366,7 @@ export class ColumnarIndex {
       primaryExact =
         original.kind === "phrase" &&
         preliminary?.kind !== "documents" &&
-        exactPlans.length > 0,
+        bundledExactPlans.length > 0,
       membershipRead =
         this.membership && !primaryExact
           ? planMembershipAnchor(
@@ -419,27 +420,57 @@ export class ColumnarIndex {
             return terms;
           })
         : this.terms(requested, reader),
-      [terms, selection, presence, unigramCandidates] = await Promise.all([
-        termRequest,
-        membershipRead && this.membership
-          ? readMembershipAnchor(membershipRead, reader, this.membership)
-          : undefined,
-        this.membership
-          ? loadCommonPresence(presenceRanks, reader, this.membership)
-          : [],
-        membershipRead &&
-        preliminary?.kind === "documents" &&
-        unigramAnchors?.length &&
-        bundled
-          ? readAnchorDocuments(
-              unigramAnchors,
-              bundled,
-              reader,
+      [terms, selection, presence, unigramCandidates, remotePhrases] =
+        await Promise.all([
+          termRequest,
+          membershipRead && this.membership
+            ? readMembershipAnchor(membershipRead, reader, this.membership)
+            : undefined,
+          this.membership
+            ? loadCommonPresence(presenceRanks, reader, this.membership)
+            : [],
+          membershipRead &&
+          preliminary?.kind === "documents" &&
+          unigramAnchors?.length &&
+          bundled
+            ? readAnchorDocuments(
+                unigramAnchors,
+                bundled,
+                reader,
+                options.field ?? "all",
+                this.root,
+              )
+            : undefined,
+          readExactPhrasePairs(
+            original,
+            this.membership?.router,
+            this.membership?.exactPhrases,
+            reader,
+            preliminary,
+            membershipRead?.pairs,
+          ),
+        ]),
+      allExactPlans = [
+        ...bundledExactPlans,
+        ...(remotePhrases.size
+          ? planExactPhrases(
+              original,
+              { lookup: (a, b) => remotePhrases.get(a + "\0" + b) },
+              terms as Map<string, DirectoryTerm>,
+              preliminary,
+              basePackages?.averageBytes ?? 16384,
               options.field ?? "all",
-              this.root,
+              reader,
             )
-          : undefined,
-      ]),
+          : []),
+      ],
+      exactPlans = [
+        ...new Map(
+          allExactPlans
+            .sort((a, b) => b.cost - a.cost)
+            .map((p) => [p.words.join("\0"), p]),
+        ).values(),
+      ],
       ast = simplify(original, (t) => terms.has(t)),
       names = queryTerms(ast),
       positive = new Set(queryTerms(ast, true)),

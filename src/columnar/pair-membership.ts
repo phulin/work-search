@@ -1,5 +1,10 @@
 import { concat, lower, pack, unpack, u32, view } from "./format.js";
 import { PairPacket } from "./pair-packet.js";
+import {
+  isCompletePairRanges,
+  decodeCompletePairRanges,
+  type ExactPairRanges,
+} from "./pair-ranges.js";
 import { encodeVarints, readVarint } from "./compact-integers.js";
 import {
   PairPositionDirectory,
@@ -193,7 +198,8 @@ export function encodePairMembership(
   const b = encodeMembership(record.body, corpusCount),
     t = encodeMembership(record.title, corpusCount),
     context = record.context
-      ? isPairPositionDirectory(record.context)
+      ? isPairPositionDirectory(record.context) ||
+        isCompletePairRanges(record.context)
         ? record.context
         : new PairPacket(record.context).contextBytes
       : new Uint8Array();
@@ -227,6 +233,7 @@ export class PairMembership {
   readonly title: Membership;
   readonly context?: PairPacket;
   readonly positionDirectory?: PairPositionDirectory;
+  readonly completePositions?: ExactPairRanges;
   supplementalContext?: PairEvidence;
   constructor(
     readonly bytes: Uint8Array,
@@ -277,7 +284,16 @@ export class PairMembership {
       this.df > Math.min(count, this.body.count + this.title.count)
     )
       throw Error("Invalid pair DF");
-    if (cn && isPairPositionDirectory(bytes.subarray(at + bn + tn))) {
+    if (cn && isCompletePairRanges(bytes.subarray(at + bn + tn))) {
+      this.completePositions = decodeCompletePairRanges(
+        bytes.subarray(at + bn + tn),
+      );
+      if (
+        this.completePositions.a !== this.a ||
+        this.completePositions.b !== this.b
+      )
+        throw Error("Complete pair term identity mismatch");
+    } else if (cn && isPairPositionDirectory(bytes.subarray(at + bn + tn))) {
       this.positionDirectory = new PairPositionDirectory(
         bytes.subarray(at + bn + tn),
       );

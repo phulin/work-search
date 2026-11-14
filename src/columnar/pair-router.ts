@@ -15,6 +15,7 @@ export interface PairRoutingMetadata {
   roots: number[];
   commonWords: { word: string; id: number; df: number }[];
   positionObjects?: { id: number; bytes: number; sha256: string }[];
+  completeContext?: boolean;
 }
 export interface PairLeaf {
   object: number;

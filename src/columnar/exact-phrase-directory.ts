@@ -4,12 +4,9 @@ import {
   encodePairMembershipPacket,
 } from "./pair-membership.js";
 import { PairPositionDirectory } from "./pair-positions.js";
-export interface ExactPairRanges {
-  a: number;
-  b: number;
-  generation: string;
-  ranges: { object: number; offset: number; length: number }[];
-}
+import type {PairPacket} from "./pair-packet.js";
+import type { ExactPairRanges } from "./pair-ranges.js";
+export type { ExactPairRanges } from "./pair-ranges.js";
 export function completePairRanges(
   directory: PairPositionDirectory,
 ): ExactPairRanges {
@@ -37,6 +34,7 @@ export interface ExactPairDescriptor {
   bodyOccurrences: number;
   titleOccurrences: number;
   directory: ExactPairRanges;
+  inline?: PairPacket;
 }
 export interface ExactPhraseMetadata {
   generation: string;

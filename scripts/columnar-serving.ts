@@ -24,6 +24,7 @@ import type { MembershipSettings } from "../src/columnar/membership-anchor.js";
 import type { Root } from "../src/columnar/format.js";
 import type { Source } from "../src/columnar/storage.js";
 export type AuxiliaryObject = {
+  sha256?: string;
   key: string;
   size: number;
   path: string;
@@ -116,6 +117,7 @@ export async function loadServingAssets(
         auxiliary.push({
           key: `${phrases.metadata.generation}/positions-${o.id}.bin`,
           size: o.bytes,
+          sha256: o.sha256,
           path: join(membershipDir, "objects", `positions-${o.id}.bin`),
         });
     }
@@ -167,6 +169,17 @@ export async function loadServingAssets(
     documents ? new DocumentDirectory(documents) : undefined,
     membership,
   );
+  const uniqueAuxiliary = new Map<string, AuxiliaryObject>();
+  for (const o of auxiliary) {
+    const old = uniqueAuxiliary.get(o.key);
+    if (
+      old &&
+      (old.size !== o.size ||
+        (old.sha256 && o.sha256 && old.sha256 !== o.sha256))
+    )
+      throw Error("Conflicting auxiliary identity");
+    uniqueAuxiliary.set(o.key, { ...o, sha256: o.sha256 ?? old?.sha256 });
+  }
   return {
     root,
     directory,
@@ -175,7 +188,7 @@ export async function loadServingAssets(
     router,
     exactPhrases,
     metadata,
-    auxiliary,
+    auxiliary: [...uniqueAuxiliary.values()],
   };
 }
 export type ServingAssets = Awaited<ReturnType<typeof loadServingAssets>>;
@@ -187,6 +200,8 @@ export function matchesServingHealth(a: ServingAssets, health: any) {
     health.analysis === a.root.analysis &&
     health.metadataGeneration === a.metadata?.generation &&
     health.pairGeneration === a.membership?.router.metadata.generation &&
+    (!a.membership?.router.metadata.completeContext ||
+      health.pairContextCoverage === "complete") &&
     health.exactPhraseGeneration ===
       a.membership?.exactPhrases?.metadata.generation &&
     (!a.membership ||

@@ -582,6 +582,9 @@ const manifest = {
   pairRouterSha256: pairRaw
     ? createHash("sha256").update(pairRaw).digest("hex")
     : undefined,
+  exactPhraseDirectorySha256: exactPhraseRaw
+    ? createHash("sha256").update(exactPhraseRaw).digest("hex")
+    : undefined,
   includes:
     "Matching, exact ranking, metadata, query-relevant snippet and JSON serialization",
   preparedDownloads: source.downloads,

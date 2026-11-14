@@ -9,6 +9,129 @@ import type {
 import { PairPacket } from "./pair-packet.js";
 import { lower, concat, view } from "./format.js";
 import { QueryResourceError } from "../query/evaluate.js";
+import { PairRouter, pairObjectKey } from "./pair-router.js";
+import { PairMembershipPacket } from "./pair-membership.js";
+
+/** One routed discovery wave. Every record has complete context: tiny records
+ * already contain it; larger records directly address their complete stream.
+ * Prefer a covering pair whose packet is already required by candidate planning.
+ */
+export async function readExactPhrasePairs(
+  ast: Node,
+  router: PairRouter | undefined,
+  directory: ExactPhraseDirectory | undefined,
+  reader: Reader,
+  alternative: FilterAlternative | undefined,
+  selected: { a: string; b: string }[] = [],
+) {
+  const out = new Map<string, ExactPairDescriptor>();
+  if (!router?.metadata.completeContext || alternative?.kind === "documents")
+    return out;
+  const wanted = new Map<string, { a: string; b: string }>();
+  const visit = (n: Node): void => {
+    if (n.kind === "phrase") {
+      if (n.terms.length < 2 || n.terms.length > 4) return;
+      const pairs = n.terms
+        .slice(1)
+        .map((b, i) => ({ a: n.terms[i], b, at: i }))
+        .filter((p) => p.at <= 1 && n.terms.length - p.at - 2 <= 1);
+      const unknown = pairs.filter((p) => !directory?.lookup(p.a, p.b));
+      if (!unknown.length) return;
+      const already = unknown.filter((p) =>
+        selected.some((s) => s.a === p.a && s.b === p.b),
+      );
+      const choices = already.length ? already : unknown;
+      for (const p of choices) wanted.set(p.a + "\0" + p.b, p);
+    } else if (n.kind === "not") visit(n.child);
+    else if ("left" in n) {
+      visit(n.left);
+      visit(n.right);
+    }
+  };
+  visit(ast);
+  const packets = new Map<string, Promise<PairMembershipPacket>>();
+  const absent = (a: string, b: string): ExactPairDescriptor => ({
+    a,
+    b,
+    df: 0,
+    bodyDf: 0,
+    titleDf: 0,
+    bodyOccurrences: 0,
+    titleOccurrences: 0,
+    directory: {
+      a: 0,
+      b: 0,
+      generation: router.metadata.generation,
+      ranges: [],
+    },
+  });
+  for (const p of wanted.values()) {
+    const leaf = router.route(p.a, p.b);
+    if (!leaf) {
+      out.set(p.a + "\0" + p.b, absent(p.a, p.b));
+      continue;
+    }
+    const key = pairObjectKey(router.metadata.generation, leaf);
+    if (!packets.has(key)) {
+      reader.stats.exactPhraseDiscoveryReads++;
+      reader.stats.exactPhraseDiscoveryBytes += leaf.bytes;
+      packets.set(
+        key,
+        reader
+          .named(key, leaf.bytes)
+          .then((raw) => new PairMembershipPacket(raw)),
+      );
+    }
+  }
+  if (packets.size) reader.stats.exactPhraseDiscoveryWaves++;
+  await Promise.all(packets.values());
+  for (const [key, p] of wanted) {
+    const leaf = router.route(p.a, p.b);
+    if (!leaf) continue;
+    const packet = await packets.get(
+        pairObjectKey(router.metadata.generation, leaf),
+      )!,
+      r = packet.lookup(
+        p.a,
+        p.b,
+        router.metadata.documents,
+        (_row, _field, n, bytes) => {
+          reader.stats.positionIntegers += n;
+          reader.stats.pairContextIntegers += 2 * n;
+          reader.stats.decodedBytes += bytes;
+          reader.stats.exactPhraseOccurrences += n;
+        },
+      );
+    if (!r) {
+      out.set(key, absent(p.a, p.b));
+      continue;
+    }
+    if (
+      r.completePositions &&
+      r.completePositions.generation !== router.metadata.generation
+    )
+      throw Error("Complete context generation mismatch");
+    if (!r.completePositions && !r.context)
+      throw Error("Incomplete pair context in complete generation");
+    out.set(key, {
+      a: p.a,
+      b: p.b,
+      df: r.df,
+      bodyDf: r.body.count,
+      titleDf: r.title.count,
+      bodyOccurrences: r.bodyOccurrences,
+      titleOccurrences: r.titleOccurrences,
+      directory: r.completePositions ?? {
+        a: r.a,
+        b: r.b,
+        generation: router.metadata.generation,
+        ranges: [],
+      },
+      inline: r.context,
+    });
+  }
+  return out;
+}
 
 export interface ExactPhrasePlan {
   words: string[];
@@ -77,14 +200,36 @@ function groups(pair: ExactPairDescriptor) {
  * plans only; every selected stream has complete positional coverage. */
 export function planExactPhrases(
   ast: Node,
-  directory: ExactPhraseDirectory | undefined,
+  directory: Pick<ExactPhraseDirectory, "lookup"> | undefined,
   terms: ReadonlyMap<string, DirectoryTerm> | undefined,
   alternative: FilterAlternative | undefined,
   averageDocumentBytes: number,
   field: "all" | "body" | "title",
   reader?: Reader,
 ) {
-  if (!directory || !terms || !alternative) return [];
+  if (!directory || !terms) return [];
+  alternative ??= {
+    kind: "blocks",
+    expectedCandidates: Math.min(...[...terms.values()].map((t) => t.df)),
+    frequencyBytes: [...terms.values()].reduce(
+      (n, t) =>
+        n +
+        [t.frequencies, ...(t.frequencyParts ?? [])].reduce(
+          (n, r) => n + r[2],
+          0,
+        ),
+      0,
+    ),
+    positionBytes: [...terms.values()].reduce(
+      (n, t) =>
+        n +
+        [t.positional, ...(t.positionalParts ?? [])].reduce(
+          (n, r) => n + r[2],
+          0,
+        ),
+      0,
+    ),
+  };
   const phrases = new Map<string, string[]>();
   const visit = (n: Node): void => {
     if (n.kind === "phrase") phrases.set(n.terms.join("\0"), n.terms);
@@ -119,7 +264,10 @@ export function planExactPhrases(
       if (at > 1 || words.length - at - 2 > 1) continue;
       const pair = directory.lookup(words[at], words[at + 1]);
       if (!pair) continue;
-      if (pair.directory.a !== ids[at] || pair.directory.b !== ids[at + 1])
+      if (
+        pair.df &&
+        (pair.directory.a !== ids[at] || pair.directory.b !== ids[at + 1])
+      )
         throw Error("Exact phrase term identity mismatch");
       const gs = groups(pair),
         bytes = gs.reduce((n, g) => n + g.length, 0),
@@ -229,9 +377,9 @@ async function* matches(
     return batch;
   };
   let carry = new Uint8Array();
-  for (let i = 0; i < plan.groups.length; i++) {
+  for (let i = 0; i < (plan.pair.inline ? 1 : plan.groups.length); i++) {
     for (let j = i; j < i + 6; j++) start(j);
-    const fetched = await pending.get(i)!;
+    const fetched = plan.pair.inline ? new Uint8Array() : await pending.get(i)!;
     const raw = carry.length ? concat([carry, fetched]) : fetched;
     pending.delete(i);
     reader.stats.peakExactPhraseBufferBytes = Math.max(
@@ -239,25 +387,32 @@ async function* matches(
       Math.min(plan.bytes, 6 * 262144),
     );
     let at = 0;
-    while (at + 24 <= raw.length) {
-      const v = view(raw.subarray(at)),
-        length =
-          24 +
-          v.getUint32(12, true) +
-          v.getUint32(16, true) +
-          v.getUint32(20, true);
-      if (length < 24 || length > 65536)
-        throw Error("Invalid exact phrase chunk length");
-      if (at + length > raw.length) break;
-      const p = new PairPacket(
-        raw.subarray(at, at + length),
-        (_row, _f, n, bytes) => {
-          reader.stats.positionIntegers += n;
-          reader.stats.pairContextIntegers += 2 * n;
-          reader.stats.decodedBytes += bytes;
-          reader.stats.exactPhraseOccurrences += n;
-        },
-      );
+    while (plan.pair.inline ? at === 0 : at + 24 <= raw.length) {
+      let p: PairPacket, length: number;
+      if (plan.pair.inline) {
+        p = plan.pair.inline;
+        length = 1;
+      } else {
+        const v = view(raw.subarray(at)),
+          size =
+            24 +
+            v.getUint32(12, true) +
+            v.getUint32(16, true) +
+            v.getUint32(20, true);
+        length = size;
+        if (length < 24 || length > 65536)
+          throw Error("Invalid exact phrase chunk length");
+        if (at + length > raw.length) break;
+        p = new PairPacket(
+          raw.subarray(at, at + length),
+          (_row, _f, n, bytes) => {
+            reader.stats.positionIntegers += n;
+            reader.stats.pairContextIntegers += 2 * n;
+            reader.stats.decodedBytes += bytes;
+            reader.stats.exactPhraseOccurrences += n;
+          },
+        );
+      }
       if (
         p.a !== plan.ids[plan.at] ||
         p.b !== plan.ids[plan.at + 1] ||
@@ -284,7 +439,7 @@ async function* matches(
       if (docs.length >= 128) yield emit();
       at += length;
     }
-    carry = raw.slice(at);
+    carry = plan.pair.inline ? new Uint8Array() : raw.slice(at);
     if (carry.length >= 65536) throw Error("Unbounded exact phrase carry");
   }
   if (carry.length) throw Error("Truncated exact phrase stream");

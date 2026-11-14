@@ -382,6 +382,11 @@ if (process.argv.includes("--deploy-only")) {
     const data = await readFile(item.path),
       h = heads.get(item.key)!;
     if (
+      item.sha256 &&
+      createHash("sha256").update(data).digest("hex") !== item.sha256
+    )
+      throw Error("Auxiliary manifest hash mismatch: " + item.key);
+    if (
       h.status !== 200 ||
       Number(h.headers["content-length"]) !== item.size ||
       h.headers["x-sha256"] !== createHash("sha256").update(data).digest("hex")
