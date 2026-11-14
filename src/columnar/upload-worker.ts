@@ -1,13 +1,54 @@
 import { verifyPackageCoverage } from "./construction/coverage.js";
+import {
+  inspectPublication,
+  publicationBody,
+  publishBatch,
+} from "./publication.js";
+let activePublications = 0;
+let activePublicationBytes = 0;
 // Deployment transport and bounded publication checks; never a serving dependency.
 export default {
   async fetch(
     request: Request,
     env: { INDEX: R2Bucket; UPLOAD_TOKEN: string },
   ) {
-    if (request.headers.get("authorization") !== `Bearer ${env.UPLOAD_TOKEN}`)
+    if (
+      !env.UPLOAD_TOKEN ||
+      request.headers.get("authorization") !== `Bearer ${env.UPLOAD_TOKEN}`
+    )
       return new Response("Not found", { status: 404 });
     const key = decodeURIComponent(new URL(request.url).pathname.slice(1));
+    if (key === "__head-batch" && request.method === "POST") {
+      try {
+        return Response.json(
+          await inspectPublication(env.INDEX, await request.json()),
+        );
+      } catch (error) {
+        return Response.json({ error: String(error) }, { status: 400 });
+      }
+    }
+    if (key === "__publish-batch" && request.method === "POST") {
+      const size = Number(request.headers.get("x-raw-length"));
+      if (!Number.isSafeInteger(size) || size < 5 || size > 8 * 1048576)
+        return new Response("Invalid publication size", { status: 400 });
+      if (
+        activePublications >= 16 ||
+        activePublicationBytes + size > 48 * 1048576
+      )
+        return new Response("Publication busy", { status: 503 });
+      activePublications++;
+      activePublicationBytes += size;
+      try {
+        return Response.json(
+          await publishBatch(env.INDEX, await publicationBody(request)),
+        );
+      } catch (error) {
+        return Response.json({ error: String(error) }, { status: 400 });
+      } finally {
+        activePublications--;
+        activePublicationBytes -= size;
+      }
+    }
     if (/^[a-f0-9]{64}\/root\.json$/.test(key) && request.method === "GET") {
       const object = await env.INDEX.get(key);
       return new Response(object?.body ?? "Missing published generation", {

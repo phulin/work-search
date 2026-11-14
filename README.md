@@ -225,3 +225,20 @@ filter source are included. Direct API consumers can instead supply a batched
 See [metadata filters and deployment](bench/METADATA-FILTERS.md) for the request
 contract, commands, 1M validation results, publication checks and remaining
 Casework/full-corpus integration work. Preparation does not deploy or upload.
+
+Publish the complete local 1M generation, including its pair packets and filter
+columns, with:
+
+```sh
+yarn deploy work/columnar-worker-stem-1m work-search-cws-1m \
+  --membership work/columnar-complete-pairs-1m \
+  --metadata work/columnar-metadata-1m
+```
+
+Publication batches small immutable objects into bounded gzip transfers. The
+uploader verifies SHA-256 during atomic creation, rejects conflicting existing
+objects, and limits expanded active payloads to 48 MiB. An acknowledgment journal
+allows interrupted uploads to resume after checking recorded identities in R2.
+`--deploy-only` verifies already published objects without uploading them.
+`bench/columnar/deployment-smoke.ts` prepares local reference responses and checks
+the deployed API, including complete results, metadata filters and pagination.

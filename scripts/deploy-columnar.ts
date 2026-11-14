@@ -16,6 +16,8 @@ import { benchmarkToken } from "../bench/columnar/token.js";
 import { gzip } from "node:zlib";
 import { promisify } from "node:util";
 import { request as httpsRequest, Agent } from "node:https";
+import { DocumentDirectory } from "../src/columnar/document-directory.js";
+import { inspectObjects, publishAuxiliary } from "./columnar-publication.js";
 import {
   loadServingAssets,
   servingOptions,
@@ -40,6 +42,7 @@ const uploadAgent = new Agent({
   maxSockets: uploadConcurrency,
 });
 const compress = promisify(gzip);
+let publicationHeads: Awaited<ReturnType<typeof inspectObjects>> | undefined;
 function headObjectOnce(address: string, token: string) {
   return new Promise<{
     status: number;
@@ -65,6 +68,8 @@ function headObjectOnce(address: string, token: string) {
   });
 }
 async function headObject(address: string, token: string) {
+  const cached = publicationHeads?.get(new URL(address).pathname.slice(1));
+  if (cached?.status === 200) return cached;
   for (let attempt = 0; ; attempt++)
     try {
       return await headObjectOnce(address, token);
@@ -213,6 +218,17 @@ if (!process.argv.includes("--deploy-only")) {
   );
 }
 const url = "https://work-search-cws-upload.phulin.workers.dev";
+publicationHeads = await inspectObjects(url, token, [
+  ...new Set([
+    ...root.objects.map((o) => o.key ?? `${root.generation}/${o.name}`),
+    ...(pairs?.objects ?? []).map(
+      (o) => o.key ?? `${pairs!.generation}/${o.name}`,
+    ),
+    ...(serving.documents
+      ? [...new DocumentDirectory(serving.documents).groups()].map((g) => g.key)
+      : []),
+  ]),
+]);
 if (process.argv.includes("--deploy-only")) {
   // Native publication already verifies every immutable object and full document
   // coverage before writing this exact root. Reuse that proof instead of making
@@ -356,49 +372,29 @@ await verifyDocumentPublication(
   (key) => headObject(`${url}/${key}`, token),
   uploadConcurrency,
 );
-let auxiliaryNext = 0;
-await Promise.all(
-  Array.from({ length: uploadConcurrency }, async () => {
-    for (;;) {
-      const item = serving.auxiliary[auxiliaryNext++];
-      if (!item) return;
-      const data = await readFile(item.path);
-      if (data.length !== item.size)
-        throw Error("Auxiliary object size mismatch: " + item.key);
-      const sha256 = createHash("sha256").update(data).digest("hex"),
-        address = `${url}/${item.key}`;
-      if (
-        item.key.endsWith("/metadata.bin") &&
-        sha256 !== item.key.split("/")[0]
-      )
-        throw Error("Metadata digest mismatch");
-      const h = await headObject(address, token);
-      if (h.status === 200) {
-        if (
-          Number(h.headers["content-length"]) !== item.size ||
-          h.headers["x-sha256"] !== sha256
-        )
-          throw Error("Auxiliary immutable identity mismatch: " + item.key);
-        continue;
-      }
-      if (process.argv.includes("--deploy-only") || h.status !== 404)
-        throw Error("Unpublished auxiliary object: " + item.key);
-      const compressed = await compress(data, { level: 1 });
-      const result = await uploadObject(
-        address,
-        {
-          authorization: `Bearer ${token}`,
-          "content-length": String(compressed.length),
-          "x-sha256": sha256,
-          "x-raw-length": String(item.size),
-        },
-        compressed,
-      );
-      if (result.status < 200 || result.status >= 300)
-        throw Error("Auxiliary upload failed: " + result.status);
-    }
-  }),
-);
+if (process.argv.includes("--deploy-only")) {
+  const heads = await inspectObjects(
+    url,
+    token,
+    serving.auxiliary.map((o) => o.key),
+  );
+  for (const item of serving.auxiliary) {
+    const data = await readFile(item.path),
+      h = heads.get(item.key)!;
+    if (
+      h.status !== 200 ||
+      Number(h.headers["content-length"]) !== item.size ||
+      h.headers["x-sha256"] !== createHash("sha256").update(data).digest("hex")
+    )
+      throw Error("Unpublished auxiliary object: " + item.key);
+  }
+} else
+  await publishAuxiliary(
+    url,
+    token,
+    serving.auxiliary,
+    out + "/auxiliary-publication.jsonl",
+  );
 uploadAgent.destroy();
 if (process.argv.includes("--publish-only")) {
   await writeFile(

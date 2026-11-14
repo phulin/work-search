@@ -95,6 +95,7 @@ try {
         "--import",
         "tsx",
         process.env.CWS_DRIVER ?? "bench/columnar/live.ts",
+        ...process.argv.slice(2),
       ],
       { stdio: "inherit", env: process.env },
     );
