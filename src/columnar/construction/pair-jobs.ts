@@ -32,9 +32,11 @@ export async function pairStatisticsJob(
   if (
     !Number.isInteger(g.first) ||
     g.first < 0 ||
-    g.end - g.first > 128 ||
+    g.end - g.first > 1024 ||
     g.end <= g.first ||
     offsets.length !== g.end - g.first + 1 ||
+    offsets[0] !== 0 ||
+    offsets.some((n, i) => i > 0 && n <= offsets[i - 1]) ||
     !/^[a-f0-9]{64}$/.test(g.sha256) ||
     !Array.isArray(vocabulary.terms) ||
     g.end > vocabulary.documents
@@ -78,9 +80,11 @@ export async function pairOccurrencesJob(
   if (
     !Number.isInteger(g.first) ||
     g.first < 0 ||
-    g.end - g.first > 128 ||
+    g.end - g.first > 1024 ||
     g.end <= g.first ||
     offsets.length !== g.end - g.first + 1 ||
+    offsets[0] !== 0 ||
+    offsets.some((n, i) => i > 0 && n <= offsets[i - 1]) ||
     !/^[a-f0-9]{64}$/.test(g.sha256) ||
     g.end > selection.documents
   )
@@ -109,10 +113,17 @@ export async function finishPairsJob(
     objectBase: number;
     range?: { firstKey: number; endKey: number };
   },
+  supplied?: {
+    documents: number;
+    vocabulary: number;
+    pairs: PairSelection["pairs"];
+  },
 ) {
-  const selection: PairSelection = JSON.parse(
-    new TextDecoder().decode(await store.get(input.selectionRef)),
-  );
+  const selection =
+    supplied ??
+    (JSON.parse(
+      new TextDecoder().decode(await store.get(input.selectionRef)),
+    ) as PairSelection);
   if (
     input.run.selection !== input.selectionRef.sha256 ||
     input.run.first !== 0 ||
@@ -171,7 +182,10 @@ export async function finishPairsJob(
     descriptors,
     coverage: {
       documents: selection.documents,
-      vocabulary: selection.terms.length,
+      vocabulary:
+        "vocabulary" in selection
+          ? selection.vocabulary
+          : selection.terms.length,
       pairs: count,
       occurrences,
       bytes,

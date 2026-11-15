@@ -279,7 +279,16 @@ export function createConstructionWorker(
             const saved = await existing.json<any>();
             if (saved.fingerprint !== fingerprint)
               throw Error("Construction task changed; use another task name");
-            result = { ...saved.result, reused: true };
+            result = {
+              ...saved.result,
+              reused: true,
+              originalWork: {
+                writesAndMergeReads: saved.result.writesAndMergeReads,
+                writeAndMergeBytes: saved.result.writeAndMergeBytes,
+              },
+              writesAndMergeReads: 0,
+              writeAndMergeBytes: 0,
+            };
           } else {
             const store = new BuildStore(env.INDEX);
             if (input.stateTask) {
@@ -398,7 +407,9 @@ export function createConstructionWorker(
                 }
                 if (
                   next !== input.root.count ||
-                  bytes !== input.root.documentPackages.bytes
+                  bytes !==
+                    (input.root.documentPackages.storedBytes ??
+                      input.root.documentPackages.bytes)
                 )
                   throw Error("Incomplete document package coverage");
               }
@@ -618,6 +629,8 @@ export function createConstructionWorker(
           requests: source.requests,
           bytes: source.bytes,
           r2: counted.operations,
+          io: counted.snapshot(),
+          reused: Boolean(result.reused),
         };
         console.log(JSON.stringify({ construction: telemetry }));
         return Response.json(
@@ -625,12 +638,28 @@ export function createConstructionWorker(
           { headers: { "cache-control": "no-store" } },
         );
       } catch (e) {
+        const telemetry = {
+          isolate,
+          code,
+          operation: url.pathname,
+          wallMs: performance.now() - started,
+          queueMs: started - queuedAt,
+          requests: source.requests,
+          bytes: source.bytes,
+          r2: counted.operations,
+          io: counted.snapshot(),
+          failed: true,
+        };
+        console.log(
+          JSON.stringify({ construction: telemetry, error: String(e) }),
+        );
         return Response.json(
           {
             error: String(e),
             isolate,
             code,
             wallMs: performance.now() - started,
+            telemetry,
           },
           { status: 500 },
         );

@@ -15,7 +15,9 @@ export async function finishPairDirectoryJob(
 ) {
   if (
     !input.pairs.length ||
-    input.pairs.length > 256 ||
+    input.pairs.length > 4096 ||
+    input.pairs.reduce((n, p) => n + (p.ref[2] <= 16384 ? p.ref[2] : 0), 0) >
+      8 * 1048576 ||
     input.objects.length !== input.objectIds.length
   )
     throw Error("Invalid pair directory job");

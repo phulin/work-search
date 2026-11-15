@@ -190,6 +190,17 @@ class ContextField {
       throw Error("Invalid pair occurrence span");
     return this.spans.subarray(from, end);
   }
+  columns() {
+    const docs = Uint32Array.from(this.members.values()),
+      offsets = new Uint32Array(docs.length + 1);
+    for (let i = 0; i <= docs.length; i++)
+      offsets[i] = this.directory
+        ? packedAt(this.directory, i)
+        : i
+          ? this.spans.length
+          : 0;
+    return { docs, offsets, spans: this.spans };
+  }
 }
 export class PairPacket {
   readonly a: number;
@@ -277,6 +288,12 @@ export class PairPacket {
       throw Error("Invalid pair row");
     return this.fields[field].raw(this.docs[row]);
   }
+  /** Construction can concatenate exact encoded context spans without
+   * materializing three occurrence arrays and an object for every document. */
+  encodedField(field: number) {
+    if (field !== 0 && field !== 1) throw Error("Invalid pair field");
+    return this.fields[field].columns();
+  }
   count(row: number, field: number) {
     const raw = this.raw(row, field);
     return raw ? readVarint(raw, 0).value : 0;
@@ -354,21 +371,55 @@ export function mergePairPackets(packets: PairPacket[]) {
   if (!packets.length) throw Error("Pair merge requires packets");
   const sorted = [...packets].sort((a, b) => a.docs[0] - b.docs[0]),
     a = sorted[0].a,
-    b = sorted[0].b,
-    rows: PairColumnRow[] = [];
+    b = sorted[0].b;
   let previous = -1;
   for (const p of sorted) {
     if (p.a !== a || p.b !== b || p.docs[0] <= previous)
       throw Error("Pair merge document overlap or ID mismatch");
-    for (let i = 0; i < p.docs.length; i++)
-      rows.push({
-        doc: p.docs[i],
-        body: p.occurrences(i, 0),
-        title: p.occurrences(i, 1),
-      });
     previous = p.docs.at(-1)!;
   }
-  return encodePairColumns(a, b, rows);
+  const fields = [0, 1].map((field) => {
+    const columns = sorted.map((p) => p.encodedField(field)),
+      count = columns.reduce((n, c) => n + c.docs.length, 0),
+      docs = new Uint32Array(count),
+      offsets = new Uint32Array(count + 1);
+    let row = 0,
+      bytes = 0;
+    for (const c of columns) {
+      docs.set(c.docs, row);
+      for (let i = 0; i < c.docs.length; i++)
+        offsets[row + i] = bytes + c.offsets[i];
+      row += c.docs.length;
+      bytes += c.spans.length;
+    }
+    offsets[count] = bytes;
+    const spans = concat(columns.map((c) => c.spans)),
+      directory = count > 1 ? pack(offsets) : undefined;
+    return {
+      members: count ? pack(docs, true) : new Uint8Array(),
+      context: directory
+        ? concat([u32([directory.length]), directory, spans])
+        : spans,
+    };
+  });
+  const context = concat([
+    u32([CONTEXT, fields[0].context.length, fields[1].context.length]),
+    fields[0].context,
+    fields[1].context,
+  ]);
+  return concat([
+    u32([
+      PACKET,
+      a,
+      b,
+      fields[0].members.length,
+      fields[1].members.length,
+      context.length,
+    ]),
+    fields[0].members,
+    fields[1].members,
+    context,
+  ]);
 }
 /** Mandatory pair intersections retain a document only when all pair anchors
  * coexist in one allowed field. This is a filter, never phrase proof by itself. */

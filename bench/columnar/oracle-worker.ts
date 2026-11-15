@@ -16,6 +16,7 @@ import {
 
 export interface OracleConfiguration {
   corpusHash: string;
+  sourceIdentity?: "construction-v3";
   statistics: OracleStatistics;
   contracts: OracleContract[];
 }
@@ -57,7 +58,17 @@ export function createOracleWorker(sourceRoot: SourceRoot, code: string) {
         configuration.contracts.length > 256 ||
         configuration.statistics.names.length > 4096 ||
         configuration.corpusHash !==
-          (await digest(jsonBytes({ sourceRoot, count })))
+          (await digest(
+            jsonBytes(
+              configuration.sourceIdentity === "construction-v3"
+                ? {
+                    sourceRoot,
+                    count,
+                    analysis: configuration.statistics.analysis,
+                  }
+                : { sourceRoot, count },
+            ),
+          ))
       )
         throw Error("Invalid oracle configuration/range");
       const receipt = `cws-oracle/${code}/${input.configuration.sha256}/${input.first}-${input.end}.json`,

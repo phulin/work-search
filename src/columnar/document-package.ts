@@ -2,6 +2,12 @@ import { concat, u32, view, pack, unpack, lower } from "./format.js";
 import { scanText } from "./construction/text.js";
 import { encodeTextChunks, TextChunks } from "./text-chunks.js";
 import { encodeSpan, decodeSpan, packedAt } from "./compact-integers.js";
+import {
+  analyzeDocument,
+  resolveDocument,
+  type AnalyzedDocument,
+  type NumericDocument,
+} from "./construction/analyzed-document.js";
 
 const MAGIC = 0x34504443;
 export const VERIFICATION_CHUNK_BYTES = 32768;
@@ -142,26 +148,22 @@ export async function encodeDocumentPackage(
   ids: Map<string, number>,
   analysis?: import("../query/analysis.js").Analysis,
 ) {
-  const body = scanText(document.body, analysis),
-    starts: number[] = [],
-    b: number[] = [],
-    t: number[] = [];
-  const id = (word: string) => {
-    const n = ids.get(word);
-    if (n === undefined) throw Error("Document vocabulary missing a token");
-    return n;
-  };
-  for (const token of body.tokens()) {
-    b.push(id(token.word));
-    starts.push(token.start);
-  }
-  for (const token of scanText(document.title ?? "", analysis).tokens())
-    t.push(id(token.word));
-  const text = await encodeTextChunks(body.text, starts);
+  const analyzed = analyzeDocument(document, analysis);
+  return encodeAnalyzedDocumentPackage(
+    analyzed,
+    resolveDocument(analyzed, ids),
+  );
+}
+export async function encodeAnalyzedDocumentPackage(
+  analyzed: AnalyzedDocument,
+  numeric: NumericDocument,
+) {
+  const document = analyzed.document,
+    text = await encodeTextChunks(analyzed.text, Array.from(analyzed.starts));
   return encodeDocumentParts({
     doc: document.doc,
-    body: b,
-    title: t,
+    body: numeric.body,
+    title: numeric.title,
     display: await gzip({
       id: document.id,
       title: document.title,

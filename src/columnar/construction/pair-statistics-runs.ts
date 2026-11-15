@@ -1,5 +1,6 @@
 import { BuildStore, type Chunk } from "./runs.js";
 import { PairStatistics, statisticsOutput } from "./pair-statistics.js";
+import type { StagingContainer } from "./staging-container.js";
 
 export interface PairStatisticsRun {
   first: number;
@@ -18,6 +19,7 @@ class Writer {
     readonly store: BuildStore,
     readonly first: number,
     readonly end: number,
+    readonly container?: StagingContainer,
   ) {
     this.output = statisticsOutput(CHUNK_ROWS, first, end);
   }
@@ -31,8 +33,9 @@ class Writer {
     const index = this.chunks.length,
       bytes = this.output.finish(this.count);
     this.chunks.length++;
-    const task = this.store
-      .put(bytes)
+    const task = (
+      this.container ? this.container.append(bytes) : this.store.put(bytes)
+    )
       .then(
         (chunk) => {
           this.chunks[index] = chunk;
@@ -56,8 +59,9 @@ export async function storePairStatistics(
   store: BuildStore,
   stats: PairStatistics,
   vocabulary: string,
+  container?: StagingContainer,
 ): Promise<PairStatisticsRun> {
-  const writer = new Writer(store, stats.first, stats.end);
+  const writer = new Writer(store, stats.first, stats.end, container);
   for (let row = 0; row < stats.count; row++) {
     writer.put(stats.key(row), stats.df(row), stats.occurrences(row));
     if (writer.count === CHUNK_ROWS) await writer.flush();
@@ -76,7 +80,7 @@ class Cursor {
   row = 0;
   stats?: PairStatistics;
   last = -1;
-  next?: Promise<Uint8Array>;
+  private window = new Map<number, Uint8Array>();
   constructor(
     readonly store: BuildStore,
     readonly run: PairStatisticsRun,
@@ -85,14 +89,23 @@ class Cursor {
     if (this.stats && this.row < this.stats.count) return;
     this.stats = undefined;
     if (this.chunk === this.run.chunks.length) return;
-    const bytes = await (this.next ??
-      this.store.get(this.run.chunks[this.chunk]));
-    this.chunk++;
-    this.next =
-      this.chunk < this.run.chunks.length
-        ? this.store.get(this.run.chunks[this.chunk])
-        : undefined;
-    void this.next?.catch(() => {});
+    if (!this.window.has(this.chunk)) {
+      let end = this.chunk + 1,
+        bytes = this.run.chunks[this.chunk].size;
+      while (
+        end < this.run.chunks.length &&
+        this.run.chunks[end].key === this.run.chunks[this.chunk].key &&
+        bytes + this.run.chunks[end].size <= 2 * 1048576
+      )
+        bytes += this.run.chunks[end++].size;
+      const raw = await this.store.getMany(
+        this.run.chunks.slice(this.chunk, end),
+        2 * 1048576,
+      );
+      raw.forEach((b, i) => this.window.set(this.chunk + i, b));
+    }
+    const bytes = this.window.get(this.chunk)!;
+    this.window.delete(this.chunk++);
     const stats = new PairStatistics(bytes);
     if (
       stats.first !== this.run.first ||

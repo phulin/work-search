@@ -1,6 +1,12 @@
 import { pack, concat, u32, view, type Root } from "../format.js";
 import { CorpusSource } from "./source.js";
 import { scanText } from "./text.js";
+import {
+  encodeRunBlock,
+  decodeRunBlock,
+  type RunCodec,
+} from "./block-codec.js";
+import { SummaryWriter } from "./term-summaries.js";
 
 const encoder = new TextEncoder(),
   decoder = new TextDecoder("utf-8", { fatal: true });
@@ -30,6 +36,8 @@ export interface Chunk {
   firstTerm?: { at: number; word: string };
   firstWord?: string;
   lastWord?: string;
+  codec?: RunCodec;
+  rawBytes?: number;
 }
 export interface Run {
   chunks: Chunk[];
@@ -38,10 +46,15 @@ export interface Run {
   count: number;
   bodyTokens: number;
   titleTokens: number;
+  summaries?: Chunk[];
 }
 export class BuildStore {
   requests = 0;
   bytes = 0;
+  codecEncodeMs = 0;
+  codecDecodeMs = 0;
+  decodedBytes = 0;
+  continuationDecodeBytes = 0;
   constructor(readonly bucket: R2Bucket) {}
   async putNamed(
     generation: string,
@@ -146,6 +159,52 @@ export class BuildStore {
     }
     return chunks;
   }
+  /** Coalesce only requested contiguous blocks. Verify each block's digest;
+   * do not inflate adjacent blocks merely because their bytes share a GET. */
+  async getMany(chunks: Chunk[], maxBytes = 8 * 1048576) {
+    const result: Uint8Array[] = [];
+    for (let at = 0; at < chunks.length;) {
+      const first = chunks[at];
+      let end = at + 1,
+        length = first.size;
+      if (first.offset !== undefined)
+        while (
+          end < chunks.length &&
+          chunks[end].key === first.key &&
+          chunks[end].objectBytes === first.objectBytes &&
+          chunks[end].offset === first.offset + length &&
+          length + chunks[end].size <= maxBytes
+        )
+          length += chunks[end++].size;
+      if (end === at + 1) result.push(await this.get(first));
+      else {
+        this.requests++;
+        const object = await this.bucket.get(first.key, {
+          range: { offset: first.offset!, length },
+        });
+        if (
+          !object ||
+          object.size !== first.objectBytes ||
+          object.customMetadata?.sha256 !== first.key.split("/")[0]
+        )
+          throw Error("Missing coalesced construction object");
+        const data = new Uint8Array(await object.arrayBuffer());
+        this.bytes += data.length;
+        if (data.length !== length)
+          throw Error("Truncated coalesced construction object");
+        let p = 0;
+        for (let i = at; i < end; i++) {
+          const raw = data.subarray(p, p + chunks[i].size);
+          if ((await digest(raw)) !== chunks[i].sha256)
+            throw Error("Construction chunk checksum mismatch");
+          result.push(raw);
+          p += raw.length;
+        }
+      }
+      at = end;
+    }
+    return result;
+  }
 }
 // Chunks contain whole records; a single unusually large positional row can
 // exceed the target. Readers keep at most one chunk per input run.
@@ -160,7 +219,10 @@ export class RunWriter {
   private parts: {
     bytes: Uint8Array;
     index: number;
-    descriptor: Pick<Chunk, "terms" | "firstTerm" | "firstWord" | "lastWord">;
+    descriptor: Pick<
+      Chunk,
+      "terms" | "firstTerm" | "firstWord" | "lastWord" | "codec" | "rawBytes"
+    >;
   }[] = [];
   private packedBytes = 0;
   constructor(
@@ -168,6 +230,7 @@ export class RunWriter {
     readonly target = 2 * 1048576,
     public currentWord?: string,
     readonly containerBytes = 16 * 1048576,
+    readonly codec: RunCodec = "raw",
   ) {}
   async append(record: Uint8Array) {
     if (this.bytes && this.bytes + record.length > this.target)
@@ -199,13 +262,18 @@ export class RunWriter {
   }
   private async flushBlock() {
     if (!this.bytes) return;
-    const bytes = concat(this.records),
+    const raw = concat(this.records),
+      start = performance.now(),
+      bytes = await encodeRunBlock(raw, this.codec),
       descriptor = {
         terms: this.terms,
         firstTerm: this.firstTerm,
         firstWord: this.firstWord,
         lastWord: this.lastWord,
+        codec: this.codec,
+        rawBytes: raw.length,
       };
+    this.store.codecEncodeMs += performance.now() - start;
     if (
       this.packedBytes &&
       this.packedBytes + bytes.length > this.containerBytes
@@ -263,6 +331,7 @@ export interface Cursor {
 export class RunReader {
   cursor: Cursor;
   data?: Uint8Array;
+  private window = new Map<number, Uint8Array>();
   constructor(
     readonly store: BuildStore,
     readonly chunks: Chunk[],
@@ -273,7 +342,35 @@ export class RunReader {
   async peek(): Promise<Uint8Array | undefined> {
     if (!this.data) {
       if (this.cursor.chunk >= this.chunks.length) return;
-      this.data = await this.store.get(this.chunks[this.cursor.chunk]);
+      const chunk = this.chunks[this.cursor.chunk];
+      if (!this.window.has(this.cursor.chunk)) {
+        let end = this.cursor.chunk + 1,
+          bytes = chunk.rawBytes ?? chunk.size;
+        if (chunk.codec && chunk.codec !== "raw")
+          while (
+            end < this.chunks.length &&
+            bytes + (this.chunks[end].rawBytes ?? this.chunks[end].size) <=
+              1048576 &&
+            this.chunks[end].key === chunk.key
+          )
+            bytes += this.chunks[end++].rawBytes ?? this.chunks[end - 1].size;
+        const raw = await this.store.getMany(
+          this.chunks.slice(this.cursor.chunk, end),
+          1048576,
+        );
+        raw.forEach((b, i) => this.window.set(this.cursor.chunk + i, b));
+      }
+      const raw = this.window.get(this.cursor.chunk)!;
+      this.window.delete(this.cursor.chunk);
+      const start = performance.now();
+      this.data = await decodeRunBlock(
+        raw,
+        chunk.codec ?? "raw",
+        chunk.rawBytes,
+      );
+      this.store.codecDecodeMs += performance.now() - start;
+      this.store.decodedBytes += this.data.length;
+      this.store.continuationDecodeBytes += this.cursor.at;
     }
     const { at } = this.cursor;
     if (at + 8 > this.data.length) throw Error("Truncated construction record");
@@ -322,6 +419,7 @@ export class RunReader {
     }
     this.cursor = { chunk: lo, at: 0 };
     this.data = undefined;
+    this.window.clear();
     for (;;) {
       const record = await this.peek();
       if (!record) return;
@@ -350,6 +448,12 @@ export async function ingest(
   count: number,
   tokenBudget = 1048576,
   analysis?: import("../../query/analysis.js").Analysis,
+  format?: {
+    codec: RunCodec;
+    blockBytes: number;
+    containerBytes: number;
+    summaries: boolean;
+  },
 ): Promise<Run> {
   if (
     !Number.isInteger(first) ||
@@ -406,9 +510,26 @@ export async function ingest(
       break;
     }
   }
-  const writer = new RunWriter(store);
+  const writer = new RunWriter(
+      store,
+      format?.blockBytes,
+      undefined,
+      format?.containerBytes,
+      format?.codec,
+    ),
+    summaries = format?.summaries ? new SummaryWriter(store) : undefined;
   for (const word of [...rows.keys()].sort()) {
     const list = rows.get(word)!;
+    if (summaries) {
+      let body = 0,
+        title = 0;
+      for (const row of list) {
+        const v = view(row);
+        body += v.getUint32(28, true);
+        title += v.getUint32(28 + v.getUint32(20, true), true);
+      }
+      await summaries.append({ word, df: list.length, body, title });
+    }
     await writer.append(termRecord(word, list.length));
     for (const row of list) await writer.append(row);
     rows.delete(word);
@@ -421,6 +542,7 @@ export async function ingest(
     count: next - first,
     bodyTokens,
     titleTokens,
+    ...(summaries ? { summaries: await summaries.finish() } : {}),
   };
 }
 export interface MergeState {
@@ -439,6 +561,7 @@ export async function merge(
   state?: MergeState,
   byteBudget = 8 * 1048576,
   range?: { firstWord?: string; endWord?: string },
+  format?: { codec: RunCodec; blockBytes: number; containerBytes: number },
 ) {
   if (
     runs.length < 2 ||
@@ -455,7 +578,13 @@ export async function merge(
   const readers = runs.map(
       (r, i) => new RunReader(store, r.chunks, state!.cursors[i]),
     ),
-    writer = new RunWriter(store, 2 * 1048576, state.word),
+    writer = new RunWriter(
+      store,
+      format?.blockBytes ?? 2 * 1048576,
+      state.word,
+      format?.containerBytes,
+      format?.codec,
+    ),
     started = performance.now();
   if (starting && range?.firstWord)
     for (const reader of readers) await reader.seekTerm(range.firstWord);

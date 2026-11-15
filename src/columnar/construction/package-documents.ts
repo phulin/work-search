@@ -1,4 +1,10 @@
-import { encodeDocumentPackage } from "../document-package.js";
+import { encodeAnalyzedDocumentPackage } from "../document-package.js";
+import {
+  analyzeDocument,
+  resolveDocument,
+  type AnalyzedDocument,
+  type NumericDocument,
+} from "./analyzed-document.js";
 import { Reader, Lru, Memory } from "../storage.js";
 import { ColumnarR2 } from "../r2.js";
 import { loadDictionary } from "../dictionary.js";
@@ -20,6 +26,7 @@ export async function finishPackageDocuments(
     lookup(names: string[]): Promise<Map<string, number>>;
     stats: { requests: number; bytes: number; hits: number; misses: number };
   },
+  numericSink?: (document: NumericDocument) => Promise<void>,
 ) {
   if (
     !Number.isInteger(first) ||
@@ -55,14 +62,15 @@ export async function finishPackageDocuments(
       Math.min(128, end - next, part.first + part.count - next),
     );
   await source.prefetch(pointers);
-  let batch: Awaited<ReturnType<CorpusSource["document"]>>[] = [],
+  let batch: AnalyzedDocument[] = [],
     batchAt = 0;
   const encoder = new TextEncoder(),
     decoder = new TextDecoder();
   async function readBatch() {
     batch = [];
     batchAt = 0;
-    let characters = 0;
+    let analyzedBytes = 0,
+      batchTokens = 0;
     const missing = new Set<string>();
     for (let doc = next; doc < end && batch.length < 128; doc++) {
       if (doc >= batchFirst + pointers.view.byteLength / 32) {
@@ -75,15 +83,17 @@ export async function finishPackageDocuments(
         await source.prefetch(pointers);
       }
       const value = await source.document(doc, pointers, doc - batchFirst);
-      batch.push(value);
-      characters += value.body.length + (value.title?.length ?? 0);
-      for (const text of vocabulary
-        ? [value.title ?? ""]
-        : [value.title ?? "", value.body])
-        for (const token of scanText(text, root.analysis).tokens())
-          if (!ids.has(token.word) && !missing.has(token.word))
-            missing.add(decoder.decode(encoder.encode(token.word)));
-      if (characters >= 4 * 1048576 || missing.size >= 100000) break;
+      const analyzed = analyzeDocument({ ...value, doc }, root.analysis);
+      batch.push(analyzed);
+      analyzedBytes += analyzed.retainedBytes;
+      batchTokens += analyzed.body.length + analyzed.title.length;
+      for (const word of analyzed.words) if (!ids.has(word)) missing.add(word);
+      if (
+        analyzedBytes >= 8 * 1048576 ||
+        batchTokens >= Math.min(262144, tokenBudget - tokens) ||
+        missing.size >= 100000
+      )
+        break;
     }
     if (missing.size) {
       const names = [...missing].sort(),
@@ -100,13 +110,11 @@ export async function finishPackageDocuments(
   }
   for (; next < end; next++) {
     if (batchAt === batch.length) await readBatch();
-    const doc = batch[batchAt++];
-    const packet = await encodeDocumentPackage(
-      { ...doc, doc: next },
-      ids,
-      root.analysis,
-    );
+    const doc = batch[batchAt++],
+      numeric = resolveDocument(doc, ids);
+    const packet = await encodeAnalyzedDocumentPackage(doc, numeric);
     if (sink && (await sink(next, packet)) === false) break;
+    await numericSink?.(numeric);
     while (writes.size >= 4) await Promise.race(writes);
     if (writeError) throw writeError;
     const write = (

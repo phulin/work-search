@@ -38,6 +38,7 @@ export async function finishDocumentGroup(
       },
       4 * 1048576,
       args[9],
+      args[10],
     ),
     store = args[1],
     data = concat(packets),
@@ -127,7 +128,22 @@ export function createDocumentGroupHandler(
             throw Error("Construction task changed");
           return Response.json({
             ...saved.result,
-            telemetry: { ...saved.result.telemetry, r2: counted.operations },
+            writesAndMergeReads: 0,
+            writeAndMergeBytes: 0,
+            originalWork: saved.result.telemetry,
+            telemetry: {
+              isolate,
+              code,
+              build: input.build,
+              task: input.task,
+              wallMs: performance.now() - started,
+              queueMs: started - queued,
+              requests: 0,
+              bytes: 0,
+              r2: counted.operations,
+              io: counted.snapshot(),
+              reused: true,
+            },
             reused: true,
           });
         }
@@ -174,6 +190,7 @@ export function createDocumentGroupHandler(
             requests: source.requests,
             bytes: source.bytes,
             r2: counted.operations,
+            io: counted.snapshot(),
           },
           result = {
             output,
@@ -188,7 +205,23 @@ export function createDocumentGroupHandler(
         console.log(JSON.stringify({ construction: telemetry }));
         return Response.json(result);
       } catch (error) {
-        return Response.json({ error: String(error) }, { status: 400 });
+        const telemetry = {
+          isolate,
+          code,
+          operation: path,
+          wallMs: performance.now() - started,
+          queueMs: started - queued,
+          r2: counted.operations,
+          io: counted.snapshot(),
+          failed: true,
+        };
+        console.log(
+          JSON.stringify({ construction: telemetry, error: String(error) }),
+        );
+        return Response.json(
+          { error: String(error), telemetry },
+          { status: 400 },
+        );
       } finally {
         pending--;
         release();

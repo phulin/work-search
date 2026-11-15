@@ -164,12 +164,21 @@ export async function finishPostings(
   saved?: FinishState,
   byteBudget = 8 * 1048576,
   range?: TermRange,
+  direct?: {
+    objects?: ObjectStore;
+    reader: Pick<RunReader, "peek" | "consume" | "cursor">;
+    term: (
+      word: string,
+      term: DirectoryTerm,
+      inline: { ref: Ref; data: Uint8Array }[],
+    ) => Promise<void>;
+  },
 ) {
   const state: FinishState = saved
       ? structuredClone(saved)
       : initialFinishState(range),
-    reader = new RunReader(store, run.chunks, state.cursor),
-    objects = new ObjectStore(store, objectBase),
+    reader = direct?.reader ?? new RunReader(store, run.chunks, state.cursor),
+    objects = direct?.objects ?? new ObjectStore(store, objectBase),
     scores = new PackedWriter(objects),
     positions = new PackedWriter(objects),
     plans = new PackedWriter(objects),
@@ -198,6 +207,7 @@ export async function finishPostings(
   let pending: PacketBlock[] = [],
     pendingPositions: Ref[] = [],
     pendingBytes = 24;
+  let smallInline: { ref: Ref; data: Uint8Array }[] = [];
   const appendPosition = (ref: Ref) => {
     const list = state.term!.positionalParts,
       last = list.at(-1);
@@ -210,6 +220,12 @@ export async function finishPostings(
     const packet = encodeTermPacket(state.term!.id, pending, pendingPositions),
       ref = await scores.put(packet.frequencies),
       v = view(packet.frequencies);
+    if (
+      direct &&
+      state.term!.visited === pending.reduce((n, b) => n + b.branch.count, 0) &&
+      packet.frequencies.length <= 4096
+    )
+      smallInline.push({ ref, data: packet.frequencies });
     state.term!.frequencyParts.push(ref);
     for (let i = 0; i < pending.length; i++) {
       const p = 24 + i * 48;
@@ -268,7 +284,12 @@ export async function finishPostings(
     state.ids.entries = [];
   };
   let processed = 0;
-  while (processed < byteBudget && performance.now() - started < 20000) {
+  let completedTerms = 0;
+  while (
+    processed < byteBudget &&
+    performance.now() - started < 20000 &&
+    (!direct || completedTerms < 8192)
+  ) {
     if (
       !state.term &&
       range?.end &&
@@ -347,7 +368,15 @@ export async function finishPostings(
     }
     if (docs.length) {
       const score = encodeScores(docs, bf, tf, bls, tls),
-        positional = await positions.put(encodePositions(pos));
+        positionalBytes = encodePositions(pos),
+        positional = await positions.put(positionalBytes);
+      if (
+        direct &&
+        !state.term!.visited &&
+        docs.length === state.term!.df &&
+        positionalBytes.length <= 4096
+      )
+        smallInline.push({ ref: positional, data: positionalBytes });
       if (pending.length && pendingBytes + score.length + 48 > 4 * 1048576)
         await flushFrequency();
       pending.push({
@@ -400,15 +429,20 @@ export async function finishPostings(
             ? { positionalParts: term.positionalParts.slice(1) }
             : {}),
         };
-      state.entries.push([term.word, plan]);
-      state.ids.entries.push([term.word, term.id]);
-      if (state.entries.length === 256) await flushDictionary();
+      if (direct) await direct.term(term.word, plan, smallInline);
+      else {
+        state.entries.push([term.word, plan]);
+        state.ids.entries.push([term.word, term.id]);
+        if (state.entries.length === 256) await flushDictionary();
+      }
+      smallInline = [];
       if (state.hot.length < 256 || term.df >= state.hot.at(-1)![1].df) {
         state.hot.push([term.word, plan]);
         state.hot.sort((a, b) => b[1].df - a[1].df || (a[0] < b[0] ? -1 : 1));
         state.hot.length = Math.min(256, state.hot.length);
       }
       state.term = undefined;
+      completedTerms++;
     }
   }
   await flushFrequency();

@@ -23,6 +23,20 @@ export class OfflineObjects {
   packageReads = new Map<string, Promise<Uint8Array>>();
   keys?: Map<string, number>;
   source = {
+    readNamed: async (address: string, length: number) => {
+      const match = /^([a-f0-9]{64}\/plan-\d+\.bin)@(\d+)$/.exec(address);
+      if (!match) throw Error("Invalid offline named document range");
+      const raw = await this.readGroup(match[1]),
+        offset = Number(match[2]);
+      if (
+        !Number.isSafeInteger(offset) ||
+        !Number.isSafeInteger(length) ||
+        length < 1 ||
+        offset + length > raw.length
+      )
+        throw Error("Invalid offline named document range");
+      return raw.subarray(offset, offset + length);
+    },
     readWhole: (
       key: string,
       range?: { offset: number; length: number; doc: number; first: number },

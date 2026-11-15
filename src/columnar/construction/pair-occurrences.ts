@@ -7,6 +7,8 @@ import {
 } from "../pair-packet.js";
 import { concat, view, u32, unpack } from "../format.js";
 import { BuildStore, type Chunk } from "./runs.js";
+import type { NumericDocument } from "./analyzed-document.js";
+import { StagingContainer } from "./staging-container.js";
 export interface PairRun {
   first: number;
   end: number;
@@ -31,25 +33,36 @@ class Writer {
   bytes = 0;
   last = -1;
   firstKey = -1;
-  constructor(readonly store: BuildStore) {}
+  private physical: StagingContainer;
+  constructor(
+    readonly store: BuildStore,
+    readonly shared?: StagingContainer,
+  ) {
+    this.physical = shared ?? new StagingContainer(store);
+  }
   async append(key: number, packet: Uint8Array) {
-    if (key <= this.last || packet.length > 2 * 1048576)
+    if (key <= this.last || packet.length > 8 * 1048576)
       throw Error("Unsorted or oversized pair packet");
     if (this.bytes && this.bytes + packet.length + 8 > 1048576)
-      await this.flush();
+      await this.flushBlock();
     if (!this.bytes) this.firstKey = key;
     this.parts.push(u32([packet.length + 8, key]), packet);
     this.bytes += packet.length + 8;
     this.last = key;
   }
-  async flush() {
+  private async flushBlock() {
     if (this.bytes)
-      this.chunks.push({
-        ...(await this.store.put(concat(this.parts))),
-        firstKey: this.firstKey,
-      });
+      this.chunks.push(
+        await this.physical.append(concat(this.parts), {
+          firstKey: this.firstKey,
+        } as any),
+      );
     this.parts = [];
     this.bytes = 0;
+  }
+  async flush() {
+    await this.flushBlock();
+    if (!this.shared) await this.physical.flush();
   }
 }
 class Cursor {
@@ -57,6 +70,7 @@ class Cursor {
   at = 0;
   bytes?: Uint8Array;
   last = -1;
+  private window = new Map<number, Uint8Array>();
   constructor(
     readonly store: BuildStore,
     readonly run: PairRun,
@@ -79,7 +93,24 @@ class Cursor {
     for (;;) {
       if (!this.bytes || this.at === this.bytes.length) {
         if (this.chunk === this.run.chunks.length) return;
-        this.bytes = await this.store.get(this.run.chunks[this.chunk++]);
+        if (!this.window.has(this.chunk)) {
+          let end = this.chunk + 1,
+            bytes = this.run.chunks[this.chunk].size;
+          if (this.firstKey === undefined)
+            while (
+              end < this.run.chunks.length &&
+              this.run.chunks[end].key === this.run.chunks[this.chunk].key &&
+              bytes + this.run.chunks[end].size <= 4 * 1048576
+            )
+              bytes += this.run.chunks[end++].size;
+          const raw = await this.store.getMany(
+            this.run.chunks.slice(this.chunk, end),
+            4 * 1048576,
+          );
+          raw.forEach((b, i) => this.window.set(this.chunk + i, b));
+        }
+        this.bytes = this.window.get(this.chunk)!;
+        this.window.delete(this.chunk++);
         this.at = 0;
       }
       const v = view(this.bytes),
@@ -200,26 +231,29 @@ export async function documentGroupPairRuns(
   first: number,
   selection: PairSelection,
   selectionHash: string,
+  numeric?: Iterable<NumericDocument> | AsyncIterable<NumericDocument>,
 ) {
   const width = selection.terms.length;
   if (
     !width ||
     width > 65536 ||
     selection.pairs.length > 65536 ||
-    offsets.length < 2 ||
-    offsets[0] !== 0 ||
-    offsets.at(-1) !== bytes.length
+    (!numeric &&
+      (offsets.length < 2 ||
+        offsets[0] !== 0 ||
+        offsets.at(-1) !== bytes.length))
   )
     throw Error("Invalid positional pair group");
   const ranks = new Map(selection.terms.map((t, i) => [t.id, i])),
     selected = new Map(selection.pairs.map((p) => [p.key, p])),
-    runs: PairRun[] = [];
+    runs: PairRun[] = [],
+    physical = new StagingContainer(store);
   let rows = new Map<number, PairColumnRow[]>(),
     records = 0,
     occurrences = 0,
     start = first;
   const flush = async (end: number) => {
-    const writer = new Writer(store);
+    const writer = new Writer(store, physical);
     for (const key of [...rows.keys()].sort((a, b) => a - b)) {
       const descriptor = selected.get(key)!,
         packet = encodePairColumns(descriptor.a, descriptor.b, rows.get(key)!);
@@ -236,15 +270,24 @@ export async function documentGroupPairRuns(
     records = occurrences = 0;
     start = end;
   };
-  for (let row = 0; row + 1 < offsets.length; row++) {
-    const doc = first + row,
-      pkg = new DocumentPackage(
-        bytes.subarray(offsets[row], offsets[row + 1]),
-        doc,
-      ),
+  function* packages() {
+    for (let row = 0; row + 1 < offsets.length; row++) {
+      const doc = first + row,
+        pkg = new DocumentPackage(
+          bytes.subarray(offsets[row], offsets[row + 1]),
+          doc,
+        );
+      yield { doc, body: pkg.tokens(0), title: pkg.tokens(1) };
+    }
+  }
+  let next = first;
+  for await (const input of numeric ?? packages()) {
+    const doc = input.doc,
       document = new Map<number, PairColumnRow>();
+    if (doc !== next++)
+      throw Error("Pair occurrence numeric coverage mismatch");
     for (let field = 0; field < 2; field++) {
-      const tokens = pkg.tokens(field);
+      const tokens = field ? input.title : input.body;
       let a = tokens.length ? ranks.get(tokens[0]) : undefined;
       for (let p = 1; p < tokens.length; p++) {
         const b = ranks.get(tokens[p]);
@@ -284,8 +327,8 @@ export async function documentGroupPairRuns(
     }
     if (records >= 8192 || occurrences >= 262144) await flush(doc + 1);
   }
-  if (start < first + offsets.length - 1)
-    await flush(first + offsets.length - 1);
+  if (start < next) await flush(next);
+  await physical.flush();
   return runs;
 }
 export async function* pairRunEntries(

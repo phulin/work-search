@@ -1,5 +1,6 @@
 import { DocumentPackage } from "../document-package.js";
 import { view } from "../format.js";
+import type { NumericDocument } from "./analyzed-document.js";
 
 /** Fixed-width sorted statistic rows. Counts use float64 so a 10M-document
  * corpus can exceed 2^32 occurrences without corrupting accelerator selection. */
@@ -72,25 +73,37 @@ export function documentGroupPairStatistics(
   offsets: Uint32Array,
   first: number,
   termIds: number[],
+  numeric?: Iterable<NumericDocument>,
 ) {
   if (
     !termIds.length ||
     termIds.length > 65536 ||
     new Set(termIds).size !== termIds.length ||
-    offsets.length < 2 ||
-    offsets[0] !== 0 ||
-    offsets.at(-1) !== bytes.length
+    (!numeric &&
+      (offsets.length < 2 ||
+        offsets[0] !== 0 ||
+        offsets.at(-1) !== bytes.length))
   )
     throw Error("Invalid pair statistics input");
   const ranks = new Map(termIds.map((id, i) => [id, i])),
     width = termIds.length;
-  let runs: PairStatistics[] = [];
-  for (let row = 0; row + 1 < offsets.length; row++) {
-    const pkg = new DocumentPackage(
-      bytes.subarray(offsets[row], offsets[row + 1]),
-      first + row,
-    );
-    const fields = [pkg.tokens(0), pkg.tokens(1)],
+  // Binary carry reduction retains at most one run per level rather than
+  // every document's occurrence histogram until the group ends.
+  const levels: (PairStatistics | undefined)[] = [];
+  function* packages() {
+    for (let row = 0; row + 1 < offsets.length; row++) {
+      const pkg = new DocumentPackage(
+        bytes.subarray(offsets[row], offsets[row + 1]),
+        first + row,
+      );
+      yield { doc: first + row, body: pkg.tokens(0), title: pkg.tokens(1) };
+    }
+  }
+  let row = 0;
+  for (const doc of numeric ?? packages()) {
+    if (doc.doc !== first + row)
+      throw Error("Pair statistics numeric coverage mismatch");
+    const fields = [doc.body, doc.title],
       keys = new Uint32Array(fields[0].length + fields[1].length);
     let count = 0;
     for (const tokens of fields) {
@@ -116,15 +129,24 @@ export function documentGroupPairStatistics(
       result.put(out++, sorted[i], 1, end - i);
       i = end;
     }
-    runs.push(new PairStatistics(result.finish(out)));
+    let run = new PairStatistics(result.finish(out)),
+      level = 0;
+    while (levels[level]) {
+      run = new PairStatistics(mergePairStatistics([levels[level]!, run]));
+      levels[level++] = undefined;
+    }
+    levels[level] = run;
+    row++;
   }
-  while (runs.length > 1) {
-    const next: PairStatistics[] = [];
-    for (let i = 0; i < runs.length; i += 4)
-      next.push(new PairStatistics(mergePairStatistics(runs.slice(i, i + 4))));
-    runs = next;
-  }
-  return runs[0].bytes;
+  return levels.reduce<PairStatistics | undefined>(
+    (tail, run) =>
+      run
+        ? tail
+          ? new PairStatistics(mergePairStatistics([run, tail]))
+          : run
+        : tail,
+    undefined,
+  )!.bytes;
 }
 /** Small local merges. Corpus-wide merges stream bounded physical chunks. */
 export function mergePairStatistics(inputs: PairStatistics[]) {

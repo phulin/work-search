@@ -72,7 +72,11 @@ const root = JSON.parse(sourceRootBytes.toString()),
         ]
       : JSON.parse(await readFile(definitions, "utf8")),
   sourceRoot = JSON.parse(
-    await readFile("work/columnar-worker-build/source-root.json", "utf8"),
+    await readFile(
+      process.env.CWS_SOURCE_ROOT ??
+        "work/columnar-worker-build/source-root.json",
+      "utf8",
+    ),
   ),
   headers = { authorization: `Bearer ${token}` },
   health = (await fetch(url + "/oracle-health", { headers }).then((r) =>
@@ -83,7 +87,14 @@ const root = JSON.parse(sourceRootBytes.toString()),
 if (
   !health.code ||
   health.sourceHash !== hash(JSON.stringify(sourceRoot)) ||
-  root.corpusHash !== hash(JSON.stringify({ sourceRoot, count: root.count }))
+  root.corpusHash !==
+    hash(
+      JSON.stringify(
+        process.argv.includes("--construction-v3")
+          ? { sourceRoot, count: root.count, analysis: root.analysis }
+          : { sourceRoot, count: root.count },
+      ),
+    )
 )
   throw Error("Oracle source mismatch");
 const names = [
@@ -104,6 +115,9 @@ const names = [
 await objects.close();
 const configuration: OracleConfiguration = {
     corpusHash: root.corpusHash,
+    ...(process.argv.includes("--construction-v3")
+      ? { sourceIdentity: "construction-v3" as const }
+      : {}),
     statistics: {
       ...(root.analysis ? { analysis: root.analysis } : {}),
       count: root.count,
