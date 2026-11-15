@@ -91,6 +91,11 @@ The first retry classifier covered GET only; a later PUT throttle stopped the
 fourth occurrence-merge round. Classification was expanded to R2 operations
 including writes, with tests retaining fatal handling for invalid data. The same
 completed tasks were reused again.
+The largest occurrence merge completed in 379,792 ms wall time. The four-minute
+client timeout disconnected twice before a retry retrieved its successful receipt.
+The HTTP client timeout is now 15 minutes; the deployed Worker's CPU limit remains
+300,000 ms. This client change applies to subsequent coordinator processes. The
+active coordinator was left running rather than replaying completed selection work.
 The engineering targets—20x fewer GETs, 2x fewer PUTs, and 3x faster elapsed—are
 not all met by the small matched run: writes meet the target, reads and time do not.
 Do not extrapolate its ratios to 1M or the full corpus.

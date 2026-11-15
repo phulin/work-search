@@ -49,7 +49,9 @@ export function constructionHTTP(concurrency: number) {
           });
         },
       );
-      r.setTimeout(240000, () =>
+      // HTTP wall time includes R2 waits. The 1M occurrence merge takes over
+      // six minutes while remaining within its separately enforced CPU limit.
+      r.setTimeout(15 * 60 * 1000, () =>
         r.destroy(Error("Construction request timeout")),
       );
       r.once("error", no);
