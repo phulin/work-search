@@ -12,6 +12,7 @@ import { PairMembershipPacket, PairMembership } from "./pair-membership.js";
 import { PairRouter, pairObjectKey } from "./pair-router.js";
 import type { PairPacket } from "./pair-packet.js";
 import { intersectCursors, unionCursors } from "./numeric-cursor.js";
+import { candidatePairContext } from "./candidate-pair-context.js";
 
 export interface MembershipSettings {
   exactPhrases?: import("./exact-phrase-directory.js").ExactPhraseDirectory;
@@ -541,9 +542,38 @@ export async function enrichMembershipPositions(
   docs: Uint32Array,
   reader: Reader,
   budget: number,
+  completeStreams = false,
 ) {
+  // Complete streams have no per-document fences. Price their bounded GETs
+  // against opening candidate records, then retain only relevant occurrences.
+  // This is an optional necessary-condition refinement, never a cutoff.
+  const complete = selection.records
+    .filter(
+      (r) =>
+        completeStreams &&
+        selection.words.length > 2 &&
+        r.completePositions &&
+        !r.supplementalContext,
+    )
+    .map((record) => {
+      const ranges = record.completePositions!.ranges,
+        bytes = ranges.reduce((n, r) => n + r.length, 0),
+        gets = ranges.reduce((n, r) => n + Math.ceil(r.length / 262144), 0),
+        cost = bytes / 104857.6 + Math.ceil(gets / 6) * 20 + record.df / 50000;
+      return { record, cost };
+    })
+    .sort((a, b) => a.cost - b.cost);
+  const best = complete[0];
+  if (best && best.cost < Math.ceil(docs.length / 6) * 20 * 0.5) {
+    best.record.supplementalContext = await candidatePairContext(
+      best.record.completePositions!,
+      docs,
+      reader,
+      budget,
+    );
+  }
   const choices = selection.records
-    .filter((r) => r.positionDirectory)
+    .filter((r) => r.positionDirectory && !r.supplementalContext)
     .map((record) => ({
       record,
       bytes: record
@@ -578,5 +608,9 @@ export async function enrichMembershipPositions(
         },
       );
     }),
+  );
+  return (
+    !!best?.record.supplementalContext ||
+    selected.some((c) => !!c.record.supplementalContext)
   );
 }

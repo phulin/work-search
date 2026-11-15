@@ -1,0 +1,60 @@
+{
+  "kind": "Local actual Worker-handler PUT counts; construction sample from retained 1M corpus, not full-generation counts",
+  "results": [
+    {
+      "label": "control",
+      "documents": 4096,
+      "ingestTasks": 32,
+      "ingest": {
+        "put": 96,
+        "get": 8256,
+        "head": 0,
+        "bytes": 90259652
+      },
+      "staging": {
+        "put": 184,
+        "get": 8366,
+        "head": 0,
+        "bytes": 264525304
+      },
+      "documentsPass": {
+        "put": 64,
+        "bytes": 33215620
+      },
+      "totalPut": 248,
+      "sortedSha256": "6b0c2a5aeb9ce5688264ecee2014862c984c6c8eba08d056856d7b1cfb6a4d8d",
+      "packagesSha256": "e69bcec1994405f1cfb1b79fba8357a71df4770c8c741dc2470bc57a5957973e",
+      "packageCount": 4096,
+      "wallMs": 15647.645333,
+      "processPeakRssObserved": 724533248
+    },
+    {
+      "label": "candidate",
+      "documents": 4096,
+      "ingestTasks": 8,
+      "ingest": {
+        "put": 16,
+        "get": 8232,
+        "head": 0,
+        "bytes": 88257485
+      },
+      "staging": {
+        "put": 23,
+        "get": 8279,
+        "head": 0,
+        "bytes": 175251999
+      },
+      "documentsPass": {
+        "put": 8,
+        "bytes": 33194159
+      },
+      "totalPut": 31,
+      "sortedSha256": "6b0c2a5aeb9ce5688264ecee2014862c984c6c8eba08d056856d7b1cfb6a4d8d",
+      "packagesSha256": "e69bcec1994405f1cfb1b79fba8357a71df4770c8c741dc2470bc57a5957973e",
+      "packageCount": 4096,
+      "wallMs": 14211.932624999998,
+      "processPeakRssObserved": 1138917376
+    }
+  ],
+  "reduction": 0.875
+}

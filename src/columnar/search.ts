@@ -530,40 +530,54 @@ export class ColumnarIndex {
         }
       : undefined;
     let packetCandidates: Uint32Array | undefined;
-    if (
-      selection &&
-      loadedMembership &&
-      [...selection.selections.values()].some((s) =>
-        s.records.some((r) => r.positionDirectory),
-      )
-    ) {
-      const docs = Uint32Array.from(
-          [...loadedMembership.values()].filter(
-            (doc) => !presenceFilter || presenceFilter(doc),
+    const refineMembership = async (complete = false) => {
+      if (
+        selection &&
+        loadedMembership &&
+        [...selection.selections.values()].some((s) =>
+          s.records.some(
+            (r) =>
+              (!r.supplementalContext && r.positionDirectory) ||
+              (complete &&
+                s.words.length > 2 &&
+                r.completePositions &&
+                !r.supplementalContext),
           ),
-        ),
-        verificationBytes = basePackages?.byteLength
-          ? docs.reduce((n, doc) => n + basePackages.byteLength!(doc), 0)
-          : docs.length * (basePackages?.averageBytes ?? 16384);
-      const selections = [...selection.selections.values()],
-        budget = Math.floor(
-          Math.min(4 * 1048576, verificationBytes / 2) / selections.length,
+        )
+      ) {
+        const docs = Uint32Array.from(
+            [...loadedMembership.values()].filter(
+              (doc) => !presenceFilter || presenceFilter(doc),
+            ),
+          ),
+          verificationBytes = basePackages?.byteLength
+            ? docs.reduce((n, doc) => n + basePackages.byteLength!(doc), 0)
+            : docs.length * (basePackages?.averageBytes ?? 16384);
+        if (complete && docs.length < 128) return false;
+        const selections = [...selection.selections.values()],
+          budget = Math.floor(
+            Math.min(4 * 1048576, verificationBytes / 2) / selections.length,
+          );
+        const enriched = await Promise.all(
+          selections.map((s) =>
+            enrichMembershipPositions(s, docs, reader, budget, complete),
+          ),
         );
-      await Promise.all(
-        selections.map((s) =>
-          enrichMembershipPositions(s, docs, reader, budget),
-        ),
-      );
-      loadedMembership = intersectMembershipAnchor(
-        membershipAnchor(
-          selection,
-          new Map([...terms].map(([name, t]) => [name, t.id])),
-          field,
-        ),
-        unigramCandidates,
-      );
-      reader.stats.membershipCandidates = loadedMembership.count;
-    }
+        if (!enriched.some(Boolean)) return false;
+        loadedMembership = intersectMembershipAnchor(
+          membershipAnchor(
+            selection,
+            new Map([...terms].map(([name, t]) => [name, t.id])),
+            field,
+          ),
+          unigramCandidates,
+        );
+        reader.stats.membershipCandidates = loadedMembership.count;
+        return true;
+      }
+      return false;
+    };
+    await refineMembership();
     const packages = basePackages
       ? {
           ...basePackages,
@@ -630,6 +644,30 @@ export class ColumnarIndex {
           packages,
           plan: planned,
         });
+      // Optional context must beat the already chosen continuation. Do not
+      // turn an efficient postings plan into hundreds of document GETs.
+      if (
+        planned.kind === "documents" &&
+        packages &&
+        (await refineMembership(true))
+      ) {
+        packages.membership = loadedMembership;
+        planned = await this.chooseContinuation({
+          ast,
+          terms: terms as Map<string, DirectoryTerm>,
+          root: queryRoot,
+          reader,
+          options,
+          packages,
+          plan: packetPlan(
+            ast,
+            terms as Map<string, DirectoryTerm>,
+            queryRoot,
+            options,
+            packages,
+          ),
+        });
+      }
       // The measured candidate-document continuation remains a complete
       // alternative. Do not replace a cheap, actually filtered set with a
       // corpus-wide context scan just because its unigram forecast was broad.

@@ -8,6 +8,11 @@ const dir = resolve("work/columnar-worker-build"),
 if (!/^work-search-cws-build-\d+$/.test(name))
   throw Error("Use an isolated construction Worker name");
 await mkdir(dir, { recursive: true });
+if (process.env.CWS_SOURCE_ROOT)
+  await writeFile(
+    dir + "/source-root.json",
+    await readFile(process.env.CWS_SOURCE_ROOT),
+  );
 const hash = createHash("sha256");
 async function hashSources(dir: string): Promise<void> {
   for (const item of (await readdir(dir, { withFileTypes: true })).sort(
@@ -77,6 +82,16 @@ await writeFile(
 );
 await wrangler(["deploy", "--config", config]);
 await wrangler(["secret", "put", "INTERNAL_TOKEN", "--config", config], token);
+for (let attempt = 0; ; attempt++) {
+  const response = await fetch(`https://${name}.phulin.workers.dev/health`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  const health = response.ok ? ((await response.json()) as any) : undefined;
+  if (health?.code === code) break;
+  if (attempt >= 6)
+    throw Error("Constructor has not activated the expected code");
+  await new Promise((r) => setTimeout(r, Math.min(10000, 500 * 2 ** attempt)));
+}
 console.log(
   JSON.stringify({
     name,

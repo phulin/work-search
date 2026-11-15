@@ -5,6 +5,8 @@ export interface SourcePart {
   first: number;
   count: number;
   inputSha256: string;
+  /** Filtered ordinal map; content/info remain in the original archive. */
+  pointerMap?: { key: string; size: number; sha256: string };
 }
 export interface SourceRoot {
   format: "R2-source-v1";
@@ -134,17 +136,95 @@ export class CorpusSource {
     const part = this.part(first);
     if (count < 1 || first + count > part.first + part.count)
       throw Error("Cross-partition source range");
-    const { bytes } = await this.get(
-      part.generation,
-      "contentmap-0.bin",
-      (first - part.first) * 32,
-      count * 32,
-    );
+    let bytes: Uint8Array;
+    if (part.pointerMap) {
+      const map = part.pointerMap;
+      if (
+        map.size !== part.count * 32 ||
+        map.key !== `${map.sha256}/plan-0.bin`
+      )
+        throw Error("Invalid filtered source map");
+      this.requests++;
+      const object = await this.bucket.get(map.key, {
+        range: { offset: (first - part.first) * 32, length: count * 32 },
+      });
+      if (
+        !object ||
+        object.size !== map.size ||
+        object.customMetadata?.sha256 !== map.sha256 ||
+        object.customMetadata?.generation !== map.sha256
+      )
+        throw Error("Filtered source map identity mismatch");
+      bytes = new Uint8Array(await object.arrayBuffer());
+      if (bytes.length !== count * 32)
+        throw Error("Truncated filtered source map");
+      this.bytes += bytes.length;
+    } else
+      ({ bytes } = await this.get(
+        part.generation,
+        "contentmap-0.bin",
+        (first - part.first) * 32,
+        count * 32,
+      ));
     return {
       part,
       first,
       view: new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
     };
+  }
+  /** Metadata only, coalesced by archive object. Return a bounded prefix and
+   * explicit continuation when unusually large metadata exhausts the budget. */
+  async metadata(first: number, count: number) {
+    if (!Number.isInteger(count) || count < 1 || count > 16384)
+      throw Error("Invalid metadata range");
+    const pointers = await this.pointers(first, count),
+      v = pointers.view,
+      ranges = new Map<string, { offset: number; end: number }>();
+    let bytes = 0,
+      taken = 0;
+    for (; taken < count; taken++) {
+      const at = taken * 32 + 16,
+        name = `info-${v.getUint32(at, true)}.bin`,
+        offset = v.getUint32(at + 4, true),
+        end = offset + v.getUint32(at + 8, true),
+        old = ranges.get(name),
+        lo = Math.min(old?.offset ?? offset, offset),
+        hi = Math.max(old?.end ?? end, end),
+        extra = hi - lo - (old ? old.end - old.offset : 0);
+      if (taken && bytes + extra > 8 * 1048576) break;
+      ranges.set(name, { offset: lo, end: hi });
+      bytes += extra;
+    }
+    const data = new Map<string, { bytes: Uint8Array; offset: number }>();
+    for (const [name, r] of ranges)
+      data.set(name, {
+        bytes: (
+          await this.get(
+            pointers.part.generation,
+            name,
+            r.offset,
+            r.end - r.offset,
+          )
+        ).bytes,
+        offset: r.offset,
+      });
+    const rows: { id: string; cluster_id: number | null }[] = [];
+    for (let i = 0; i < taken; i++) {
+      const at = i * 32 + 16,
+        range = data.get(`info-${v.getUint32(at, true)}.bin`)!,
+        offset = v.getUint32(at + 4, true) - range.offset,
+        raw = range.bytes.subarray(offset, offset + v.getUint32(at + 8, true));
+      if (crc32(raw) !== v.getUint32(at + 12, true))
+        throw Error("Source metadata checksum mismatch");
+      const record = JSON.parse(
+        new TextDecoder("utf-8", { fatal: true }).decode(raw),
+      );
+      rows.push({
+        id: record.id,
+        cluster_id: record.metadata?.cluster_id ?? null,
+      });
+    }
+    return { first, next: first + taken, rows };
   }
   async document(
     doc: number,

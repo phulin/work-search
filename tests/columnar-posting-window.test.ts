@@ -22,7 +22,8 @@ it("emits identical searchable objects from bounded lexical descriptors, includi
     stored.set(key, bytes.slice());
     return { key, sha256, size: bytes.length };
   };
-  store.get = async (ref) => stored.get(ref.key)!.slice();
+  store.get = async (ref) =>
+    stored.get(ref.key)!.slice(ref.offset ?? 0, (ref.offset ?? 0) + ref.size);
   const writer = new RunWriter(store, 180),
     starts: { chunk: number; at: number }[] = [];
   for (let i = 0; i < 12; i++) {

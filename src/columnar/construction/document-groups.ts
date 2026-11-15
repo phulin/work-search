@@ -1,24 +1,25 @@
-import { concat, pack, u32 } from "../format.js";
-import { crc32 } from "../../format/codec.js";
+import { concat, pack } from "../format.js";
 import { finishPackageDocuments } from "./package-documents.js";
 import { documentPrefix } from "../document-package.js";
 import { digest, jsonBytes, BuildStore } from "./runs.js";
 import { readVocabulary } from "./vocabulary.js";
 import { CorpusSource, type SourceRoot } from "./source.js";
+import { countedBucket } from "./bucket.js";
 
 export async function finishDocumentGroup(
   ...args: Parameters<typeof finishPackageDocuments>
 ) {
-  if (args[6] > 128)
-    throw Error("Document groups contain at most 128 documents");
+  if (args[6] > 1024)
+    throw Error("Document groups contain at most 1024 documents");
   const packets: Uint8Array[] = [],
     offsets = [0],
     prefixes: number[] = [],
-    budgets: number[] = [],
-    crcs: number[] = [];
+    budgets: number[] = [];
   const result = await finishPackageDocuments(
       ...(args.slice(0, 7) as [any, any, any, any, any, any, any]),
       async (_doc, packet) => {
+        if (packets.length && offsets.at(-1)! + packet.length > 16 * 1048576)
+          return false;
         packets.push(packet);
         offsets.push(offsets.at(-1)! + packet.length);
         prefixes.push(documentPrefix(packet));
@@ -29,15 +30,13 @@ export async function finishDocumentGroup(
             packet.byteLength,
           ).getUint32(16, true),
         );
-        crcs.push(crc32(packet));
       },
+      4 * 1048576,
     ),
     store = args[1],
     data = concat(packets),
     sha256 = await digest(data),
     key = `${sha256}/plan-0.bin`;
-  const crcBytes = u32(crcs),
-    encoded = btoa(String.fromCharCode(...crcBytes));
   store.requests++;
   store.bytes += data.length;
   await store.bucket.put(key, data as ArrayBufferView<ArrayBuffer>, {
@@ -47,7 +46,6 @@ export async function finishDocumentGroup(
       sha256,
       packageFirst: String(result.first),
       packageEnd: String(result.end),
-      packageCrc32: encoded,
     },
   });
   return {
@@ -90,6 +88,8 @@ export function createDocumentGroupHandler(root: SourceRoot, code: string) {
       tail = new Promise<void>((r) => (release = r));
       pending++;
       await previous;
+      const counted = countedBucket(env.INDEX);
+      env = { ...env, INDEX: counted.bucket };
       const started = performance.now();
       isolate ??= crypto.randomUUID();
       try {
@@ -110,7 +110,11 @@ export function createDocumentGroupHandler(root: SourceRoot, code: string) {
           const saved = await old.json<any>();
           if (saved.fingerprint !== fingerprint)
             throw Error("Construction task changed");
-          return Response.json({ ...saved.result, reused: true });
+          return Response.json({
+            ...saved.result,
+            telemetry: { ...saved.result.telemetry, r2: counted.operations },
+            reused: true,
+          });
         }
         const store = new BuildStore(env.INDEX),
           source = new CorpusSource(env.INDEX, root),
@@ -137,6 +141,7 @@ export function createDocumentGroupHandler(root: SourceRoot, code: string) {
             queueMs: started - queued,
             requests: source.requests,
             bytes: source.bytes,
+            r2: counted.operations,
           },
           result = {
             output,

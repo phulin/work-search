@@ -70,7 +70,11 @@ if (
 )
   throw Error("Builder pool code or source mismatch");
 const sourceRoot = JSON.parse(
-    await readFile("work/columnar-worker-build/source-root.json", "utf8"),
+    await readFile(
+      process.env.CWS_SOURCE_ROOT ??
+        "work/columnar-worker-build/source-root.json",
+      "utf8",
+    ),
   ),
   sourceHash = createHash("sha256")
     .update(JSON.stringify({ sourceRoot, count }))
@@ -218,7 +222,7 @@ if (!state.runRef) {
       const run = (await call(worker, "/ingest", {
         task: `ingest-${job.next}`,
         first: job.next,
-        count: Math.min(128, job.end - job.next),
+        count: Math.min(512, job.end - job.next),
         analysis: ENGLISH_ANALYSIS,
       })) as Run;
       if (run.first !== job.next || run.next <= job.next || run.next > job.end)

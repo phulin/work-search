@@ -26,6 +26,7 @@ import { pairRangeJob } from "./pair-range-jobs.js";
 import { finishPairDirectoryJob } from "./pair-directory-job.js";
 import { finishPacketTerms } from "./packet-terms.js";
 import { buildVocabulary, readVocabulary } from "./vocabulary.js";
+import { countedBucket } from "./bucket.js";
 export function createConstructionWorker(root: SourceRoot, code: string) {
   const groups = createDocumentGroupHandler(root, code);
   let isolate: string | undefined,
@@ -79,12 +80,44 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
       });
       pending++;
       await previous;
+      const counted = countedBucket(env.INDEX);
+      env = { ...env, INDEX: counted.bucket };
       const started = performance.now(),
         source = new CorpusSource(env.INDEX, root);
       try {
         const input = (await request.json()) as any;
         let result;
-        if (url.pathname === "/probe-io") {
+        if (url.pathname === "/source-metadata") {
+          result = await source.metadata(input.first, input.count);
+        } else if (url.pathname === "/source-filter-map") {
+          const part = root.parts.find((p) => p.part === input.part),
+            selected = input.selected as number[];
+          if (
+            !part ||
+            !Array.isArray(selected) ||
+            !selected.length ||
+            selected.length > part.count ||
+            selected.some(
+              (d, i) =>
+                !Number.isInteger(d) ||
+                d < 0 ||
+                d >= part.count ||
+                (i > 0 && d <= selected[i - 1]),
+            )
+          )
+            throw Error("Invalid filtered source selection");
+          const pointers = await source.pointers(part.first, part.count),
+            raw = new Uint8Array(selected.length * 32),
+            all = new Uint8Array(
+              pointers.view.buffer,
+              pointers.view.byteOffset,
+              pointers.view.byteLength,
+            );
+          selected.forEach((d, i) =>
+            raw.set(all.subarray(d * 32, d * 32 + 32), i * 32),
+          );
+          result = await new BuildStore(env.INDEX).put(raw, "plan-0.bin");
+        } else if (url.pathname === "/probe-io") {
           const samples = [];
           for (let i = 0; i < 10; i++) {
             const started = performance.now();
@@ -537,6 +570,7 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
           queueMs: started - queuedAt,
           requests: source.requests,
           bytes: source.bytes,
+          r2: counted.operations,
         };
         console.log(JSON.stringify({ construction: telemetry }));
         return Response.json(

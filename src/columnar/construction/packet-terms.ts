@@ -69,7 +69,7 @@ export async function finishPacketTerms(
       bodyOccurrences += term.bodyOccurrences;
       titleOccurrences += term.titleOccurrences;
       dfCounts.set(term.df, (dfCounts.get(term.df) ?? 0) + 1);
-      if (state.pending.length === 128) await flush();
+      if (state.pending.length === 512) await flush();
     }
     state.entry = 0;
     state.fence++;

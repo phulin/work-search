@@ -35,6 +35,9 @@ import { parse, queryTerms } from "../src/query/parser.js";
 import { tokenize, type Document } from "../src/query/tokenize.js";
 import { ENGLISH_ANALYSIS, tokenizerFor } from "../src/query/analysis.js";
 import { finishPackageDocuments } from "../src/columnar/construction/package-documents.js";
+import { finishDocumentGroup } from "../src/columnar/construction/document-groups.js";
+import { createConstructionWorker } from "../src/columnar/construction/worker.js";
+import { concat } from "../src/columnar/format.js";
 import { finishTieredTerms } from "../src/columnar/construction/tiered-terms.js";
 import {
   TermDirectory,
@@ -181,6 +184,144 @@ export async function fixture(docs: Document[]) {
     sourceRoot,
   };
 }
+it("packs many logical sorted-run blocks into one PUT and range-reads each block independently", async () => {
+  const f = await fixture([{ id: "a", body: "alpha" }]),
+    writer = new RunWriter(f.store, 512);
+  for (let doc = 0; doc < 2000; doc++) {
+    await writer.append(new Uint8Array(new Uint32Array([12, 1, doc]).buffer));
+  }
+  await writer.finish();
+  expect(writer.chunks.length).toBeGreaterThan(32);
+  expect(new Set(writer.chunks.map((c) => c.key)).size).toBe(1);
+  expect(f.store.requests).toBe(1);
+  const result = concat(
+    await Promise.all(writer.chunks.map((c) => f.store.get(c))),
+  );
+  expect(result.length).toBe(24000);
+  for (let i = 0; i < 2000; i++)
+    expect(new DataView(result.buffer).getUint32(i * 12 + 8, true)).toBe(i);
+  await expect(
+    f.store.get({ ...writer.chunks[0], sha256: "0".repeat(64) }),
+  ).rejects.toThrow("checksum");
+});
+it("filters source ordinals without copying archive content or fetching text during metadata selection", async () => {
+  const f = await fixture([
+      { id: "a", body: "alpha", metadata: { cluster_id: 10 } },
+      { id: "b", body: "beta", metadata: { cluster_id: 20 } },
+      { id: "c", body: "gamma", metadata: { cluster_id: 30 } },
+    ]),
+    seen: string[] = [],
+    get = f.bucket.get.bind(f.bucket);
+  f.bucket.get = ((key: string, options?: any) => {
+    seen.push(key);
+    return get(key, options);
+  }) as any;
+  const meta = await f.source.metadata(0, 3);
+  expect(meta.rows.map((r) => r.cluster_id)).toEqual([10, 20, 30]);
+  expect(seen.some((k) => /\/content-/.test(k))).toBe(false);
+  const p = await f.source.pointers(0, 3),
+    raw = new Uint8Array(p.view.buffer, p.view.byteOffset, p.view.byteLength),
+    map = await f.store.put(
+      concat([raw.subarray(0, 32), raw.subarray(64, 96)]),
+      "plan-0.bin",
+    ),
+    source = new CorpusSource(f.bucket, {
+      ...f.sourceRoot,
+      documents: 2,
+      parts: [{ ...f.sourceRoot.parts[0], count: 2, pointerMap: map }],
+    });
+  expect((await source.document(1)).id).toBe("c");
+  expect((await source.document(1)).body).toBe("gamma");
+  expect((await source.metadata(0, 2)).rows.map((r) => r.cluster_id)).toEqual([
+    10, 30,
+  ]);
+});
+it("exposes metadata-only selection and writes one immutable filtered pointer map through the constructor", async () => {
+  const f = await fixture([
+      { id: "a", body: "alpha", metadata: { cluster_id: 10 } },
+      { id: "b", body: "beta", metadata: { cluster_id: 20 } },
+    ]),
+    worker = createConstructionWorker(f.sourceRoot, "test"),
+    call = async (path: string, body: unknown) =>
+      worker.fetch(
+        new Request("https://local" + path, {
+          method: "POST",
+          headers: {
+            authorization: "Bearer token",
+            "content-type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }),
+        { INDEX: f.bucket, INTERNAL_TOKEN: "token" },
+      );
+  const meta = (await (
+    await call("/source-metadata", { first: 0, count: 2 })
+  ).json()) as any;
+  expect(meta.rows).toEqual([
+    { id: "a", cluster_id: 10 },
+    { id: "b", cluster_id: 20 },
+  ]);
+  expect(meta.telemetry.r2.put ?? 0).toBe(0);
+  const map = (await (
+    await call("/source-filter-map", { part: 0, selected: [1] })
+  ).json()) as any;
+  expect(map.size).toBe(32);
+  expect(map.telemetry.r2.put).toBe(1);
+  const source = new CorpusSource(f.bucket, {
+    ...f.sourceRoot,
+    documents: 1,
+    parts: [{ ...f.sourceRoot.parts[0], count: 1, pointerMap: map }],
+  });
+  expect((await source.document(0)).id).toBe("b");
+  expect(
+    (await call("/source-filter-map", { part: 0, selected: [1, 1] })).ok,
+  ).toBe(false);
+});
+it("constructs larger byte-bounded document groups and preserves a refused document for continuation", async () => {
+  const docs = Array.from({ length: 600 }, (_, i) => ({
+      id: String(i),
+      body: "alpha beta",
+    })),
+    f = await fixture(docs),
+    root = {
+      generation: "a".repeat(64),
+      count: docs.length,
+      objects: [],
+      idRouting: { dictionaries: [] },
+    },
+    vocabulary = {
+      generation: root.generation,
+      first: 0,
+      end: docs.length,
+      ids: new Map([
+        ["alpha", 1],
+        ["beta", 2],
+      ]),
+    },
+    group = await finishDocumentGroup(
+      f.source,
+      f.store,
+      root,
+      vocabulary,
+      root.generation,
+      0,
+      docs.length,
+    );
+  expect(group.documents).toBe(600);
+  expect(f.store.requests).toBe(1);
+  const stopped = await finishPackageDocuments(
+    f.source,
+    f.store,
+    root,
+    vocabulary,
+    root.generation,
+    0,
+    3,
+    async (doc) => doc === 0,
+  );
+  expect(stopped.end).toBe(1);
+  expect(stopped.documents).toBe(1);
+});
 it("merges stem variants before DF/BM25 construction and finishes stemmed phrases, fields, cursors and original snippets", async () => {
   const docs = [
       {

@@ -14,7 +14,8 @@ export async function finishPackageDocuments(
   generation: string,
   first: number,
   count: number,
-  sink?: (doc: number, packet: Uint8Array) => Promise<void>,
+  sink?: (doc: number, packet: Uint8Array) => Promise<void | boolean>,
+  tokenBudget = 1048576,
 ) {
   if (
     !Number.isInteger(first) ||
@@ -78,11 +79,12 @@ export async function finishPackageDocuments(
       ids,
       root.analysis,
     );
+    if (sink && (await sink(next, packet)) === false) break;
     while (writes.size >= 4) await Promise.race(writes);
     if (writeError) throw writeError;
     const write = (
       sink
-        ? sink(next, packet)
+        ? Promise.resolve()
         : store.putNamed(generation, `plan-${next}.bin`, packet)
     )
       .then(
@@ -104,7 +106,7 @@ export async function finishPackageDocuments(
       packet.byteOffset,
       packet.byteLength,
     ).getUint32(16, true);
-    if (tokens >= 1048576 || performance.now() - started >= 15000) {
+    if (tokens >= tokenBudget || performance.now() - started >= 15000) {
       next++;
       break;
     }

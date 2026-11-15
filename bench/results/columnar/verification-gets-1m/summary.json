@@ -1,0 +1,5862 @@
+{
+  "manifest": {
+    "kind": "Local Node diagnostic with simulated R2/cache delays; not live Worker or client HTTP latency",
+    "generation": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
+    "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+    "analysis": "nfkc-lower-porter2-v1",
+    "documents": 1000000,
+    "format": "CWS1",
+    "model": {
+      "r2Ms": 20,
+      "sharedMs": 2,
+      "r2MiBPerSecond": 100,
+      "sharedMiBPerSecond": 1000,
+      "jitterMs": 0,
+      "seed": 20261113
+    },
+    "comparisonSeed": 20261113,
+    "sharedCacheMiB": 256,
+    "sharedBudget": 900,
+    "primeSharedBudget": 900,
+    "primePasses": 1,
+    "artificialDelays": true,
+    "cacheIsolation": "Independent caches per measured query/plan/repeat; one untimed same-query priming pass for warm conditions",
+    "condition": "fresh-namespace",
+    "plans": [
+      "control-N100-M1000",
+      "auto-N100-M1000"
+    ],
+    "repeats": 3,
+    "contracts": 200,
+    "contractFile": "work/io-iteration/expanded-contract.json",
+    "contractSha256": "f38f8cb2bc6737e7124013e1420f8f966bfcd7909cb7d3d61474ea260d23b7e1",
+    "node": "v26.7.0",
+    "responseCaching": false,
+    "pairRouterSha256": "8a1db82b64546e8b05ca0722aa881a026159e69abfe7383a9291eb453e8c2ecd",
+    "exactPhraseDirectorySha256": "c2ef97f1904c067fd4774e6fa495b9b964dd02d5d9737815f6d59d113dc17a9b",
+    "includes": "Matching, exact ranking, metadata, query-relevant snippet and JSON serialization",
+    "preparedDownloads": 0,
+    "preparedBytes": 0,
+    "warmup": "Bounded cache population without artificial delays, using primeSharedBudget; measured delays follow artificialDelays",
+    "startedAt": "2026-11-15T02:14:55.466Z",
+    "implementationSha256": "7f8a7fc8cec947ca165ef714fc55ce88e773f99764cc0cb5fb5e5876ab128fdd",
+    "controlSource": "work/verification-gets-control",
+    "controlIndex": "work/verification-gets-control/index",
+    "controlGeneration": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
+    "controlRuntime": "frozen"
+  },
+  "samples": 1200,
+  "control": {
+    "0.5": 385.9518330000283,
+    "0.95": 1022.747666999996,
+    "0.99": 1827.1353339999914
+  },
+  "candidate": {
+    "0.5": 384.9254170000204,
+    "0.95": 1016.8852910000132,
+    "0.99": 1261.0116669999843
+  },
+  "regressions": [],
+  "queries": [
+    {
+      "q": "\"motion to seal\" AND \"previously public\" AND \"confidentiality\"",
+      "control": {
+        "samples": 3,
+        "ms": 97.47433299996192,
+        "minMs": 94.31795899997815,
+        "maxMs": 106.78250000000116,
+        "cpuMs": 71.908,
+        "gets": 16,
+        "bytes": 692686,
+        "verificationGets": 6,
+        "candidates": 6,
+        "positions": 1842,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 94.17099999999846,
+        "minMs": 91.7484580000164,
+        "maxMs": 96.8155839999963,
+        "cpuMs": 57.24,
+        "gets": 16,
+        "bytes": 692686,
+        "verificationGets": 6,
+        "candidates": 6,
+        "positions": 1842,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"municipal indemnification\" W/P (ripeness AND \"constitutional claim\")",
+      "control": {
+        "samples": 3,
+        "ms": 126.96445799999856,
+        "minMs": 126.13762499997392,
+        "maxMs": 127.13312499999302,
+        "cpuMs": 20.443,
+        "gets": 22,
+        "bytes": 1410992,
+        "verificationGets": 19,
+        "candidates": 19,
+        "positions": 1370,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 128.68358300003456,
+        "minMs": 126.28916699998081,
+        "maxMs": 132.77179199999955,
+        "cpuMs": 34.822,
+        "gets": 22,
+        "bytes": 1410992,
+        "verificationGets": 19,
+        "candidates": 19,
+        "positions": 1370,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"statutory damages\" AND (willful OR discretion)",
+      "control": {
+        "samples": 3,
+        "ms": 467.0085839999956,
+        "minMs": 457.7967500000377,
+        "maxMs": 495.2905410000021,
+        "cpuMs": 241.37,
+        "gets": 45,
+        "bytes": 6908042,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3685,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 479.8104999999632,
+        "minMs": 463.2832499999786,
+        "maxMs": 488.7806249999994,
+        "cpuMs": 169.031,
+        "gets": 45,
+        "bytes": 6908042,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3685,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"fair use\" AND \"market dilution\" AND (evidence OR speculation)",
+      "control": {
+        "samples": 3,
+        "ms": 653.0088749999995,
+        "minMs": 627.2539580000011,
+        "maxMs": 653.5016249999753,
+        "cpuMs": 251.783,
+        "gets": 43,
+        "bytes": 14942208,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 15925,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 629.2970829999831,
+        "minMs": 622.6832500000019,
+        "maxMs": 665.2584590000006,
+        "cpuMs": 220.117,
+        "gets": 43,
+        "bytes": 14942208,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 15925,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rooker Feldman\" W/P (\"independent injury\" OR \"third party conduct\")",
+      "control": {
+        "samples": 3,
+        "ms": 668.5925419999985,
+        "minMs": 640.6183329999913,
+        "maxMs": 669.6822920000013,
+        "cpuMs": 363.747,
+        "gets": 68,
+        "bytes": 20470621,
+        "verificationGets": 1,
+        "candidates": 0,
+        "positions": 9375,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 647.4377500000119,
+        "minMs": 637.2150409999886,
+        "maxMs": 651.7215420000139,
+        "cpuMs": 358.614,
+        "gets": 68,
+        "bytes": 20470621,
+        "verificationGets": 1,
+        "candidates": 0,
+        "positions": 9375,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"preliminary injunction\" W/P (delay AND \"irreparable harm\")",
+      "control": {
+        "samples": 3,
+        "ms": 504.5217920000032,
+        "minMs": 473.39379200001713,
+        "maxMs": 509.66075000001,
+        "cpuMs": 296.103,
+        "gets": 44,
+        "bytes": 6945820,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 7726,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 480.4514590000035,
+        "minMs": 469.11691600002814,
+        "maxMs": 486.38879100000486,
+        "cpuMs": 306.326,
+        "gets": 44,
+        "bytes": 6945820,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 7726,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"criminal forfeiture\" W/P (\"judgment lien\" AND \"bona fide purchaser\")",
+      "control": {
+        "samples": 3,
+        "ms": 633.3430410000146,
+        "minMs": 622.6668749999953,
+        "maxMs": 645.7231249999604,
+        "cpuMs": 302.324,
+        "gets": 57,
+        "bytes": 16777216,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 2434,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 630.9895419999957,
+        "minMs": 626.1727919999976,
+        "maxMs": 656.0467080000017,
+        "cpuMs": 251.575,
+        "gets": 57,
+        "bytes": 16777216,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 2434,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Speedy Trial Act\" W/P (complexity AND \"ends of justice\")",
+      "control": {
+        "samples": 3,
+        "ms": 385.9518330000283,
+        "minMs": 361.9070419999771,
+        "maxMs": 399.41354200000205,
+        "cpuMs": 122.709,
+        "gets": 78,
+        "bytes": 2736329,
+        "verificationGets": 54,
+        "candidates": 54,
+        "positions": 21440,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 384.9254170000204,
+        "minMs": 372.0551250000135,
+        "maxMs": 401.3586660000001,
+        "cpuMs": 147.644,
+        "gets": 78,
+        "bytes": 2736329,
+        "verificationGets": 54,
+        "candidates": 54,
+        "positions": 21440,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"mandate rule\" AND (discovery OR \"law of the case\") AND timeliness",
+      "control": {
+        "samples": 3,
+        "ms": 82.58720799999719,
+        "minMs": 79.93941700004507,
+        "maxMs": 85.46866700000828,
+        "cpuMs": 13.558,
+        "gets": 12,
+        "bytes": 550074,
+        "verificationGets": 6,
+        "candidates": 6,
+        "positions": 5733,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 84.99370799999451,
+        "minMs": 82.45008300000336,
+        "maxMs": 95.5681250000016,
+        "cpuMs": 76.325,
+        "gets": 12,
+        "bytes": 550074,
+        "verificationGets": 6,
+        "candidates": 6,
+        "positions": 5733,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"special master\" AND disqualification AND reconsideration",
+      "control": {
+        "samples": 3,
+        "ms": 301.0939580000122,
+        "minMs": 297.44637499999953,
+        "maxMs": 301.7513329999929,
+        "cpuMs": 100.103,
+        "gets": 53,
+        "bytes": 2287179,
+        "verificationGets": 34,
+        "candidates": 34,
+        "positions": 813,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 297.5726249999716,
+        "minMs": 293.22100000001956,
+        "maxMs": 300.3832089999996,
+        "cpuMs": 111.645,
+        "gets": 53,
+        "bytes": 2287179,
+        "verificationGets": 34,
+        "candidates": 34,
+        "positions": 813,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"leave to amend\" AND futility AND (\"frivolous claims\" OR \"claim preclusion\")",
+      "control": {
+        "samples": 3,
+        "ms": 570.4519159999909,
+        "minMs": 556.688375000027,
+        "maxMs": 597.3112079999992,
+        "cpuMs": 340.63,
+        "gets": 63,
+        "bytes": 13102985,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 104568,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 538.6197500000126,
+        "minMs": 527.5762500000128,
+        "maxMs": 543.9694170000148,
+        "cpuMs": 212.398,
+        "gets": 63,
+        "bytes": 13102985,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 104568,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"pharmacy benefit manager\" AND \"learned intermediary\" AND Pennsylvania AND opioids",
+      "control": {
+        "samples": 3,
+        "ms": 54.034499999997934,
+        "minMs": 52.58991700003389,
+        "maxMs": 54.16500000000815,
+        "cpuMs": 12.053,
+        "gets": 4,
+        "bytes": 577003,
+        "verificationGets": 2,
+        "candidates": 2,
+        "positions": 31,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 54.82270799999242,
+        "minMs": 54.09145800000988,
+        "maxMs": 57.00383399997372,
+        "cpuMs": 12.607,
+        "gets": 4,
+        "bytes": 577003,
+        "verificationGets": 2,
+        "candidates": 2,
+        "positions": 31,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Exemption 7(E)\" W/P (\"Vaughn index\" OR \"agency declaration\")",
+      "control": {
+        "samples": 3,
+        "ms": 352.7862080000341,
+        "minMs": 345.72641699999804,
+        "maxMs": 365.6977910000023,
+        "cpuMs": 124.482,
+        "gets": 54,
+        "bytes": 1171797,
+        "verificationGets": 31,
+        "candidates": 31,
+        "positions": 6562,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 350.98225000000093,
+        "minMs": 348.7622080000001,
+        "maxMs": 352.2129169999971,
+        "cpuMs": 98.719,
+        "gets": 54,
+        "bytes": 1171797,
+        "verificationGets": 31,
+        "candidates": 31,
+        "positions": 6633,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"fraud on the court\" AND (nonparty OR intervenor) AND appeal",
+      "control": {
+        "samples": 3,
+        "ms": 1643.791333999994,
+        "minMs": 1617.0065829999803,
+        "maxMs": 1664.4939170000143,
+        "cpuMs": 1307.661,
+        "gets": 185,
+        "bytes": 47812734,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3398661,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1640.2517499999994,
+        "minMs": 1605.2345000000205,
+        "maxMs": 1698.087750000006,
+        "cpuMs": 1265.141,
+        "gets": 185,
+        "bytes": 47812734,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3398661,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"20703\" AND (\"electronic records\" OR \"voter registration\") AND \"privacy\"",
+      "control": {
+        "samples": 3,
+        "ms": 29.34387500002049,
+        "minMs": 29.128040999989025,
+        "maxMs": 29.783250000007683,
+        "cpuMs": 10.33,
+        "gets": 2,
+        "bytes": 524288,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 29.741792000015266,
+        "minMs": 29.08979200000249,
+        "maxMs": 29.99595899999258,
+        "cpuMs": 49.674,
+        "gets": 2,
+        "bytes": 524288,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"fair use\" AND \"intermediate copying\" AND (training OR \"reverse engineering\")",
+      "control": {
+        "samples": 3,
+        "ms": 78.31737500000236,
+        "minMs": 78.27704199997243,
+        "maxMs": 78.72966599999927,
+        "cpuMs": 19.307,
+        "gets": 11,
+        "bytes": 549142,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 1854,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 78.32466600002954,
+        "minMs": 77.72899999999208,
+        "maxMs": 79.62579199997708,
+        "cpuMs": 19.317,
+        "gets": 11,
+        "bytes": 549142,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 1854,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"clear error\" AND \"credibility determination\"",
+      "control": {
+        "samples": 3,
+        "ms": 465.73641699994914,
+        "minMs": 457.50304199999664,
+        "maxMs": 470.127833999999,
+        "cpuMs": 243.386,
+        "gets": 47,
+        "bytes": 7112171,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 38587,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 468.29633399999875,
+        "minMs": 458.2923750000191,
+        "maxMs": 470.9450839999481,
+        "cpuMs": 262.611,
+        "gets": 47,
+        "bytes": 7112171,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 38587,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "(\"direct evidence\" W/10 \"anticompetitive effects\") AND \"market definition\"",
+      "control": {
+        "samples": 3,
+        "ms": 616.09283400001,
+        "minMs": 605.5343750000466,
+        "maxMs": 658.4986669999998,
+        "cpuMs": 243.662,
+        "gets": 63,
+        "bytes": 23870648,
+        "verificationGets": 1,
+        "candidates": 0,
+        "positions": 13605,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 637.7199170000094,
+        "minMs": 601.79237499999,
+        "maxMs": 640.9350419999682,
+        "cpuMs": 294.404,
+        "gets": 63,
+        "bytes": 23870648,
+        "verificationGets": 1,
+        "candidates": 0,
+        "positions": 13605,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"forum selection clause\" AND \"closely related\" AND nonsignatory",
+      "control": {
+        "samples": 3,
+        "ms": 442.79554200009443,
+        "minMs": 440.66041699999187,
+        "maxMs": 444.5395000000135,
+        "cpuMs": 123.826,
+        "gets": 94,
+        "bytes": 2772393,
+        "verificationGets": 83,
+        "candidates": 83,
+        "positions": 4492,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 458.977957999974,
+        "minMs": 457.45350000000326,
+        "maxMs": 460.5587919999998,
+        "cpuMs": 213.002,
+        "gets": 94,
+        "bytes": 2772393,
+        "verificationGets": 83,
+        "candidates": 83,
+        "positions": 4492,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Arlington Heights\" W/P (immigration AND \"equal protection\")",
+      "control": {
+        "samples": 3,
+        "ms": 271.63195900000574,
+        "minMs": 268.5910000000149,
+        "maxMs": 279.9951659999788,
+        "cpuMs": 78.122,
+        "gets": 51,
+        "bytes": 2302035,
+        "verificationGets": 32,
+        "candidates": 32,
+        "positions": 2325,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 281.59887499999604,
+        "minMs": 275.02854099997785,
+        "maxMs": 293.3433339999974,
+        "cpuMs": 90.538,
+        "gets": 51,
+        "bytes": 2302035,
+        "verificationGets": 32,
+        "candidates": 32,
+        "positions": 2325,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"business judgment\" AND (fiduciary OR director)",
+      "control": {
+        "samples": 3,
+        "ms": 501.01383399998304,
+        "minMs": 496.56279200001154,
+        "maxMs": 521.0147500000021,
+        "cpuMs": 233.345,
+        "gets": 45,
+        "bytes": 6396647,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3844,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 509.9882499999949,
+        "minMs": 494.7554170000367,
+        "maxMs": 541.5489589999997,
+        "cpuMs": 294.475,
+        "gets": 45,
+        "bytes": 6396647,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3844,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "wiretap AND consent AND (cookie OR identifiers)",
+      "control": {
+        "samples": 3,
+        "ms": 137.65649999998277,
+        "minMs": 136.9196670000092,
+        "maxMs": 137.85720900000888,
+        "cpuMs": 90.451,
+        "gets": 24,
+        "bytes": 2666008,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 694,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 140.1899169999524,
+        "minMs": 138.85887499997625,
+        "maxMs": 144.7614169999979,
+        "cpuMs": 130.584,
+        "gets": 24,
+        "bytes": 2666008,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 694,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"civil contempt\" AND (ambiguous OR \"specific and definite\") AND order",
+      "control": {
+        "samples": 3,
+        "ms": 622.9925830000429,
+        "minMs": 618.3567080000066,
+        "maxMs": 624.8786250000012,
+        "cpuMs": 312.36,
+        "gets": 64,
+        "bytes": 13212835,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 12702,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 620.4853330000769,
+        "minMs": 579.3910000000033,
+        "maxMs": 632.9792500000331,
+        "cpuMs": 296.827,
+        "gets": 64,
+        "bytes": 13212835,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 12702,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"appeal bond\" W/P (objector OR \"access to courts\") AND \"Rule 7\"",
+      "control": {
+        "samples": 3,
+        "ms": 130.70845899998676,
+        "minMs": 129.51158300001407,
+        "maxMs": 134.63429200000246,
+        "cpuMs": 44.836,
+        "gets": 24,
+        "bytes": 388045,
+        "verificationGets": 18,
+        "candidates": 18,
+        "positions": 3595,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 131.6891670000041,
+        "minMs": 125.91937499999767,
+        "maxMs": 131.79337499997928,
+        "cpuMs": 78.496,
+        "gets": 24,
+        "bytes": 388045,
+        "verificationGets": 18,
+        "candidates": 18,
+        "positions": 3595,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "clickwrap W/10 \"conspicuous notice\" AND arbitration",
+      "control": {
+        "samples": 3,
+        "ms": 173.67762500001118,
+        "minMs": 173.4332079999731,
+        "maxMs": 177.49166699999478,
+        "cpuMs": 22.693,
+        "gets": 32,
+        "bytes": 1104718,
+        "verificationGets": 28,
+        "candidates": 28,
+        "positions": 1009,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 176.70491599995876,
+        "minMs": 176.39362499996787,
+        "maxMs": 183.30254100000093,
+        "cpuMs": 53.505,
+        "gets": 32,
+        "bytes": 1104718,
+        "verificationGets": 28,
+        "candidates": 28,
+        "positions": 1009,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"voluntary cessation\" AND \"nonenforcement policy\" AND \"organizational members\"",
+      "control": {
+        "samples": 3,
+        "ms": 59.13774999999441,
+        "minMs": 55.43429100001231,
+        "maxMs": 66.31912499997998,
+        "cpuMs": 64.099,
+        "gets": 6,
+        "bytes": 661636,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 176,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 54.2393339999835,
+        "minMs": 52.99162499996601,
+        "maxMs": 59.32495800000106,
+        "cpuMs": 12.686,
+        "gets": 6,
+        "bytes": 661636,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 176,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"anti SLAPP\" W/P \"public interest\" AND (shareholder OR defamation)",
+      "control": {
+        "samples": 3,
+        "ms": 539.5024169999997,
+        "minMs": 514.0125419999822,
+        "maxMs": 541.9442079999717,
+        "cpuMs": 182.236,
+        "gets": 56,
+        "bytes": 12235170,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 7141,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 524.4864170000073,
+        "minMs": 503.81012499995995,
+        "maxMs": 533.0701250000275,
+        "cpuMs": 271.98,
+        "gets": 56,
+        "bytes": 12235170,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 7141,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"dismissal sanction\" AND \"government\" AND \"discovery violations\"",
+      "control": {
+        "samples": 3,
+        "ms": 160.15325000009034,
+        "minMs": 157.0317909999867,
+        "maxMs": 170.5349580000002,
+        "cpuMs": 82.741,
+        "gets": 28,
+        "bytes": 627539,
+        "verificationGets": 16,
+        "candidates": 16,
+        "positions": 1686,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 154.23066599998856,
+        "minMs": 152.3167910000193,
+        "maxMs": 156.74545899999794,
+        "cpuMs": 74.99,
+        "gets": 28,
+        "bytes": 627539,
+        "verificationGets": 16,
+        "candidates": 16,
+        "positions": 1686,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"juror privacy\" W/P (sealing OR redaction) AND \"less drastic\"",
+      "control": {
+        "samples": 3,
+        "ms": 200.9568749999744,
+        "minMs": 200.90245900000446,
+        "maxMs": 216.65308399999776,
+        "cpuMs": 94.632,
+        "gets": 44,
+        "bytes": 2406122,
+        "verificationGets": 41,
+        "candidates": 41,
+        "positions": 1658,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 199.76779199996963,
+        "minMs": 196.37700000000768,
+        "maxMs": 200.4864579999994,
+        "cpuMs": 45.195,
+        "gets": 44,
+        "bytes": 2406122,
+        "verificationGets": 41,
+        "candidates": 41,
+        "positions": 1658,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 37(c)\" AND (harmless OR surprise) AND \"treating physician\"",
+      "control": {
+        "samples": 3,
+        "ms": 206.58658300001116,
+        "minMs": 205.4716250000056,
+        "maxMs": 209.79924999998184,
+        "cpuMs": 84.444,
+        "gets": 36,
+        "bytes": 721007,
+        "verificationGets": 19,
+        "candidates": 19,
+        "positions": 1419,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 218.03295800002525,
+        "minMs": 206.89320799999405,
+        "maxMs": 228.68870799999786,
+        "cpuMs": 65.891,
+        "gets": 36,
+        "bytes": 721007,
+        "verificationGets": 19,
+        "candidates": 19,
+        "positions": 1419,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"attorney client\" /10 waiver",
+      "control": {
+        "samples": 3,
+        "ms": 465.29637499997625,
+        "minMs": 452.0242919999873,
+        "maxMs": 488.1805420000019,
+        "cpuMs": 262.489,
+        "gets": 36,
+        "bytes": 4086773,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 19617,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 472.8662919999915,
+        "minMs": 466.329665999976,
+        "maxMs": 473.9746660000019,
+        "cpuMs": 163.789,
+        "gets": 36,
+        "bytes": 4086773,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 19617,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"under the circumstances\" AND \"in light of\"",
+      "control": {
+        "samples": 3,
+        "ms": 839.1178749999999,
+        "minMs": 837.7890420000185,
+        "maxMs": 847.4347919999855,
+        "cpuMs": 553.233,
+        "gets": 93,
+        "bytes": 25551527,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 355720,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 849.2041249999893,
+        "minMs": 809.5539159999462,
+        "maxMs": 854.7638750000042,
+        "cpuMs": 524.512,
+        "gets": 93,
+        "bytes": 25551527,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 355720,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"public interest\" AND (injunction OR \"temporary restraining order\")",
+      "control": {
+        "samples": 3,
+        "ms": 583.0416659999755,
+        "minMs": 581.5736250000191,
+        "maxMs": 601.1782919999969,
+        "cpuMs": 302.903,
+        "gets": 57,
+        "bytes": 9349665,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 54947,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 589.2122920000111,
+        "minMs": 587.5597500000003,
+        "maxMs": 591.4762920000067,
+        "cpuMs": 332.116,
+        "gets": 57,
+        "bytes": 9349665,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 54947,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"discovery deadline\" AND \"new evidence\" AND \"motion to compel\"",
+      "control": {
+        "samples": 3,
+        "ms": 182.1953339999891,
+        "minMs": 180.41137499996694,
+        "maxMs": 192.41304200000013,
+        "cpuMs": 71.839,
+        "gets": 32,
+        "bytes": 775413,
+        "verificationGets": 16,
+        "candidates": 16,
+        "positions": 4952,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 188.01524999999674,
+        "minMs": 184.25079099999857,
+        "maxMs": 188.13145799998892,
+        "cpuMs": 111.857,
+        "gets": 32,
+        "bytes": 775413,
+        "verificationGets": 16,
+        "candidates": 16,
+        "positions": 4952,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1325(a)(9)\" AND \"tax returns\" AND confirmation",
+      "control": {
+        "samples": 3,
+        "ms": 1032.4489169999724,
+        "minMs": 1029.2070829999866,
+        "maxMs": 1043.6359170000032,
+        "cpuMs": 357.35,
+        "gets": 239,
+        "bytes": 8068958,
+        "verificationGets": 235,
+        "candidates": 235,
+        "positions": 57079,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1040.6890830000048,
+        "minMs": 1036.0821670000441,
+        "maxMs": 1059.6701250000042,
+        "cpuMs": 340.278,
+        "gets": 239,
+        "bytes": 8068958,
+        "verificationGets": 235,
+        "candidates": 235,
+        "positions": 57079,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"abuse of discretion\" AND NOT (\"criminal history\" OR \"sentencing guidelines\")",
+      "control": {
+        "samples": 3,
+        "ms": 691.7364170000073,
+        "minMs": 687.4853749999893,
+        "maxMs": 702.7309580000001,
+        "cpuMs": 466.753,
+        "gets": 66,
+        "bytes": 13994520,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 179295,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 692.9225839999854,
+        "minMs": 678.0612079999992,
+        "maxMs": 704.3383749999994,
+        "cpuMs": 467.42,
+        "gets": 66,
+        "bytes": 13994520,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 179295,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"failure to exhaust\" AND (administrative OR remedies)",
+      "control": {
+        "samples": 3,
+        "ms": 561.9664590000175,
+        "minMs": 541.7516250000044,
+        "maxMs": 567.6410000000033,
+        "cpuMs": 255.947,
+        "gets": 47,
+        "bytes": 8821789,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 18557,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 543.2734589999891,
+        "minMs": 522.6260839999886,
+        "maxMs": 549.0431659999958,
+        "cpuMs": 264.469,
+        "gets": 47,
+        "bytes": 8821789,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 18557,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"to the extent that\" AND jurisdiction",
+      "control": {
+        "samples": 3,
+        "ms": 660.4305420000019,
+        "minMs": 649.6057919999585,
+        "maxMs": 664.3192090000375,
+        "cpuMs": 442.363,
+        "gets": 70,
+        "bytes": 18309521,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 213157,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 668.538542000002,
+        "minMs": 663.5576669999864,
+        "maxMs": 668.5790410000191,
+        "cpuMs": 441.288,
+        "gets": 70,
+        "bytes": 18309521,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 213157,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Sherman Act\" AND \"information exchange\" AND \"concerted action\"",
+      "control": {
+        "samples": 3,
+        "ms": 772.510540999996,
+        "minMs": 770.3670000000275,
+        "maxMs": 788.3989579999761,
+        "cpuMs": 259.45,
+        "gets": 176,
+        "bytes": 6057504,
+        "verificationGets": 165,
+        "candidates": 165,
+        "positions": 13281,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 754.7815420000043,
+        "minMs": 753.6087919999845,
+        "maxMs": 766.9729579999694,
+        "cpuMs": 209.242,
+        "gets": 176,
+        "bytes": 6057504,
+        "verificationGets": 165,
+        "candidates": 165,
+        "positions": 13281,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"facial challenge\" AND (hypothetical OR imaginary) AND \"First Amendment\"",
+      "control": {
+        "samples": 3,
+        "ms": 484.11524999997346,
+        "minMs": 466.3007499999949,
+        "maxMs": 504.9842080000017,
+        "cpuMs": 256.995,
+        "gets": 52,
+        "bytes": 8251681,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 67082,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 472.90145899995696,
+        "minMs": 457.5655410000036,
+        "maxMs": 476.9689580000122,
+        "cpuMs": 218.154,
+        "gets": 52,
+        "bytes": 8251681,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 67082,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"administrative record\" AND (\"extra record discovery\" OR \"bad faith\")",
+      "control": {
+        "samples": 3,
+        "ms": 1147.6321250000037,
+        "minMs": 1133.4191669999855,
+        "maxMs": 1154.3444999999992,
+        "cpuMs": 356.011,
+        "gets": 266,
+        "bytes": 6204268,
+        "verificationGets": 242,
+        "candidates": 242,
+        "positions": 4421,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1167.501540999976,
+        "minMs": 1137.3704169999983,
+        "maxMs": 1168.0911669999768,
+        "cpuMs": 325.903,
+        "gets": 267,
+        "bytes": 6212611,
+        "verificationGets": 242,
+        "candidates": 242,
+        "positions": 4963,
+        "contextBytes": 8343
+      }
+    },
+    {
+      "q": "\"Title IX\" W/P (\"Spending Clause\" AND \"clear notice\")",
+      "control": {
+        "samples": 3,
+        "ms": 1022.747666999996,
+        "minMs": 1010.5028340000426,
+        "maxMs": 1037.1848329999775,
+        "cpuMs": 431.893,
+        "gets": 242,
+        "bytes": 12322031,
+        "verificationGets": 237,
+        "candidates": 237,
+        "positions": 11804,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1037.0820419999654,
+        "minMs": 1013.9221250000119,
+        "maxMs": 1074.7801660000114,
+        "cpuMs": 380.837,
+        "gets": 242,
+        "bytes": 12322031,
+        "verificationGets": 237,
+        "candidates": 237,
+        "positions": 11804,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "copyright AND (\"machine learning\" OR \"artificial intelligence\") AND \"fair use\"",
+      "control": {
+        "samples": 3,
+        "ms": 27.667083999956958,
+        "minMs": 27.54350000002887,
+        "maxMs": 28.87137499999517,
+        "cpuMs": 10.769,
+        "gets": 4,
+        "bytes": 417904,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 528,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 27.571957999956794,
+        "minMs": 27.04716699999699,
+        "maxMs": 28.96045799998683,
+        "cpuMs": 9.47,
+        "gets": 4,
+        "bytes": 417904,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 528,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1201\" AND circumvention AND \"valid credentials\"",
+      "control": {
+        "samples": 3,
+        "ms": 101.78058299999975,
+        "minMs": 99.58391599997412,
+        "maxMs": 102.2377919999999,
+        "cpuMs": 12.708,
+        "gets": 15,
+        "bytes": 876411,
+        "verificationGets": 13,
+        "candidates": 13,
+        "positions": 36,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 100.32374999998137,
+        "minMs": 99.28579199999513,
+        "maxMs": 105.57333300000755,
+        "cpuMs": 62.949,
+        "gets": 15,
+        "bytes": 876411,
+        "verificationGets": 13,
+        "candidates": 13,
+        "positions": 36,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"54(b)\" W/P (\"no just reason\" AND moot)",
+      "control": {
+        "samples": 3,
+        "ms": 568.1909169999999,
+        "minMs": 536.4407499999506,
+        "maxMs": 572.2120420000283,
+        "cpuMs": 271.699,
+        "gets": 62,
+        "bytes": 11754506,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 12065,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 552.5446249999804,
+        "minMs": 542.2878329999949,
+        "maxMs": 567.4386660000018,
+        "cpuMs": 279.287,
+        "gets": 62,
+        "bytes": 11754506,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 12065,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "restitution W/P (apportionment AND \"forfeited assets\")",
+      "control": {
+        "samples": 3,
+        "ms": 102.40970900002867,
+        "minMs": 101.51674999995157,
+        "maxMs": 104.25220799999079,
+        "cpuMs": 67.291,
+        "gets": 18,
+        "bytes": 1559538,
+        "verificationGets": 15,
+        "candidates": 15,
+        "positions": 210,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 102.82966599997599,
+        "minMs": 101.0772500000312,
+        "maxMs": 103.19874999999593,
+        "cpuMs": 67.798,
+        "gets": 18,
+        "bytes": 1559538,
+        "verificationGets": 15,
+        "candidates": 15,
+        "positions": 210,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"qualified immunity\" W/P \"First Amendment\" AND (retaliate OR retaliated OR retaliating OR retaliation OR retaliatory)",
+      "control": {
+        "samples": 3,
+        "ms": 475.9707500000077,
+        "minMs": 454.68204200000037,
+        "maxMs": 479.0552080000052,
+        "cpuMs": 280.506,
+        "gets": 46,
+        "bytes": 8068287,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 88616,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 468.56970900000306,
+        "minMs": 464.0969169999589,
+        "maxMs": 519.4890000000014,
+        "cpuMs": 289.649,
+        "gets": 46,
+        "bytes": 8068287,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 88616,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Title VII\" W/P (\"joint employer\" OR \"single employer\")",
+      "control": {
+        "samples": 3,
+        "ms": 514.9952079999784,
+        "minMs": 507.9145420000423,
+        "maxMs": 517.8896669999958,
+        "cpuMs": 124.62,
+        "gets": 112,
+        "bytes": 2204043,
+        "verificationGets": 89,
+        "candidates": 89,
+        "positions": 5147,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 514.0740829999995,
+        "minMs": 509.4073330000392,
+        "maxMs": 514.9330000000191,
+        "cpuMs": 164.744,
+        "gets": 112,
+        "bytes": 2204043,
+        "verificationGets": 89,
+        "candidates": 89,
+        "positions": 5245,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"statute of limitations\" AND \"fraudulent concealment\" AND \"motion to dismiss\"",
+      "control": {
+        "samples": 3,
+        "ms": 865.8825420000358,
+        "minMs": 858.039167000039,
+        "maxMs": 876.0649579999954,
+        "cpuMs": 505.662,
+        "gets": 90,
+        "bytes": 22269885,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 455606,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 854.2314579999656,
+        "minMs": 834.1165409999958,
+        "maxMs": 859.5019999999786,
+        "cpuMs": 519.635,
+        "gets": 90,
+        "bytes": 22269885,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 455606,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"arbitration deposition\" W/P (confidentiality OR sealing)",
+      "control": {
+        "samples": 3,
+        "ms": 66.4372920000169,
+        "minMs": 65.21437499998137,
+        "maxMs": 75.37249999999767,
+        "cpuMs": 50.544,
+        "gets": 8,
+        "bytes": 3932160,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 13489,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 67.86683299997821,
+        "minMs": 65.85470799996983,
+        "maxMs": 72.86545800000022,
+        "cpuMs": 34.371,
+        "gets": 8,
+        "bytes": 3932160,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 13489,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"citizen suit\" AND \"Clean Air Act\" AND (\"Article II\" OR \"executive power\")",
+      "control": {
+        "samples": 3,
+        "ms": 137.98595800000476,
+        "minMs": 135.5779999999795,
+        "maxMs": 142.34558399999514,
+        "cpuMs": 61.064,
+        "gets": 17,
+        "bytes": 1573676,
+        "verificationGets": 7,
+        "candidates": 7,
+        "positions": 2794,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 138.48512500000652,
+        "minMs": 137.4086670000106,
+        "maxMs": 140.671792000001,
+        "cpuMs": 34.139,
+        "gets": 17,
+        "bytes": 1573676,
+        "verificationGets": 7,
+        "candidates": 7,
+        "positions": 2794,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"protective order\" AND (\"confidential financial\" OR \"burden of proof\")",
+      "control": {
+        "samples": 3,
+        "ms": 692.3549170000042,
+        "minMs": 677.9005829999805,
+        "maxMs": 699.4823749999923,
+        "cpuMs": 364.715,
+        "gets": 70,
+        "bytes": 16206028,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 154491,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 705.5703329999815,
+        "minMs": 664.9960420000134,
+        "maxMs": 711.3470830000006,
+        "cpuMs": 363.802,
+        "gets": 70,
+        "bytes": 16206028,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 154491,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"scope of employment\" W/P (certification AND \"malicious prosecution\")",
+      "control": {
+        "samples": 3,
+        "ms": 165.05475000001024,
+        "minMs": 164.19162500003586,
+        "maxMs": 174.7023329999938,
+        "cpuMs": 54.782,
+        "gets": 24,
+        "bytes": 1529204,
+        "verificationGets": 19,
+        "candidates": 19,
+        "positions": 13596,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 165.36766699999862,
+        "minMs": 163.15983299998334,
+        "maxMs": 166.4029580000206,
+        "cpuMs": 39.318,
+        "gets": 24,
+        "bytes": 1529204,
+        "verificationGets": 19,
+        "candidates": 19,
+        "positions": 13596,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "(withdraw OR withdrawal OR withdrawn OR withdrawing) W/P counsel AND (\"fundamental disagreement\" OR \"breakdown in communication\") AND sentencing",
+      "control": {
+        "samples": 3,
+        "ms": 1827.1353339999914,
+        "minMs": 1825.9976669999887,
+        "maxMs": 1839.4868330000027,
+        "cpuMs": 497.195,
+        "gets": 418,
+        "bytes": 9828035,
+        "verificationGets": 384,
+        "candidates": 384,
+        "positions": 24895,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 869.1900419999729,
+        "minMs": 858.7569580000127,
+        "maxMs": 993.9460839999956,
+        "cpuMs": 355.983,
+        "gets": 67,
+        "bytes": 15068415,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 5332,
+        "contextBytes": 24116
+      }
+    },
+    {
+      "q": "\"burden of production\" AND \"legitimate reason\"",
+      "control": {
+        "samples": 3,
+        "ms": 26.723958999995375,
+        "minMs": 26.00458300000173,
+        "maxMs": 27.396125000028405,
+        "cpuMs": 8.536,
+        "gets": 3,
+        "bytes": 237738,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 25.86254199995892,
+        "minMs": 25.307291999924928,
+        "maxMs": 29.635042000001704,
+        "cpuMs": 20.523,
+        "gets": 3,
+        "bytes": 237738,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 408\" AND \"attorney fees\" AND \"settlement negotiations\"",
+      "control": {
+        "samples": 3,
+        "ms": 631.6892499999958,
+        "minMs": 630.1390409999876,
+        "maxMs": 644.334291999985,
+        "cpuMs": 333.836,
+        "gets": 65,
+        "bytes": 18962338,
+        "verificationGets": 12,
+        "candidates": 0,
+        "positions": 13980,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 649.5870420000283,
+        "minMs": 631.2468329999829,
+        "maxMs": 695.8497920000009,
+        "cpuMs": 298.072,
+        "gets": 65,
+        "bytes": 18962338,
+        "verificationGets": 12,
+        "candidates": 0,
+        "positions": 13980,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 54(b)\" AND \"secondary liability\" AND \"same underlying\"",
+      "control": {
+        "samples": 3,
+        "ms": 30.464082999969833,
+        "minMs": 29.960124999997788,
+        "maxMs": 30.707625000039116,
+        "cpuMs": 14.371,
+        "gets": 4,
+        "bytes": 210091,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 33.22100000001956,
+        "minMs": 32.116125000000466,
+        "maxMs": 33.3327500000014,
+        "cpuMs": 49.137,
+        "gets": 4,
+        "bytes": 210091,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Second Amendment\" W/P (\"one handgun\" OR \"purchase limits\")",
+      "control": {
+        "samples": 3,
+        "ms": 103.87083299999358,
+        "minMs": 100.72758300002897,
+        "maxMs": 104.44258400000399,
+        "cpuMs": 15.46,
+        "gets": 14,
+        "bytes": 2812052,
+        "verificationGets": 1,
+        "candidates": 1,
+        "positions": 415,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 104.58820800000103,
+        "minMs": 103.1799170000013,
+        "maxMs": 110.14516599999479,
+        "cpuMs": 15.587,
+        "gets": 14,
+        "bytes": 2812052,
+        "verificationGets": 1,
+        "candidates": 1,
+        "positions": 415,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"consent decree\" AND monitor AND (interpretation OR compliance)",
+      "control": {
+        "samples": 3,
+        "ms": 1254.0130409999983,
+        "minMs": 1252.1734999999753,
+        "maxMs": 1262.267292000004,
+        "cpuMs": 205.984,
+        "gets": 286,
+        "bytes": 7347659,
+        "verificationGets": 262,
+        "candidates": 262,
+        "positions": 5491,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1261.0116669999843,
+        "minMs": 1243.9032920000027,
+        "maxMs": 1292.0938339999993,
+        "cpuMs": 260.515,
+        "gets": 286,
+        "bytes": 7347659,
+        "verificationGets": 262,
+        "candidates": 262,
+        "positions": 5453,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"intervention as of right\" AND (timeliness OR \"inadequate representation\")",
+      "control": {
+        "samples": 3,
+        "ms": 1988.2266250000102,
+        "minMs": 1946.149624999991,
+        "maxMs": 2006.068041999999,
+        "cpuMs": 479.192,
+        "gets": 462,
+        "bytes": 9367793,
+        "verificationGets": 428,
+        "candidates": 428,
+        "positions": 35097,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1286.1145000000251,
+        "minMs": 1254.0241659999956,
+        "maxMs": 1286.7391249999637,
+        "cpuMs": 320.027,
+        "gets": 280,
+        "bytes": 6666056,
+        "verificationGets": 245,
+        "candidates": 245,
+        "positions": 22398,
+        "contextBytes": 15937
+      }
+    },
+    {
+      "q": "\"Civil Rights Act of 1960\" AND \"voter records\" AND \"statement of the basis\"",
+      "control": {
+        "samples": 3,
+        "ms": 82.3762080000015,
+        "minMs": 77.08604200003901,
+        "maxMs": 82.74770800000988,
+        "cpuMs": 78.578,
+        "gets": 8,
+        "bytes": 1868742,
+        "verificationGets": 2,
+        "candidates": 2,
+        "positions": 1870,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 78.29691599996295,
+        "minMs": 75.56191699999908,
+        "maxMs": 78.84004200005438,
+        "cpuMs": 36.046,
+        "gets": 8,
+        "bytes": 1868742,
+        "verificationGets": 2,
+        "candidates": 2,
+        "positions": 1870,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"sealing\" W/P (provisional AND \"confidentiality order\")",
+      "control": {
+        "samples": 3,
+        "ms": 453.9771249999758,
+        "minMs": 451.6801669999986,
+        "maxMs": 478.7462499999965,
+        "cpuMs": 131.534,
+        "gets": 97,
+        "bytes": 2995475,
+        "verificationGets": 93,
+        "candidates": 93,
+        "positions": 4733,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 442.84983299998567,
+        "minMs": 437.4765839999891,
+        "maxMs": 491.8862919999956,
+        "cpuMs": 81.86,
+        "gets": 97,
+        "bytes": 2995475,
+        "verificationGets": 93,
+        "candidates": 93,
+        "positions": 4733,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Landis stay\" AND (\"parallel appeal\" OR \"duplicative trials\")",
+      "control": {
+        "samples": 3,
+        "ms": 26.76187500002561,
+        "minMs": 25.926332999995793,
+        "maxMs": 26.81358400004683,
+        "cpuMs": 8.192,
+        "gets": 3,
+        "bytes": 119375,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 205,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 26.822083999984898,
+        "minMs": 26.379750000021886,
+        "maxMs": 27.120292000006884,
+        "cpuMs": 9.105,
+        "gets": 3,
+        "bytes": 119375,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 205,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "copyright W/P (\"confirmatory assignment\" AND standing)",
+      "control": {
+        "samples": 3,
+        "ms": 77.24870799999917,
+        "minMs": 75.49920800000109,
+        "maxMs": 77.61637499998324,
+        "cpuMs": 10.967,
+        "gets": 6,
+        "bytes": 555275,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 85,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 76.41358300001593,
+        "minMs": 75.32154199999059,
+        "maxMs": 79.55741600005422,
+        "cpuMs": 7.84,
+        "gets": 6,
+        "bytes": 555275,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 85,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Fair Housing Act\" AND \"United States\" AND (\"private right of action\" OR \"sovereign immunity\")",
+      "control": {
+        "samples": 3,
+        "ms": 390.31233300000895,
+        "minMs": 384.12970900000073,
+        "maxMs": 396.2235830000136,
+        "cpuMs": 89.459,
+        "gets": 73,
+        "bytes": 2029860,
+        "verificationGets": 46,
+        "candidates": 46,
+        "positions": 21821,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 389.9576250000391,
+        "minMs": 387.05616700000246,
+        "maxMs": 391.56420799999614,
+        "cpuMs": 119.876,
+        "gets": 73,
+        "bytes": 2029860,
+        "verificationGets": 46,
+        "candidates": 46,
+        "positions": 20914,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1782\" AND (\"letters rogatory\" OR \"Hague Evidence Convention\")",
+      "control": {
+        "samples": 3,
+        "ms": 589.813582999981,
+        "minMs": 588.718583000009,
+        "maxMs": 658.8923340000038,
+        "cpuMs": 99.213,
+        "gets": 136,
+        "bytes": 1868030,
+        "verificationGets": 119,
+        "candidates": 119,
+        "positions": 979,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 613.7665410000482,
+        "minMs": 583.8930420000033,
+        "maxMs": 617.9972080000152,
+        "cpuMs": 169.717,
+        "gets": 136,
+        "bytes": 1868030,
+        "verificationGets": 119,
+        "candidates": 119,
+        "positions": 979,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "patent AND \"preliminary injunction\" AND \"irreparable harm\"",
+      "control": {
+        "samples": 3,
+        "ms": 408.2855410000193,
+        "minMs": 404.2744160000002,
+        "maxMs": 412.5487920000014,
+        "cpuMs": 223.605,
+        "gets": 41,
+        "bytes": 5891456,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 4661,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 394.40333300002385,
+        "minMs": 388.9367080000011,
+        "maxMs": 418.621833000012,
+        "cpuMs": 169.135,
+        "gets": 41,
+        "bytes": 5891456,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 4661,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1254a\" AND \"judicial review\" AND \"equal protection\"",
+      "control": {
+        "samples": 3,
+        "ms": 115.4725000000326,
+        "minMs": 110.2376669999212,
+        "maxMs": 116.13395799999125,
+        "cpuMs": 21.803,
+        "gets": 12,
+        "bytes": 1198304,
+        "verificationGets": 9,
+        "candidates": 9,
+        "positions": 139,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 114.19141700002365,
+        "minMs": 109.26350000000093,
+        "maxMs": 118.31274999998277,
+        "cpuMs": 78.755,
+        "gets": 12,
+        "bytes": 1198304,
+        "verificationGets": 9,
+        "candidates": 9,
+        "positions": 139,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"protective order\" AND deposition AND \"bad faith filing\"",
+      "control": {
+        "samples": 3,
+        "ms": 90.41083300000173,
+        "minMs": 88.43379200000345,
+        "maxMs": 98.46508399996674,
+        "cpuMs": 73.066,
+        "gets": 10,
+        "bytes": 762094,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 292,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 89.76779200002784,
+        "minMs": 87.56325000000652,
+        "maxMs": 96.51516700000502,
+        "cpuMs": 74.159,
+        "gets": 10,
+        "bytes": 762094,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 292,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"deliberative process\" W/P \"government misconduct\" AND discovery",
+      "control": {
+        "samples": 3,
+        "ms": 506.11745799999335,
+        "minMs": 492.4142920000013,
+        "maxMs": 508.954665999976,
+        "cpuMs": 208.743,
+        "gets": 112,
+        "bytes": 4982763,
+        "verificationGets": 108,
+        "candidates": 108,
+        "positions": 5471,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 499.04108300001826,
+        "minMs": 491.5046250000014,
+        "maxMs": 507.37200000003213,
+        "cpuMs": 177.985,
+        "gets": 112,
+        "bytes": 4982763,
+        "verificationGets": 108,
+        "candidates": 108,
+        "positions": 5471,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1988\" W/P (fees AND \"criminal defense\")",
+      "control": {
+        "samples": 3,
+        "ms": 545.590291999979,
+        "minMs": 545.4567919999972,
+        "maxMs": 558.7840420000721,
+        "cpuMs": 250.404,
+        "gets": 48,
+        "bytes": 7038628,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 4379,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 550.6374999999534,
+        "minMs": 538.7440420000057,
+        "maxMs": 798.2800830000197,
+        "cpuMs": 245.086,
+        "gets": 48,
+        "bytes": 7038628,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 4379,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"entrapment by estoppel\" W/P (\"voter registration\" OR noncitizen)",
+      "control": {
+        "samples": 3,
+        "ms": 174.4894159999967,
+        "minMs": 169.18483399995603,
+        "maxMs": 179.83087499999965,
+        "cpuMs": 76.714,
+        "gets": 35,
+        "bytes": 416597,
+        "verificationGets": 33,
+        "candidates": 33,
+        "positions": 1260,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 173.18212499999208,
+        "minMs": 169.9162920000017,
+        "maxMs": 175.17104099999415,
+        "cpuMs": 33.031,
+        "gets": 35,
+        "bytes": 416597,
+        "verificationGets": 33,
+        "candidates": 33,
+        "positions": 1260,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"limited public forum\" AND (\"viewpoint neutral\" OR reasonable) AND \"stay pending appeal\"",
+      "control": {
+        "samples": 3,
+        "ms": 31.555292000004556,
+        "minMs": 28.834667000046466,
+        "maxMs": 33.537083000002895,
+        "cpuMs": 51.373,
+        "gets": 4,
+        "bytes": 184576,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 33.046457999997074,
+        "minMs": 30.439291000016965,
+        "maxMs": 35.293625000005704,
+        "cpuMs": 64.176,
+        "gets": 4,
+        "bytes": 184576,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"motion to seal\" AND \"pretrial brief\" AND \"competitive harm\"",
+      "control": {
+        "samples": 3,
+        "ms": 628.5149579999998,
+        "minMs": 625.1944580000127,
+        "maxMs": 637.8162920000032,
+        "cpuMs": 224.415,
+        "gets": 151,
+        "bytes": 6867145,
+        "verificationGets": 148,
+        "candidates": 148,
+        "positions": 76380,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 635.872791999951,
+        "minMs": 627.4040839999798,
+        "maxMs": 643.9214590000047,
+        "cpuMs": 244.199,
+        "gets": 151,
+        "bytes": 6867145,
+        "verificationGets": 148,
+        "candidates": 148,
+        "positions": 76380,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"organizational standing\" AND \"core business activities\" AND \"diversion of resources\"",
+      "control": {
+        "samples": 3,
+        "ms": 353.0901249999879,
+        "minMs": 342.82474999999977,
+        "maxMs": 356.7999589999672,
+        "cpuMs": 180.018,
+        "gets": 74,
+        "bytes": 4099049,
+        "verificationGets": 70,
+        "candidates": 70,
+        "positions": 47811,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 346.3846669999766,
+        "minMs": 342.87854200000584,
+        "maxMs": 349.0090419999906,
+        "cpuMs": 67.572,
+        "gets": 74,
+        "bytes": 4099049,
+        "verificationGets": 70,
+        "candidates": 70,
+        "positions": 47811,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"beneficial owner\" W/P (bonds OR \"registered holder\") AND (enforce OR enforced OR enforcement OR enforcing OR enforceable)",
+      "control": {
+        "samples": 3,
+        "ms": 529.6447080000071,
+        "minMs": 514.0263750000158,
+        "maxMs": 557.6865840000028,
+        "cpuMs": 307.1,
+        "gets": 48,
+        "bytes": 6294316,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3566,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 512.123208999983,
+        "minMs": 509.79991600004723,
+        "maxMs": 527.5593750000116,
+        "cpuMs": 318.725,
+        "gets": 48,
+        "bytes": 6294316,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3566,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 37(e)\" W/P \"lost emails\" AND (\"adverse inference\" OR \"intent to deprive\")",
+      "control": {
+        "samples": 3,
+        "ms": 29.92279199999757,
+        "minMs": 29.00070799997775,
+        "maxMs": 30.354875000019092,
+        "cpuMs": 12.916,
+        "gets": 5,
+        "bytes": 281233,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 30,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 28.16133400000399,
+        "minMs": 25.079165999952238,
+        "maxMs": 28.526624999998603,
+        "cpuMs": 5.193,
+        "gets": 5,
+        "bytes": 281233,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 36,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"permit transfer\" AND \"takings claim\"",
+      "control": {
+        "samples": 3,
+        "ms": 99.47820899996441,
+        "minMs": 97.29450000001816,
+        "maxMs": 102.83129199998803,
+        "cpuMs": 10.955,
+        "gets": 10,
+        "bytes": 257855,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 907,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 98.96337499993388,
+        "minMs": 98.72633300000598,
+        "maxMs": 103.30875000002561,
+        "cpuMs": 16.364,
+        "gets": 10,
+        "bytes": 257855,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 907,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"judicial records\" W/P ((redact OR redacted OR redaction OR redacting) OR (seal OR sealed OR sealing)) AND \"employment information\"",
+      "control": {
+        "samples": 3,
+        "ms": 76.46437499998137,
+        "minMs": 76.1517920000042,
+        "maxMs": 76.48187499999767,
+        "cpuMs": 17.774,
+        "gets": 6,
+        "bytes": 131616,
+        "verificationGets": 2,
+        "candidates": 2,
+        "positions": 236,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 74.94416700000875,
+        "minMs": 74.39400000000023,
+        "maxMs": 115.64391699997941,
+        "cpuMs": 6.207,
+        "gets": 6,
+        "bytes": 131616,
+        "verificationGets": 2,
+        "candidates": 2,
+        "positions": 236,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "TPS AND termination AND (\"jurisdiction stripping\" OR \"equal protection\")",
+      "control": {
+        "samples": 3,
+        "ms": 211.47033300000476,
+        "minMs": 208.54712499998277,
+        "maxMs": 214.74154099999578,
+        "cpuMs": 89.28,
+        "gets": 40,
+        "bytes": 1559224,
+        "verificationGets": 35,
+        "candidates": 35,
+        "positions": 410,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 207.74974999995902,
+        "minMs": 203.99337500000547,
+        "maxMs": 208.21570900001097,
+        "cpuMs": 98.344,
+        "gets": 40,
+        "bytes": 1559224,
+        "verificationGets": 35,
+        "candidates": 35,
+        "positions": 410,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"court order\" W/P (\"collateral attack\" OR forfeiture)",
+      "control": {
+        "samples": 3,
+        "ms": 620.3923330000034,
+        "minMs": 611.852332999988,
+        "maxMs": 658.0862080000225,
+        "cpuMs": 413.463,
+        "gets": 58,
+        "bytes": 11348377,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 110970,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 646.9039589999593,
+        "minMs": 646.7075839999961,
+        "maxMs": 650.1175840000506,
+        "cpuMs": 454.974,
+        "gets": 58,
+        "bytes": 11348377,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 110970,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"equitable tolling\" AND diligence AND NOT \"class action\"",
+      "control": {
+        "samples": 3,
+        "ms": 646.8785409999837,
+        "minMs": 634.7143329999963,
+        "maxMs": 650.4557090000017,
+        "cpuMs": 285.585,
+        "gets": 53,
+        "bytes": 10771567,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 2831,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 655.3216249999823,
+        "minMs": 652.4213749999908,
+        "maxMs": 670.5474580000155,
+        "cpuMs": 247.276,
+        "gets": 53,
+        "bytes": 10771567,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 2831,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"plain meaning\" AND (ambiguity OR legislative)",
+      "control": {
+        "samples": 3,
+        "ms": 411.02016699995147,
+        "minMs": 405.2534169999999,
+        "maxMs": 420.94545800000196,
+        "cpuMs": 231.35,
+        "gets": 36,
+        "bytes": 4166880,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 14991,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 409.18712499999674,
+        "minMs": 408.86912499996834,
+        "maxMs": 417.2502910000039,
+        "cpuMs": 228.741,
+        "gets": 36,
+        "bytes": 4166880,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 14991,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "Bivens AND \"ultra vires\" AND \"scope of employment\"",
+      "control": {
+        "samples": 3,
+        "ms": 104.75366600003326,
+        "minMs": 102.93216700002085,
+        "maxMs": 113.05683300000965,
+        "cpuMs": 57.676,
+        "gets": 15,
+        "bytes": 1058657,
+        "verificationGets": 12,
+        "candidates": 12,
+        "positions": 7087,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 104.80295800000022,
+        "minMs": 101.56562499998836,
+        "maxMs": 105.66970800003037,
+        "cpuMs": 24.562,
+        "gets": 15,
+        "bytes": 1058657,
+        "verificationGets": 12,
+        "candidates": 12,
+        "positions": 7087,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"compelling reasons\" AND sealing AND (\"non-dispositive\" OR \"more than tangential\")",
+      "control": {
+        "samples": 3,
+        "ms": 550.7932080000173,
+        "minMs": 537.140625,
+        "maxMs": 556.756166999985,
+        "cpuMs": 96.438,
+        "gets": 125,
+        "bytes": 1186242,
+        "verificationGets": 102,
+        "candidates": 102,
+        "positions": 1810,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 546.1143750000047,
+        "minMs": 538.4682090000133,
+        "maxMs": 560.553917000012,
+        "cpuMs": 116.757,
+        "gets": 125,
+        "bytes": 1186242,
+        "verificationGets": 102,
+        "candidates": 102,
+        "positions": 1823,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"18 U.S.C. 611\" AND (enforcement OR injunction)",
+      "control": {
+        "samples": 3,
+        "ms": 82.47191700001713,
+        "minMs": 80.89329199999338,
+        "maxMs": 85.88100000002305,
+        "cpuMs": 44.796,
+        "gets": 13,
+        "bytes": 863700,
+        "verificationGets": 10,
+        "candidates": 10,
+        "positions": 2849,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 83.79354099999182,
+        "minMs": 83.0057079999824,
+        "maxMs": 84.59908300000097,
+        "cpuMs": 18.822,
+        "gets": 13,
+        "bytes": 863700,
+        "verificationGets": 10,
+        "candidates": 10,
+        "positions": 2849,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"public access\" W/P \"summary judgment hearing\" AND closure",
+      "control": {
+        "samples": 3,
+        "ms": 589.66525000002,
+        "minMs": 560.0699999999997,
+        "maxMs": 613.1680000000051,
+        "cpuMs": 243.664,
+        "gets": 58,
+        "bytes": 22544384,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 17280,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 609.2173749999929,
+        "minMs": 608.2870410000323,
+        "maxMs": 623.9835409999941,
+        "cpuMs": 289.964,
+        "gets": 58,
+        "bytes": 22544384,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 17280,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Section 504\" AND contractor AND \"recipient of federal funds\" AND housing",
+      "control": {
+        "samples": 3,
+        "ms": 795.4950409999874,
+        "minMs": 786.6685829999624,
+        "maxMs": 801.5754169999855,
+        "cpuMs": 304.975,
+        "gets": 182,
+        "bytes": 7751230,
+        "verificationGets": 175,
+        "candidates": 175,
+        "positions": 105370,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 776.4948330000043,
+        "minMs": 774.5322920000035,
+        "maxMs": 793.1695000000182,
+        "cpuMs": 248.387,
+        "gets": 182,
+        "bytes": 7751230,
+        "verificationGets": 175,
+        "candidates": 175,
+        "positions": 105370,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "(apex OR \"high ranking\") W/5 deposition AND \"unique knowledge\"",
+      "control": {
+        "samples": 3,
+        "ms": 235.97637499996927,
+        "minMs": 231.41358400000172,
+        "maxMs": 241.97741699998733,
+        "cpuMs": 123.547,
+        "gets": 45,
+        "bytes": 1279771,
+        "verificationGets": 33,
+        "candidates": 33,
+        "positions": 1238,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 247.65441700001247,
+        "minMs": 232.51458299998194,
+        "maxMs": 250.301833000005,
+        "cpuMs": 90.04,
+        "gets": 45,
+        "bytes": 1279771,
+        "verificationGets": 33,
+        "candidates": 33,
+        "positions": 1238,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"conditional remand\" AND (\"advisory opinion\" OR severance)",
+      "control": {
+        "samples": 3,
+        "ms": 235.08075000002282,
+        "minMs": 223.12195799999608,
+        "maxMs": 254.21166699996684,
+        "cpuMs": 47.079,
+        "gets": 42,
+        "bytes": 513536,
+        "verificationGets": 27,
+        "candidates": 27,
+        "positions": 374,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 234.28258299996378,
+        "minMs": 233.7029169999878,
+        "maxMs": 241.19904199999291,
+        "cpuMs": 100.19,
+        "gets": 42,
+        "bytes": 513536,
+        "verificationGets": 27,
+        "candidates": 27,
+        "positions": 374,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "counterclaim AND \"amended complaint\" AND (\"Rule 15\" OR \"responsive pleading\")",
+      "control": {
+        "samples": 3,
+        "ms": 547.300333000021,
+        "minMs": 524.6617499999993,
+        "maxMs": 553.1904170000344,
+        "cpuMs": 299.042,
+        "gets": 66,
+        "bytes": 12181290,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 118189,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 539.0845419999969,
+        "minMs": 534.8810839999933,
+        "maxMs": 543.0662080000038,
+        "cpuMs": 313.541,
+        "gets": 66,
+        "bytes": 12181290,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 118189,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 106\" W/P (\"self serving\" OR interview)",
+      "control": {
+        "samples": 3,
+        "ms": 1186.1846659999865,
+        "minMs": 1162.1895829999994,
+        "maxMs": 1188.0229580000741,
+        "cpuMs": 308.483,
+        "gets": 277,
+        "bytes": 3134181,
+        "verificationGets": 265,
+        "candidates": 265,
+        "positions": 6022,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1195.681249999965,
+        "minMs": 1176.7071250000154,
+        "maxMs": 1206.0321250000125,
+        "cpuMs": 322.541,
+        "gets": 277,
+        "bytes": 3134181,
+        "verificationGets": 265,
+        "candidates": 265,
+        "positions": 6022,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "HIPAA AND \"embedded federal question\" AND (remand OR Grable)",
+      "control": {
+        "samples": 3,
+        "ms": 54.02083299998776,
+        "minMs": 53.4096669999999,
+        "maxMs": 54.196249999979045,
+        "cpuMs": 10.877,
+        "gets": 7,
+        "bytes": 616034,
+        "verificationGets": 5,
+        "candidates": 5,
+        "positions": 78,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 55.04087499999878,
+        "minMs": 53.30404199997429,
+        "maxMs": 72.30808300001081,
+        "cpuMs": 14.062,
+        "gets": 7,
+        "bytes": 616034,
+        "verificationGets": 5,
+        "candidates": 5,
+        "positions": 78,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"trade secret\" AND \"reasonable measures\"",
+      "control": {
+        "samples": 3,
+        "ms": 642.991915999999,
+        "minMs": 640.8626670000376,
+        "maxMs": 648.3002919999999,
+        "cpuMs": 358.398,
+        "gets": 51,
+        "bytes": 12925814,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 21823,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 664.2680829999736,
+        "minMs": 628.6813330000004,
+        "maxMs": 680.4687919999706,
+        "cpuMs": 359.276,
+        "gets": 51,
+        "bytes": 12925814,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 21823,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"attorneys eyes only\" W/P (pricing OR (competition OR competitive OR competitor)) AND \"protective order\"",
+      "control": {
+        "samples": 3,
+        "ms": 603.4568750000326,
+        "minMs": 584.8035840000084,
+        "maxMs": 610.8517919999722,
+        "cpuMs": 110.21,
+        "gets": 136,
+        "bytes": 1845019,
+        "verificationGets": 114,
+        "candidates": 114,
+        "positions": 10829,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 596.388833999983,
+        "minMs": 591.6358330000003,
+        "maxMs": 686.7520829999994,
+        "cpuMs": 123.709,
+        "gets": 136,
+        "bytes": 1845019,
+        "verificationGets": 114,
+        "candidates": 114,
+        "positions": 10829,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 26(f)\" AND (defer OR stay) AND \"motion to dismiss\"",
+      "control": {
+        "samples": 3,
+        "ms": 693.5109579999698,
+        "minMs": 655.4204999999929,
+        "maxMs": 703.7953339999658,
+        "cpuMs": 346.862,
+        "gets": 81,
+        "bytes": 16613618,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 298028,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 699.689458000008,
+        "minMs": 668.2425000000076,
+        "maxMs": 711.2733749999898,
+        "cpuMs": 389.656,
+        "gets": 81,
+        "bytes": 16613618,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 298028,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "(\"filter team\" OR \"taint team\") AND \"special master\" AND privilege",
+      "control": {
+        "samples": 3,
+        "ms": 1014.7919589999947,
+        "minMs": 1000.4340830000001,
+        "maxMs": 1037.9018329999963,
+        "cpuMs": 204.926,
+        "gets": 237,
+        "bytes": 9323112,
+        "verificationGets": 232,
+        "candidates": 232,
+        "positions": 3677,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1016.8852910000132,
+        "minMs": 1008.9004580000037,
+        "maxMs": 1033.7216250000056,
+        "cpuMs": 372.66,
+        "gets": 237,
+        "bytes": 9323112,
+        "verificationGets": 232,
+        "candidates": 232,
+        "positions": 3677,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1407(a)\" W/P (remand AND \"pretrial proceedings\")",
+      "control": {
+        "samples": 3,
+        "ms": 769.6554579999938,
+        "minMs": 768.6158750000177,
+        "maxMs": 790.3094169999968,
+        "cpuMs": 227.329,
+        "gets": 173,
+        "bytes": 5327599,
+        "verificationGets": 151,
+        "candidates": 151,
+        "positions": 27872,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 789.8950419999892,
+        "minMs": 770.1190829999978,
+        "maxMs": 800.7074579999899,
+        "cpuMs": 267.342,
+        "gets": 173,
+        "bytes": 5327599,
+        "verificationGets": 151,
+        "candidates": 151,
+        "positions": 27872,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Clayton Act\" AND \"Section 12\" AND \"personal jurisdiction\"",
+      "control": {
+        "samples": 3,
+        "ms": 151.76275000005262,
+        "minMs": 150.35216700000456,
+        "maxMs": 151.77229200000875,
+        "cpuMs": 36.393,
+        "gets": 25,
+        "bytes": 544511,
+        "verificationGets": 10,
+        "candidates": 10,
+        "positions": 1527,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 154.68362500000512,
+        "minMs": 150.18054199998733,
+        "maxMs": 156.96745799999917,
+        "cpuMs": 52.313,
+        "gets": 25,
+        "bytes": 544511,
+        "verificationGets": 10,
+        "candidates": 10,
+        "positions": 1527,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "reconsideration AND \"summary judgment\" AND \"new arguments\"",
+      "control": {
+        "samples": 3,
+        "ms": 745.7640000000101,
+        "minMs": 707.8671669999603,
+        "maxMs": 764.5049579999759,
+        "cpuMs": 281.57,
+        "gets": 66,
+        "bytes": 16448168,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 4793,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 753.8012910000398,
+        "minMs": 732.9359579999873,
+        "maxMs": 759.5370420000108,
+        "cpuMs": 331.516,
+        "gets": 66,
+        "bytes": 16448168,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 4793,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"admiralty jurisdiction\" AND \"maritime contract\" AND formation",
+      "control": {
+        "samples": 3,
+        "ms": 230.79424999997718,
+        "minMs": 226.73691600002348,
+        "maxMs": 236.23283400000946,
+        "cpuMs": 97.3,
+        "gets": 46,
+        "bytes": 2294214,
+        "verificationGets": 36,
+        "candidates": 36,
+        "positions": 1571,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 227.28479199999128,
+        "minMs": 226.59799999999814,
+        "maxMs": 230.79795900001773,
+        "cpuMs": 37.9,
+        "gets": 46,
+        "bytes": 2294214,
+        "verificationGets": 36,
+        "candidates": 36,
+        "positions": 1571,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"stay pending appeal\" W/P (\"school names\" OR \"permanent injunction\")",
+      "control": {
+        "samples": 3,
+        "ms": 942.7639590000035,
+        "minMs": 931.8585839999869,
+        "maxMs": 951.0898750000051,
+        "cpuMs": 299.414,
+        "gets": 220,
+        "bytes": 3898132,
+        "verificationGets": 197,
+        "candidates": 197,
+        "positions": 9376,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 540.4912499999919,
+        "minMs": 528.2127920000057,
+        "maxMs": 554.3885419999715,
+        "cpuMs": 133.012,
+        "gets": 112,
+        "bytes": 2016262,
+        "verificationGets": 88,
+        "candidates": 88,
+        "positions": 2970,
+        "contextBytes": 69479
+      }
+    },
+    {
+      "q": "Medicaid AND \"medically frail\" AND (exclusion OR eligibility)",
+      "control": {
+        "samples": 3,
+        "ms": 76.8859999999986,
+        "minMs": 76.19399999998859,
+        "maxMs": 86.32883299997775,
+        "cpuMs": 46.729,
+        "gets": 10,
+        "bytes": 755492,
+        "verificationGets": 8,
+        "candidates": 8,
+        "positions": 289,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 77.20220900001004,
+        "minMs": 76.01762499999313,
+        "maxMs": 77.35537500004284,
+        "cpuMs": 14.691,
+        "gets": 10,
+        "bytes": 755492,
+        "verificationGets": 8,
+        "candidates": 8,
+        "positions": 289,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 6(b)\" AND \"excusable neglect\" AND \"late opposition\"",
+      "control": {
+        "samples": 3,
+        "ms": 676.6400419999845,
+        "minMs": 669.8678750000108,
+        "maxMs": 697.356334000011,
+        "cpuMs": 314.547,
+        "gets": 68,
+        "bytes": 23916631,
+        "verificationGets": 2,
+        "candidates": 0,
+        "positions": 3737,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 695.1200839999947,
+        "minMs": 691.9976669999887,
+        "maxMs": 720.8257079999894,
+        "cpuMs": 234.873,
+        "gets": 68,
+        "bytes": 23916631,
+        "verificationGets": 2,
+        "candidates": 0,
+        "positions": 3737,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"public duty doctrine\" AND \"legislative intent\" AND (tribe OR tribal) AND Washington",
+      "control": {
+        "samples": 3,
+        "ms": 181.9885409999988,
+        "minMs": 181.93491599999834,
+        "maxMs": 183.27645800000755,
+        "cpuMs": 70.449,
+        "gets": 40,
+        "bytes": 1334291,
+        "verificationGets": 36,
+        "candidates": 36,
+        "positions": 3585,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 182.55587499999092,
+        "minMs": 180.9131250000064,
+        "maxMs": 182.78700000001118,
+        "cpuMs": 99.509,
+        "gets": 40,
+        "bytes": 1334291,
+        "verificationGets": 36,
+        "candidates": 36,
+        "positions": 3585,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 37(e)\" W/P (discovery OR (proportion OR proportional OR proportionality)) AND \"deleted messages\"",
+      "control": {
+        "samples": 3,
+        "ms": 580.1131659999955,
+        "minMs": 577.7101250000123,
+        "maxMs": 588.5949159999727,
+        "cpuMs": 284.826,
+        "gets": 53,
+        "bytes": 19922944,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 16022,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 571.1766670000216,
+        "minMs": 566.4514999999956,
+        "maxMs": 592.5142080000369,
+        "cpuMs": 277.836,
+        "gets": 53,
+        "bytes": 19922944,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 16022,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"pretrial motions\" AND (extension OR continuance) AND \"good cause\"",
+      "control": {
+        "samples": 3,
+        "ms": 490.79912500001956,
+        "minMs": 487.53120800000033,
+        "maxMs": 501.5636250000098,
+        "cpuMs": 248.955,
+        "gets": 56,
+        "bytes": 9725700,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 60725,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 492.5608749999956,
+        "minMs": 481.9938750000438,
+        "maxMs": 495.72749999997905,
+        "cpuMs": 261.34,
+        "gets": 56,
+        "bytes": 9725700,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 60725,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"stay discovery\" AND \"motion to dismiss\" AND (\"good cause\" OR prejudice)",
+      "control": {
+        "samples": 3,
+        "ms": 720.0142500000075,
+        "minMs": 713.2015000000247,
+        "maxMs": 754.8214160000207,
+        "cpuMs": 434.013,
+        "gets": 81,
+        "bytes": 17231386,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 349516,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 709.932541999995,
+        "minMs": 708.1447080000071,
+        "maxMs": 719.459124999994,
+        "cpuMs": 431.101,
+        "gets": 81,
+        "bytes": 17231386,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 349516,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Price Anderson Act\" AND (preemption OR waiver) AND contamination",
+      "control": {
+        "samples": 3,
+        "ms": 507.241875000007,
+        "minMs": 501.4216669999296,
+        "maxMs": 515.020583000005,
+        "cpuMs": 121.588,
+        "gets": 108,
+        "bytes": 5200946,
+        "verificationGets": 97,
+        "candidates": 97,
+        "positions": 2626,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 500.34995800000615,
+        "minMs": 498.64029100000334,
+        "maxMs": 541.4191669999855,
+        "cpuMs": 207.89,
+        "gets": 108,
+        "bytes": 5200946,
+        "verificationGets": 97,
+        "candidates": 97,
+        "positions": 2626,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1509\" W/P (summons AND suppression)",
+      "control": {
+        "samples": 3,
+        "ms": 129.4763329999987,
+        "minMs": 127.36087500001304,
+        "maxMs": 131.02183400001377,
+        "cpuMs": 76.751,
+        "gets": 21,
+        "bytes": 1285254,
+        "verificationGets": 17,
+        "candidates": 17,
+        "positions": 212,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 126.44620800000848,
+        "minMs": 126.27337499998976,
+        "maxMs": 127.72916699998314,
+        "cpuMs": 19.798,
+        "gets": 21,
+        "bytes": 1285254,
+        "verificationGets": 17,
+        "candidates": 17,
+        "positions": 212,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"forum non conveniens\" AND copyright AND Japan AND \"adequate alternative forum\"",
+      "control": {
+        "samples": 3,
+        "ms": 174.06862500001444,
+        "minMs": 173.40912499994738,
+        "maxMs": 176.29233299999032,
+        "cpuMs": 32.942,
+        "gets": 31,
+        "bytes": 1577114,
+        "verificationGets": 28,
+        "candidates": 28,
+        "positions": 1284,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 174.28812499996275,
+        "minMs": 171.98616699996637,
+        "maxMs": 175.53170799999498,
+        "cpuMs": 31.944,
+        "gets": 31,
+        "bytes": 1577114,
+        "verificationGets": 28,
+        "candidates": 28,
+        "positions": 1284,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"domestic injury\" W/P RICO AND \"foreign plaintiff\"",
+      "control": {
+        "samples": 3,
+        "ms": 832.8412499999977,
+        "minMs": 816.2489579999819,
+        "maxMs": 843.5789170000062,
+        "cpuMs": 303.211,
+        "gets": 197,
+        "bytes": 6774016,
+        "verificationGets": 194,
+        "candidates": 194,
+        "positions": 12501,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 835.1715829999885,
+        "minMs": 818.0708750000049,
+        "maxMs": 847.3163750000531,
+        "cpuMs": 171.021,
+        "gets": 197,
+        "bytes": 6774016,
+        "verificationGets": 194,
+        "candidates": 194,
+        "positions": 12501,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"CIPA\" W/P (\"Section 4\" AND \"ex parte\")",
+      "control": {
+        "samples": 3,
+        "ms": 110.30558399995789,
+        "minMs": 110.0793330000015,
+        "maxMs": 110.41462500000489,
+        "cpuMs": 62.286,
+        "gets": 15,
+        "bytes": 1438581,
+        "verificationGets": 12,
+        "candidates": 12,
+        "positions": 784,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 115.6047499999986,
+        "minMs": 114.69445799999812,
+        "maxMs": 115.68041699996684,
+        "cpuMs": 84.697,
+        "gets": 15,
+        "bytes": 1438581,
+        "verificationGets": 12,
+        "candidates": 12,
+        "positions": 784,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Section 230\" AND (\"product design\" OR \"failure to warn\") AND grooming",
+      "control": {
+        "samples": 3,
+        "ms": 29.346916000009514,
+        "minMs": 28.619791999983136,
+        "maxMs": 29.891625000018394,
+        "cpuMs": 12.243,
+        "gets": 4,
+        "bytes": 400268,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 31.52491700000246,
+        "minMs": 29.43558300001314,
+        "maxMs": 31.640625,
+        "cpuMs": 15.264,
+        "gets": 4,
+        "bytes": 400268,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"independent contractor\" AND control AND NOT tax",
+      "control": {
+        "samples": 3,
+        "ms": 26.153624999977183,
+        "minMs": 23.869582999992417,
+        "maxMs": 27.239374999975553,
+        "cpuMs": 9.507,
+        "gets": 1,
+        "bytes": 60709,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 25.481958999997005,
+        "minMs": 25.067082999972627,
+        "maxMs": 25.848583000013605,
+        "cpuMs": 6.826,
+        "gets": 1,
+        "bytes": 60709,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"intervening cause\" AND contract AND \"New York\"",
+      "control": {
+        "samples": 3,
+        "ms": 689.8747500000172,
+        "minMs": 672.4262079999899,
+        "maxMs": 718.9782910000067,
+        "cpuMs": 269.559,
+        "gets": 61,
+        "bytes": 12221892,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3034,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 706.4840410000179,
+        "minMs": 690.0200419999892,
+        "maxMs": 710.0041249999776,
+        "cpuMs": 257.848,
+        "gets": 61,
+        "bytes": 12221892,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3034,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Indiana Tort Claims Act\" W/P (brownfield OR \"acts of another\")",
+      "control": {
+        "samples": 3,
+        "ms": 414.67687500000466,
+        "minMs": 410.4874579999596,
+        "maxMs": 454.86758299998473,
+        "cpuMs": 66.169,
+        "gets": 93,
+        "bytes": 1003780,
+        "verificationGets": 91,
+        "candidates": 91,
+        "positions": 15838,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 411.193082999991,
+        "minMs": 401.6280420000112,
+        "maxMs": 420.44983399997,
+        "cpuMs": 61.909,
+        "gets": 93,
+        "bytes": 1003780,
+        "verificationGets": 91,
+        "candidates": 91,
+        "positions": 15838,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 15\" AND \"undue prejudice\" AND \"leave to amend\"",
+      "control": {
+        "samples": 3,
+        "ms": 573.2984580000048,
+        "minMs": 548.9697909999959,
+        "maxMs": 589.1545420000039,
+        "cpuMs": 268.041,
+        "gets": 68,
+        "bytes": 14188810,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 110057,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 595.1689159999951,
+        "minMs": 574.8747080000467,
+        "maxMs": 595.8195000000414,
+        "cpuMs": 328.258,
+        "gets": 68,
+        "bytes": 14188810,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 110057,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 11\" W/P (\"safe harbor\" AND \"21 days\")",
+      "control": {
+        "samples": 3,
+        "ms": 345.2913750000298,
+        "minMs": 344.4882499999949,
+        "maxMs": 358.2556249999907,
+        "cpuMs": 87.47,
+        "gets": 74,
+        "bytes": 1013673,
+        "verificationGets": 51,
+        "candidates": 51,
+        "positions": 3655,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 371.2012920000125,
+        "minMs": 366.7670420000213,
+        "maxMs": 381.76420799999323,
+        "cpuMs": 127.333,
+        "gets": 74,
+        "bytes": 1013673,
+        "verificationGets": 51,
+        "candidates": 51,
+        "positions": 3720,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"contract interpretation\" W/P (\"parol evidence\" AND \"Rule 50\")",
+      "control": {
+        "samples": 3,
+        "ms": 77.50866699998733,
+        "minMs": 77.10550000000512,
+        "maxMs": 80.19612500001676,
+        "cpuMs": 10.292,
+        "gets": 8,
+        "bytes": 463707,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 1199,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 80.2377919999999,
+        "minMs": 79.87512500002049,
+        "maxMs": 80.40037499996834,
+        "cpuMs": 56.746,
+        "gets": 8,
+        "bytes": 463707,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 1199,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"temporary protected status\" AND \"judicial review\" AND \"constitutional claims\"",
+      "control": {
+        "samples": 3,
+        "ms": 83.54470899997978,
+        "minMs": 79.11912500001199,
+        "maxMs": 84.08249999996042,
+        "cpuMs": 25.42,
+        "gets": 12,
+        "bytes": 328844,
+        "verificationGets": 5,
+        "candidates": 5,
+        "positions": 543,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 87.43899999999849,
+        "minMs": 87.12645799998427,
+        "maxMs": 91.87325000000419,
+        "cpuMs": 40.379,
+        "gets": 12,
+        "bytes": 328844,
+        "verificationGets": 5,
+        "candidates": 5,
+        "positions": 543,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 53\" AND \"special master\" AND FOIA AND \"de novo\"",
+      "control": {
+        "samples": 3,
+        "ms": 113.10424999997485,
+        "minMs": 107.27825000000303,
+        "maxMs": 117.66025000001537,
+        "cpuMs": 60.048,
+        "gets": 21,
+        "bytes": 1717221,
+        "verificationGets": 18,
+        "candidates": 18,
+        "positions": 859,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 109.21937499998603,
+        "minMs": 108.76720899995416,
+        "maxMs": 114.41804099996807,
+        "cpuMs": 71.076,
+        "gets": 21,
+        "bytes": 1717221,
+        "verificationGets": 18,
+        "candidates": 18,
+        "positions": 859,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"ex parte\" W/P (counterfeiting AND \"asset freeze\")",
+      "control": {
+        "samples": 3,
+        "ms": 176.50795800000196,
+        "minMs": 175.4175830000313,
+        "maxMs": 180.765459000002,
+        "cpuMs": 34.712,
+        "gets": 30,
+        "bytes": 1164276,
+        "verificationGets": 25,
+        "candidates": 25,
+        "positions": 689,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 180.6011250000156,
+        "minMs": 172.9260409999988,
+        "maxMs": 180.99579099999391,
+        "cpuMs": 71.317,
+        "gets": 30,
+        "bytes": 1164276,
+        "verificationGets": 25,
+        "candidates": 25,
+        "positions": 689,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1359\" AND (collusive OR feigned) AND \"Article III\"",
+      "control": {
+        "samples": 3,
+        "ms": 349.6622079999943,
+        "minMs": 328.79158299999835,
+        "maxMs": 350.04141600005096,
+        "cpuMs": 214.029,
+        "gets": 32,
+        "bytes": 6790690,
+        "verificationGets": 12,
+        "candidates": 0,
+        "positions": 216,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 325.6074999999837,
+        "minMs": 323.546875,
+        "maxMs": 337.989957999991,
+        "cpuMs": 218.144,
+        "gets": 32,
+        "bytes": 6790690,
+        "verificationGets": 12,
+        "candidates": 0,
+        "positions": 216,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "(contract OR fraud OR negligence) AND (damages OR causation)",
+      "control": {
+        "samples": 3,
+        "ms": 385.26149999996414,
+        "minMs": 381.1517920000042,
+        "maxMs": 386.5889159999788,
+        "cpuMs": 168.259,
+        "gets": 39,
+        "bytes": 5328894,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 1124,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 399.29570899999817,
+        "minMs": 391.3879999999772,
+        "maxMs": 401.03129199999967,
+        "cpuMs": 209.204,
+        "gets": 39,
+        "bytes": 5328894,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 1124,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "attachment W/P (\"6212\" AND priority)",
+      "control": {
+        "samples": 3,
+        "ms": 177.29470900003798,
+        "minMs": 168.6957500000135,
+        "maxMs": 177.59124999999767,
+        "cpuMs": 22.759,
+        "gets": 35,
+        "bytes": 965550,
+        "verificationGets": 28,
+        "candidates": 28,
+        "positions": 262,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 174.77941699999792,
+        "minMs": 173.58129200001713,
+        "maxMs": 187.8615829999908,
+        "cpuMs": 61.397,
+        "gets": 35,
+        "bytes": 965550,
+        "verificationGets": 28,
+        "candidates": 28,
+        "positions": 262,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"fail safe class\" AND (\"strike class allegations\" OR \"Rule 23(b)(2)\")",
+      "control": {
+        "samples": 3,
+        "ms": 184.34875000000466,
+        "minMs": 180.3919590000296,
+        "maxMs": 188.96508299998823,
+        "cpuMs": 53.347,
+        "gets": 33,
+        "bytes": 864298,
+        "verificationGets": 22,
+        "candidates": 22,
+        "positions": 6925,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 183.69254200003343,
+        "minMs": 180.38662499999919,
+        "maxMs": 183.8650000000489,
+        "cpuMs": 88.071,
+        "gets": 33,
+        "bytes": 864298,
+        "verificationGets": 22,
+        "candidates": 22,
+        "positions": 7064,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"evidentiary sanctions\" AND \"investigative ruse\" AND attorney",
+      "control": {
+        "samples": 3,
+        "ms": 196.5463340000133,
+        "minMs": 195.89837499998976,
+        "maxMs": 200.29391599999508,
+        "cpuMs": 77.746,
+        "gets": 40,
+        "bytes": 1904916,
+        "verificationGets": 37,
+        "candidates": 37,
+        "positions": 581,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 199.50916699999652,
+        "minMs": 199.0450000000128,
+        "maxMs": 199.99391700001433,
+        "cpuMs": 28.978,
+        "gets": 40,
+        "bytes": 1904916,
+        "verificationGets": 37,
+        "candidates": 37,
+        "positions": 581,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"227\" W/P (\"text messages\" AND \"residential subscriber\")",
+      "control": {
+        "samples": 3,
+        "ms": 335.06983400002355,
+        "minMs": 319.3884169999801,
+        "maxMs": 426.4553329999908,
+        "cpuMs": 92.084,
+        "gets": 71,
+        "bytes": 3246564,
+        "verificationGets": 64,
+        "candidates": 64,
+        "positions": 1853,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 329.59920899997815,
+        "minMs": 323.72004200000083,
+        "maxMs": 342.88079200001084,
+        "cpuMs": 153.914,
+        "gets": 71,
+        "bytes": 3246564,
+        "verificationGets": 64,
+        "candidates": 64,
+        "positions": 1853,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Second Amendment\" AND \"irreparable harm\" AND ammunition",
+      "control": {
+        "samples": 3,
+        "ms": 207.42716599995038,
+        "minMs": 206.794332999998,
+        "maxMs": 207.58237499999814,
+        "cpuMs": 67.41,
+        "gets": 45,
+        "bytes": 2770171,
+        "verificationGets": 36,
+        "candidates": 36,
+        "positions": 1416,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 208.0627080000122,
+        "minMs": 207.89820900000632,
+        "maxMs": 217.4409580000065,
+        "cpuMs": 86.1,
+        "gets": 45,
+        "bytes": 2770171,
+        "verificationGets": 36,
+        "candidates": 36,
+        "positions": 1416,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Endangered Species Act\" AND \"national security\" AND \"judicial review\"",
+      "control": {
+        "samples": 3,
+        "ms": 681.4574579999899,
+        "minMs": 653.0871670000051,
+        "maxMs": 713.8501250000263,
+        "cpuMs": 306.692,
+        "gets": 68,
+        "bytes": 22140055,
+        "verificationGets": 2,
+        "candidates": 0,
+        "positions": 6890,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 682.431958000001,
+        "minMs": 657.9144999999553,
+        "maxMs": 690.5325000000012,
+        "cpuMs": 313.341,
+        "gets": 68,
+        "bytes": 22140055,
+        "verificationGets": 2,
+        "candidates": 0,
+        "positions": 6890,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1407\" AND centralization AND (competitors OR \"different defendants\")",
+      "control": {
+        "samples": 3,
+        "ms": 706.9586659999914,
+        "minMs": 698.786666999993,
+        "maxMs": 759.1362080000108,
+        "cpuMs": 290.274,
+        "gets": 59,
+        "bytes": 18163493,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 8796,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 737.9200000000419,
+        "minMs": 714.179250000001,
+        "maxMs": 1013.4987499999697,
+        "cpuMs": 326.706,
+        "gets": 59,
+        "bytes": 18163493,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 8796,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"discovery letter\" AND sealing AND \"good cause\"",
+      "control": {
+        "samples": 3,
+        "ms": 83.73537500000384,
+        "minMs": 80.8015000000014,
+        "maxMs": 85.23741699999664,
+        "cpuMs": 56.88,
+        "gets": 11,
+        "bytes": 410315,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 202,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 79.26466600003187,
+        "minMs": 78.21933399996487,
+        "maxMs": 80.00524999998743,
+        "cpuMs": 17.512,
+        "gets": 11,
+        "bytes": 410315,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 202,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 11\" AND (collusive OR nonadverse) AND (sanction OR sanctions OR sanctioned OR sanctioning)",
+      "control": {
+        "samples": 3,
+        "ms": 462.51141700003063,
+        "minMs": 440.2525419999729,
+        "maxMs": 479.1684580000001,
+        "cpuMs": 298.591,
+        "gets": 40,
+        "bytes": 5718804,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 16213,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 462.5082079999993,
+        "minMs": 459.71087499998976,
+        "maxMs": 474.78637500002515,
+        "cpuMs": 265.245,
+        "gets": 40,
+        "bytes": 5718804,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 16213,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"patent ownership\" W/P (\"exceptional case\" OR \"attorney fees\") AND knowledge",
+      "control": {
+        "samples": 3,
+        "ms": 117.68787500000326,
+        "minMs": 114.94020899996394,
+        "maxMs": 122.80341699998826,
+        "cpuMs": 68.564,
+        "gets": 13,
+        "bytes": 3070684,
+        "verificationGets": 1,
+        "candidates": 1,
+        "positions": 255,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 118.10166699998081,
+        "minMs": 117.58495800000674,
+        "maxMs": 120.0652499999851,
+        "cpuMs": 76.7,
+        "gets": 13,
+        "bytes": 3070684,
+        "verificationGets": 1,
+        "candidates": 1,
+        "positions": 255,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"privilege log\" W/P (overdesignation OR sanctions OR waiver)",
+      "control": {
+        "samples": 3,
+        "ms": 218.26854099999764,
+        "minMs": 211.41420800000196,
+        "maxMs": 220.10987500002375,
+        "cpuMs": 147.583,
+        "gets": 34,
+        "bytes": 4578820,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 8608,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 220.63983400003053,
+        "minMs": 217.89616699999897,
+        "maxMs": 221.07529200000863,
+        "cpuMs": 153.141,
+        "gets": 34,
+        "bytes": 4578820,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 8608,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"res judicata\" AND (privity OR \"same transaction\")",
+      "control": {
+        "samples": 3,
+        "ms": 577.1297920000507,
+        "minMs": 573.4457079999847,
+        "maxMs": 588.0411669999885,
+        "cpuMs": 176.813,
+        "gets": 45,
+        "bytes": 6082035,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 10230,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 575.8204159999732,
+        "minMs": 569.3499999999913,
+        "maxMs": 579.7669999999925,
+        "cpuMs": 262.875,
+        "gets": 45,
+        "bytes": 6082035,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 10230,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"denial of intervention\" AND (\"divest jurisdiction\" OR \"stay pending appeal\")",
+      "control": {
+        "samples": 3,
+        "ms": 153.85304200000246,
+        "minMs": 150.88945799996145,
+        "maxMs": 171.6746249999851,
+        "cpuMs": 33.905,
+        "gets": 26,
+        "bytes": 544148,
+        "verificationGets": 21,
+        "candidates": 21,
+        "positions": 6542,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 160.14920800000255,
+        "minMs": 154.72841700003482,
+        "maxMs": 161.4105419999978,
+        "cpuMs": 61.288,
+        "gets": 26,
+        "bytes": 544148,
+        "verificationGets": 21,
+        "candidates": 21,
+        "positions": 6570,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"12601\" AND (\"state law\" OR \"facial challenge\") AND firearms",
+      "control": {
+        "samples": 3,
+        "ms": 78.19654099998297,
+        "minMs": 78.07470900000772,
+        "maxMs": 79.04904199999874,
+        "cpuMs": 12.111,
+        "gets": 6,
+        "bytes": 618375,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 183,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 79.44629200000782,
+        "minMs": 79.4409169999999,
+        "maxMs": 86.62799999996787,
+        "cpuMs": 60.107,
+        "gets": 6,
+        "bytes": 618375,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 183,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"collateral estoppel\" AND patent AND (\"unadjudicated claims\" OR \"patentable distinction\")",
+      "control": {
+        "samples": 3,
+        "ms": 687.8449580000015,
+        "minMs": 673.2246670000022,
+        "maxMs": 688.5605409999844,
+        "cpuMs": 421.897,
+        "gets": 50,
+        "bytes": 15621351,
+        "verificationGets": 5,
+        "candidates": 0,
+        "positions": 8557,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 685.2813330000063,
+        "minMs": 671.5785000000033,
+        "maxMs": 688.8923329999961,
+        "cpuMs": 384.811,
+        "gets": 50,
+        "bytes": 15621351,
+        "verificationGets": 5,
+        "candidates": 0,
+        "positions": 8557,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "arson AND (\"proximate cause\" OR \"fire suppression\") AND instruction",
+      "control": {
+        "samples": 3,
+        "ms": 554.5240830000257,
+        "minMs": 550.5472920000029,
+        "maxMs": 556.1351250000007,
+        "cpuMs": 247.178,
+        "gets": 48,
+        "bytes": 7554537,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 52590,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 562.7477089999593,
+        "minMs": 550.3050419999927,
+        "maxMs": 579.6542079999927,
+        "cpuMs": 267.09,
+        "gets": 48,
+        "bytes": 7554537,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 52590,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"bankruptcy court\" AND (contempt OR \"show cause\") AND subpoena",
+      "control": {
+        "samples": 3,
+        "ms": 963.8509999999951,
+        "minMs": 959.6110420000041,
+        "maxMs": 966.4285420000087,
+        "cpuMs": 307.748,
+        "gets": 222,
+        "bytes": 5117819,
+        "verificationGets": 200,
+        "candidates": 200,
+        "positions": 12243,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 980.5828340000007,
+        "minMs": 966.8162919999886,
+        "maxMs": 984.155625000014,
+        "cpuMs": 260.987,
+        "gets": 222,
+        "bytes": 5117819,
+        "verificationGets": 200,
+        "candidates": 200,
+        "positions": 12224,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"intergovernmental immunity\" W/P (standing AND \"local officials\")",
+      "control": {
+        "samples": 3,
+        "ms": 514.5409589999763,
+        "minMs": 508.42370800004574,
+        "maxMs": 526.8518750000512,
+        "cpuMs": 148.819,
+        "gets": 118,
+        "bytes": 2914778,
+        "verificationGets": 116,
+        "candidates": 116,
+        "positions": 3312,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 512.286082999999,
+        "minMs": 510.50191699998686,
+        "maxMs": 512.5787919999857,
+        "cpuMs": 118.789,
+        "gets": 118,
+        "bytes": 2914778,
+        "verificationGets": 116,
+        "candidates": 116,
+        "positions": 3312,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"sanctuary\" AND (\"administrative warrants\" OR \"information sharing\") AND preemption",
+      "control": {
+        "samples": 3,
+        "ms": 79.67225000000326,
+        "minMs": 76.8697079999838,
+        "maxMs": 82.02408400000422,
+        "cpuMs": 17.435,
+        "gets": 12,
+        "bytes": 702227,
+        "verificationGets": 10,
+        "candidates": 10,
+        "positions": 92,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 77.82491700001992,
+        "minMs": 74.81050000002142,
+        "maxMs": 78.94174999999814,
+        "cpuMs": 56.953,
+        "gets": 12,
+        "bytes": 702227,
+        "verificationGets": 10,
+        "candidates": 10,
+        "positions": 92,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1115A\" AND Medicare AND (\"major questions\" OR nondelegation)",
+      "control": {
+        "samples": 3,
+        "ms": 28.104749999998603,
+        "minMs": 27.468041000000085,
+        "maxMs": 28.93329099996481,
+        "cpuMs": 7.535,
+        "gets": 2,
+        "bytes": 524288,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 28.40187500003958,
+        "minMs": 28.222125000029337,
+        "maxMs": 32.90158300001349,
+        "cpuMs": 19.376,
+        "gets": 2,
+        "bytes": 524288,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 62.1\" AND \"dissolve\" AND \"preliminary injunction\"",
+      "control": {
+        "samples": 3,
+        "ms": 767.8027909999946,
+        "minMs": 759.1426659999997,
+        "maxMs": 771.7500829999917,
+        "cpuMs": 277.609,
+        "gets": 58,
+        "bytes": 23156683,
+        "verificationGets": 2,
+        "candidates": 0,
+        "positions": 19028,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 760.7318749999395,
+        "minMs": 756.5103750000126,
+        "maxMs": 767.343166000006,
+        "cpuMs": 299.461,
+        "gets": 58,
+        "bytes": 23156683,
+        "verificationGets": 2,
+        "candidates": 0,
+        "positions": 19028,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"deposition testimony\" W/P \"public access\" AND (seal OR sealed OR sealing)",
+      "control": {
+        "samples": 3,
+        "ms": 228.41408300001058,
+        "minMs": 224.54337500000838,
+        "maxMs": 233.59337499999674,
+        "cpuMs": 39.575,
+        "gets": 43,
+        "bytes": 1212581,
+        "verificationGets": 32,
+        "candidates": 32,
+        "positions": 2063,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 226.8727910000016,
+        "minMs": 224.98862499999814,
+        "maxMs": 241.4254999999539,
+        "cpuMs": 50.813,
+        "gets": 43,
+        "bytes": 1212581,
+        "verificationGets": 32,
+        "candidates": 32,
+        "positions": 2063,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"2461(c)\" W/P (forfeiture AND \"wire fraud\")",
+      "control": {
+        "samples": 3,
+        "ms": 153.1541660000221,
+        "minMs": 151.7293340000324,
+        "maxMs": 154.74241600000823,
+        "cpuMs": 29.014,
+        "gets": 30,
+        "bytes": 1088082,
+        "verificationGets": 22,
+        "candidates": 22,
+        "positions": 1087,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 149.48824999999488,
+        "minMs": 149.43283299999894,
+        "maxMs": 155.5747080000001,
+        "cpuMs": 18.677,
+        "gets": 30,
+        "bytes": 1088082,
+        "verificationGets": 22,
+        "candidates": 22,
+        "positions": 1087,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"disparate impact\" AND \"prior salary\" AND (causation OR standing)",
+      "control": {
+        "samples": 3,
+        "ms": 557.0511660000193,
+        "minMs": 554.9185000000289,
+        "maxMs": 574.3885830000072,
+        "cpuMs": 202.706,
+        "gets": 37,
+        "bytes": 9543291,
+        "verificationGets": 2,
+        "candidates": 0,
+        "positions": 4257,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 557.968499999959,
+        "minMs": 554.4186250000203,
+        "maxMs": 581.790875000006,
+        "cpuMs": 308.214,
+        "gets": 37,
+        "bytes": 9543291,
+        "verificationGets": 2,
+        "candidates": 0,
+        "positions": 4257,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 16\" AND \"nonparty fault\" AND ((amend OR amended OR amendment OR amending) OR diligence)",
+      "control": {
+        "samples": 3,
+        "ms": 929.6637080000364,
+        "minMs": 927.3457909999997,
+        "maxMs": 932.7861249999842,
+        "cpuMs": 367.4,
+        "gets": 214,
+        "bytes": 7104399,
+        "verificationGets": 211,
+        "candidates": 211,
+        "positions": 8326,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 918.0191659999837,
+        "minMs": 904.5719999999856,
+        "maxMs": 926.0476670000062,
+        "cpuMs": 237.859,
+        "gets": 214,
+        "bytes": 7104399,
+        "verificationGets": 211,
+        "candidates": 211,
+        "positions": 8326,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"forum selection\" AND (waiver OR consent)",
+      "control": {
+        "samples": 3,
+        "ms": 151.43604200001573,
+        "minMs": 147.4651250000461,
+        "maxMs": 153.62112500000512,
+        "cpuMs": 95.503,
+        "gets": 26,
+        "bytes": 3295606,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 6045,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 146.66649999999208,
+        "minMs": 142.90224999998463,
+        "maxMs": 148.11974999999802,
+        "cpuMs": 54.21,
+        "gets": 26,
+        "bytes": 3295606,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 6045,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"363(b)\" AND \"business judgment\" AND stipulation",
+      "control": {
+        "samples": 3,
+        "ms": 124.45708399999421,
+        "minMs": 123.83429099997738,
+        "maxMs": 126.43162500002654,
+        "cpuMs": 22.085,
+        "gets": 23,
+        "bytes": 558114,
+        "verificationGets": 18,
+        "candidates": 18,
+        "positions": 1302,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 126.12329199997475,
+        "minMs": 125.02599999999802,
+        "maxMs": 129.4773339999956,
+        "cpuMs": 30.866,
+        "gets": 23,
+        "bytes": 558114,
+        "verificationGets": 18,
+        "candidates": 18,
+        "positions": 1302,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Housekeeping Statute\" AND \"Touhy\" AND (reviewability OR \"agency discretion\")",
+      "control": {
+        "samples": 3,
+        "ms": 104.57666700001573,
+        "minMs": 103.15287499999977,
+        "maxMs": 105.6040829999838,
+        "cpuMs": 66.757,
+        "gets": 11,
+        "bytes": 636227,
+        "verificationGets": 7,
+        "candidates": 7,
+        "positions": 104,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 100.76208300003782,
+        "minMs": 100.75424999999814,
+        "maxMs": 104.2036250000092,
+        "cpuMs": 17.263,
+        "gets": 11,
+        "bytes": 636227,
+        "verificationGets": 7,
+        "candidates": 7,
+        "positions": 104,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"expert opinion\" W/P (\"legal conclusion\" OR undisclosed) AND exclude",
+      "control": {
+        "samples": 3,
+        "ms": 561.9393750000017,
+        "minMs": 547.9945829999633,
+        "maxMs": 695.1581669999869,
+        "cpuMs": 214.447,
+        "gets": 54,
+        "bytes": 9037361,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 30249,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 547.5384170000325,
+        "minMs": 528.7452920000069,
+        "maxMs": 565.17095900001,
+        "cpuMs": 314.244,
+        "gets": 54,
+        "bytes": 9037361,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 30249,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"deposition transcript\" W/P (certification AND \"30(f)\")",
+      "control": {
+        "samples": 3,
+        "ms": 107.61841700001969,
+        "minMs": 106.91279199998826,
+        "maxMs": 108.64358300001186,
+        "cpuMs": 65.845,
+        "gets": 11,
+        "bytes": 1043480,
+        "verificationGets": 7,
+        "candidates": 7,
+        "positions": 1307,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 108.10924999997951,
+        "minMs": 105.78933399997186,
+        "maxMs": 110.79275000002235,
+        "cpuMs": 64.124,
+        "gets": 11,
+        "bytes": 1043480,
+        "verificationGets": 7,
+        "candidates": 7,
+        "positions": 1307,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Small Business Administration\" AND \"sovereign immunity\" AND (injunction OR \"declaratory relief\")",
+      "control": {
+        "samples": 3,
+        "ms": 592.0482089999714,
+        "minMs": 591.9772499999963,
+        "maxMs": 595.4602920000034,
+        "cpuMs": 334.993,
+        "gets": 62,
+        "bytes": 14619179,
+        "verificationGets": 11,
+        "candidates": 0,
+        "positions": 4873,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 588.8886660000135,
+        "minMs": 574.5024580000318,
+        "maxMs": 589.782790999976,
+        "cpuMs": 313.059,
+        "gets": 62,
+        "bytes": 14619179,
+        "verificationGets": 11,
+        "candidates": 0,
+        "positions": 4873,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"4247\" W/P (\"reasonable cause\" OR extension)",
+      "control": {
+        "samples": 3,
+        "ms": 572.9562089999963,
+        "minMs": 559.9452910000109,
+        "maxMs": 581.7303340000217,
+        "cpuMs": 114.118,
+        "gets": 126,
+        "bytes": 1753411,
+        "verificationGets": 123,
+        "candidates": 123,
+        "positions": 1334,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 567.1869580000057,
+        "minMs": 559.2267910000082,
+        "maxMs": 570.4192499999772,
+        "cpuMs": 106.299,
+        "gets": 126,
+        "bytes": 1753411,
+        "verificationGets": 123,
+        "candidates": 123,
+        "positions": 1334,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"875(c)\" AND (\"true threat\" OR \"mental state\") AND \"115\"",
+      "control": {
+        "samples": 3,
+        "ms": 160.4236249999958,
+        "minMs": 151.9642500000191,
+        "maxMs": 160.85054200000013,
+        "cpuMs": 48.006,
+        "gets": 29,
+        "bytes": 586598,
+        "verificationGets": 20,
+        "candidates": 20,
+        "positions": 3699,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 157.16820799998823,
+        "minMs": 154.23287499998696,
+        "maxMs": 165.7795829999959,
+        "cpuMs": 43.034,
+        "gets": 29,
+        "bytes": 586598,
+        "verificationGets": 20,
+        "candidates": 20,
+        "positions": 3699,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"appeal bond\" W/P (\"Rule 7\" AND \"Rule 39\")",
+      "control": {
+        "samples": 3,
+        "ms": 77.2842079999973,
+        "minMs": 76.478415999969,
+        "maxMs": 77.78641700002481,
+        "cpuMs": 15.128,
+        "gets": 10,
+        "bytes": 207008,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 319,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 77.86291599995457,
+        "minMs": 76.62349999998696,
+        "maxMs": 79.07366599999659,
+        "cpuMs": 14.073,
+        "gets": 10,
+        "bytes": 207008,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 319,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"discovery misconduct\" W/P (dismissal OR \"bad faith\") AND \"late production\"",
+      "control": {
+        "samples": 3,
+        "ms": 100.70545900001889,
+        "minMs": 100.21591700002318,
+        "maxMs": 103.5602910000016,
+        "cpuMs": 16.288,
+        "gets": 12,
+        "bytes": 253687,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 1823,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 100.79591699998127,
+        "minMs": 99.76720800000476,
+        "maxMs": 106.25783299998147,
+        "cpuMs": 52.791,
+        "gets": 12,
+        "bytes": 253687,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 1823,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"reasonable expectation\" /25 privacy",
+      "control": {
+        "samples": 3,
+        "ms": 534.420584000065,
+        "minMs": 526.4768329999933,
+        "maxMs": 538.7416250000242,
+        "cpuMs": 263.049,
+        "gets": 38,
+        "bytes": 4989502,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 20480,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 542.3409580000007,
+        "minMs": 526.827500000014,
+        "maxMs": 547.9494169999962,
+        "cpuMs": 266.015,
+        "gets": 38,
+        "bytes": 4989502,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 20480,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Bankruptcy Rule 3007\" AND \"omnibus objection\" AND notice",
+      "control": {
+        "samples": 3,
+        "ms": 102.1256670000148,
+        "minMs": 101.80691700000898,
+        "maxMs": 103.89912499999627,
+        "cpuMs": 17.771,
+        "gets": 12,
+        "bytes": 737082,
+        "verificationGets": 9,
+        "candidates": 9,
+        "positions": 438,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 102.52079199999571,
+        "minMs": 101.64916699996684,
+        "maxMs": 103.75012499999139,
+        "cpuMs": 27.447,
+        "gets": 12,
+        "bytes": 737082,
+        "verificationGets": 9,
+        "candidates": 9,
+        "positions": 438,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 41(b)\" AND (\"lesser sanctions\" OR \"missed deadline\")",
+      "control": {
+        "samples": 3,
+        "ms": 1073.3665829999954,
+        "minMs": 1059.4065839999967,
+        "maxMs": 1078.9003329999978,
+        "cpuMs": 275.732,
+        "gets": 250,
+        "bytes": 2253529,
+        "verificationGets": 227,
+        "candidates": 227,
+        "positions": 3846,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1056.0005829999573,
+        "minMs": 1050.4945409999928,
+        "maxMs": 1092.8584169999813,
+        "cpuMs": 226.196,
+        "gets": 237,
+        "bytes": 2077857,
+        "verificationGets": 213,
+        "candidates": 213,
+        "positions": 2182,
+        "contextBytes": 90167
+      }
+    },
+    {
+      "q": "\"Rule 37(d)\" W/P \"failure to appear\" AND deposition",
+      "control": {
+        "samples": 3,
+        "ms": 675.1925420000334,
+        "minMs": 664.2780840000196,
+        "maxMs": 685.0164579999982,
+        "cpuMs": 247.906,
+        "gets": 151,
+        "bytes": 2437602,
+        "verificationGets": 128,
+        "candidates": 128,
+        "positions": 24593,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 376.95220900001004,
+        "minMs": 368.43962499999907,
+        "maxMs": 454.5534580000676,
+        "cpuMs": 144.149,
+        "gets": 66,
+        "bytes": 1729558,
+        "verificationGets": 39,
+        "candidates": 39,
+        "positions": 825,
+        "contextBytes": 696926
+      }
+    },
+    {
+      "q": "\"Rule 408\" AND (\"another purpose\" OR retaliation) AND settlement",
+      "control": {
+        "samples": 3,
+        "ms": 944.9884160000074,
+        "minMs": 942.9040830000304,
+        "maxMs": 1030.005416,
+        "cpuMs": 185.755,
+        "gets": 219,
+        "bytes": 3593438,
+        "verificationGets": 197,
+        "candidates": 197,
+        "positions": 4293,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 942.4342920000199,
+        "minMs": 929.6344589999644,
+        "maxMs": 951.2093330000062,
+        "cpuMs": 317.028,
+        "gets": 219,
+        "bytes": 3593438,
+        "verificationGets": 197,
+        "candidates": 197,
+        "positions": 4600,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"deliberative process privilege\" W/P (\"government intent\" OR \"post decisional\")",
+      "control": {
+        "samples": 3,
+        "ms": 564.7679580000113,
+        "minMs": 550.1422080000048,
+        "maxMs": 577.2982090000005,
+        "cpuMs": 195.711,
+        "gets": 59,
+        "bytes": 15743812,
+        "verificationGets": 5,
+        "candidates": 0,
+        "positions": 19276,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 546.9290840000031,
+        "minMs": 542.4091250000056,
+        "maxMs": 557.005084000004,
+        "cpuMs": 331.959,
+        "gets": 59,
+        "bytes": 15743812,
+        "verificationGets": 5,
+        "candidates": 0,
+        "positions": 19276,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"sensitive places\" W/P (parks OR airports)",
+      "control": {
+        "samples": 3,
+        "ms": 220.84258399996907,
+        "minMs": 220.12699999997858,
+        "maxMs": 222.02241599999252,
+        "cpuMs": 48.701,
+        "gets": 42,
+        "bytes": 1031654,
+        "verificationGets": 40,
+        "candidates": 40,
+        "positions": 463,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 222.18191699999443,
+        "minMs": 220.5264169999864,
+        "maxMs": 223.55904200000805,
+        "cpuMs": 62.223,
+        "gets": 42,
+        "bytes": 1031654,
+        "verificationGets": 40,
+        "candidates": 40,
+        "positions": 463,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "habeas AND (\"bail conditions\" W/P travel)",
+      "control": {
+        "samples": 3,
+        "ms": 566.8940419999999,
+        "minMs": 566.5556660000002,
+        "maxMs": 575.3313749999943,
+        "cpuMs": 160.555,
+        "gets": 134,
+        "bytes": 4399263,
+        "verificationGets": 131,
+        "candidates": 131,
+        "positions": 2483,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 563.79933300009,
+        "minMs": 557.2898330000025,
+        "maxMs": 570.9159170000057,
+        "cpuMs": 174.882,
+        "gets": 134,
+        "bytes": 4399263,
+        "verificationGets": 131,
+        "candidates": 131,
+        "positions": 2483,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "sealing AND (\"good cause\" OR \"compelling reasons\") AND \"discovery letter\"",
+      "control": {
+        "samples": 3,
+        "ms": 83.54812500000116,
+        "minMs": 80.04766599996947,
+        "maxMs": 307.809459000011,
+        "cpuMs": 21.064,
+        "gets": 12,
+        "bytes": 468750,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 211,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 83.54924999998184,
+        "minMs": 80.06349999998929,
+        "maxMs": 87.08541700000933,
+        "cpuMs": 66.031,
+        "gets": 12,
+        "bytes": 468750,
+        "verificationGets": 4,
+        "candidates": 4,
+        "positions": 211,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"price impact\" W/P \"class certification\" AND \"Affiliated Ute\"",
+      "control": {
+        "samples": 3,
+        "ms": 302.94162499997765,
+        "minMs": 300.25820799998473,
+        "maxMs": 323.7980000000098,
+        "cpuMs": 53.723,
+        "gets": 65,
+        "bytes": 3457094,
+        "verificationGets": 60,
+        "candidates": 60,
+        "positions": 6151,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 302.3950410000107,
+        "minMs": 293.5232079999987,
+        "maxMs": 305.09320899999875,
+        "cpuMs": 140.202,
+        "gets": 65,
+        "bytes": 3457094,
+        "verificationGets": 60,
+        "candidates": 60,
+        "positions": 6151,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"expert testimony\" W/P (cumulative AND \"403\")",
+      "control": {
+        "samples": 3,
+        "ms": 567.321958000015,
+        "minMs": 563.6143750000047,
+        "maxMs": 574.3525419999933,
+        "cpuMs": 306.726,
+        "gets": 48,
+        "bytes": 8699393,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 18855,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 570.0481250000012,
+        "minMs": 558.1034170000348,
+        "maxMs": 580.2682920000079,
+        "cpuMs": 177.113,
+        "gets": 48,
+        "bytes": 8699393,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 18855,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "JASTA W/P (charity AND \"aiding and abetting\")",
+      "control": {
+        "samples": 3,
+        "ms": 105.1454580000136,
+        "minMs": 104.76449999999022,
+        "maxMs": 106.64112499999464,
+        "cpuMs": 56.05,
+        "gets": 12,
+        "bytes": 796502,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 2274,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 105.5298339999863,
+        "minMs": 105.23637499997858,
+        "maxMs": 107.00283300003503,
+        "cpuMs": 24.38,
+        "gets": 12,
+        "bytes": 796502,
+        "verificationGets": 3,
+        "candidates": 3,
+        "positions": 2274,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"securities fraud\" W/P (bribery AND scienter)",
+      "control": {
+        "samples": 3,
+        "ms": 207.97408299997915,
+        "minMs": 206.70379099994898,
+        "maxMs": 226.08995799999684,
+        "cpuMs": 43.666,
+        "gets": 43,
+        "bytes": 1613335,
+        "verificationGets": 35,
+        "candidates": 35,
+        "positions": 1487,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 211.7709170000162,
+        "minMs": 207.8721249999944,
+        "maxMs": 222.58841599998414,
+        "cpuMs": 93.519,
+        "gets": 43,
+        "bytes": 1613335,
+        "verificationGets": 35,
+        "candidates": 35,
+        "positions": 1487,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"terminating sanctions\" AND (\"discovery order\" OR spoliation) AND willful",
+      "control": {
+        "samples": 3,
+        "ms": 748.5011670000385,
+        "minMs": 739.5724169999594,
+        "maxMs": 752.7143749999959,
+        "cpuMs": 238.422,
+        "gets": 157,
+        "bytes": 2227080,
+        "verificationGets": 133,
+        "candidates": 133,
+        "positions": 6449,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 756.8257079999894,
+        "minMs": 741.374291999964,
+        "maxMs": 793.6354160000046,
+        "cpuMs": 206.651,
+        "gets": 157,
+        "bytes": 2227080,
+        "verificationGets": 133,
+        "candidates": 133,
+        "positions": 6482,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"expert testimony\" AND \"undisclosed assumption\" AND prejudice",
+      "control": {
+        "samples": 3,
+        "ms": 1036.1994579999882,
+        "minMs": 1032.217875000002,
+        "maxMs": 1044.0879999999888,
+        "cpuMs": 403.943,
+        "gets": 244,
+        "bytes": 11456571,
+        "verificationGets": 241,
+        "candidates": 241,
+        "positions": 10124,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1038.8323749999981,
+        "minMs": 1024.6572920000035,
+        "maxMs": 1113.039334000001,
+        "cpuMs": 240.9,
+        "gets": 244,
+        "bytes": 11456571,
+        "verificationGets": 241,
+        "candidates": 241,
+        "positions": 10124,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "prosecutor AND \"false confession\" AND (\"absolute immunity\" OR \"investigative function\")",
+      "control": {
+        "samples": 3,
+        "ms": 83.13691599998856,
+        "minMs": 82.46283300002688,
+        "maxMs": 84.11324999999488,
+        "cpuMs": 65.946,
+        "gets": 14,
+        "bytes": 614485,
+        "verificationGets": 5,
+        "candidates": 5,
+        "positions": 747,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 81.95083300000988,
+        "minMs": 79.91183399996953,
+        "maxMs": 90.16825000000244,
+        "cpuMs": 72.067,
+        "gets": 14,
+        "bytes": 614485,
+        "verificationGets": 5,
+        "candidates": 5,
+        "positions": 747,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Sarbanes Oxley\" AND \"credit union\" AND \"covered employer\"",
+      "control": {
+        "samples": 3,
+        "ms": 441.86195799999405,
+        "minMs": 441.60562500001106,
+        "maxMs": 454.5995000000112,
+        "cpuMs": 123.794,
+        "gets": 104,
+        "bytes": 2988658,
+        "verificationGets": 102,
+        "candidates": 102,
+        "positions": 2117,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 443.5663749999949,
+        "minMs": 436.8331670000043,
+        "maxMs": 480.58212500001537,
+        "cpuMs": 97.714,
+        "gets": 104,
+        "bytes": 2988658,
+        "verificationGets": 102,
+        "candidates": 102,
+        "positions": 2117,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"civil contempt\" W/P (compliance OR ambiguity) AND \"turnover order\"",
+      "control": {
+        "samples": 3,
+        "ms": 463.24991600000067,
+        "minMs": 462.32258300000103,
+        "maxMs": 464.307541999995,
+        "cpuMs": 127.376,
+        "gets": 100,
+        "bytes": 3872419,
+        "verificationGets": 93,
+        "candidates": 93,
+        "positions": 7130,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 462.5222079999803,
+        "minMs": 450.9514590000035,
+        "maxMs": 493.35820799999055,
+        "cpuMs": 161.24,
+        "gets": 100,
+        "bytes": 3872419,
+        "verificationGets": 93,
+        "candidates": 93,
+        "positions": 7130,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"expert testimony\" AND \"executive compensation\" AND scienter",
+      "control": {
+        "samples": 3,
+        "ms": 533.0006670000148,
+        "minMs": 527.6868749999558,
+        "maxMs": 533.3205420000013,
+        "cpuMs": 194.838,
+        "gets": 121,
+        "bytes": 5884389,
+        "verificationGets": 118,
+        "candidates": 118,
+        "positions": 3548,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 522.694375000021,
+        "minMs": 521.4020409999939,
+        "maxMs": 525.0501670000085,
+        "cpuMs": 180.995,
+        "gets": 121,
+        "bytes": 5884389,
+        "verificationGets": 118,
+        "candidates": 118,
+        "positions": 3548,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"arbitration agreement\" W/P (minor AND disaffirmance)",
+      "control": {
+        "samples": 3,
+        "ms": 141.37391600001138,
+        "minMs": 134.2345830000122,
+        "maxMs": 147.09775000007357,
+        "cpuMs": 84.134,
+        "gets": 22,
+        "bytes": 1896950,
+        "verificationGets": 14,
+        "candidates": 14,
+        "positions": 1870,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 139.43445900001097,
+        "minMs": 138.16941700002644,
+        "maxMs": 140.82716700001038,
+        "cpuMs": 81,
+        "gets": 22,
+        "bytes": 1896950,
+        "verificationGets": 14,
+        "candidates": 14,
+        "positions": 1870,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "HIPAA AND (\"embedded federal question\" OR Grable) AND remand",
+      "control": {
+        "samples": 3,
+        "ms": 337.40970800002106,
+        "minMs": 335.6489999999758,
+        "maxMs": 339.1525419999962,
+        "cpuMs": 164.253,
+        "gets": 68,
+        "bytes": 2483673,
+        "verificationGets": 65,
+        "candidates": 65,
+        "positions": 796,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 341.132042000012,
+        "minMs": 333.73616600001696,
+        "maxMs": 345.53495899998234,
+        "cpuMs": 107.524,
+        "gets": 68,
+        "bytes": 2483673,
+        "verificationGets": 65,
+        "candidates": 65,
+        "positions": 796,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"claim construction\" W/P \"wherein clause\"",
+      "control": {
+        "samples": 3,
+        "ms": 99.02045900002122,
+        "minMs": 98.475792000012,
+        "maxMs": 101.61791700002505,
+        "cpuMs": 15.279,
+        "gets": 13,
+        "bytes": 297828,
+        "verificationGets": 10,
+        "candidates": 10,
+        "positions": 1651,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 102.09912500000792,
+        "minMs": 100.56925000000047,
+        "maxMs": 102.21950000000652,
+        "cpuMs": 20.956,
+        "gets": 13,
+        "bytes": 297828,
+        "verificationGets": 10,
+        "candidates": 10,
+        "positions": 1651,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "TANF W/P (\"Privacy Act\" OR disclosure)",
+      "control": {
+        "samples": 3,
+        "ms": 146.75104100001045,
+        "minMs": 146.40150000000722,
+        "maxMs": 148.22195799998008,
+        "cpuMs": 43.659,
+        "gets": 30,
+        "bytes": 706356,
+        "verificationGets": 29,
+        "candidates": 29,
+        "positions": 342,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 150.5215840000019,
+        "minMs": 148.2235829999554,
+        "maxMs": 151.19479199999478,
+        "cpuMs": 22.672,
+        "gets": 30,
+        "bytes": 706356,
+        "verificationGets": 29,
+        "candidates": 29,
+        "positions": 342,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "corporation AND \"client file\" AND (\"pro se\" OR \"ancillary jurisdiction\")",
+      "control": {
+        "samples": 3,
+        "ms": 549.3149169999815,
+        "minMs": 537.5994590000482,
+        "maxMs": 553.1412919999857,
+        "cpuMs": 278.998,
+        "gets": 54,
+        "bytes": 9094801,
+        "verificationGets": 12,
+        "candidates": 0,
+        "positions": 95355,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 547.8765419999836,
+        "minMs": 546.9512920000125,
+        "maxMs": 557.651916999981,
+        "cpuMs": 321.1,
+        "gets": 54,
+        "bytes": 9094801,
+        "verificationGets": 12,
+        "candidates": 0,
+        "positions": 95355,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "centralization AND (\"individualized claims\" OR \"informal coordination\") AND \"1407\"",
+      "control": {
+        "samples": 3,
+        "ms": 297.84437499998603,
+        "minMs": 290.9153749999823,
+        "maxMs": 300.2890829999815,
+        "cpuMs": 71.652,
+        "gets": 56,
+        "bytes": 1906724,
+        "verificationGets": 32,
+        "candidates": 32,
+        "positions": 2888,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 306.5041670000064,
+        "minMs": 293.7798339999863,
+        "maxMs": 314.2559579999943,
+        "cpuMs": 150.689,
+        "gets": 56,
+        "bytes": 1906724,
+        "verificationGets": 32,
+        "candidates": 32,
+        "positions": 2888,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"dismissal without prejudice\" AND \"statutory standing\" AND \"Rule 17\"",
+      "control": {
+        "samples": 3,
+        "ms": 37.457208000007086,
+        "minMs": 36.64320900000166,
+        "maxMs": 40.33116600001813,
+        "cpuMs": 28.434,
+        "gets": 4,
+        "bytes": 214599,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 40.76762499997858,
+        "minMs": 39.8741250000312,
+        "maxMs": 43.676582999993116,
+        "cpuMs": 34.36,
+        "gets": 4,
+        "bytes": 214599,
+        "verificationGets": 0,
+        "candidates": 0,
+        "positions": 0,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"actual notice\" /15 prejudice",
+      "control": {
+        "samples": 3,
+        "ms": 562.3659160000389,
+        "minMs": 561.104708000028,
+        "maxMs": 579.3383329999924,
+        "cpuMs": 212.892,
+        "gets": 40,
+        "bytes": 5091481,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 13831,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 563.1209589999635,
+        "minMs": 543.4596669999883,
+        "maxMs": 570.4170000000158,
+        "cpuMs": 265.952,
+        "gets": 40,
+        "bytes": 5091481,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 13831,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Rule 16\" AND \"good cause\" AND (\"additional depositions\" OR discovery)",
+      "control": {
+        "samples": 3,
+        "ms": 529.5293339999625,
+        "minMs": 517.5360000000219,
+        "maxMs": 531.520583000005,
+        "cpuMs": 299.707,
+        "gets": 65,
+        "bytes": 11600943,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 59602,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 519.7822090000263,
+        "minMs": 513.5548329999438,
+        "maxMs": 523.695040999999,
+        "cpuMs": 261.589,
+        "gets": 65,
+        "bytes": 11600943,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 59602,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "FLSA AND decertification AND (\"representative testimony\" OR \"similarly situated\")",
+      "control": {
+        "samples": 3,
+        "ms": 408.91908300001523,
+        "minMs": 400.08841599995503,
+        "maxMs": 421.9623750000028,
+        "cpuMs": 144.571,
+        "gets": 87,
+        "bytes": 2164104,
+        "verificationGets": 65,
+        "candidates": 65,
+        "positions": 2045,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 415.9767910000228,
+        "minMs": 410.67050000000745,
+        "maxMs": 418.6110420000041,
+        "cpuMs": 109.44,
+        "gets": 87,
+        "bytes": 2164104,
+        "verificationGets": 65,
+        "candidates": 65,
+        "positions": 2061,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"stay pending appeal\" W/P (\"irreparable injury\" AND enforcement)",
+      "control": {
+        "samples": 3,
+        "ms": 854.5718340000021,
+        "minMs": 851.8742920000223,
+        "maxMs": 858.8669590000063,
+        "cpuMs": 327.876,
+        "gets": 193,
+        "bytes": 3761354,
+        "verificationGets": 170,
+        "candidates": 170,
+        "positions": 12015,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 831.3367919999873,
+        "minMs": 826.8995419999119,
+        "maxMs": 845.8084999999846,
+        "cpuMs": 330.852,
+        "gets": 183,
+        "bytes": 3617775,
+        "verificationGets": 159,
+        "candidates": 159,
+        "positions": 3521,
+        "contextBytes": 69479
+      }
+    },
+    {
+      "q": "\"statute of limitations\" AND \"affirmative defense\" AND \"Rule 16\" AND diligence",
+      "control": {
+        "samples": 3,
+        "ms": 351.4086670000106,
+        "minMs": 349.15299999999115,
+        "maxMs": 361.5387079999782,
+        "cpuMs": 111.802,
+        "gets": 60,
+        "bytes": 1642713,
+        "verificationGets": 33,
+        "candidates": 33,
+        "positions": 21479,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 355.37537500000326,
+        "minMs": 350.4084579999326,
+        "maxMs": 355.41354099998716,
+        "cpuMs": 138.745,
+        "gets": 60,
+        "bytes": 1642713,
+        "verificationGets": 33,
+        "candidates": 33,
+        "positions": 21479,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"Monsanto hearing\" W/P (assets AND counsel)",
+      "control": {
+        "samples": 3,
+        "ms": 104.70712499995716,
+        "minMs": 103.75966600002721,
+        "maxMs": 105.97629199997755,
+        "cpuMs": 58.637,
+        "gets": 8,
+        "bytes": 1361135,
+        "verificationGets": 1,
+        "candidates": 1,
+        "positions": 57,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 106.96362499997485,
+        "minMs": 103.77633299998706,
+        "maxMs": 107.2486660000286,
+        "cpuMs": 62.741,
+        "gets": 8,
+        "bytes": 1361135,
+        "verificationGets": 1,
+        "candidates": 1,
+        "positions": 57,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"12601\" AND \"pattern or practice\" AND \"statutory enforcement\"",
+      "control": {
+        "samples": 3,
+        "ms": 54.11604100000113,
+        "minMs": 53.019582999986596,
+        "maxMs": 55.48512500000652,
+        "cpuMs": 14.631,
+        "gets": 4,
+        "bytes": 575305,
+        "verificationGets": 2,
+        "candidates": 2,
+        "positions": 117,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 54.09191700001247,
+        "minMs": 52.48379200004274,
+        "maxMs": 54.845375000004424,
+        "cpuMs": 10.335,
+        "gets": 4,
+        "bytes": 575305,
+        "verificationGets": 2,
+        "candidates": 2,
+        "positions": 117,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"1292(b)\" AND \"controlling question\" AND \"citizen suit\"",
+      "control": {
+        "samples": 3,
+        "ms": 129.9682090000133,
+        "minMs": 128.20625000001746,
+        "maxMs": 137.8779579999973,
+        "cpuMs": 19.693,
+        "gets": 12,
+        "bytes": 1990726,
+        "verificationGets": 1,
+        "candidates": 1,
+        "positions": 30,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 129.82304200000362,
+        "minMs": 129.5512919999892,
+        "maxMs": 133.41133299999638,
+        "cpuMs": 68.094,
+        "gets": 12,
+        "bytes": 1990726,
+        "verificationGets": 1,
+        "candidates": 1,
+        "positions": 30,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"requests for admission\" AND (\"application of law to fact\" OR \"legal conclusions\")",
+      "control": {
+        "samples": 3,
+        "ms": 1993.1877499999828,
+        "minMs": 1924.8147919999901,
+        "maxMs": 1993.471749999997,
+        "cpuMs": 587.156,
+        "gets": 452,
+        "bytes": 15880513,
+        "verificationGets": 407,
+        "candidates": 407,
+        "positions": 66785,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 1066.6591670000344,
+        "minMs": 1053.53575000001,
+        "maxMs": 1088.8468340000254,
+        "cpuMs": 369.754,
+        "gets": 214,
+        "bytes": 9143335,
+        "verificationGets": 167,
+        "candidates": 167,
+        "positions": 23247,
+        "contextBytes": 264433
+      }
+    },
+    {
+      "q": "\"newly discovered evidence\" AND diligence",
+      "control": {
+        "samples": 3,
+        "ms": 668.8978749999951,
+        "minMs": 666.165416999982,
+        "maxMs": 708.4634999999544,
+        "cpuMs": 359.981,
+        "gets": 50,
+        "bytes": 11061712,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3440,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 647.7708330000169,
+        "minMs": 644.4023330000346,
+        "maxMs": 656.6532909999951,
+        "cpuMs": 316.978,
+        "gets": 50,
+        "bytes": 11061712,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 3440,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "FIFRA AND preemption AND (advertising OR \"non-label\")",
+      "control": {
+        "samples": 3,
+        "ms": 291.0757920000178,
+        "minMs": 285.27229200000875,
+        "maxMs": 297.4582079999964,
+        "cpuMs": 103.014,
+        "gets": 56,
+        "bytes": 1317470,
+        "verificationGets": 35,
+        "candidates": 35,
+        "positions": 2006,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 288.26974999997765,
+        "minMs": 284.63187499996275,
+        "maxMs": 303.71879100002116,
+        "cpuMs": 120.821,
+        "gets": 56,
+        "bytes": 1317470,
+        "verificationGets": 35,
+        "candidates": 35,
+        "positions": 2006,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "IDEA AND \"attorneys fees\" AND (intervenor OR \"bad faith\")",
+      "control": {
+        "samples": 3,
+        "ms": 570.2792079999927,
+        "minMs": 554.2602919999626,
+        "maxMs": 622.8221669999766,
+        "cpuMs": 284.181,
+        "gets": 51,
+        "bytes": 7491799,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 190706,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 547.2479170000006,
+        "minMs": 543.2703750000219,
+        "maxMs": 554.0020000000368,
+        "cpuMs": 354.414,
+        "gets": 51,
+        "bytes": 7491799,
+        "verificationGets": 20,
+        "candidates": 0,
+        "positions": 190706,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"flight evidence\" W/P (\"consciousness of guilt\" OR prejudice)",
+      "control": {
+        "samples": 3,
+        "ms": 397.7304160000058,
+        "minMs": 394.3537919999799,
+        "maxMs": 398.0722090000054,
+        "cpuMs": 98.539,
+        "gets": 79,
+        "bytes": 1512029,
+        "verificationGets": 56,
+        "candidates": 56,
+        "positions": 12093,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 393.6194999999716,
+        "minMs": 386.50337500000023,
+        "maxMs": 394.40500000002794,
+        "cpuMs": 145.666,
+        "gets": 79,
+        "bytes": 1512029,
+        "verificationGets": 56,
+        "candidates": 56,
+        "positions": 12093,
+        "contextBytes": 0
+      }
+    },
+    {
+      "q": "\"false advertising\" AND \"clinical guidelines\" AND (opinion OR fact)",
+      "control": {
+        "samples": 3,
+        "ms": 374.1192499999888,
+        "minMs": 365.47154200001387,
+        "maxMs": 375.9199999999837,
+        "cpuMs": 132.691,
+        "gets": 84,
+        "bytes": 4300128,
+        "verificationGets": 81,
+        "candidates": 81,
+        "positions": 1974,
+        "contextBytes": 0
+      },
+      "candidate": {
+        "samples": 3,
+        "ms": 368.5072919999948,
+        "minMs": 367.70283299998846,
+        "maxMs": 369.4958329999936,
+        "cpuMs": 169.581,
+        "gets": 84,
+        "bytes": 4300128,
+        "verificationGets": 81,
+        "candidates": 81,
+        "positions": 1974,
+        "contextBytes": 0
+      }
+    }
+  ]
+}

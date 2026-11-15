@@ -23,6 +23,9 @@ export interface Chunk {
   key: string;
   size: number;
   sha256: string;
+  /** Logical decode block inside a larger immutable staging object. */
+  offset?: number;
+  objectBytes?: number;
   terms?: number;
   firstTerm?: { at: number; word: string };
   firstWord?: string;
@@ -97,14 +100,51 @@ export class BuildStore {
   }
   async get(chunk: Chunk) {
     this.requests++;
-    const object = await this.bucket.get(chunk.key);
-    if (!object || object.customMetadata?.sha256 !== chunk.sha256)
+    const ranged = chunk.offset !== undefined;
+    if (
+      ranged &&
+      (!Number.isSafeInteger(chunk.offset) ||
+        chunk.offset! < 0 ||
+        !Number.isSafeInteger(chunk.objectBytes) ||
+        chunk.offset! + chunk.size > chunk.objectBytes!)
+    )
+      throw Error("Invalid construction block range");
+    const object = await this.bucket.get(
+      chunk.key,
+      ranged
+        ? { range: { offset: chunk.offset!, length: chunk.size } }
+        : undefined,
+    );
+    if (
+      !object ||
+      object.customMetadata?.sha256 !==
+        (ranged ? chunk.key.split("/")[0] : chunk.sha256) ||
+      (ranged && object.size !== chunk.objectBytes)
+    )
       throw Error("Missing or changed construction chunk");
     const bytes = new Uint8Array(await object.arrayBuffer());
     this.bytes += bytes.length;
     if (bytes.length !== chunk.size || (await digest(bytes)) !== chunk.sha256)
       throw Error("Construction chunk checksum mismatch");
     return bytes;
+  }
+  async putParts(parts: Uint8Array[]): Promise<Chunk[]> {
+    if (!parts.length) return [];
+    if (parts.length === 1) return [await this.put(parts[0])];
+    const object = await this.put(concat(parts)),
+      chunks: Chunk[] = [];
+    let offset = 0;
+    for (const bytes of parts) {
+      chunks.push({
+        key: object.key,
+        offset,
+        size: bytes.length,
+        objectBytes: object.size,
+        sha256: await digest(bytes),
+      });
+      offset += bytes.length;
+    }
+    return chunks;
   }
 }
 // Chunks contain whole records; a single unusually large positional row can
@@ -117,17 +157,21 @@ export class RunWriter {
   firstTerm?: Chunk["firstTerm"];
   firstWord?: string;
   lastWord?: string;
-  private pending = new Set<Promise<void>>();
-  private failure?: unknown;
+  private parts: {
+    bytes: Uint8Array;
+    index: number;
+    descriptor: Pick<Chunk, "terms" | "firstTerm" | "firstWord" | "lastWord">;
+  }[] = [];
+  private packedBytes = 0;
   constructor(
     readonly store: BuildStore,
     readonly target = 2 * 1048576,
     public currentWord?: string,
-    readonly writeConcurrency = 1,
+    readonly containerBytes = 16 * 1048576,
   ) {}
   async append(record: Uint8Array) {
     if (this.bytes && this.bytes + record.length > this.target)
-      await this.flush();
+      await this.flushBlock();
     if (view(record).getUint32(4, true) === 1) {
       this.terms++;
       this.currentWord = termHeader(record).word;
@@ -144,14 +188,16 @@ export class RunWriter {
    * a typed-array view and promise for every posting. Headers remain separate. */
   async appendRows(rows: Uint8Array) {
     if (this.bytes && this.bytes + rows.length > this.target)
-      await this.flush();
+      await this.flushBlock();
     if (this.currentWord === undefined) throw Error("Rows lack term context");
     this.firstWord ??= this.currentWord;
     this.lastWord = this.currentWord;
-    this.records.push(rows);
+    // Own the queued span: a tiny view must not pin an old 2 MiB input block
+    // after its cursor advances while other fan-in readers hold newer blocks.
+    this.records.push(Uint8Array.from(rows));
     this.bytes += rows.length;
   }
-  async flush() {
+  private async flushBlock() {
     if (!this.bytes) return;
     const bytes = concat(this.records),
       descriptor = {
@@ -160,28 +206,14 @@ export class RunWriter {
         firstWord: this.firstWord,
         lastWord: this.lastWord,
       };
-    if (this.writeConcurrency === 1)
-      this.chunks.push({
-        ...(await this.store.put(bytes)),
-        ...descriptor,
-      });
-    else {
-      while (this.pending.size >= this.writeConcurrency)
-        await Promise.race(this.pending);
-      if (this.failure) throw this.failure;
-      const i = this.chunks.length;
-      this.chunks.push(undefined as unknown as Chunk);
-      const pending = this.store
-        .put(bytes)
-        .then((chunk) => {
-          this.chunks[i] = { ...chunk, ...descriptor };
-        })
-        .catch((error) => {
-          this.failure ??= error;
-        })
-        .finally(() => this.pending.delete(pending));
-      this.pending.add(pending);
-    }
+    if (
+      this.packedBytes &&
+      this.packedBytes + bytes.length > this.containerBytes
+    )
+      await this.flushContainer();
+    this.parts.push({ bytes, descriptor, index: this.chunks.length });
+    this.chunks.push(undefined as unknown as Chunk);
+    this.packedBytes += bytes.length;
     this.records = [];
     this.bytes = 0;
     this.terms = 0;
@@ -189,10 +221,20 @@ export class RunWriter {
     this.firstWord = undefined;
     this.lastWord = undefined;
   }
+  private async flushContainer() {
+    const chunks = await this.store.putParts(this.parts.map((p) => p.bytes));
+    this.parts.forEach((p, i) => {
+      this.chunks[p.index] = { ...chunks[i], ...p.descriptor };
+    });
+    this.parts = [];
+    this.packedBytes = 0;
+  }
+  async flush() {
+    await this.flushBlock();
+    await this.flushContainer();
+  }
   async finish() {
     await this.flush();
-    await Promise.all(this.pending);
-    if (this.failure) throw this.failure;
   }
 }
 export function termRecord(word: string, df: number) {
@@ -306,27 +348,33 @@ export async function ingest(
   store: BuildStore,
   first: number,
   count: number,
-  tokenBudget = 262144,
+  tokenBudget = 1048576,
   analysis?: import("../../query/analysis.js").Analysis,
 ): Promise<Run> {
   if (
     !Number.isInteger(first) ||
     !Number.isInteger(count) ||
     count < 1 ||
-    count > 128
+    count > 512
   )
     throw Error("Invalid ingest range");
   const part = source.part(first),
     end = Math.min(first + count, part.first + part.count),
-    pointers = await source.pointers(first, end - first),
     rows = new Map<string, Uint8Array[]>(),
     started = performance.now();
+  let batchFirst = first,
+    pointers = await source.pointers(first, Math.min(128, end - first));
   let next = first,
     bodyTokens = 0,
     titleTokens = 0;
   await source.prefetch(pointers);
   for (; next < end; next++) {
-    const d = await source.document(next, pointers, next - first),
+    if (next >= batchFirst + pointers.view.byteLength / 32) {
+      batchFirst = next;
+      pointers = await source.pointers(next, Math.min(128, end - next));
+      await source.prefetch(pointers);
+    }
+    const d = await source.document(next, pointers, next - batchFirst),
       postings = new Map<string, [number[], number[]]>();
     let bl = 0,
       tl = 0;
@@ -363,6 +411,7 @@ export async function ingest(
     const list = rows.get(word)!;
     await writer.append(termRecord(word, list.length));
     for (const row of list) await writer.append(row);
+    rows.delete(word);
   }
   await writer.flush();
   return {
@@ -406,7 +455,7 @@ export async function merge(
   const readers = runs.map(
       (r, i) => new RunReader(store, r.chunks, state!.cursors[i]),
     ),
-    writer = new RunWriter(store, 2 * 1048576, state.word, 2),
+    writer = new RunWriter(store, 2 * 1048576, state.word),
     started = performance.now();
   if (starting && range?.firstWord)
     for (const reader of readers) await reader.seekTerm(range.firstWord);

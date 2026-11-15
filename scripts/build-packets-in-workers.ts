@@ -222,11 +222,11 @@ if (!state.terms.length) {
 if (!state.packages.length && !process.argv.includes("--directory-only")) {
   for (const vocabulary of source.vocabularies)
     for (const segment of vocabulary.segments)
-      for (let first = segment.first; first < segment.end; first += 128)
+      for (let first = segment.first; first < segment.end; first += 1024)
         state.packages.push({
           ref: segment.ref,
           first,
-          end: Math.min(segment.end, first + 128),
+          end: Math.min(segment.end, first + 1024),
           next: first,
           tasks: [],
           bytes: 0,
