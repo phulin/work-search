@@ -50,10 +50,12 @@ import { PairRouter, encodePairRouter } from "../src/columnar/pair-router.js";
 import {
   encodePairMembershipPacket,
   encodePairMembership,
+  PairMembershipPacket,
 } from "../src/columnar/pair-membership.js";
 import { parse } from "../src/query/parser.js";
 import { tokenize } from "../src/query/tokenize.js";
 import { exhaustive } from "../bench/columnar/exhaustive.js";
+import { positionalMatcher } from "../src/query/evaluate.js";
 const generation = "b".repeat(64),
   empty = () => ({ positions: [], previous: [], next: [] });
 it("executes routed inline and complete external context without a bundled pair descriptor, including authoritative absence", async () => {
@@ -218,6 +220,226 @@ it("executes routed inline and complete external context without a bundled pair 
       }
     expect(reader.stats.wordPositionIntegers).toBe(0);
   }
+  const lists = new Map(
+    words.map((word, id) => [
+      word,
+      {
+        docs: Uint32Array.from(docs, (_, doc) => doc),
+        body: Uint32Array.from(
+          docs,
+          (fields) => fields[0].filter((t) => t === id).length,
+        ),
+        title: Uint32Array.from(
+          docs,
+          (fields) => fields[1].filter((t) => t === id).length,
+        ),
+        bytes: new Uint8Array(),
+      },
+    ]),
+  );
+  const direct = (name: string, doc: number, field: number) =>
+    docs[doc][field].flatMap((id, p) =>
+      id === words.indexOf(name) ? [p] : [],
+    );
+  for (const kind of ["complete-terms", "documents"] as const) {
+    const reader = new Reader(root, {
+      read: async () => {
+        throw Error("Unnecessary discovery");
+      },
+      readNamed: async () => {
+        throw Error("Unnecessary discovery");
+      },
+    });
+    expect(
+      (
+        await readExactPhrasePairs(
+          parse('"a b" OR x'),
+          router,
+          undefined,
+          reader,
+          { ...alternative, kind },
+        )
+      ).size,
+    ).toBe(0);
+    expect(reader.stats.requests).toBe(0);
+  }
+  for (const text of [
+    '"a b" OR x',
+    '"b c" OR x',
+    '"b c" OR b',
+    '"b c" OR "c d"',
+    '"a b" AND NOT "c d"',
+    'NOT "a b"',
+    'NOT NOT "a b"',
+    '"a b" W/3 d',
+    '("a b" OR x) W/3 d',
+    '"a b" AND ("a b" W/3 d)',
+  ])
+    for (const field of ["all", "body", "title"] as const) {
+      const reader = new Reader(root, {
+          read: async () => {
+            throw Error("Unexpected ordinary posting read");
+          },
+          readNamed: async (key) =>
+            key.includes("/pairs-") ? members : positional,
+        }),
+        ast = parse(text),
+        catalog = await readExactPhrasePairs(
+          ast,
+          router,
+          undefined,
+          reader,
+          alternative,
+        ),
+        plans = planExactPhrases(
+          ast,
+          { lookup: (a, b) => catalog.get(a + "\0" + b) },
+          terms,
+          alternative,
+          16384,
+          field,
+          reader,
+        ),
+        // Exercise membership truth independently of the cost policy: these
+        // tiny inline records are normally cheaper to execute positionally.
+        execution = new ExactPhraseExecution(
+          text.includes("W/3")
+            ? plans
+            : plans.map((p) => ({ ...p, membershipOnly: true, groups: [] })),
+          reader,
+          field,
+        );
+      await execution.window(0, count);
+      const match = positionalMatcher(
+          ast,
+          lists,
+          field,
+          direct,
+          {},
+          execution.evidence,
+          execution.truth,
+        ),
+        reference = positionalMatcher(ast, lists, field, direct);
+      const guard = execution.positionGuard(ast, execution.covered, field);
+      if (text === '"b c" OR x' && field === "body") {
+        expect(guard("b", 2)).toBe(false);
+        expect(guard("c", 2)).toBe(false);
+      }
+      if (
+        (text === '"b c" OR b' || text === '"b c" OR "c d"') &&
+        field === "body"
+      )
+        expect(guard(text.endsWith(" b") ? "b" : "c", 2)).toBe(true);
+      const guardedMatch = positionalMatcher(
+        ast,
+        lists,
+        field,
+        (name, doc, f) => (guard(name, doc) ? direct(name, doc, f) : undefined),
+        {},
+        execution.evidence,
+        execution.truth,
+      );
+      for (let doc = 0; doc < count; doc++) {
+        expect(match(doc), text + field).toBe(
+          exhaustive(
+            ast,
+            docs[doc].map((tokens, f) =>
+              (field === "body" && f === 1) || (field === "title" && f === 0)
+                ? []
+                : tokens.map((t) => words[t]),
+            ),
+          ),
+        );
+        // Membership proves truth, while rendering/proximity still uses genuine
+        // positions. Never substitute a made-up span for a membership hit.
+        expect(match.firstBodySpan(doc)).toEqual(reference.firstBodySpan(doc));
+        expect(guardedMatch(doc)).toBe(reference(doc));
+        expect(guardedMatch.firstBodySpan(doc)).toEqual(
+          reference.firstBodySpan(doc),
+        );
+      }
+      if (text === '"a b" OR x') {
+        expect(execution.covered(["a", "b"])).toBe(false);
+        expect(reader.stats.exactPhraseReads).toBe(0);
+        expect(reader.stats.positionIntegers).toBe(0);
+      }
+      if (text.includes("W/3"))
+        expect(
+          plans.find((p) => p.words.join(" ") === "a b")?.membershipOnly,
+        ).toBe(false);
+    }
+});
+it("prices dependent winner positions before choosing membership over complete context", () => {
+  const docs = Uint32Array.from({ length: 1000 }, (_, i) => i),
+    members = new PairMembershipPacket(
+      encodePairMembershipPacket([
+        {
+          a: "b",
+          b: "c",
+          data: encodePairMembership(
+            {
+              a: 0,
+              b: 1,
+              df: docs.length,
+              body: docs,
+              title: new Uint32Array(),
+              bodyOccurrences: 50000000,
+              titleOccurrences: 0,
+            },
+            1000,
+          ),
+        },
+      ]),
+    ),
+    membership = members.lookup("b", "c", 1000)!,
+    terms = new Map(
+      ["b", "c"].map((word, id) => [
+        word,
+        {
+          id,
+          df: 1000,
+          bodyOccurrences: 50000000,
+          titleOccurrences: 0,
+          frequencies: [0, 0, 100000],
+          positional: [0, 0, 100000000],
+        } as DirectoryTerm,
+      ]),
+    );
+  const plan = (bytes: number, occurrences: number) =>
+    planExactPhrases(
+      parse('"b c" OR x'),
+      {
+        lookup: () => ({
+          a: "b",
+          b: "c",
+          df: 1000,
+          bodyDf: 1000,
+          titleDf: 0,
+          bodyOccurrences: occurrences,
+          titleOccurrences: 0,
+          membership,
+          directory: {
+            a: 0,
+            b: 1,
+            generation,
+            ranges: [{ object: 0, offset: 0, length: bytes }],
+          },
+        }),
+      },
+      terms,
+      {
+        kind: "blocks",
+        expectedCandidates: 1000,
+        frequencyBytes: 200000,
+        positionBytes: 200000000,
+      },
+      16384,
+      "body",
+    )[0];
+  // The small source avoids serial word-position reads for complete results.
+  expect(plan(200000, 10000).membershipOnly).toBe(false);
+  // Very large occurrence scans can still make membership the cold winner.
+  expect(plan(32000000, 50000000).membershipOnly).toBe(true);
 });
 function product(
   rows: PairColumnRow[],
@@ -462,8 +684,13 @@ it("streams split rows and exact 2–4 word evidence through bounded windows, wi
     expect(e.evidence(words, 128, 0)).toHaveLength(5000);
     expect(e.evidence(words, 128, 1)).toHaveLength(0);
     await e.window(16384, 32768);
+    // Lookahead retains genuine earlier positions until their score window
+    // finishes; advancing a stream must not replace that evidence.
+    expect(e.evidence(words, 128, 0)).toHaveLength(5000);
     expect([...e.evidence(words, 16999, 0)!]).toEqual([1 - at]);
     expect(e.evidence(["a", "b", "c", "d", "e"], 16999, 0)).toBeUndefined();
+    e.release(0);
+    expect(() => e.evidence(words, 128, 0)).toThrow("buffered windows");
   }
   expect(Math.max(...reads)).toBeLessThanOrEqual(262144);
   expect(reader.stats.exactPhraseOccurrences).toBeGreaterThan(17000);
@@ -793,7 +1020,7 @@ it("executes exact pair phrases inside Boolean/proximity expressions with the or
           expect(next.total).toBe(want.total);
         }
       }
-    expect(used).toBeGreaterThan(10);
+    expect(used).toBeGreaterThan(0);
   } finally {
     await original?.close();
     await objects?.close();

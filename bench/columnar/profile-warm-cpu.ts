@@ -58,13 +58,25 @@ const source = new LocalObjects(
 source.namedDirectory = pairDir;
 const memory = new Memory();
 memory.pages = new Lru(12 * 1048576);
+const condition = process.env.CWS_PROFILE_CONDITION ?? "memory-reuse";
+if (!["memory-reuse", "fresh-namespace"].includes(condition))
+  throw Error("Invalid profile cache condition");
+const exactRaw = await readFile(pairDir + "/exact-phrases.bin").catch(
+  (error) => {
+    if (error.code !== "ENOENT") throw error;
+    return undefined;
+  },
+);
+const exactPhrases = exactRaw
+  ? new (await module("exact-phrase-directory")).ExactPhraseDirectory(exactRaw)
+  : undefined;
 const index = new ColumnarIndex(
     root,
     undefined,
     new TermDirectory(td, root.count),
     undefined,
     new DocumentDirectory(dd),
-    { router, N: 100, M: 1000, presence },
+    { router, N: 100, M: 1000, presence, exactPhrases },
   ),
   io = new SimulatedIO(
     source,
@@ -76,7 +88,7 @@ const index = new ColumnarIndex(
       jitterMs: 0,
       seed: 1,
     },
-    1024,
+    condition === "fresh-namespace" ? 256 : 1024,
   );
 io.delaysEnabled = false;
 const session = new Session();
@@ -88,12 +100,19 @@ const post = (method: string, params: Record<string, unknown> = {}) =>
 const rows = [];
 for (const [sid, s] of contract.scenarios.entries()) {
   if (
-    process.env.CWS_QUERY_FILTER
-      ? !process.env.CWS_QUERY_FILTER.split("|").some((q) => s.q.includes(q))
-      : !chosen.has(s.q)
+    process.env.CWS_PROFILE_ALL === "1"
+      ? false
+      : process.env.CWS_QUERY_FILTER
+        ? !process.env.CWS_QUERY_FILTER.split("|").some((q) => s.q.includes(q))
+        : !chosen.has(s.q)
   )
     continue;
   const run = async () => {
+    if (condition === "fresh-namespace") {
+      memory.clear();
+      index.directory?.clear();
+      io.sharedBytes.clear();
+    }
     const deferred: Promise<unknown>[] = [],
       reader = new Reader(
         root,
@@ -178,6 +197,34 @@ for (const [sid, s] of contract.scenarios.entries()) {
   walk(heap.head);
   const sorted = (m: Map<string, number>) =>
     Object.fromEntries([...m].sort((a, b) => b[1] - a[1]));
+  let ioTrace;
+  if (process.env.CWS_TRACE_IO === "1") {
+    if (base !== "." || condition !== "fresh-namespace")
+      throw Error("I/O traces require the current engine and empty caches");
+    const { traceColdQuery } = await import("./trace-cold-query.js");
+    const trace = await traceColdQuery(index, root, source, s.q, s.options);
+    if (
+      trace.result.results.length !== s.oracle.length ||
+      trace.result.results.some(
+        (h: any, i: number) =>
+          h.id !== s.oracle[i].id ||
+          Math.abs(h.score - s.oracle[i].score) >
+            1e-11 * Math.max(1, Math.abs(s.oracle[i].score)),
+      )
+    )
+      throw Error("Traced query oracle mismatch: " + s.q);
+    await writeFile(
+      out + "/" + sid + ".io-trace.json.gz",
+      gzipSync(JSON.stringify(trace)),
+    );
+    const {
+      events: _events,
+      slots: _slots,
+      result: _result,
+      ...summary
+    } = trace;
+    ioTrace = summary;
+  }
   const row = {
     q: s.q,
     options: s.options,
@@ -187,6 +234,7 @@ for (const [sid, s] of contract.scenarios.entries()) {
     inclusiveMicros: sorted(inclusive),
     sampledAllocationBytes: sorted(alloc),
     processMemory: process.memoryUsage(),
+    ioTrace,
   };
   rows.push(row);
   console.log(
@@ -204,6 +252,24 @@ await writeFile(
     {
       kind: "Local Node CPU/sampled allocation attribution; no artificial delays; not live Worker latency or retained/peak memory",
       source: base,
+      cacheCondition: condition,
+      cacheReset:
+        condition === "fresh-namespace"
+          ? "Clear application pages, decoded blocks, term directory and simulated shared pages before every call; JIT process remains reused"
+          : "Application/shared cache reuse",
+      exactPhraseSha256: await readFile(
+        resolve(
+          base,
+          process.env.CWS_PROFILE_COMPILED
+            ? "columnar/exact-phrase.js"
+            : "src/columnar/exact-phrase.ts",
+        ),
+      )
+        .then((raw) => createHash("sha256").update(raw).digest("hex"))
+        .catch((error) => {
+          if (error.code !== "ENOENT") throw error;
+          return undefined;
+        }),
       searchSha256: createHash("sha256")
         .update(
           await readFile(

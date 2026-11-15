@@ -2,9 +2,10 @@ import { concat, u32, view } from "./format.js";
 import {
   PairMembershipPacket,
   encodePairMembershipPacket,
+  type PairMembership,
 } from "./pair-membership.js";
 import { PairPositionDirectory } from "./pair-positions.js";
-import type {PairPacket} from "./pair-packet.js";
+import type { PairPacket } from "./pair-packet.js";
 import type { ExactPairRanges } from "./pair-ranges.js";
 export type { ExactPairRanges } from "./pair-ranges.js";
 export function completePairRanges(
@@ -35,6 +36,8 @@ export interface ExactPairDescriptor {
   titleOccurrences: number;
   directory: ExactPairRanges;
   inline?: PairPacket;
+  /** Query-local view of an already fetched sorted membership record. */
+  membership?: PairMembership;
 }
 export interface ExactPhraseMetadata {
   generation: string;

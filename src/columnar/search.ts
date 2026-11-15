@@ -358,6 +358,7 @@ export class ColumnarIndex {
         basePackages?.averageBytes ?? 16384,
         options.field ?? "all",
         reader,
+        options,
       ),
       // A complete standalone phrase source already supplies both membership
       // and exact positions. Do not first fetch redundant pair/presence filters
@@ -448,6 +449,8 @@ export class ColumnarIndex {
             reader,
             preliminary,
             membershipRead?.pairs,
+            bundled,
+            options,
           ),
         ]),
       allExactPlans = [
@@ -461,6 +464,7 @@ export class ColumnarIndex {
               basePackages?.averageBytes ?? 16384,
               options.field ?? "all",
               reader,
+              options,
             )
           : []),
       ],
@@ -491,6 +495,9 @@ export class ColumnarIndex {
         gets: p.groups.length,
         cost: p.cost,
         alternativeCost: p.alternativeCost,
+        mode: p.membershipOnly
+          ? ("membership" as const)
+          : ("positions" as const),
       }));
     reader.stats.plannedPairPackets = membershipRead?.pairs.length ?? 0;
     reader.stats.plannedPresenceLists = presenceRanks.length;
@@ -625,7 +632,7 @@ export class ColumnarIndex {
       // The measured candidate-document continuation remains a complete
       // alternative. Do not replace a cheap, actually filtered set with a
       // corpus-wide context scan just because its unigram forecast was broad.
-      if (exactPlans.length && (primaryExact || planned.kind !== "documents")) {
+      if (exactPlans.length && (primaryExact || planned.kind === "blocks")) {
         const useful = exactPlans.filter((p) => {
           if (loadedMembership?.covered(p.words)) return false;
           if (!primaryExact && loadedMembership) {
@@ -683,7 +690,7 @@ export class ColumnarIndex {
     // Four document-directory windows per numeric batch amortize the two score
     // phases without adding another remote stage per 4096 documents.
     const BAND = 16384,
-      LOOKAHEAD = exact ? 1 : 8;
+      LOOKAHEAD = 8;
     const covered = (words: string[]) =>
       !!exact?.covered(words) || !!loadedMembership?.covered(words);
     if (exact) {
@@ -882,6 +889,7 @@ export class ColumnarIndex {
       );
     let total = 0;
     const nameIndex = new Map(names.map((n, i) => [n, i])),
+      needsWordPositions = exact?.positionGuard(ast, covered, field),
       requiredIndices = [...required].map((name) => nameIndex.get(name)!);
     const scoreBatches = names.map(
         (name) =>
@@ -999,6 +1007,8 @@ export class ColumnarIndex {
       scoring.length > 0 &&
       !!(exact || loadedMembership || pairCandidates || options.documentFilter);
     let lookaheadRefs: Ref[][] = [],
+      windowStart = 0,
+      windowEnd = 0,
       prefetchedThrough = 0;
     for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
       const band = bands[bandIndex];
@@ -1007,10 +1017,30 @@ export class ColumnarIndex {
       if (
         (!positions || scoring.length > 0) &&
         (bands.length >= 8 || candidateLookahead) &&
-        bandIndex % LOOKAHEAD === 0
+        bandIndex >= windowEnd
       ) {
-        const nextBands = bands.slice(bandIndex, bandIndex + LOOKAHEAD);
-        if (nextBands.at(-1)! - nextBands[0] === nextBands.length - 1) {
+        let nextBands = bands.slice(bandIndex, bandIndex + LOOKAHEAD);
+        windowStart = bandIndex;
+        // Each positional iterator advances in order. Retain snapshots for
+        // earlier windows until their scoring completes; bound active evidence,
+        // rather than disabling useful score batching for the entire query.
+        if (candidateLookahead) {
+          for (let i = 0; i < nextBands.length; i++) {
+            await candidateWindow(nextBands[i]);
+            if (exact && exact.bufferBytes >= 4 * 1048576) {
+              nextBands = nextBands.slice(0, i + 1);
+              break;
+            }
+          }
+        }
+        windowEnd = bandIndex + nextBands.length;
+        const possible = (band: number) =>
+          !candidateLookahead ||
+          candidateWindows.get(band)!.cells.some(Boolean);
+        if (
+          nextBands.every(possible) &&
+          nextBands.at(-1)! - nextBands[0] === nextBands.length - 1
+        ) {
           const combined = await Promise.all(
             names.map((name) =>
               leaves(
@@ -1033,21 +1063,21 @@ export class ColumnarIndex {
         } else {
           window = await Promise.all(
             nextBands.map((next) =>
-              Promise.all(
-                names.map((name) =>
-                  leaves(
-                    reader,
-                    terms.get(name)!.tree,
-                    next * BAND,
-                    Math.min(this.root.count, (next + 1) * BAND),
-                  ),
-                ),
-              ),
+              possible(next)
+                ? Promise.all(
+                    names.map((name) =>
+                      leaves(
+                        reader,
+                        terms.get(name)!.tree,
+                        next * BAND,
+                        Math.min(this.root.count, (next + 1) * BAND),
+                      ),
+                    ),
+                  )
+                : names.map(() => []),
             ),
           );
         }
-        if (candidateLookahead)
-          await Promise.all(nextBands.map((next) => candidateWindow(next)));
         const groups = window.map((bs, i) => {
           if (
             coarse(ast, (name) => (bs[names.indexOf(name)].length ? 2 : 0)) ===
@@ -1144,7 +1174,7 @@ export class ColumnarIndex {
       }
       if (candidateLookahead && bandIndex >= prefetchedThrough) {
         const batch = scoreLookahead(
-          lookaheadRefs.slice(bandIndex % LOOKAHEAD),
+          lookaheadRefs.slice(bandIndex - windowStart),
           Math.min(4 * 1048576, reader.memory.pages.limit / 3),
           (refs) => reader.packetFootprint(refs),
         );
@@ -1165,13 +1195,14 @@ export class ColumnarIndex {
         hi = Math.min(this.root.count, lo + BAND),
         size = hi - lo;
       const blocks =
-        window[bandIndex % LOOKAHEAD] ??
+        window[bandIndex - windowStart] ??
         (await Promise.all(
           names.map((n) => leaves(reader, terms.get(n)!.tree, lo, hi)),
         ));
       if (coarse(ast, (n) => (blocks[names.indexOf(n)].length ? 2 : 0)) === 0) {
         reader.stats.skippedRanges++;
         candidateWindows.delete(band);
+        exact?.release(lo);
         continue;
       }
       const bounds = blocks.map((bs) => {
@@ -1194,6 +1225,7 @@ export class ColumnarIndex {
       ) {
         reader.stats.skippedRanges++;
         candidateWindows.delete(band);
+        exact?.release(lo);
         continue;
       }
       const { cells, mask: candidateMask } = await candidateWindow(band);
@@ -1350,6 +1382,7 @@ export class ColumnarIndex {
           for (let i = from; i < to; i++) {
             if (
               (forward && forward[i] !== -2) ||
+              (needsWordPositions && !needsWordPositions(n, candidates[i])) ||
               (!options.exactTotal && !heap.accepts(candidates[i], values[i]))
             )
               continue;
@@ -1431,6 +1464,7 @@ export class ColumnarIndex {
               exact?.evidence(words, doc, f) ??
               loadedMembership?.evidence(words, doc, f) ??
               context?.evidence(words, doc, f),
+            exact?.truth,
           )
         : undefined;
       const exactStandalone =
@@ -1517,11 +1551,13 @@ export class ColumnarIndex {
         fetchedBytes +
         candidates.byteLength +
         values.byteLength +
+        (exact?.bufferBytes ?? 0) +
         [...positionData.values()].reduce((s, b) => s + b.length, 0);
       reader.stats.peakActiveBufferBytes = Math.max(
         reader.stats.peakActiveBufferBytes,
         active + reader.stats.anchorBufferBytes,
       );
+      exact?.release(lo);
     }
     const ranked = heap.values.sort(
         (a, b) => b.score - a.score || a.doc - b.doc,

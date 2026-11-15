@@ -62,7 +62,7 @@ global scan. Singleton context rows are checked directly in their existing
 encoding, without allocating three decoded columns per document.
 
 Existing cheap candidate discovery remains useful. If its actual candidate set
-selects document verification, the executor retains that continuation rather
+selects document verification or complete term packets, the executor retains that continuation rather
 than replacing it with a global pair scan. For broader continuations, a covered
 phrase becomes an independent exact source. Already-covered inline phrases do
 not trigger another scan. This also preserves useful filters on other Boolean
@@ -71,10 +71,23 @@ branches.
 Each stream prefetches at most six 256 KiB ranges. Range boundaries can cross
 packet boundaries; the parser carries at most one incomplete packet. Completed
 occurrences are checked in numeric batches, with split documents joined before
-emission. Only the active 16,384-document window's exact phrase positions are
-retained, together with bounded prefetched encoded data. The limit applies to
+emission. Up to eight 16,384-document windows retain exact phrase positions so
+score reads can be batched across windows. Lookahead stops once retained evidence
+reaches 4 MiB; one indivisible window can exceed this soft byte budget under the
+existing per-document span limits. Each window is released after scoring.
+Prefetched encoded data remains bounded separately. The limit applies to
 active buffers, not cumulative transfer; a sparse phrase with fewer than K hits
 still scans and rejects the rest of its complete stream.
+
+Two-word phrases used for Boolean truth can instead execute the existing sorted,
+field-aware pair membership lists. The planner compares complete context decoding
+against membership plus the ordinary positions still required for rendering.
+Small inline records retain positional execution. Phrases used inside proximity
+retain real positions; a membership hit is never turned into an invented span.
+Routed membership discovery shares the initial parallel read wave, including for
+hot pairs whose membership packet is cheaper than their complete context stream.
+This changes runtime selection only; every stored occurrence retains its previous
+and next token.
 
 Exact phrase truth participates in Boolean candidate filtering before score-block
 retrieval. Unknown branches remain conservative; negative supersets are never

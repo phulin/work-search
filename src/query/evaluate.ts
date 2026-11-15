@@ -259,6 +259,11 @@ export function positionalMatcher(
     doc: number,
     field: number,
   ) => ArrayLike<number> | undefined,
+  phraseTruth?: (
+    words: string[],
+    doc: number,
+    field: number,
+  ) => boolean | undefined,
 ) {
   let document = 0,
     epoch = 0,
@@ -344,6 +349,12 @@ export function positionalMatcher(
       truthValue = false;
     const spanEpoch = [-1, -1];
     function phraseMatch(f: number, out?: SpanBuffer) {
+      if (node.kind === "phrase") {
+        const known = phraseTruth?.(node.terms, document, f);
+        // Known absence also proves an empty span list. A true membership
+        // still needs genuine positions whenever spans are requested.
+        if (known === false || (!out && known !== undefined)) return known;
+      }
       // Undefined means unknown. An empty exact occurrence list proves absence,
       // including underneath NOT; partial accelerator matches cannot prove it.
       const evidence =

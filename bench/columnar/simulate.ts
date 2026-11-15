@@ -201,6 +201,12 @@ const controlAssets = process.env.CWS_CONTROL_INDEX
           "utf8",
         ),
       ),
+      exactPhrases: await readFile(
+        process.env.CWS_CONTROL_INDEX + "/pairs/exact-phrases.bin",
+      ).catch((error) => {
+        if (error.code !== "ENOENT") throw error;
+        return undefined;
+      }),
     }
   : undefined;
 const runtimes = new Map(
@@ -219,8 +225,11 @@ const runtimes = new Map(
               M: Number(setting[2]),
               presence: assets?.presence ?? commonPresence,
               exactPhrases:
-                !plan.startsWith("control-") && exactPhraseRaw
-                  ? new ExactPhraseDirectory(exactPhraseRaw)
+                (assets?.exactPhrases ??
+                (!plan.startsWith("control-") && exactPhraseRaw))
+                  ? new ExactPhraseDirectory(
+                      assets?.exactPhrases ?? exactPhraseRaw!,
+                    )
                   : undefined,
             }
           : undefined;

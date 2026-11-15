@@ -163,12 +163,14 @@ export class Reader {
       gets: number;
       cost: number;
       alternativeCost: number;
+      mode?: "membership" | "positions";
     }[],
     exactPhraseReads: 0,
     exactPhraseBytes: 0,
     exactPhraseOccurrences: 0,
     exactPhraseMatches: 0,
     peakExactPhraseBufferBytes: 0,
+    peakExactPhraseWindows: 0,
     wordPositionIntegers: 0,
     wordPositionBlocks: 0,
     wordPositionBytes: 0,
