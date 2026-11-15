@@ -3,7 +3,9 @@ import { request, Agent } from "node:https";
  * application errors, including validation and corruption, must remain fatal. */
 export function retryableConstructionError(error?: string) {
   return (
-    error === undefined || error === "Busy" || /\bget:.*\(10058\)/.test(error)
+    error === undefined ||
+    error === "Busy" ||
+    /\b(?:get|put|head|delete|list):.*\(10058\)/.test(error)
   );
 }
 /** Separate HTTP/1 connections allow concurrent construction invocations without

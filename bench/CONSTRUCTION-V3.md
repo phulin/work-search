@@ -87,6 +87,10 @@ The coordinator now retries that specific transient error with bounded exponenti
 backoff and jitter, while retaining fatal handling for validation/corruption errors.
 The same 1M build was resumed from completed tasks, with the coordinator change
 recorded in its manifest. No source processing or Worker deployment was restarted.
+The first retry classifier covered GET only; a later PUT throttle stopped the
+fourth occurrence-merge round. Classification was expanded to R2 operations
+including writes, with tests retaining fatal handling for invalid data. The same
+completed tasks were reused again.
 The engineering targets—20x fewer GETs, 2x fewer PUTs, and 3x faster elapsed—are
 not all met by the small matched run: writes meet the target, reads and time do not.
 Do not extrapolate its ratios to 1M or the full corpus.
