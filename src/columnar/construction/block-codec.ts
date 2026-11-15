@@ -12,15 +12,6 @@ export async function transformBlock(data: Uint8Array, inflate = false) {
     ).arrayBuffer(),
   );
 }
-function integer(out: number[], n: number) {
-  if (!Number.isSafeInteger(n) || n < 0 || n > 0xffffffff)
-    throw Error("Invalid run integer");
-  do {
-    const b = n % 128;
-    n = Math.floor(n / 128);
-    out.push(b | (n ? 128 : 0));
-  } while (n);
-}
 function take(data: Uint8Array, at: { n: number }) {
   let n = 0,
     scale = 1;
@@ -40,44 +31,57 @@ function take(data: Uint8Array, at: { n: number }) {
 export async function encodeRunBlock(raw: Uint8Array, codec: RunCodec) {
   if (codec === "raw") return raw;
   if (codec === "gzip") return transformBlock(raw);
-  const out: number[] = [];
+  // Each compact header is no larger than its original fixed-width header.
+  // Write bytes directly; a number[] per byte multiplied temporary memory and
+  // forced a second conversion before gzip.
+  const out = new Uint8Array(raw.length + 8),
+    header = view(out),
+    input = view(raw);
+  header.setUint32(0, 0x33524343, true);
+  header.setUint32(4, raw.length, true);
+  let written = 8;
+  const integer = (n: number) => {
+    if (!Number.isSafeInteger(n) || n < 0 || n > 0xffffffff)
+      throw Error("Invalid run integer");
+    do {
+      const b = n & 127;
+      n >>>= 7;
+      out[written++] = b | (n ? 128 : 0);
+    } while (n);
+  };
   let doc = 0;
   for (let at = 0; at < raw.length;) {
-    const v = view(raw.subarray(at)),
-      length = v.getUint32(0, true),
-      kind = v.getUint32(4, true);
+    const length = input.getUint32(at, true),
+      kind = input.getUint32(at + 4, true);
     if (length < 8 || at + length > raw.length)
       throw Error("Invalid run record");
-    out.push(kind);
+    out[written++] = kind;
     if (kind === 1) {
-      integer(out, length - 12);
-      integer(out, v.getUint32(8, true));
-      for (let p = 12; p < length; p++) out.push(raw[at + p]);
+      integer(length - 12);
+      integer(input.getUint32(at + 8, true));
+      out.set(raw.subarray(at + 12, at + length), written);
+      written += length - 12;
       doc = 0;
     } else if (kind === 2) {
-      const next = v.getUint32(8, true),
-        bn = v.getUint32(20, true),
-        tn = v.getUint32(24, true);
+      const next = input.getUint32(at + 8, true),
+        bn = input.getUint32(at + 20, true),
+        tn = input.getUint32(at + 24, true);
       if (next < doc || length !== 28 + bn + tn)
         throw Error("Invalid run row order");
-      for (const n of [
-        next - doc,
-        v.getUint32(12, true),
-        v.getUint32(16, true),
-        bn,
-        tn,
-      ])
-        integer(out, n);
+      integer(next - doc);
+      integer(input.getUint32(at + 12, true));
+      integer(input.getUint32(at + 16, true));
+      integer(bn);
+      integer(tn);
       // Position columns already use delta/block-packed integers. Keep them
       // independently decodable without an object or integer per occurrence.
-      for (let p = 28; p < length; p++) out.push(raw[at + p]);
+      out.set(raw.subarray(at + 28, at + length), written);
+      written += length - 28;
       doc = next;
     } else throw Error("Invalid run record kind");
     at += length;
   }
-  return transformBlock(
-    concat([u32([0x33524343, raw.length]), Uint8Array.from(out)]),
-  );
+  return transformBlock(out.subarray(0, written));
 }
 export async function decodeRunBlock(
   bytes: Uint8Array,

@@ -416,12 +416,44 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
     expect(response.status, JSON.stringify(data)).toBe(status);
     return data;
   };
+  const originalPut = f.bucket.put.bind(f.bucket);
+  let failOnce = true;
+  (f.bucket as any).put = async (...args: any[]) => {
+    if (failOnce && String(args[0]).includes("/stage-")) {
+      failOnce = false;
+      throw Error("Injected R2 write failure");
+    }
+    return (originalPut as any)(...args);
+  };
+  const failed = await call(
+    "/ingest",
+    { task: "failed-ingest", first: 0, count: 128 },
+    500,
+  );
+  expect(failed.telemetry.io.failures.put).toBe(1);
+  (f.bucket as any).put = originalPut;
+  worker = createFreshConstructionWorker(sourceRoot as any, "test-code");
+  const recovered = await call("/ingest", {
+    task: "failed-ingest",
+    first: 0,
+    count: 128,
+  });
+  const duplicate = await call("/ingest", {
+    task: "failed-ingest",
+    first: 0,
+    count: 128,
+  });
+  expect(duplicate.reused).toBe(true);
+  expect(duplicate.output).toEqual(recovered.output);
+  expect(duplicate.telemetry.io.operations).toEqual({ get: 1 });
   const ingests = [];
   for (const first of [0, 128, 256])
     ingests.push(
       (await call("/ingest", { first, count: Math.min(128, 257 - first) }))
         .output,
     );
+  expect(ingests[0].chunks).toEqual(recovered.output.chunks);
+  expect(ingests[0].summaries).toEqual(recovered.output.summaries);
   const summaries = (
     await call("/summaries", {
       runs: ingests.map((r) => ({

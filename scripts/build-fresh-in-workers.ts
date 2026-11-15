@@ -203,34 +203,61 @@ async function stage(task: string, value: unknown): Promise<Chunk> {
 }
 async function download(ref: Chunk) {
   return slots.run(async () => {
-    const started = performance.now();
-    const r = await fetch(url + "/download", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ ref }),
-    });
-    const raw = new Uint8Array(await r.arrayBuffer());
-    await record({
-      path: "/download",
-      coordinator: true,
-      status: r.status,
-      clientMs: performance.now() - started,
-      ray: r.headers.get("cf-ray")?.split("-")[0],
-      downloadedBytes: raw.length,
-      telemetry: JSON.parse(
-        r.headers.get("x-construction-telemetry") ?? "null",
-      ),
-    });
-    if (
-      !r.ok ||
-      raw.length !== ref.size ||
-      createHash("sha256").update(raw).digest("hex") !== ref.sha256
-    )
-      throw Error("Coordinator download mismatch");
-    return raw;
+    for (let attempt = 0; ; attempt++) {
+      const started = performance.now();
+      let r: Response | undefined;
+      let raw: Uint8Array;
+      try {
+        r = await fetch(url + "/download", {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ ref }),
+        });
+        raw = new Uint8Array(await r.arrayBuffer());
+      } catch (error) {
+        await record({
+          path: "/download",
+          coordinator: true,
+          attempt,
+          clientMs: performance.now() - started,
+          transportFailure: true,
+          error: String(error),
+        });
+        if (attempt >= 20) throw error;
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.min(5000, 250 * (attempt + 1))),
+        );
+        continue;
+      }
+      await record({
+        path: "/download",
+        attempt,
+        coordinator: true,
+        status: r.status,
+        clientMs: performance.now() - started,
+        ray: r.headers.get("cf-ray")?.split("-")[0],
+        downloadedBytes: raw.length,
+        telemetry: JSON.parse(
+          r.headers.get("x-construction-telemetry") ?? "null",
+        ),
+      });
+      if (!r.ok && [429, 502, 503, 504].includes(r.status) && attempt < 20) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.min(5000, 250 * (attempt + 1))),
+        );
+        continue;
+      }
+      if (
+        !r.ok ||
+        raw.length !== ref.size ||
+        createHash("sha256").update(raw).digest("hex") !== ref.sha256
+      )
+        throw Error("Coordinator download mismatch");
+      return raw;
+    }
   });
 }
 async function upload(raw: Uint8Array) {

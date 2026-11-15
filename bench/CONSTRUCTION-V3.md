@@ -59,7 +59,7 @@ It retains the original construction algorithms.
 | Logged GETs | 2,070 | 436 |
 | Logged PUTs | 1,064 | 221 |
 | Logged HEADs | 432 | 49 |
-| R2 bytes read | 981 MiB | 145 MiB |
+| R2 bytes read | 982 MiB | 145 MiB |
 | R2 bytes written | 166 MiB | 139 MiB |
 
 The control omits some coordinator transfers and helper verification operations;
@@ -79,6 +79,9 @@ repeated terms, empty fields, common-term continuation, duplicate delivery,
 corruption, missing objects, and changed-generation rejection.
 
 The 1M build has started on the isolated Worker. It is not yet validated.
+Subsequent ingestion CPU changes and their separate native comparison are in
+[CONSTRUCTION-CPU.md](CONSTRUCTION-CPU.md). The running build retains its original
+Worker code; its coordinator was resumed after a temporary download failure.
 The engineering targets—20x fewer GETs, 2x fewer PUTs, and 3x faster elapsed—are
 not all met by the small matched run: writes meet the target, reads and time do not.
 Do not extrapolate its ratios to 1M or the full corpus.

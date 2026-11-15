@@ -1,6 +1,6 @@
 import { pack, concat, u32, view, type Root } from "../format.js";
 import { CorpusSource } from "./source.js";
-import { scanText } from "./text.js";
+import { ingestAnalyzer } from "./ingest-analysis.js";
 import {
   encodeRunBlock,
   decodeRunBlock,
@@ -47,6 +47,13 @@ export interface Run {
   bodyTokens: number;
   titleTokens: number;
   summaries?: Chunk[];
+  analysisWork?: {
+    tokens: number;
+    stemCalls: number;
+    cacheHits: number;
+    cacheBytes: number;
+    maxCacheBytes: number;
+  };
 }
 export class BuildStore {
   requests = 0;
@@ -309,6 +316,7 @@ export function termRecord(word: string, df: number) {
   const bytes = encoder.encode(word);
   return concat([u32([12 + bytes.length, 1, df]), bytes]);
 }
+const emptyPositions = pack([], true);
 export function rowRecord(
   doc: number,
   bl: number,
@@ -316,13 +324,20 @@ export function rowRecord(
   body: number[],
   title: number[],
 ) {
-  const b = pack(body, true),
-    t = pack(title, true);
-  return concat([
-    u32([28 + b.length + t.length, 2, doc, bl, tl, b.length, t.length]),
-    b,
-    t,
-  ]);
+  const b = body.length ? pack(body, true) : emptyPositions,
+    t = title.length ? pack(title, true) : emptyPositions,
+    raw = new Uint8Array(28 + b.length + t.length),
+    header = new Uint32Array(raw.buffer, 0, 7);
+  header[0] = raw.length;
+  header[1] = 2;
+  header[2] = doc;
+  header[3] = bl;
+  header[4] = tl;
+  header[5] = b.length;
+  header[6] = t.length;
+  raw.set(b, 28);
+  raw.set(t, 28 + b.length);
+  return raw;
 }
 export interface Cursor {
   chunk: number;
@@ -463,8 +478,12 @@ export async function ingest(
   )
     throw Error("Invalid ingest range");
   const part = source.part(first),
+    analyzer = ingestAnalyzer(analysis),
     end = Math.min(first + count, part.first + part.count),
-    rows = new Map<string, Uint8Array[]>(),
+    rows = new Map<
+      string,
+      { records: Uint8Array[]; body: number; title: number }
+    >(),
     started = performance.now();
   let batchFirst = first,
     pointers = await source.pointers(first, Math.min(128, end - first));
@@ -483,22 +502,28 @@ export async function ingest(
     let bl = 0,
       tl = 0;
     for (const field of [0, 1]) {
-      for (const token of scanText(
+      const count = analyzer.scan(
         field ? (d.title ?? "") : d.body,
-        analysis,
-      ).tokens()) {
-        let pair = postings.get(token.word);
-        if (!pair) postings.set(token.word, (pair = [[], []]));
-        pair[field].push(token.position);
-        if (field) tl++;
-        else bl++;
-      }
+        (word, position) => {
+          let pair = postings.get(word);
+          if (!pair) postings.set(word, (pair = [[], []]));
+          pair[field].push(position);
+        },
+      );
+      if (field) tl = count;
+      else bl = count;
     }
     for (const [word, [b, t]] of postings) {
       let list = rows.get(word);
       // Copy new keys: regex substrings must not retain entire document strings.
-      if (!list) rows.set(decoder.decode(encoder.encode(word)), (list = []));
-      list.push(rowRecord(next, bl, tl, b, t));
+      if (!list)
+        rows.set(
+          decoder.decode(encoder.encode(word)),
+          (list = { records: [], body: 0, title: 0 }),
+        );
+      list.records.push(rowRecord(next, bl, tl, b, t));
+      list.body += b.length;
+      list.title += t.length;
     }
     bodyTokens += bl;
     titleTokens += tl;
@@ -520,18 +545,15 @@ export async function ingest(
     summaries = format?.summaries ? new SummaryWriter(store) : undefined;
   for (const word of [...rows.keys()].sort()) {
     const list = rows.get(word)!;
-    if (summaries) {
-      let body = 0,
-        title = 0;
-      for (const row of list) {
-        const v = view(row);
-        body += v.getUint32(28, true);
-        title += v.getUint32(28 + v.getUint32(20, true), true);
-      }
-      await summaries.append({ word, df: list.length, body, title });
-    }
-    await writer.append(termRecord(word, list.length));
-    for (const row of list) await writer.append(row);
+    if (summaries)
+      await summaries.append({
+        word,
+        df: list.records.length,
+        body: list.body,
+        title: list.title,
+      });
+    await writer.append(termRecord(word, list.records.length));
+    for (const row of list.records) await writer.append(row);
     rows.delete(word);
   }
   await writer.flush();
@@ -542,6 +564,7 @@ export async function ingest(
     count: next - first,
     bodyTokens,
     titleTokens,
+    analysisWork: { ...analyzer.stats },
     ...(summaries ? { summaries: await summaries.finish() } : {}),
   };
 }

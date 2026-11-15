@@ -12,6 +12,7 @@ await mkdir(dir, { recursive: true });
 const source = JSON.parse(await readFile(sourcePath, "utf8"));
 const hash = createHash("sha256");
 for (const path of [
+  "bench/columnar/deploy-isolated-oracle.ts",
   "bench/columnar/oracle-worker.ts",
   "bench/columnar/oracle-scan.ts",
   "bench/columnar/exhaustive.ts",
@@ -32,6 +33,13 @@ import {BuildStore,jsonBytes} from ${JSON.stringify(resolve("src/columnar/constr
 const oracle=createOracleWorker(${JSON.stringify(source)},${JSON.stringify(code)});
 export default {async fetch(request,env){
  if(request.headers.get('authorization')!=='Bearer '+env.INTERNAL_TOKEN)return new Response('Not found',{status:404});
+ if(new URL(request.url).pathname==='/source-object'){
+  const input=await request.json();const m=/^([a-f0-9]{64})\\/(?:content|info)-\\d+\\.bin$/.exec(input.key);
+  if(!m||!${JSON.stringify(source.parts.map((p: any) => p.generation))}.includes(m[1])||!Number.isSafeInteger(input.length)||input.length<1||input.length>32*1048576)return new Response('Invalid source range',{status:400});
+  const object=await env.INDEX.get(input.key,{range:{offset:0,length:input.length}});
+  if(!object||object.customMetadata?.generation!==m[1])return new Response('Source identity mismatch',{status:404});
+  return new Response(object.body,{headers:{'x-generation':m[1],'x-sha256':object.customMetadata?.sha256??''}});
+ }
  if(new URL(request.url).pathname==='/stage'){
   const input=await request.json();const output=await new BuildStore(env.INDEX).put(jsonBytes(input.value));return Response.json({output});
  }
