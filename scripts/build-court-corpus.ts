@@ -1,7 +1,26 @@
 import { spawn } from "node:child_process";
+import { openSync, closeSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import { resolve } from "node:path";
 import { constructionLock } from "./construction-lock.js";
+
+if (process.argv.includes("--background")) {
+  const log = openSync("work/court-cases-full.log", "a"),
+    child = spawn(
+      process.execPath,
+      [
+        ...process.execArgv,
+        fileURLToPath(import.meta.url),
+        ...process.argv.slice(2).filter((a) => a !== "--background"),
+      ],
+      { detached: true, stdio: ["ignore", log, log], env: process.env },
+    );
+  child.unref();
+  closeSync(log);
+  console.log("Started detached court corpus coordinator", child.pid);
+  process.exit(0);
+}
 
 /** A durable local coordinator invokes one constructor Worker many times.
  * It changes no serving deployment. Court filtering writes pointer maps only;
