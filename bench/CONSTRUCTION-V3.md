@@ -82,6 +82,11 @@ The 1M build has started on the isolated Worker. It is not yet validated.
 Subsequent ingestion CPU changes and their separate native comparison are in
 [CONSTRUCTION-CPU.md](CONSTRUCTION-CPU.md). The running build retains its original
 Worker code; its coordinator was resumed after a temporary download failure.
+Later pair-occurrence merging hit R2 same-object read throttling (10058).
+The coordinator now retries that specific transient error with bounded exponential
+backoff and jitter, while retaining fatal handling for validation/corruption errors.
+The same 1M build was resumed from completed tasks, with the coordinator change
+recorded in its manifest. No source processing or Worker deployment was restarted.
 The engineering targets—20x fewer GETs, 2x fewer PUTs, and 3x faster elapsed—are
 not all met by the small matched run: writes meet the target, reads and time do not.
 Do not extrapolate its ratios to 1M or the full corpus.

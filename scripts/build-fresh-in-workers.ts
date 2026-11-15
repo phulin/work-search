@@ -9,7 +9,10 @@ import {
 import { createHash } from "node:crypto";
 import { gzipSync } from "node:zlib";
 import { benchmarkToken } from "../bench/columnar/token.js";
-import { constructionHTTP } from "./construction-http.js";
+import {
+  constructionHTTP,
+  retryableConstructionError,
+} from "./construction-http.js";
 import { Semaphore } from "../src/columnar/storage.js";
 import {
   type Run,
@@ -186,13 +189,14 @@ async function call(path: string, task: string, body: any = {}) {
             error: String(error),
             transportFailure: true,
           });
-        if (attempt >= 20 || (response?.error && response.error !== "Busy"))
+        if (attempt >= 20 || !retryableConstructionError(response?.error))
           throw error;
+        const delay =
+          response?.error && response.error !== "Busy"
+            ? Math.min(20000, 1000 * 2 ** Math.min(attempt, 5))
+            : Math.min(5000, 250 * (attempt + 1));
         await new Promise((r) =>
-          setTimeout(
-            r,
-            Math.min(5000, 250 * (attempt + 1)) * (0.75 + Math.random() * 0.5),
-          ),
+          setTimeout(r, delay * (0.75 + Math.random() * 0.5)),
         );
       }
     }

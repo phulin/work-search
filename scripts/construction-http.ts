@@ -1,4 +1,11 @@
 import { request, Agent } from "node:https";
+/** Completed task receipts make retrying a transient failure safe. Other
+ * application errors, including validation and corruption, must remain fatal. */
+export function retryableConstructionError(error?: string) {
+  return (
+    error === undefined || error === "Busy" || /\bget:.*\(10058\)/.test(error)
+  );
+}
 /** Separate HTTP/1 connections allow concurrent construction invocations without
  * funneling the whole dispatcher through one multiplexed client connection. */
 export function constructionHTTP(concurrency: number) {
