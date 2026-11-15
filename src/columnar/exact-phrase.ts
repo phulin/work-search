@@ -578,7 +578,9 @@ async function* matches(
   plan: ExactPhrasePlan,
   reader: Reader,
   field: "all" | "body" | "title",
+  candidates?: Uint32Array,
 ): AsyncGenerator<MatchBatch> {
+  if (candidates && !candidates.length) return;
   const pending = new Map<number, Promise<Uint8Array>>();
   const start = (i: number) => {
     if (i >= plan.groups.length || pending.has(i)) return;
@@ -593,6 +595,8 @@ async function* matches(
     pending.set(i, task);
   };
   let doc = -1,
+    lastDoc = -1,
+    wanted = 0,
     body: number[] = [],
     title: number[] = [];
   let docs: number[] = [],
@@ -657,11 +661,27 @@ async function* matches(
       if (
         p.a !== plan.ids[plan.at] ||
         p.b !== plan.ids[plan.at + 1] ||
-        p.docs[0] < doc
+        p.docs[0] < lastDoc
       )
         throw Error("Exact phrase chunk identity mismatch");
+      lastDoc = p.docs.at(-1)!;
       for (let row = 0; row < p.docs.length; row++) {
         const next = p.docs[row];
+        if (candidates) {
+          while (wanted < candidates.length && candidates[wanted] < next)
+            wanted++;
+          if (candidates[wanted] !== next) {
+            // A later physical row finishes the previous selected document,
+            // including fragments split across chunks or GET boundaries.
+            if (doc >= 0 && next > doc) {
+              append();
+              doc = -1;
+              body = [];
+              title = [];
+            }
+            continue;
+          }
+        }
         if (doc !== next) {
           if (doc >= 0) append();
           doc = next;
@@ -682,6 +702,9 @@ async function* matches(
     }
     carry = plan.pair.inline ? new Uint8Array() : raw.slice(at);
     if (carry.length >= 65536) throw Error("Unbounded exact phrase carry");
+    // Sparse matching must not wait for 128 matches (or stream exhaustion)
+    // before letting earlier document windows proceed.
+    if (candidates && docs.length) yield emit();
   }
   if (carry.length) throw Error("Truncated exact phrase stream");
   if (doc >= 0) append();
@@ -698,8 +721,9 @@ class PhraseStream {
     readonly plan: ExactPhrasePlan,
     readonly reader: Reader,
     field: "all" | "body" | "title",
+    candidates?: Uint32Array,
   ) {
-    this.iterator = matches(plan, reader, field);
+    this.iterator = matches(plan, reader, field, candidates);
   }
   async window(lo: number, hi: number) {
     const docs: number[] = [],
@@ -761,7 +785,10 @@ export class ExactPhraseExecution {
     readonly plans: ExactPhrasePlan[],
     readonly reader: Reader,
     field: "all" | "body" | "title",
+    candidates?: Uint32Array,
   ) {
+    if (candidates?.some((doc, i) => i > 0 && doc <= candidates[i - 1]))
+      throw Error("Exact phrase candidates must be sorted and unique");
     for (const p of plans) {
       const key = p.words.join("\0");
       if (p.membershipOnly) {
@@ -773,7 +800,8 @@ export class ExactPhraseExecution {
           cursors,
           next: cursors.map((c) => c.next()),
         });
-      } else this.streams.set(key, new PhraseStream(p, reader, field));
+      } else
+        this.streams.set(key, new PhraseStream(p, reader, field, candidates));
     }
   }
   private key = (words: string[]) => {

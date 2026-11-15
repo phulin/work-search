@@ -184,3 +184,56 @@ it("avoids detailed remote plans when package waves already beat the score-windo
   expect(got.continuationCost?.metadataBytes).toBe(0);
   expect(reader.stats.requests).toBe(0);
 });
+it("compares a scattered candidate set with batched scoring rather than one fetch wave per band", async () => {
+  const { root, index, reader } = fixture(1000000),
+    tree: Branch = {
+      first: 0,
+      last: 999999,
+      count: 128,
+      height: 0,
+      b: 1,
+      t: 0,
+      score: [0, 0, 100],
+      positions: [0, 0, 0],
+      locators: [0, 0, 0],
+    },
+    term = {
+      id: 0,
+      df: 128,
+      tree,
+      frequencies: [0, 0, 100] as [number, number, number],
+      positional: [0, 0, 0] as [number, number, number],
+      bodyOccurrences: 128,
+      titleOccurrences: 0,
+    },
+    plan: PacketPlan = {
+      kind: "documents",
+      frequencyBytes: 100,
+      positionBytes: 0,
+      expectedCandidates: 120,
+      expectedDocumentBytes: 12000,
+      gets: 120,
+      dependentStages: 2,
+    };
+  const got = await index.choose({
+    root,
+    reader,
+    ast: { kind: "term", term: "alpha" },
+    terms: new Map([["alpha", term]]),
+    options: {},
+    plan,
+    packages: {
+      averageBytes: 100,
+      byteLength: () => 100,
+      load: async () => {
+        throw Error("No package reads while planning");
+      },
+      membership: membership(120, function* () {
+        for (let i = 0; i < 120; i++) yield i * 8000;
+      }),
+    },
+  });
+  expect(got.kind).toBe("blocks");
+  expect(got.continuationCost?.pageBytes).toBe(262144);
+  expect(reader.stats.requests).toBe(0);
+});

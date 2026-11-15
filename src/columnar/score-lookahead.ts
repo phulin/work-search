@@ -1,4 +1,5 @@
 import type { Ref } from "./format.js";
+export const SCORE_LOOKAHEAD_WINDOWS = 8;
 /** Prefetch a bounded prefix, then let execution consume it before scheduling
  * another prefix. An oversized single window gets only a fitting prefix;
  * execution still fetches every required ref through its ordinary path. */

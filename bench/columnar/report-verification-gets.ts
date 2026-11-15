@@ -31,6 +31,15 @@ const queries = [...groups].map(([q, rows]) => {
       candidates: median((r) => r.diagnostics.packageCandidates),
       positions: median((r) => r.diagnostics.positionIntegers),
       contextBytes: median((r) => r.diagnostics.pairPositionBytes),
+      scoreBlocks: median((r) => r.diagnostics.scoreBlocksFetched),
+      scorePostings: median((r) => r.diagnostics.scorePostingsDecoded),
+      scoreWaves: median((r) => r.diagnostics.scoreIOWaves),
+      positionWaves: median((r) => r.diagnostics.positionIOWaves),
+      packageWaves: median((r) => r.diagnostics.packageIOWaves),
+      exactPhraseOccurrences: median(
+        (r) => r.diagnostics.exactPhraseOccurrences,
+      ),
+      peakBuffers: median((r) => r.diagnostics.peakActiveBufferBytes),
     };
   };
   return { q, control: summarize("control"), candidate: summarize("auto") };
@@ -50,6 +59,27 @@ const summary = {
   samples: data.rows.length,
   control: percentile("control"),
   candidate: percentile("candidate"),
+  aggregate: Object.fromEntries(
+    (["control", "candidate"] as const).map((side) => [
+      side,
+      Object.fromEntries(
+        Object.keys(queries[0][side])
+          .filter((key) => key !== "samples")
+          .map((key) => {
+            const xs = queries.map((r) => (r[side] as any)[key]);
+            return [
+              key,
+              {
+                sum: xs.reduce((n, x) => n + x, 0),
+                p50: quantile(xs, 0.5),
+                p95: quantile(xs, 0.95),
+                p99: quantile(xs, 0.99),
+              },
+            ];
+          }),
+      ),
+    ]),
+  ),
   regressions: queries.filter(
     (r) =>
       r.candidate.ms > r.control.ms * 1.1 && r.candidate.ms > r.control.ms + 10,

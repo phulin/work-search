@@ -2,6 +2,7 @@ import { candidateLayout } from "./candidate-layout.js";
 import type { ContinuationContext } from "./search.js";
 import { PACKAGE_CONCURRENCY } from "./package-batches.js";
 import { PAGE } from "./format.js";
+import { SCORE_LOOKAHEAD_WINDOWS } from "./score-lookahead.js";
 const BAND = 16384,
   WAVE = 8;
 /** Price actual sorted candidates before package I/O. Cost estimates select an
@@ -59,9 +60,15 @@ export async function priceDocuments(
     gets: ids.length,
     dependentStages: ids.length ? 2 : 1,
   };
-  // Already cheaper than the score-wave estimate: further page discovery is
-  // unnecessary. Avoid a remote planning stage just to confirm the choice.
-  if (!ids.length || packageWork < candidateBands * WAVE)
+  // Scoring batches nearby bands. A band is not a serial fetch wave. Only a
+  // genuinely cheap package prefix can bypass physical-footprint discovery.
+  const batchedWaves = Math.ceil(candidateBands / SCORE_LOOKAHEAD_WINDOWS);
+  if (
+    !ids.length ||
+    (waves <= 2 * SCORE_LOOKAHEAD_WINDOWS &&
+      packageWork < candidateBands * WAVE) ||
+    packageWork < batchedWaves * WAVE
+  )
     return {
       ...documentPlan,
       continuationCost: {
@@ -72,7 +79,7 @@ export async function priceDocuments(
         pageGets: 0,
         candidateBands,
         packageWork,
-        blockWork: candidateBands * WAVE,
+        blockWork: batchedWaves * WAVE,
         metadataBytes: 0,
         waveEstimateOnly: true,
       },
@@ -88,9 +95,10 @@ export async function priceDocuments(
       covered,
     ),
     blockWork =
-      ((layout.bytes - layout.residentBytes) / PAGE) *
-        (options.exactTotal ? 1 : 0.5) +
-      layout.candidateBands * WAVE,
+      // There may be fewer than K verified matches. Do not assume ranking
+      // bounds will discard half the physical footprint before verification.
+      (layout.bytes - layout.residentBytes) / PAGE +
+      Math.ceil(layout.candidateBands / SCORE_LOOKAHEAD_WINDOWS) * WAVE,
     continuationCost = {
       packageBytes: bytes,
       packageGets: ids.length,

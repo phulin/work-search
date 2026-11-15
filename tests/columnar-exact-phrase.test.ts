@@ -689,6 +689,35 @@ it("streams split rows and exact 2–4 word evidence through bounded windows, wi
     expect(e.evidence(words, 128, 0)).toHaveLength(5000);
     expect([...e.evidence(words, 16999, 0)!]).toEqual([1 - at]);
     expect(e.evidence(["a", "b", "c", "d", "e"], 16999, 0)).toBeUndefined();
+    const filteredReader = new Reader(
+        { generation, objects: [] },
+        reader.source,
+      ),
+      filtered = new ExactPhraseExecution(
+        [plan],
+        filteredReader,
+        "all",
+        Uint32Array.of(128, 16999),
+      );
+    await filtered.window(0, 16384);
+    await filtered.window(16384, 32768);
+    for (const doc of [128, 16999])
+      for (const f of [0, 1])
+        expect(filtered.evidence(words, doc, f)).toEqual(
+          e.evidence(words, doc, f),
+        );
+    expect(filtered.evidence(words, 127, 0)).toHaveLength(0);
+    expect(filteredReader.stats.positionIntegers).toBe(5001);
+    const emptyReader = new Reader({ generation, objects: [] }, reader.source),
+      none = new ExactPhraseExecution(
+        [plan],
+        emptyReader,
+        "all",
+        new Uint32Array(),
+      );
+    await none.window(0, 32768);
+    expect(none.evidence(words, 128, 0)).toHaveLength(0);
+    expect(emptyReader.stats.requests).toBe(0);
     e.release(0);
     expect(() => e.evidence(words, 128, 0)).toThrow("buffered windows");
   }

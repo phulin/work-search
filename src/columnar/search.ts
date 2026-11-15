@@ -8,7 +8,7 @@ import {
 } from "./exact-phrase.js";
 import { scoreParameters } from "./scoring.js";
 import { filterDocuments, type DocumentFilter } from "./document-filter.js";
-import { scoreLookahead } from "./score-lookahead.js";
+import { scoreLookahead, SCORE_LOOKAHEAD_WINDOWS } from "./score-lookahead.js";
 import { leaves } from "./candidate-layout.js";
 import { priceDocuments } from "./continuation.js";
 export { leaves } from "./candidate-layout.js";
@@ -700,7 +700,12 @@ export class ColumnarIndex {
         );
         const useful = exactPlans.filter((_, i) => decisions[i]);
         if (useful.length) {
-          exact = new ExactPhraseExecution(useful, reader, field);
+          exact = new ExactPhraseExecution(
+            useful,
+            reader,
+            field,
+            phraseCandidates,
+          );
           reader.stats.exactPhrasePlans = describeExactPlans().filter((p) =>
             useful.some((s) => s.words === p.words),
           );
@@ -736,7 +741,7 @@ export class ColumnarIndex {
     // Four document-directory windows per numeric batch amortize the two score
     // phases without adding another remote stage per 4096 documents.
     const BAND = 16384,
-      LOOKAHEAD = 8;
+      LOOKAHEAD = SCORE_LOOKAHEAD_WINDOWS;
     const covered = (words: string[]) =>
       !!exact?.covered(words) || !!loadedMembership?.covered(words);
     if (exact) {
