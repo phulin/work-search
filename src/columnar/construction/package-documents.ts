@@ -10,25 +10,33 @@ export async function finishPackageDocuments(
   source: CorpusSource,
   store: BuildStore,
   root: VocabularyRoot,
-  vocabulary: Vocabulary,
+  vocabulary: Vocabulary | undefined,
   generation: string,
   first: number,
   count: number,
   sink?: (doc: number, packet: Uint8Array) => Promise<void | boolean>,
   tokenBudget = 1048576,
+  lookup?: {
+    lookup(names: string[]): Promise<Map<string, number>>;
+    stats: { requests: number; bytes: number; hits: number; misses: number };
+  },
 ) {
   if (
     !Number.isInteger(first) ||
     !Number.isInteger(count) ||
     count < 1 ||
     count > 1024 ||
-    first < vocabulary.first ||
-    first >= vocabulary.end ||
-    vocabulary.generation !== root.generation
+    first < 0 ||
+    first >= root.count ||
+    (!vocabulary && !lookup) ||
+    (vocabulary &&
+      (first < vocabulary.first ||
+        first >= vocabulary.end ||
+        vocabulary.generation !== root.generation))
   )
     throw Error("Invalid document package range");
-  const end = Math.min(first + count, vocabulary.end),
-    ids = new Map(vocabulary.ids),
+  const end = Math.min(first + count, vocabulary?.end ?? root.count),
+    ids = new Map(vocabulary?.ids),
     memory = new Memory();
   memory.pages = new Lru(4 * 1048576);
   memory.decoded = new Lru(2 * 1048576);
@@ -47,33 +55,52 @@ export async function finishPackageDocuments(
       Math.min(128, end - next, part.first + part.count - next),
     );
   await source.prefetch(pointers);
-  for (; next < end; next++) {
-    if (next >= batchFirst + pointers.view.byteLength / 32) {
-      part = source.part(next);
-      batchFirst = next;
-      pointers = await source.pointers(
-        next,
-        Math.min(128, end - next, part.first + part.count - next),
-      );
-      await source.prefetch(pointers);
+  let batch: Awaited<ReturnType<CorpusSource["document"]>>[] = [],
+    batchAt = 0;
+  const encoder = new TextEncoder(),
+    decoder = new TextDecoder();
+  async function readBatch() {
+    batch = [];
+    batchAt = 0;
+    let characters = 0;
+    const missing = new Set<string>();
+    for (let doc = next; doc < end && batch.length < 128; doc++) {
+      if (doc >= batchFirst + pointers.view.byteLength / 32) {
+        part = source.part(doc);
+        batchFirst = doc;
+        pointers = await source.pointers(
+          doc,
+          Math.min(128, end - doc, part.first + part.count - doc),
+        );
+        await source.prefetch(pointers);
+      }
+      const value = await source.document(doc, pointers, doc - batchFirst);
+      batch.push(value);
+      characters += value.body.length + (value.title?.length ?? 0);
+      for (const text of vocabulary
+        ? [value.title ?? ""]
+        : [value.title ?? "", value.body])
+        for (const token of scanText(text, root.analysis).tokens())
+          if (!ids.has(token.word) && !missing.has(token.word))
+            missing.add(decoder.decode(encoder.encode(token.word)));
+      if (characters >= 4 * 1048576 || missing.size >= 100000) break;
     }
-    const doc = await source.document(next, pointers, next - batchFirst),
-      missing = [
-        ...new Set(
-          [...scanText(doc.title ?? "", root.analysis).tokens()]
-            .map((t) => t.word)
-            .filter((word) => !ids.has(word)),
-        ),
-      ];
-    if (missing.length) {
-      const found = await loadDictionary<number>(missing, reader, {
-        ...root.idRouting,
-        hot: {},
-      });
+    if (missing.size) {
+      const names = [...missing].sort(),
+        found = lookup
+          ? await lookup.lookup(names)
+          : await loadDictionary<number>(names, reader, {
+              ...root.idRouting,
+              hot: {},
+            });
+      if (found.size !== names.length)
+        throw Error("Document token missing from global directory");
       for (const [word, id] of found) ids.set(word, id);
-      if (found.size !== missing.length)
-        throw Error("Title token missing from global directory");
     }
+  }
+  for (; next < end; next++) {
+    if (batchAt === batch.length) await readBatch();
+    const doc = batch[batchAt++];
     const packet = await encodeDocumentPackage(
       { ...doc, doc: next },
       ids,
@@ -121,7 +148,9 @@ export async function finishPackageDocuments(
     bytes,
     verificationBytes,
     generation,
-    dictionaryRequests: reader.stats.requests,
-    dictionaryBytes: reader.stats.bytes,
+    dictionaryRequests: reader.stats.requests + (lookup?.stats.requests ?? 0),
+    dictionaryBytes: reader.stats.bytes + (lookup?.stats.bytes ?? 0),
+    idHits: lookup?.stats.hits ?? 0,
+    idMisses: lookup?.stats.misses ?? 0,
   };
 }

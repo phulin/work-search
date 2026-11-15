@@ -109,23 +109,28 @@ const stop = () => {
 process.once("SIGTERM", stop);
 process.once("SIGINT", stop);
 try {
-  await progress("preparing-source");
-  await run("scripts/construction-source.ts", [
-    "work/full-flp/published.json",
-    original,
-  ]);
-  const available = JSON.parse(await readFile(original, "utf8")),
-    imported = JSON.parse(
-      await readFile("work/full-flp/import-complete.json", "utf8"),
-    );
-  if (!imported.complete || imported.documents !== available.documents)
-    throw Error("Published source does not cover the complete imported corpus");
-  await usage();
-  await progress("filtering-court-cases", { available: available.documents });
-  await run("scripts/deploy-construction.ts", [name], {
-    CWS_SOURCE_ROOT: original,
-  });
-  await run("scripts/filter-court-source.ts", [original, out + "/source"]);
+  const resume = process.argv.includes("--resume-documents");
+  if (!resume) {
+    await progress("preparing-source");
+    await run("scripts/construction-source.ts", [
+      "work/full-flp/published.json",
+      original,
+    ]);
+    const available = JSON.parse(await readFile(original, "utf8")),
+      imported = JSON.parse(
+        await readFile("work/full-flp/import-complete.json", "utf8"),
+      );
+    if (!imported.complete || imported.documents !== available.documents)
+      throw Error(
+        "Published source does not cover the complete imported corpus",
+      );
+    await usage();
+    await progress("filtering-court-cases", { available: available.documents });
+    await run("scripts/deploy-construction.ts", [name], {
+      CWS_SOURCE_ROOT: original,
+    });
+    await run("scripts/filter-court-source.ts", [original, out + "/source"]);
+  }
   const source = JSON.parse(await readFile(filtered, "utf8")),
     selection = JSON.parse(
       await readFile(out + "/source/complete.json", "utf8"),
@@ -136,6 +141,9 @@ try {
   });
   await run("scripts/deploy-construction.ts", [name], {
     CWS_SOURCE_ROOT: filtered,
+    ...(resume
+      ? { CWS_CONSTRUCTION_WORDS: out + "/index/vocabulary-words" }
+      : {}),
   });
   await progress("building-index", {
     documents: source.documents,
@@ -143,7 +151,12 @@ try {
   });
   await run(
     "scripts/build-in-workers.ts",
-    [String(source.documents), out + "/index", build],
+    [
+      String(source.documents),
+      out + "/index",
+      build,
+      ...(resume ? ["--resume-documents"] : []),
+    ],
     { CWS_SOURCE_ROOT: filtered },
   );
   await progress("base-index-complete", {

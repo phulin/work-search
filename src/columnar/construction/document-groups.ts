@@ -5,6 +5,11 @@ import { digest, jsonBytes, BuildStore } from "./runs.js";
 import { readVocabulary } from "./vocabulary.js";
 import { CorpusSource, type SourceRoot } from "./source.js";
 import { countedBucket } from "./bucket.js";
+import {
+  ConstructionWordLookup,
+  type ConstructionWords,
+} from "./word-lookup.js";
+import { ENGLISH_ANALYSIS } from "../../query/analysis.js";
 
 export async function finishDocumentGroup(
   ...args: Parameters<typeof finishPackageDocuments>
@@ -32,6 +37,7 @@ export async function finishDocumentGroup(
         );
       },
       4 * 1048576,
+      args[9],
     ),
     store = args[1],
     data = concat(packets),
@@ -62,7 +68,12 @@ export async function finishDocumentGroup(
 }
 /** A separate handler lets a running constructor add grouped transport without
  * changing the frozen core that owns its already acknowledged sorting jobs. */
-export function createDocumentGroupHandler(root: SourceRoot, code: string) {
+export function createDocumentGroupHandler(
+  root: SourceRoot,
+  code: string,
+  bundled?: ConstructionWords,
+) {
+  let words: ConstructionWordLookup | undefined;
   let pending = 0,
     tail = Promise.resolve(),
     isolate: string | undefined;
@@ -77,7 +88,11 @@ export function createDocumentGroupHandler(root: SourceRoot, code: string) {
         return new Response("Not found", { status: 404 });
       const path = new URL(request.url).pathname;
       if (path === "/group-health")
-        return Response.json({ code, format: "grouped-CDP4" });
+        return Response.json({
+          code,
+          format: "grouped-CDP4",
+          directWordLookup: bundled?.rootSha256,
+        });
       if (path !== "/grouped-documents" || request.method !== "POST")
         return new Response("Not found", { status: 404 });
       if (pending >= 4)
@@ -116,12 +131,24 @@ export function createDocumentGroupHandler(root: SourceRoot, code: string) {
             reused: true,
           });
         }
-        const store = new BuildStore(env.INDEX),
+        const direct =
+            bundled?.rootSha256 === input.rootRef?.sha256 ? bundled : undefined,
+          store = new BuildStore(env.INDEX),
           source = new CorpusSource(env.INDEX, root),
-          idsRoot = JSON.parse(
-            new TextDecoder().decode(await store.get(input.rootRef)),
-          ),
-          vocabulary = await readVocabulary(store, input.vocabularyRef),
+          idsRoot = direct
+            ? {
+                generation: direct.generation,
+                count: direct.count,
+                analysis: ENGLISH_ANALYSIS,
+                objects: [],
+                idRouting: { dictionaries: [] },
+              }
+            : JSON.parse(
+                new TextDecoder().decode(await store.get(input.rootRef)),
+              ),
+          vocabulary = input.vocabularyRef
+            ? await readVocabulary(store, input.vocabularyRef)
+            : undefined,
           output = await finishDocumentGroup(
             source,
             store,
@@ -130,6 +157,11 @@ export function createDocumentGroupHandler(root: SourceRoot, code: string) {
             input.generation,
             input.first,
             input.count,
+            undefined,
+            undefined,
+            direct
+              ? (words ??= new ConstructionWordLookup(direct)).request(store)
+              : undefined,
           ),
           telemetry = {
             isolate,

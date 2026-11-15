@@ -27,8 +27,26 @@ import { finishPairDirectoryJob } from "./pair-directory-job.js";
 import { finishPacketTerms } from "./packet-terms.js";
 import { buildVocabulary, readVocabulary } from "./vocabulary.js";
 import { countedBucket } from "./bucket.js";
-export function createConstructionWorker(root: SourceRoot, code: string) {
-  const groups = createDocumentGroupHandler(root, code);
+import {
+  ConstructionWordLookup,
+  type ConstructionWords,
+} from "./word-lookup.js";
+export function createConstructionWorker(
+  root: SourceRoot,
+  code: string,
+  vocabulary?: ConstructionWords,
+) {
+  const groups = createDocumentGroupHandler(root, code, vocabulary);
+  if (
+    vocabulary &&
+    (!/^[a-f0-9]{64}$/.test(vocabulary.generation) ||
+      !/^[a-f0-9]{64}$/.test(vocabulary.rootSha256) ||
+      !Number.isInteger(vocabulary.count) ||
+      vocabulary.count < 1 ||
+      vocabulary.count > root.documents)
+  )
+    throw Error("Invalid construction vocabulary identity");
+  let words: ConstructionWordLookup | undefined;
   let isolate: string | undefined,
     pending = 0,
     tail = Promise.resolve();
@@ -61,6 +79,16 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
           sourceHash: await digest(jsonBytes(root)),
           isolate,
           placement: request.headers.get("cf-placement"),
+          vocabulary: vocabulary
+            ? {
+                generation: vocabulary.generation,
+                count: vocabulary.count,
+                rootSha256: vocabulary.rootSha256,
+                bytes: vocabulary.hot.length + vocabulary.ids.byteLength,
+                commonTerms: vocabulary.ids.length,
+                packets: vocabulary.packets.length,
+              }
+            : undefined,
         });
       if (request.method !== "POST")
         return new Response("Method not allowed", { status: 405 });
@@ -86,6 +114,11 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
         source = new CorpusSource(env.INDEX, root);
       try {
         const input = (await request.json()) as any;
+        const bundled =
+          url.pathname === "/vocabulary" &&
+          vocabulary?.rootSha256 === input.rootRef?.sha256
+            ? vocabulary
+            : undefined;
         let result;
         if (url.pathname === "/source-metadata") {
           result = await source.metadata(input.first, input.count);
@@ -259,9 +292,17 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
               input.state = (await previous.json<any>()).result.output.state;
             }
             if (input.rootRef)
-              input.root = JSON.parse(
-                new TextDecoder().decode(await store.get(input.rootRef)),
-              );
+              input.root = bundled
+                ? {
+                    generation: bundled.generation,
+                    count: bundled.count,
+                    analysis: ENGLISH_ANALYSIS,
+                    objects: [],
+                    idRouting: { dictionaries: [] },
+                  }
+                : JSON.parse(
+                    new TextDecoder().decode(await store.get(input.rootRef)),
+                  );
             if (input.runRef)
               input.run = JSON.parse(
                 new TextDecoder().decode(await store.get(input.runRef)),
@@ -502,6 +543,12 @@ export function createConstructionWorker(root: SourceRoot, code: string) {
                                                     input.root,
                                                     input.first,
                                                     input.count,
+                                                    bundled
+                                                      ? (words ??=
+                                                          new ConstructionWordLookup(
+                                                            bundled,
+                                                          )).request(store)
+                                                      : undefined,
                                                   )
                                                 : await finishDocuments(
                                                     source,

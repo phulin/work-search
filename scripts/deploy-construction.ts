@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { benchmarkToken } from "../bench/columnar/token.js";
+import { ENGLISH_ANALYSIS } from "../src/query/analysis.js";
 const dir = resolve("work/columnar-worker-build"),
   name = process.argv[2] ?? "work-search-cws-build-0";
 if (!/^work-search-cws-build-\d+$/.test(name))
@@ -25,11 +26,46 @@ async function hashSources(dir: string): Promise<void> {
 }
 await hashSources("src");
 hash.update(await readFile(dir + "/source-root.json"));
+const wordDir = process.env.CWS_CONSTRUCTION_WORDS;
+let vocabulary: any;
+if (wordDir) {
+  const metadata = await readFile(wordDir + "/manifest.json"),
+    manifest = JSON.parse(metadata.toString()),
+    hot = await readFile(wordDir + "/hot.bin"),
+    ids = await readFile(wordDir + "/ids.bin"),
+    sourceRoot = JSON.parse(await readFile(dir + "/source-root.json", "utf8")),
+    sourceHash = createHash("sha256")
+      .update(JSON.stringify({ sourceRoot, count: manifest.count }))
+      .digest("hex"),
+    generation = createHash("sha256")
+      .update(JSON.stringify({ sourceHash, analysis: ENGLISH_ANALYSIS }))
+      .digest("hex"),
+    digest = (b: Uint8Array) => createHash("sha256").update(b).digest("hex");
+  if (
+    manifest.generation !== generation ||
+    manifest.count > sourceRoot.documents ||
+    hot.length !== manifest.hotBytes ||
+    ids.length !== manifest.idsBytes ||
+    digest(hot) !== manifest.hotSha256 ||
+    digest(ids) !== manifest.idsSha256 ||
+    hot.length + ids.length > 16 * 1048576
+  )
+    throw Error("Construction word bundle source or budget mismatch");
+  vocabulary = {
+    generation,
+    count: manifest.count,
+    rootSha256: manifest.rootSha256,
+    packets: manifest.packets,
+  };
+  hash.update(metadata).update(hot).update(ids);
+  await writeFile(dir + "/hot.bin", hot);
+  await writeFile(dir + "/ids.bin", ids);
+}
 const code = hash.digest("hex"),
   entry = dir + "/entry.ts";
 await writeFile(
   entry,
-  `import root from './source-root.json';import{createConstructionWorker}from'../../src/columnar/construction/worker.ts';export default createConstructionWorker(root as any,${JSON.stringify(code)});`,
+  `${vocabulary ? "import hot from './hot.bin';import ids from './ids.bin';" : ""}import root from './source-root.json';import{createConstructionWorker}from'../../src/columnar/construction/worker.ts';export default createConstructionWorker(root as any,${JSON.stringify(code)}${vocabulary ? ",{..." + JSON.stringify(vocabulary) + ",hot:new Uint8Array(hot),ids:new Uint32Array(ids)}" : ""});`,
 );
 const settings = (name: string, main: string) => ({
   name,
@@ -41,6 +77,7 @@ const settings = (name: string, main: string) => ({
   r2_buckets: [{ binding: "INDEX", bucket_name: "work-search-demo" }],
   limits: { cpu_ms: 300000 },
   observability: { enabled: true },
+  rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
 });
 const token = await benchmarkToken();
 async function wrangler(args: string[], input?: string) {
@@ -98,5 +135,12 @@ console.log(
     code,
     source: dir + "/source-root.json",
     placement: "aws:us-east-1",
+    vocabulary: vocabulary
+      ? {
+          count: vocabulary.count,
+          rootSha256: vocabulary.rootSha256,
+          packets: vocabulary.packets.length,
+        }
+      : undefined,
   }),
 );

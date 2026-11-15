@@ -26,6 +26,7 @@ export async function buildVocabulary(
   bundled?: {
     generation: string;
     lookup(names: string[]): Promise<Map<string, number>>;
+    stats?: { requests: number; bytes: number; hits: number; misses: number };
   },
 ) {
   if (
@@ -113,8 +114,10 @@ export async function buildVocabulary(
     words: names.length,
     tokens,
     vocabulary: await store.put(bytes),
-    dictionaryRequests: reader.stats.requests,
-    dictionaryBytes: reader.stats.bytes,
+    dictionaryRequests: reader.stats.requests + (bundled?.stats?.requests ?? 0),
+    dictionaryBytes: reader.stats.bytes + (bundled?.stats?.bytes ?? 0),
+    idHits: bundled?.stats?.hits ?? 0,
+    idMisses: bundled?.stats?.misses ?? names.length,
   };
 }
 export async function readVocabulary(

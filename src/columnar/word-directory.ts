@@ -146,9 +146,13 @@ export function assembleWords(blocks: DirectoryBlock[]) {
 export class WordDirectory {
   private v: DataView;
   private keys: string[] = [];
-  private cache = new Lru<string[]>(2 * 1048576);
+  private cache: Lru<string[]>;
   readonly count: number;
-  constructor(readonly bytes: Uint8Array) {
+  constructor(
+    readonly bytes: Uint8Array,
+    cacheBytes = 2 * 1048576,
+  ) {
+    this.cache = new Lru<string[]>(cacheBytes);
     this.v = view(bytes);
     if (bytes.length < 16 || this.v.getUint32(0, true) !== MAGIC)
       throw Error("Invalid word directory");

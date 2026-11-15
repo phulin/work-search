@@ -793,6 +793,34 @@ it("builds the serving format through bounded R2 runs, resumed merges, and final
   expect(bundledVocabulary.vocabulary).toEqual(builtVocabulary.vocabulary);
   expect(bundledVocabulary.dictionaryRequests).toBe(0);
   expect(bundledVocabulary.dictionaryBytes).toBe(0);
+  const stagedGroup = await finishDocumentGroup(
+      source,
+      store,
+      projected,
+      vocabulary,
+      root.generation,
+      0,
+      docs.length,
+    ),
+    fusedGroup = await finishDocumentGroup(
+      source,
+      store,
+      projected,
+      undefined,
+      root.generation,
+      0,
+      docs.length,
+      undefined,
+      undefined,
+      {
+        lookup: (names) => wordDirectory.lookup(names),
+        stats: { requests: 0, bytes: 0, hits: 0, misses: 0 },
+      },
+    );
+  expect(fusedGroup.group).toEqual(stagedGroup.group);
+  expect(fusedGroup.documents).toBe(docs.length);
+  expect(fusedGroup.verificationBytes).toBe(stagedGroup.verificationBytes);
+  expect(fusedGroup.dictionaryRequests).toBe(0);
   do {
     const out = await finishDocuments(
       source,

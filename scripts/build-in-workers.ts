@@ -95,9 +95,15 @@ const state = await readFile(checkpoint, "utf8").then(JSON.parse, () => ({
   documents: [],
   vocabularies: [],
 }));
+const resumeDocuments =
+  process.argv.includes("--resume-documents") &&
+  state.rootRef &&
+  state.postings.length &&
+  state.postings.every((j: any) => j.done) &&
+  state.routingLevels.flat().every((j: any) => j.done);
 if (
   state.format !== "parallel-build-v2" ||
-  state.code !== health[0].code ||
+  (state.code !== health[0].code && !resumeDocuments) ||
   state.sourceHash !== sourceHash ||
   state.analysis !== ENGLISH_ANALYSIS ||
   state.build !== build
@@ -105,6 +111,7 @@ if (
   throw Error(
     "Build code or source changed; use another build directory and ID",
   );
+if (state.code !== health[0].code) state.code = health[0].code;
 let saving = Promise.resolve(),
   lastSaved = -Infinity;
 function save(force = false) {
@@ -528,30 +535,48 @@ if (!state.rootRef) {
   });
   await save();
 }
-if (!state.vocabularies.length)
-  for (let first = 0; first < count; first += 1024)
-    state.vocabularies.push({
-      first,
-      end: Math.min(count, first + 1024),
-      next: first,
-      segments: [],
+// Resolve IDs while producing document records. A separate source-wide
+// vocabulary pass would tokenize and transfer the same source bodies twice.
+if (health[0].vocabulary?.rootSha256 !== state.rootRef.sha256) {
+  const words = out + "/vocabulary-words";
+  async function run(script: string, args: string[], extra = {}) {
+    await new Promise<void>((ok, no) => {
+      const p = spawn("yarn", ["node", "--import", "tsx", script, ...args], {
+        stdio: "inherit",
+        env: { ...process.env, ...extra },
+      });
+      p.once("error", no);
+      p.once("exit", (c) =>
+        c === 0 ? ok() : no(Error(script + " exited " + c)),
+      );
     });
-await pool<any>(state.vocabularies, async (job, i, worker) => {
-  while (job.next < job.end) {
-    const o = await call(worker, "/vocabulary", {
-      task: `vocabulary-${job.next}`,
-      rootRef: state.rootRef,
-      first: job.next,
-      count: job.end - job.next,
-    });
-    if (o.first !== job.next || o.end <= job.next || o.end > job.end)
-      throw Error("Invalid vocabulary continuation");
-    job.segments.push({ first: o.first, end: o.end, ref: o.vocabulary });
-    job.next = o.end;
-    await save();
   }
-  console.log("R2 vocabulary range", i + 1, "/", state.vocabularies.length);
-});
+  const manifest = await readFile(words + "/manifest.json", "utf8").then(
+    JSON.parse,
+    () => undefined,
+  );
+  if (manifest?.rootSha256 !== state.rootRef.sha256)
+    await run("scripts/prepare-construction-words.ts", [out, words]);
+  await run(
+    "scripts/deploy-construction.ts",
+    [new URL(urls[0]).hostname.split(".")[0]],
+    { CWS_CONSTRUCTION_WORDS: words },
+  );
+  const next = (await fetch(urls[0] + "/health", {
+    headers: { authorization: `Bearer ${token}` },
+  }).then((r) => r.json())) as any;
+  if (
+    next.sourceHash !== health[0].sourceHash ||
+    next.vocabulary?.rootSha256 !== state.rootRef.sha256
+  )
+    throw Error(
+      "Direct construction vocabulary did not activate for this source",
+    );
+  health[0] = next;
+  state.code = next.code;
+}
+state.directDocumentIds = true;
+await save(true);
 // Sorted posting streams and range vocabularies feed the serving format
 // directly. Do not construct the retired display/forward-object layout first.
 await save(true);

@@ -19,6 +19,7 @@ import {
 } from "../src/columnar/construction/runs.js";
 import { OBJECT_GROUP } from "../src/columnar/construction/finish.js";
 import type { Root } from "../src/columnar/format.js";
+import { packageRanges } from "./construction-package-plan.js";
 
 const input = process.argv[2],
   out = process.argv[3],
@@ -220,17 +221,13 @@ if (!state.terms.length) {
   await save();
 }
 if (!state.packages.length && !process.argv.includes("--directory-only")) {
-  for (const vocabulary of source.vocabularies)
-    for (const segment of vocabulary.segments)
-      for (let first = segment.first; first < segment.end; first += 1024)
-        state.packages.push({
-          ref: segment.ref,
-          first,
-          end: Math.min(segment.end, first + 1024),
-          next: first,
-          tasks: [],
-          bytes: 0,
-        });
+  for (const range of packageRanges(original.count, source.vocabularies)) {
+    if (!range.ref && groupHealth.directWordLookup !== source.rootRef.sha256)
+      throw Error(
+        "Missing document vocabulary and no matching direct word lookup",
+      );
+    state.packages.push({ ...range, next: range.first, tasks: [], bytes: 0 });
+  }
   await save();
 }
 // One deployment handles independently invocable bounded jobs. Bulk index data
