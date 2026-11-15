@@ -28,16 +28,37 @@ const health = (await Promise.all(
 )) as any[];
 if (health[0].source !== health[1].source)
   throw Error("Ingest CPU comparison source mismatch");
-const seed = 885127,
+const seed = Number(process.env.CWS_INGEST_SEED ?? 885127),
+  firsts = (process.env.CWS_INGEST_FIRSTS ?? "0,100000,500000,900000")
+    .split(",")
+    .map(Number),
   count = Number(process.env.CWS_INGEST_COUNT ?? 128),
-  repetitions = Number(process.env.CWS_INGEST_REPETITIONS ?? 3),
-  jobs = [0, 100000, 500000, 900000]
-    .flatMap((first) =>
-      Array.from({ length: repetitions }, (_, repetition) =>
-        [0, 1].map((variant) => ({ first, repetition, variant })),
-      ),
-    )
-    .flat();
+  repetitions = Number(process.env.CWS_INGEST_REPETITIONS ?? 3);
+if (
+  !Number.isInteger(seed) ||
+  seed < 0 ||
+  seed > 0xffffffff ||
+  !Number.isSafeInteger(count) ||
+  count < 1 ||
+  !Number.isSafeInteger(repetitions) ||
+  repetitions < 1 ||
+  !firsts.length ||
+  new Set(firsts).size !== firsts.length ||
+  firsts.some(
+    (first) =>
+      !Number.isSafeInteger(first) ||
+      first < 0 ||
+      first + count > Math.min(health[0].documents, 1000000),
+  )
+)
+  throw Error("Invalid ingestion comparison ranges, repetitions or seed");
+const jobs = firsts
+  .flatMap((first) =>
+    Array.from({ length: repetitions }, (_, repetition) =>
+      [0, 1].map((variant) => ({ first, repetition, variant })),
+    ),
+  )
+  .flat();
 let randomState = seed;
 for (let i = jobs.length - 1; i > 0; i--) {
   randomState = (Math.imul(randomState, 1664525) + 1013904223) >>> 0;
@@ -132,6 +153,7 @@ for (const [index, job] of jobs.entries()) {
         candidate,
         health,
         seed,
+        firsts,
         count,
         repetitions,
         build,

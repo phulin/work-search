@@ -65,6 +65,10 @@ remaining temporary position buffers. It must preserve the byte encoding and be
 measured against this version. Lower compression effort is another experiment,
 but could increase transfers enough to make elapsed time worse.
 
+That position-writing experiment is now implemented and measured in
+[CONSTRUCTION-POSITIONS.md](CONSTRUCTION-POSITIONS.md), including its remaining
+CPU regression and uncertainty.
+
 Increasing the number of independent ingestion requests can increase throughput;
 it does not reduce CPU per document. The current 1M run uses eight requests at
 most across all phases and completed ingestion in 29m26s. It retains its original

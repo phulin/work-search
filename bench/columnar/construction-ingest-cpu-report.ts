@@ -4,7 +4,8 @@ const [input, controlTail, candidateTail, out] = process.argv.slice(2);
 if (!out)
   throw Error("Use RESULTS_JSON CONTROL_TAIL CANDIDATE_TAIL OUTPUT_JSON");
 const source = JSON.parse(await readFile(input, "utf8"));
-if (source.rows.length !== source.repetitions * 8)
+const firsts: number[] = source.firsts ?? [0, 100000, 500000, 900000];
+if (source.rows.length !== source.repetitions * firsts.length * 2)
   throw Error("Incomplete ingest CPU comparison");
 const events = constructionTail(await readFile(controlTail, "utf8")).concat(
   constructionTail(await readFile(candidateTail, "utf8")),
@@ -31,7 +32,7 @@ const median = (values: number[]) => {
     mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 };
-const groups = [0, 100000, 500000, 900000].map((first) => {
+const groups = firsts.map((first) => {
   const a = rows.filter((r: any) => r.first === first && !r.variant),
     b = rows.filter((r: any) => r.first === first && r.variant);
   const controlCpuMs = median(a.map((r: any) => r.cpuMs)),

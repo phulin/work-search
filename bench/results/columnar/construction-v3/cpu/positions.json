@@ -1,0 +1,6349 @@
+{
+  "control": "https://work-search-cws-fresh-pilot-e.phulin.workers.dev",
+  "candidate": "https://work-search-cws-fresh-pilot-f.phulin.workers.dev",
+  "health": [
+    {
+      "format": "fresh-construction-v3",
+      "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+      "isolate": "13274c05-c089-4819-bc31-4afa77c539f8",
+      "source": "1b6b31afc689f13af3abcf4dc4892900a6f4792ef7094a2bfa2c75ce3d97dd0f",
+      "documents": 10769445
+    },
+    {
+      "format": "fresh-construction-v3",
+      "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+      "isolate": "243d3445-29a3-4527-b9c0-c25fc6602cc8",
+      "source": "1b6b31afc689f13af3abcf4dc4892900a6f4792ef7094a2bfa2c75ce3d97dd0f",
+      "documents": 10769445
+    }
+  ],
+  "seed": 885127,
+  "count": 512,
+  "repetitions": 10,
+  "build": "ingest-cpu-1794774847104",
+  "rows": [
+    {
+      "first": 900000,
+      "repetition": 9,
+      "variant": 1,
+      "ms": 3306.630458,
+      "ray": "a5b108ea7a724cde",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "1ae690d5-067b-486e-9efe-7bc024c43544",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-0",
+        "operation": "/ingest",
+        "wallMs": 2460,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968099
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 1719,
+      "nativeWallMs": 3169,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 9,
+      "variant": 0,
+      "ms": 5706.388000000001,
+      "ray": "a5b1091f1a9013e2",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "4f997b7c-7ee8-4654-b501-a50d2f39beb9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-1",
+        "operation": "/ingest",
+        "wallMs": 4517,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 3328,
+      "nativeWallMs": 5442,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 0,
+      "variant": 1,
+      "ms": 5517.284334,
+      "ray": "a5b1095dad1b6523",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ed7f3720-054a-4fe7-a44e-3db4f037d198",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-2",
+        "operation": "/ingest",
+        "wallMs": 4711,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869217
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 2852,
+      "nativeWallMs": 5376,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 8,
+      "variant": 0,
+      "ms": 3473.5232499999984,
+      "ray": "a5b10992dc9393a4",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "846df135-a66c-4ea9-be09-0fd31c56cac9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-3",
+        "operation": "/ingest",
+        "wallMs": 3043,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 2172,
+      "nativeWallMs": 3355,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 4,
+      "variant": 1,
+      "ms": 3443.108457999995,
+      "ray": "a5b109c1687d9033",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "3dcd882c-7a7a-4793-b86f-a849d2859d43",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-4",
+        "operation": "/ingest",
+        "wallMs": 2207,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968099
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2110,
+      "nativeWallMs": 3275,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 4,
+      "variant": 0,
+      "ms": 4947.786625000001,
+      "ray": "a5b109f0c86a29a9",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "13274c05-c089-4819-bc31-4afa77c539f8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-5",
+        "operation": "/ingest",
+        "wallMs": 3662,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 2840,
+      "nativeWallMs": 4769,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 7,
+      "variant": 0,
+      "ms": 3133.714500000002,
+      "ray": "a5b10a266cc429a9",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "0a25edad-f9fa-48e8-958f-e4ad05541693",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-6",
+        "operation": "/ingest",
+        "wallMs": 2386,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1666,
+      "nativeWallMs": 3051,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 1,
+      "variant": 0,
+      "ms": 3611.008707999994,
+      "ray": "a5b10a541a2629a9",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "f2f148d9-f08a-4e8b-a03c-709cf8bfefe2",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-7",
+        "operation": "/ingest",
+        "wallMs": 2635,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 2192,
+      "nativeWallMs": 3559,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 8,
+      "variant": 1,
+      "ms": 4187.0560410000035,
+      "ray": "a5b10a83f85a8fc6",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "9fcf9702-d0ef-4c03-98be-b309186fe9c8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-8",
+        "operation": "/ingest",
+        "wallMs": 3342,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968099
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2629,
+      "nativeWallMs": 4033,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 5,
+      "variant": 1,
+      "ms": 2325.3099999999977,
+      "ray": "a5b10ac00de08fc6",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "d77b566f-5b35-49f8-ba9a-7f5bf90b5c21",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-9",
+        "operation": "/ingest",
+        "wallMs": 1806,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869217
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 952,
+      "nativeWallMs": 2264,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 7,
+      "variant": 1,
+      "ms": 3180.883958999999,
+      "ray": "a5b10adda8db8fc6",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "01af7608-4034-4e0f-8b02-8cbc2f5a2219",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-10",
+        "operation": "/ingest",
+        "wallMs": 2231,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 1874,
+      "nativeWallMs": 3127,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 6,
+      "variant": 1,
+      "ms": 2045.126375000007,
+      "ray": "a5b10b12faf78fc6",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "293c478a-51b2-42ba-bf10-b55f8bfcee0a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-11",
+        "operation": "/ingest",
+        "wallMs": 1531,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 888,
+      "nativeWallMs": 1984,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 2,
+      "variant": 0,
+      "ms": 2543.529416999998,
+      "ray": "a5b10b2d082a1df6",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "047c4dd1-ead3-44e4-abfb-e8a7d788e8fd",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-12",
+        "operation": "/ingest",
+        "wallMs": 1724,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1084,
+      "nativeWallMs": 2294,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 2,
+      "variant": 1,
+      "ms": 3079.0743749999965,
+      "ray": "a5b10b4da857554d",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "01af7608-4034-4e0f-8b02-8cbc2f5a2219",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-13",
+        "operation": "/ingest",
+        "wallMs": 1971,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 1878,
+      "nativeWallMs": 2945,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 4,
+      "variant": 0,
+      "ms": 2371.1326670000126,
+      "ray": "a5b10b7f8e328c7f",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "692dff4c-516a-42a5-a654-af09267764f8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-14",
+        "operation": "/ingest",
+        "wallMs": 1758,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 981,
+      "nativeWallMs": 2233,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 5,
+      "variant": 0,
+      "ms": 3274.287958000001,
+      "ray": "a5b10b9d6d7b8c7f",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "4be12f80-2b2e-44a1-8f9e-8cf09884639b",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-15",
+        "operation": "/ingest",
+        "wallMs": 2415,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1896,
+      "nativeWallMs": 3205,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 1,
+      "variant": 0,
+      "ms": 7799.646166999999,
+      "ray": "a5b10bca49588c7f",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "f980c356-83e0-4ffd-a54d-dfc9cc9026f9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-16",
+        "operation": "/ingest",
+        "wallMs": 7248,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 6011,
+      "nativeWallMs": 7715,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 7,
+      "variant": 0,
+      "ms": 2323.761916999996,
+      "ray": "a5b10c199a258c7f",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "047c4dd1-ead3-44e4-abfb-e8a7d788e8fd",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-17",
+        "operation": "/ingest",
+        "wallMs": 1723,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1081,
+      "nativeWallMs": 2241,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 2,
+      "variant": 1,
+      "ms": 5234.9887499999895,
+      "ray": "a5b10c3588983d15",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "18126ea8-0139-42b3-8d04-aea62383543a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-18",
+        "operation": "/ingest",
+        "wallMs": 4515,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 3041,
+      "nativeWallMs": 5098,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 3,
+      "variant": 1,
+      "ms": 2817.904749999987,
+      "ray": "a5b10c6f5a463d15",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "4f3e5907-5776-4a25-ad0b-87e9a8153b47",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-19",
+        "operation": "/ingest",
+        "wallMs": 1944,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1610,
+      "nativeWallMs": 2760,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 9,
+      "variant": 0,
+      "ms": 6409.109250000009,
+      "ray": "a5b10c983d048f84",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "f980c356-83e0-4ffd-a54d-dfc9cc9026f9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-20",
+        "operation": "/ingest",
+        "wallMs": 5856,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 4423,
+      "nativeWallMs": 6245,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 8,
+      "variant": 0,
+      "ms": 3910.5455409999995,
+      "ray": "a5b10cddf9108f84",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "e2c04ddc-6d92-43f5-a0a5-6d5bba5d4146",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-21",
+        "operation": "/ingest",
+        "wallMs": 2616,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2601,
+      "nativeWallMs": 3862,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 5,
+      "variant": 1,
+      "ms": 3627.6854590000003,
+      "ray": "a5b10d107cc68e30",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "847179c6-8196-4c14-8fff-8f3ee2bdfeb7",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-22",
+        "operation": "/ingest",
+        "wallMs": 3078,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2304,
+      "nativeWallMs": 3476,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 5,
+      "variant": 1,
+      "ms": 3605.765583999979,
+      "ray": "a5b10d4319e68e30",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "243d3445-29a3-4527-b9c0-c25fc6602cc8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-23",
+        "operation": "/ingest",
+        "wallMs": 2451,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 2077,
+      "nativeWallMs": 3375,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 9,
+      "variant": 0,
+      "ms": 3395.362542000017,
+      "ray": "a5b10d7ca8a7a115",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "68b28e36-692d-4725-a234-ae1855b9a217",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-24",
+        "operation": "/ingest",
+        "wallMs": 2321,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 1946,
+      "nativeWallMs": 3243,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 8,
+      "variant": 1,
+      "ms": 3593.9012090000033,
+      "ray": "a5b10dac8dbc8a39",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "0812ff76-2ed3-4ddb-8a59-ff064cac3c1f",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-25",
+        "operation": "/ingest",
+        "wallMs": 2720,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 1910,
+      "nativeWallMs": 3465,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 2,
+      "variant": 1,
+      "ms": 1952.2412919999915,
+      "ray": "a5b10de039538a39",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "016a7757-25c0-4872-87cc-8f654ebd1be0",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-26",
+        "operation": "/ingest",
+        "wallMs": 1411,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 878,
+      "nativeWallMs": 1894,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 3,
+      "variant": 0,
+      "ms": 3506.0260000000126,
+      "ray": "a5b10df9cc365e9a",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "4be12f80-2b2e-44a1-8f9e-8cf09884639b",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-27",
+        "operation": "/ingest",
+        "wallMs": 3108,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 1937,
+      "nativeWallMs": 3255,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 6,
+      "variant": 1,
+      "ms": 3288.7212500000023,
+      "ray": "a5b10e2d5b4164fe",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "a6f5c29f-3e73-47f4-8297-ec66be34e39c",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-28",
+        "operation": "/ingest",
+        "wallMs": 2183,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 1950,
+      "nativeWallMs": 3136,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 7,
+      "variant": 0,
+      "ms": 3429.870332999999,
+      "ray": "a5b10e61afbb68b4",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "a73811e3-c3d3-4640-affd-1f1819dbb362",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-29",
+        "operation": "/ingest",
+        "wallMs": 2471,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 1929,
+      "nativeWallMs": 3310,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 7,
+      "variant": 1,
+      "ms": 3628.119791999983,
+      "ray": "a5b10e90e9255ea9",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ccc28823-1b6f-4cdb-b60d-7236f864e64a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-30",
+        "operation": "/ingest",
+        "wallMs": 2925,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1679,
+      "nativeWallMs": 3513,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 8,
+      "variant": 1,
+      "ms": 3005.7588749999995,
+      "ray": "a5b10eb62ebc5ea9",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ac265c03-4149-4466-9beb-b5883d1f9598",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-31",
+        "operation": "/ingest",
+        "wallMs": 2152,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1698,
+      "nativeWallMs": 2947,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 3,
+      "variant": 0,
+      "ms": 3646.1833749999932,
+      "ray": "a5b10ee1dcd3bc53",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "07858c01-5585-41b3-938e-70ee678a0395",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-32",
+        "operation": "/ingest",
+        "wallMs": 2237,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2086,
+      "nativeWallMs": 3221,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 1,
+      "variant": 1,
+      "ms": 5751.610291999998,
+      "ray": "a5b10f130e48ae2c",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "60c7b11e-2242-4d62-8219-e811e46a1648",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-33",
+        "operation": "/ingest",
+        "wallMs": 4684,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 3407,
+      "nativeWallMs": 5627,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 4,
+      "variant": 0,
+      "ms": 3408.2609169999487,
+      "ray": "a5b10f52ebadb9a3",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "12b511dc-2f09-4916-a276-acaf57abb513",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-34",
+        "operation": "/ingest",
+        "wallMs": 2310,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 2074,
+      "nativeWallMs": 3279,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 1,
+      "variant": 1,
+      "ms": 3184.188792000001,
+      "ray": "a5b10f856cd0896f",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "333da8e8-7d5c-4144-9ab0-bbbd3f5ac749",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-35",
+        "operation": "/ingest",
+        "wallMs": 2322,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1736,
+      "nativeWallMs": 3030,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 9,
+      "variant": 0,
+      "ms": 3695.4442079999717,
+      "ray": "a5b10fb11bcf9068",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "4f997b7c-7ee8-4654-b501-a50d2f39beb9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-36",
+        "operation": "/ingest",
+        "wallMs": 2773,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1948,
+      "nativeWallMs": 3518,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 0,
+      "variant": 1,
+      "ms": 3232.811083000037,
+      "ray": "a5b10fd67f9e20e0",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "d77b566f-5b35-49f8-ba9a-7f5bf90b5c21",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-37",
+        "operation": "/ingest",
+        "wallMs": 2350,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 1745,
+      "nativeWallMs": 3098,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 2,
+      "variant": 0,
+      "ms": 3763.2808749999967,
+      "ray": "a5b110080ffe8fd9",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "96fdeab3-7cbf-4563-ba71-7d323bc9f60c",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-38",
+        "operation": "/ingest",
+        "wallMs": 2467,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 2413,
+      "nativeWallMs": 3640,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 9,
+      "variant": 1,
+      "ms": 3000.254874999984,
+      "ray": "a5b110405d9e4cdc",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "58bbe471-391f-4494-af9c-2a2927b36574",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-39",
+        "operation": "/ingest",
+        "wallMs": 2297,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1490,
+      "nativeWallMs": 2874,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 2,
+      "variant": 0,
+      "ms": 3391.527875000029,
+      "ray": "a5b1106b4ac4a16e",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "692dff4c-516a-42a5-a654-af09267764f8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-40",
+        "operation": "/ingest",
+        "wallMs": 2587,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 1860,
+      "nativeWallMs": 3260,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 0,
+      "variant": 1,
+      "ms": 7603.740374999994,
+      "ray": "a5b11097fd118fc7",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "c5a197bd-0d62-4f88-8555-62ce833c0040",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-41",
+        "operation": "/ingest",
+        "wallMs": 6255,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 4941,
+      "nativeWallMs": 7412,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 7,
+      "variant": 1,
+      "ms": 5094.004375000019,
+      "ray": "a5b110e259478fc7",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "18126ea8-0139-42b3-8d04-aea62383543a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-42",
+        "operation": "/ingest",
+        "wallMs": 4555,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 3095,
+      "nativeWallMs": 5042,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 3,
+      "variant": 1,
+      "ms": 3641.4667090000003,
+      "ray": "a5b1111889428fc7",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "fbf5cd16-a2ec-4012-ac99-d1a5ac02f671",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-43",
+        "operation": "/ingest",
+        "wallMs": 3493,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2417,
+      "nativeWallMs": 3575,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 1,
+      "variant": 0,
+      "ms": 3969.7102500000037,
+      "ray": "a5b11150dfe5171b",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "63bf38af-4acf-4538-9e4f-316b158b6f3f",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-44",
+        "operation": "/ingest",
+        "wallMs": 3651,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2463,
+      "nativeWallMs": 3814,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 9,
+      "variant": 1,
+      "ms": 3706.235833999992,
+      "ray": "a5b11184ba987583",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "58bbe471-391f-4494-af9c-2a2927b36574",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-45",
+        "operation": "/ingest",
+        "wallMs": 2496,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 2361,
+      "nativeWallMs": 3588,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 4,
+      "variant": 0,
+      "ms": 4230.501624999975,
+      "ray": "a5b111bb488f4f75",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "78f80b63-f915-493b-8a14-a577ba500e62",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-46",
+        "operation": "/ingest",
+        "wallMs": 3652,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2437,
+      "nativeWallMs": 4097,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 4,
+      "variant": 1,
+      "ms": 6117.992499999993,
+      "ray": "a5b111f16f5e4ccc",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ed7f3720-054a-4fe7-a44e-3db4f037d198",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-47",
+        "operation": "/ingest",
+        "wallMs": 5530,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 4029,
+      "nativeWallMs": 5935,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 3,
+      "variant": 1,
+      "ms": 1952.5015419999836,
+      "ray": "a5b11237edaf4ccc",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "243d3445-29a3-4527-b9c0-c25fc6602cc8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-48",
+        "operation": "/ingest",
+        "wallMs": 1452,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 819,
+      "nativeWallMs": 1865,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 7,
+      "variant": 0,
+      "ms": 5078.690082999994,
+      "ray": "a5b112518de03427",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "820157d2-fb0d-4f9a-ba0f-37ee96e4d89f",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-49",
+        "operation": "/ingest",
+        "wallMs": 4576,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 3139,
+      "nativeWallMs": 4955,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 1,
+      "variant": 0,
+      "ms": 2404.685708999983,
+      "ray": "a5b11294ac623427",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "a73811e3-c3d3-4640-affd-1f1819dbb362",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-50",
+        "operation": "/ingest",
+        "wallMs": 1762,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1192,
+      "nativeWallMs": 2348,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 0,
+      "variant": 0,
+      "ms": 3598.0014170000213,
+      "ray": "a5b112b1ffcd3427",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "45062a10-ce4f-4c3b-a963-1262efe268fd",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-51",
+        "operation": "/ingest",
+        "wallMs": 2952,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2226,
+      "nativeWallMs": 3543,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 4,
+      "variant": 1,
+      "ms": 3098.7192500000237,
+      "ray": "a5b112e46bbb5e1e",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "6f4cefbc-a5ec-43ab-b56d-77867c5acf64",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-52",
+        "operation": "/ingest",
+        "wallMs": 2368,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1500,
+      "nativeWallMs": 2925,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 8,
+      "variant": 1,
+      "ms": 3939.2523330000113,
+      "ray": "a5b1130d38a85e1e",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "18126ea8-0139-42b3-8d04-aea62383543a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-53",
+        "operation": "/ingest",
+        "wallMs": 3140,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 2037,
+      "nativeWallMs": 3844,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 5,
+      "variant": 0,
+      "ms": 7097.174624999985,
+      "ray": "a5b11332dd84de02",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "13274c05-c089-4819-bc31-4afa77c539f8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-54",
+        "operation": "/ingest",
+        "wallMs": 6158,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 4455,
+      "nativeWallMs": 6980,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 7,
+      "variant": 1,
+      "ms": 3455.308541000006,
+      "ray": "a5b1137c1a5d904d",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "293c478a-51b2-42ba-bf10-b55f8bfcee0a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-55",
+        "operation": "/ingest",
+        "wallMs": 2084,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2261,
+      "nativeWallMs": 3310,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 5,
+      "variant": 0,
+      "ms": 3762.1377499999944,
+      "ray": "a5b113aea92fc8dd",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "78f80b63-f915-493b-8a14-a577ba500e62",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-56",
+        "operation": "/ingest",
+        "wallMs": 2545,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 2326,
+      "nativeWallMs": 3647,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 6,
+      "variant": 0,
+      "ms": 3289.7929170000134,
+      "ray": "a5b113e5cd7bc8dd",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "846df135-a66c-4ea9-be09-0fd31c56cac9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-57",
+        "operation": "/ingest",
+        "wallMs": 3025,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 2120,
+      "nativeWallMs": 3224,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 5,
+      "variant": 1,
+      "ms": 2873.8357090000063,
+      "ray": "a5b114143c2c8fa9",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "6f4cefbc-a5ec-43ab-b56d-77867c5acf64",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-58",
+        "operation": "/ingest",
+        "wallMs": 1904,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1637,
+      "nativeWallMs": 2740,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 8,
+      "variant": 0,
+      "ms": 5900.847458000004,
+      "ray": "a5b1143f2af65619",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "820157d2-fb0d-4f9a-ba0f-37ee96e4d89f",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-59",
+        "operation": "/ingest",
+        "wallMs": 4904,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 3870,
+      "nativeWallMs": 5782,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 6,
+      "variant": 0,
+      "ms": 5737.671499999997,
+      "ray": "a5b11481bc1f5619",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "16295596-71a0-4834-8224-b22528497eb6",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-60",
+        "operation": "/ingest",
+        "wallMs": 4338,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 3956,
+      "nativeWallMs": 5682,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 0,
+      "variant": 0,
+      "ms": 3800.7562499999767,
+      "ray": "a5b114c418085619",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "78f80b63-f915-493b-8a14-a577ba500e62",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-61",
+        "operation": "/ingest",
+        "wallMs": 3311,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 2203,
+      "nativeWallMs": 3728,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 6,
+      "variant": 0,
+      "ms": 4861.225250000018,
+      "ray": "a5b114f448825619",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "a4794b16-316c-4bd4-869a-1df321b0f07e",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-62",
+        "operation": "/ingest",
+        "wallMs": 4789,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 2915,
+      "nativeWallMs": 4813,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 0,
+      "variant": 0,
+      "ms": 2311.93533399998,
+      "ray": "a5b115286a395619",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "26600b3d-3c30-4a47-b4ed-9aba26c38f0d",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-63",
+        "operation": "/ingest",
+        "wallMs": 1713,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1131,
+      "nativeWallMs": 2260,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 6,
+      "variant": 1,
+      "ms": 4916.55587500002,
+      "ray": "a5b115445f1b633e",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "b79bda45-8417-4e2a-abeb-583fd90b216d",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-64",
+        "operation": "/ingest",
+        "wallMs": 3700,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 3057,
+      "nativeWallMs": 4756,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 3,
+      "variant": 1,
+      "ms": 2713.0473340000026,
+      "ray": "a5b1157d4e43633e",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ac265c03-4149-4466-9beb-b5883d1f9598",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-65",
+        "operation": "/ingest",
+        "wallMs": 1866,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 1561,
+      "nativeWallMs": 2653,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 2,
+      "variant": 0,
+      "ms": 6194.287624999939,
+      "ray": "a5b115ab1ef8783a",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "16295596-71a0-4834-8224-b22528497eb6",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-66",
+        "operation": "/ingest",
+        "wallMs": 4988,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 3869,
+      "nativeWallMs": 6092,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 9,
+      "variant": 1,
+      "ms": 3693.3027500000317,
+      "ray": "a5b115e7dfd1f5c2",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "60c7b11e-2242-4d62-8219-e811e46a1648",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-67",
+        "operation": "/ingest",
+        "wallMs": 2780,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1986,
+      "nativeWallMs": 3580,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 6,
+      "variant": 1,
+      "ms": 2977.6982919999864,
+      "ray": "a5b1160c09caf5c2",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "b79bda45-8417-4e2a-abeb-583fd90b216d",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-68",
+        "operation": "/ingest",
+        "wallMs": 2199,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1595,
+      "nativeWallMs": 2927,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 1,
+      "variant": 1,
+      "ms": 1907.0167919999221,
+      "ray": "a5b11636587ef5c2",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "92ba1fbb-b7e7-42fc-b802-812378e30b67",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-69",
+        "operation": "/ingest",
+        "wallMs": 1357,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 889,
+      "nativeWallMs": 1852,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 8,
+      "variant": 0,
+      "ms": 2379.1221670000814,
+      "ray": "a5b1164f4bb68ff7",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "846df135-a66c-4ea9-be09-0fd31c56cac9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-70",
+        "operation": "/ingest",
+        "wallMs": 1836,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 939,
+      "nativeWallMs": 2234,
+      "outcome": "ok"
+    },
+    {
+      "first": 0,
+      "repetition": 0,
+      "variant": 0,
+      "ms": 4006.5517919999547,
+      "ray": "a5b1166e9edb8ff7",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "e18da5fa-ae79-4a6f-aa5e-3054da2e8ab3",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-71",
+        "operation": "/ingest",
+        "wallMs": 3501,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 670675,
+        "stemCalls": 24558,
+        "cacheHits": 646117,
+        "cacheBytes": 1993614,
+        "maxCacheBytes": 1994210
+      },
+      "sha256": "613fee09a57a7ab53e518c9cbd2462df8359fa704e4f92cfe2de442d9a24368d",
+      "verificationBytes": 2063367,
+      "cpuMs": 2567,
+      "nativeWallMs": 3954,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 3,
+      "variant": 0,
+      "ms": 3004.155291999923,
+      "ray": "a5b116a23c7d8ff7",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "7afc2dcf-c3d7-44df-9d8c-34355bc581fe",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-72",
+        "operation": "/ingest",
+        "wallMs": 1986,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 1864,
+      "nativeWallMs": 2957,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 1,
+      "variant": 1,
+      "ms": 5339.782917000004,
+      "ray": "a5b116c99e5e72e6",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ccc28823-1b6f-4cdb-b60d-7236f864e64a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-73",
+        "operation": "/ingest",
+        "wallMs": 5142,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 3201,
+      "nativeWallMs": 5213,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 6,
+      "variant": 0,
+      "ms": 2336.922666999977,
+      "ray": "a5b11703fc338ceb",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "a73811e3-c3d3-4640-affd-1f1819dbb362",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-74",
+        "operation": "/ingest",
+        "wallMs": 1673,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1100,
+      "nativeWallMs": 2230,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 5,
+      "variant": 0,
+      "ms": 2235.655541999964,
+      "ray": "a5b1171f2a198ceb",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "26dbaedb-c161-473b-b4fd-3215b2f356a3",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-75",
+        "operation": "/ingest",
+        "wallMs": 1661,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 1063,
+      "nativeWallMs": 2183,
+      "outcome": "ok"
+    },
+    {
+      "first": 900000,
+      "repetition": 2,
+      "variant": 1,
+      "ms": 5246.018082999974,
+      "ray": "a5b11739ba7ccda3",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "c5a197bd-0d62-4f88-8555-62ce833c0040",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-76",
+        "operation": "/ingest",
+        "wallMs": 4934,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 593262,
+        "stemCalls": 27200,
+        "cacheHits": 566062,
+        "cacheBytes": 1990288,
+        "maxCacheBytes": 1992494
+      },
+      "sha256": "bdff763b9935ae81cc76d6c1c3a97eff91116bc38d35e9ec23d220103a0c1cab",
+      "verificationBytes": 1856529,
+      "cpuMs": 3494,
+      "nativeWallMs": 5117,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 3,
+      "variant": 0,
+      "ms": 2056.2929579999764,
+      "ray": "a5b117743f3b5e9a",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "e2c04ddc-6d92-43f5-a0a5-6d5bba5d4146",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-77",
+        "operation": "/ingest",
+        "wallMs": 1390,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 979,
+      "nativeWallMs": 1925,
+      "outcome": "ok"
+    },
+    {
+      "first": 500000,
+      "repetition": 4,
+      "variant": 1,
+      "ms": 2317.6446250000736,
+      "ray": "a5b117900bcf902f",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "0094fbaf-93b0-4f9c-a3a0-f593728c6682",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-78",
+        "operation": "/ingest",
+        "wallMs": 1657,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 227568,
+        "stemCalls": 12749,
+        "cacheHits": 214819,
+        "cacheBytes": 1545360,
+        "maxCacheBytes": 1545360
+      },
+      "sha256": "7effc428f50221c7e3c8d9e5cab411e9c3c4521b61831cbf2a1fcc37fe15ccab",
+      "verificationBytes": 803236,
+      "cpuMs": 935,
+      "nativeWallMs": 2106,
+      "outcome": "ok"
+    },
+    {
+      "first": 100000,
+      "repetition": 0,
+      "variant": 1,
+      "ms": 3838.9599170000292,
+      "ray": "a5b117ad3f08902f",
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "27dff902-d652-4526-8054-acc11a0bb7d0",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-79",
+        "operation": "/ingest",
+        "wallMs": 2603,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      },
+      "documents": 512,
+      "analysisWork": {
+        "tokens": 488776,
+        "stemCalls": 22344,
+        "cacheHits": 466432,
+        "cacheBytes": 1995154,
+        "maxCacheBytes": 1995154
+      },
+      "sha256": "309dc138b311b98609431b6ed4f583a660fe393d2ccca2b3c594726ec49ca63b",
+      "verificationBytes": 1614982,
+      "cpuMs": 2567,
+      "nativeWallMs": 3783,
+      "outcome": "ok"
+    }
+  ],
+  "attempts": [
+    {
+      "first": 900000,
+      "repetition": 9,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3306.630458,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "1ae690d5-067b-486e-9efe-7bc024c43544",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-0",
+        "operation": "/ingest",
+        "wallMs": 2460,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968099
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 9,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5706.388000000001,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "4f997b7c-7ee8-4654-b501-a50d2f39beb9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-1",
+        "operation": "/ingest",
+        "wallMs": 4517,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 0,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5517.284334,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ed7f3720-054a-4fe7-a44e-3db4f037d198",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-2",
+        "operation": "/ingest",
+        "wallMs": 4711,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869217
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 8,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3473.5232499999984,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "846df135-a66c-4ea9-be09-0fd31c56cac9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-3",
+        "operation": "/ingest",
+        "wallMs": 3043,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 4,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3443.108457999995,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "3dcd882c-7a7a-4793-b86f-a849d2859d43",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-4",
+        "operation": "/ingest",
+        "wallMs": 2207,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968099
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 4,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 4947.786625000001,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "13274c05-c089-4819-bc31-4afa77c539f8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-5",
+        "operation": "/ingest",
+        "wallMs": 3662,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 7,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3133.714500000002,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "0a25edad-f9fa-48e8-958f-e4ad05541693",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-6",
+        "operation": "/ingest",
+        "wallMs": 2386,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 1,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3611.008707999994,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "f2f148d9-f08a-4e8b-a03c-709cf8bfefe2",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-7",
+        "operation": "/ingest",
+        "wallMs": 2635,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711618
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 8,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 4187.0560410000035,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "9fcf9702-d0ef-4c03-98be-b309186fe9c8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-8",
+        "operation": "/ingest",
+        "wallMs": 3342,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968099
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 5,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2325.3099999999977,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "d77b566f-5b35-49f8-ba9a-7f5bf90b5c21",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-9",
+        "operation": "/ingest",
+        "wallMs": 1806,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869217
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 7,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3180.883958999999,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "01af7608-4034-4e0f-8b02-8cbc2f5a2219",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-10",
+        "operation": "/ingest",
+        "wallMs": 2231,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 6,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2045.126375000007,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "293c478a-51b2-42ba-bf10-b55f8bfcee0a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-11",
+        "operation": "/ingest",
+        "wallMs": 1531,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 2,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2543.529416999998,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "047c4dd1-ead3-44e4-abfb-e8a7d788e8fd",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-12",
+        "operation": "/ingest",
+        "wallMs": 1724,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 2,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3079.0743749999965,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "01af7608-4034-4e0f-8b02-8cbc2f5a2219",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-13",
+        "operation": "/ingest",
+        "wallMs": 1971,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 4,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2371.1326670000126,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "692dff4c-516a-42a5-a654-af09267764f8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-14",
+        "operation": "/ingest",
+        "wallMs": 1758,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 5,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3274.287958000001,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "4be12f80-2b2e-44a1-8f9e-8cf09884639b",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-15",
+        "operation": "/ingest",
+        "wallMs": 2415,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 1,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 7799.646166999999,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "f980c356-83e0-4ffd-a54d-dfc9cc9026f9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-16",
+        "operation": "/ingest",
+        "wallMs": 7248,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 7,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2323.761916999996,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "047c4dd1-ead3-44e4-abfb-e8a7d788e8fd",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-17",
+        "operation": "/ingest",
+        "wallMs": 1723,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 2,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5234.9887499999895,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "18126ea8-0139-42b3-8d04-aea62383543a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-18",
+        "operation": "/ingest",
+        "wallMs": 4515,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 3,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2817.904749999987,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "4f3e5907-5776-4a25-ad0b-87e9a8153b47",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-19",
+        "operation": "/ingest",
+        "wallMs": 1944,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 9,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 6409.109250000009,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "f980c356-83e0-4ffd-a54d-dfc9cc9026f9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-20",
+        "operation": "/ingest",
+        "wallMs": 5856,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 8,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3910.5455409999995,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "e2c04ddc-6d92-43f5-a0a5-6d5bba5d4146",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-21",
+        "operation": "/ingest",
+        "wallMs": 2616,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 5,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3627.6854590000003,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "847179c6-8196-4c14-8fff-8f3ee2bdfeb7",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-22",
+        "operation": "/ingest",
+        "wallMs": 3078,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 5,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3605.765583999979,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "243d3445-29a3-4527-b9c0-c25fc6602cc8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-23",
+        "operation": "/ingest",
+        "wallMs": 2451,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 9,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3395.362542000017,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "68b28e36-692d-4725-a234-ae1855b9a217",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-24",
+        "operation": "/ingest",
+        "wallMs": 2321,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 8,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3593.9012090000033,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "0812ff76-2ed3-4ddb-8a59-ff064cac3c1f",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-25",
+        "operation": "/ingest",
+        "wallMs": 2720,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 2,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 1952.2412919999915,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "016a7757-25c0-4872-87cc-8f654ebd1be0",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-26",
+        "operation": "/ingest",
+        "wallMs": 1411,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 3,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3506.0260000000126,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "4be12f80-2b2e-44a1-8f9e-8cf09884639b",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-27",
+        "operation": "/ingest",
+        "wallMs": 3108,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 6,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3288.7212500000023,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "a6f5c29f-3e73-47f4-8297-ec66be34e39c",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-28",
+        "operation": "/ingest",
+        "wallMs": 2183,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 7,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3429.870332999999,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "a73811e3-c3d3-4640-affd-1f1819dbb362",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-29",
+        "operation": "/ingest",
+        "wallMs": 2471,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 7,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3628.119791999983,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ccc28823-1b6f-4cdb-b60d-7236f864e64a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-30",
+        "operation": "/ingest",
+        "wallMs": 2925,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 8,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3005.7588749999995,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ac265c03-4149-4466-9beb-b5883d1f9598",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-31",
+        "operation": "/ingest",
+        "wallMs": 2152,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 3,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3646.1833749999932,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "07858c01-5585-41b3-938e-70ee678a0395",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-32",
+        "operation": "/ingest",
+        "wallMs": 2237,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 1,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5751.610291999998,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "60c7b11e-2242-4d62-8219-e811e46a1648",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-33",
+        "operation": "/ingest",
+        "wallMs": 4684,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 4,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3408.2609169999487,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "12b511dc-2f09-4916-a276-acaf57abb513",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-34",
+        "operation": "/ingest",
+        "wallMs": 2310,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 1,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3184.188792000001,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "333da8e8-7d5c-4144-9ab0-bbbd3f5ac749",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-35",
+        "operation": "/ingest",
+        "wallMs": 2322,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 9,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3695.4442079999717,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "4f997b7c-7ee8-4654-b501-a50d2f39beb9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-36",
+        "operation": "/ingest",
+        "wallMs": 2773,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 0,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3232.811083000037,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "d77b566f-5b35-49f8-ba9a-7f5bf90b5c21",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-37",
+        "operation": "/ingest",
+        "wallMs": 2350,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 2,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3763.2808749999967,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "96fdeab3-7cbf-4563-ba71-7d323bc9f60c",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-38",
+        "operation": "/ingest",
+        "wallMs": 2467,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 9,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3000.254874999984,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "58bbe471-391f-4494-af9c-2a2927b36574",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-39",
+        "operation": "/ingest",
+        "wallMs": 2297,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 2,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3391.527875000029,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "692dff4c-516a-42a5-a654-af09267764f8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-40",
+        "operation": "/ingest",
+        "wallMs": 2587,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 0,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 7603.740374999994,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "c5a197bd-0d62-4f88-8555-62ce833c0040",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-41",
+        "operation": "/ingest",
+        "wallMs": 6255,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 7,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5094.004375000019,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "18126ea8-0139-42b3-8d04-aea62383543a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-42",
+        "operation": "/ingest",
+        "wallMs": 4555,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 3,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3641.4667090000003,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "fbf5cd16-a2ec-4012-ac99-d1a5ac02f671",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-43",
+        "operation": "/ingest",
+        "wallMs": 3493,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 1,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3969.7102500000037,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "63bf38af-4acf-4538-9e4f-316b158b6f3f",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-44",
+        "operation": "/ingest",
+        "wallMs": 3651,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 9,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3706.235833999992,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "58bbe471-391f-4494-af9c-2a2927b36574",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-45",
+        "operation": "/ingest",
+        "wallMs": 2496,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 4,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 4230.501624999975,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "78f80b63-f915-493b-8a14-a577ba500e62",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-46",
+        "operation": "/ingest",
+        "wallMs": 3652,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 4,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 6117.992499999993,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ed7f3720-054a-4fe7-a44e-3db4f037d198",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-47",
+        "operation": "/ingest",
+        "wallMs": 5530,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 3,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 1952.5015419999836,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "243d3445-29a3-4527-b9c0-c25fc6602cc8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-48",
+        "operation": "/ingest",
+        "wallMs": 1452,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 7,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5078.690082999994,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "820157d2-fb0d-4f9a-ba0f-37ee96e4d89f",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-49",
+        "operation": "/ingest",
+        "wallMs": 4576,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 1,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2404.685708999983,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "a73811e3-c3d3-4640-affd-1f1819dbb362",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-50",
+        "operation": "/ingest",
+        "wallMs": 1762,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 0,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3598.0014170000213,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "45062a10-ce4f-4c3b-a963-1262efe268fd",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-51",
+        "operation": "/ingest",
+        "wallMs": 2952,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 4,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3098.7192500000237,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "6f4cefbc-a5ec-43ab-b56d-77867c5acf64",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-52",
+        "operation": "/ingest",
+        "wallMs": 2368,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 8,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3939.2523330000113,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "18126ea8-0139-42b3-8d04-aea62383543a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-53",
+        "operation": "/ingest",
+        "wallMs": 3140,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 5,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 7097.174624999985,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "13274c05-c089-4819-bc31-4afa77c539f8",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-54",
+        "operation": "/ingest",
+        "wallMs": 6158,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 7,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3455.308541000006,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "293c478a-51b2-42ba-bf10-b55f8bfcee0a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-55",
+        "operation": "/ingest",
+        "wallMs": 2084,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 5,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3762.1377499999944,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "78f80b63-f915-493b-8a14-a577ba500e62",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-56",
+        "operation": "/ingest",
+        "wallMs": 2545,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 6,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3289.7929170000134,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "846df135-a66c-4ea9-be09-0fd31c56cac9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-57",
+        "operation": "/ingest",
+        "wallMs": 3025,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 5,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2873.8357090000063,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "6f4cefbc-a5ec-43ab-b56d-77867c5acf64",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-58",
+        "operation": "/ingest",
+        "wallMs": 1904,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 8,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5900.847458000004,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "820157d2-fb0d-4f9a-ba0f-37ee96e4d89f",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-59",
+        "operation": "/ingest",
+        "wallMs": 4904,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 6,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5737.671499999997,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "16295596-71a0-4834-8224-b22528497eb6",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-60",
+        "operation": "/ingest",
+        "wallMs": 4338,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 0,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3800.7562499999767,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "78f80b63-f915-493b-8a14-a577ba500e62",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-61",
+        "operation": "/ingest",
+        "wallMs": 3311,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 6,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 4861.225250000018,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "a4794b16-316c-4bd4-869a-1df321b0f07e",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-62",
+        "operation": "/ingest",
+        "wallMs": 4789,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 0,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2311.93533399998,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "26600b3d-3c30-4a47-b4ed-9aba26c38f0d",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-63",
+        "operation": "/ingest",
+        "wallMs": 1713,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 6,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 4916.55587500002,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "b79bda45-8417-4e2a-abeb-583fd90b216d",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-64",
+        "operation": "/ingest",
+        "wallMs": 3700,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 3,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2713.0473340000026,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ac265c03-4149-4466-9beb-b5883d1f9598",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-65",
+        "operation": "/ingest",
+        "wallMs": 1866,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 2,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 6194.287624999939,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "16295596-71a0-4834-8224-b22528497eb6",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-66",
+        "operation": "/ingest",
+        "wallMs": 4988,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 9,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3693.3027500000317,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "60c7b11e-2242-4d62-8219-e811e46a1648",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-67",
+        "operation": "/ingest",
+        "wallMs": 2780,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 6,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2977.6982919999864,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "b79bda45-8417-4e2a-abeb-583fd90b216d",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-68",
+        "operation": "/ingest",
+        "wallMs": 2199,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 1,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 1907.0167919999221,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "92ba1fbb-b7e7-42fc-b802-812378e30b67",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-69",
+        "operation": "/ingest",
+        "wallMs": 1357,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 8,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2379.1221670000814,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "846df135-a66c-4ea9-be09-0fd31c56cac9",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-70",
+        "operation": "/ingest",
+        "wallMs": 1836,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 0,
+      "repetition": 0,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 4006.5517919999547,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "e18da5fa-ae79-4a6f-aa5e-3054da2e8ab3",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-71",
+        "operation": "/ingest",
+        "wallMs": 3501,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1823948,
+          "bytesWritten": 2172653
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 3,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3004.155291999923,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "7afc2dcf-c3d7-44df-9d8c-34355bc581fe",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-72",
+        "operation": "/ingest",
+        "wallMs": 1986,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 1,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5339.782917000004,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "ccc28823-1b6f-4cdb-b60d-7236f864e64a",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-73",
+        "operation": "/ingest",
+        "wallMs": 5142,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 6,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2336.922666999977,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "a73811e3-c3d3-4640-affd-1f1819dbb362",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-74",
+        "operation": "/ingest",
+        "wallMs": 1673,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 5,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2235.655541999964,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "26dbaedb-c161-473b-b4fd-3215b2f356a3",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-75",
+        "operation": "/ingest",
+        "wallMs": 1661,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 900000,
+      "repetition": 2,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 5246.018082999974,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "c5a197bd-0d62-4f88-8555-62ce833c0040",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-76",
+        "operation": "/ingest",
+        "wallMs": 4934,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1711452,
+          "bytesWritten": 1968100
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 3,
+      "variant": 0,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2056.2929579999764,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "6483d0be2549c53a1d3abd79205180c7648103607ad0b4ff99de2469293ac117",
+        "isolate": "e2c04ddc-6d92-43f5-a0a5-6d5bba5d4146",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-77",
+        "operation": "/ingest",
+        "wallMs": 1390,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 500000,
+      "repetition": 4,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 2317.6446250000736,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "0094fbaf-93b0-4f9c-a3a0-f593728c6682",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-78",
+        "operation": "/ingest",
+        "wallMs": 1657,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 785741,
+          "bytesWritten": 869218
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    },
+    {
+      "first": 100000,
+      "repetition": 0,
+      "variant": 1,
+      "attempt": 0,
+      "status": 200,
+      "ms": 3838.9599170000292,
+      "telemetry": {
+        "format": "fresh-construction-v3",
+        "code": "3704a75c59f8f9d0796341371b309ea41861a221811936f08fb2cfc7629651a5",
+        "isolate": "27dff902-d652-4526-8054-acc11a0bb7d0",
+        "build": "ingest-cpu-1794774847104",
+        "task": "ingest-79",
+        "operation": "/ingest",
+        "wallMs": 2603,
+        "queueMs": 0,
+        "io": {
+          "operations": {
+            "get": 13,
+            "put": 3
+          },
+          "failures": {},
+          "bytesRead": 1436445,
+          "bytesWritten": 1711619
+        },
+        "codec": {
+          "encodeMs": 0,
+          "decodeMs": 0,
+          "decodedBytes": 0,
+          "continuationDecodeBytes": 0
+        }
+      }
+    }
+  ],
+  "notes": [
+    "Randomized interleaving, identical archived ranges and request sizes, concurrency one.",
+    "All expanded sorted posting bytes and field totals must match exactly.",
+    "Verification transfers are excluded from ingest elapsed time and reported separately.",
+    "Opaque R2 backend caches are uncontrolled. Native CPU must be joined from Cloudflare logs by CF-Ray."
+  ],
+  "groups": [
+    {
+      "first": 0,
+      "samplesPerVariant": 10,
+      "documents": 512,
+      "tokens": 670675,
+      "controlCpuMs": 2853,
+      "candidateCpuMs": 1930,
+      "cpuReductionPercent": 32.351910269891334,
+      "controlClientMs": 4542.620937499974,
+      "candidateClientMs": 3441.311229500003,
+      "stemCalls": 24558,
+      "cacheHits": 646117,
+      "maxCacheBytes": 1994210
+    },
+    {
+      "first": 100000,
+      "samplesPerVariant": 10,
+      "documents": 512,
+      "tokens": 488776,
+      "controlCpuMs": 2197.5,
+      "candidateCpuMs": 1667.5,
+      "cpuReductionPercent": 24.118316268486918,
+      "controlClientMs": 3705.8824789999853,
+      "candidateClientMs": 3052.2390625000116,
+      "stemCalls": 22344,
+      "cacheHits": 466432,
+      "maxCacheBytes": 1995154
+    },
+    {
+      "first": 500000,
+      "samplesPerVariant": 10,
+      "documents": 512,
+      "tokens": 227568,
+      "controlCpuMs": 1082.5,
+      "candidateCpuMs": 943.5,
+      "cpuReductionPercent": 12.840646651270205,
+      "controlClientMs": 2354.027666999995,
+      "candidateClientMs": 2321.4773125000356,
+      "stemCalls": 12749,
+      "cacheHits": 214819,
+      "maxCacheBytes": 1545360
+    },
+    {
+      "first": 900000,
+      "samplesPerVariant": 10,
+      "documents": 512,
+      "tokens": 593262,
+      "controlCpuMs": 2173,
+      "candidateCpuMs": 2523,
+      "cpuReductionPercent": -16.10676484123332,
+      "controlClientMs": 3622.0923960000073,
+      "candidateClientMs": 3914.261375000002,
+      "stemCalls": 27200,
+      "cacheHits": 566062,
+      "maxCacheBytes": 1992494
+    }
+  ],
+  "totalCpu": {
+    "controlCpuMs": 93282,
+    "candidateCpuMs": 84809,
+    "reductionPercent": 9.083210051242474,
+    "bootstrap95ReductionPercent": [
+      -5.744376321804712,
+      22.25123520903911
+    ],
+    "bootstrapSeed": 516702,
+    "bootstrapSamples": 5000
+  },
+  "limitations": [
+    "10 observations per range and variant; pilot sample, not production percentiles.",
+    "The bootstrap interval resamples within each range and variant; it does not account for systematic host differences, temporal effects, or represent full-corpus uncertainty.",
+    "Client latency includes uncontrolled remote I/O; CPU is measured separately by Cloudflare.",
+    "The source ranges and expanded posting bytes are identical. No cache warming assumption is used."
+  ]
+}

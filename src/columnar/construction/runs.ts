@@ -1,4 +1,4 @@
-import { pack, concat, u32, view, type Root } from "../format.js";
+import { concat, u32, view, type Root } from "../format.js";
 import { CorpusSource } from "./source.js";
 import { ingestAnalyzer } from "./ingest-analysis.js";
 import {
@@ -316,7 +316,49 @@ export function termRecord(word: string, df: number) {
   const bytes = encoder.encode(word);
   return concat([u32([12 + bytes.length, 1, df]), bytes]);
 }
-const emptyPositions = pack([], true);
+function positionWidth(positions: number[]) {
+  let previous = positions[0] ?? 0,
+    maximum = 0;
+  for (let i = 0; i < positions.length; i++) {
+    const next = positions[i];
+    if (
+      !Number.isInteger(next) ||
+      next < previous ||
+      next < 0 ||
+      next > 0xffffffff
+    )
+      throw Error("Invalid packed integer");
+    maximum = Math.max(maximum, next - previous);
+    previous = next;
+  }
+  return maximum ? 32 - Math.clz32(maximum) : 0;
+}
+/** Same delta-packed bytes as pack(positions, true), directly in a new row's
+ * zeroed storage. The row and both position columns are four-byte aligned. */
+function writePositions(
+  out: Uint32Array,
+  at: number,
+  positions: number[],
+  width: number,
+) {
+  const n = positions.length,
+    base = positions[0] ?? 0;
+  out[at] = n;
+  out[at + 1] = base;
+  out[at + 2] = width | 256; // width byte, then delta flag, then two reserved bytes
+  let previous = base;
+  // The first delta is always zero, including nonzero restart positions.
+  for (let i = 1; i < n && width; i++) {
+    const next = positions[i],
+      delta = next - previous,
+      bit = i * width,
+      word = at + 3 + (bit >>> 5),
+      shift = bit & 31;
+    out[word] |= delta << shift;
+    if (shift + width > 32) out[word + 1] |= delta >>> (32 - shift);
+    previous = next;
+  }
+}
 export function rowRecord(
   doc: number,
   bl: number,
@@ -324,19 +366,21 @@ export function rowRecord(
   body: number[],
   title: number[],
 ) {
-  const b = body.length ? pack(body, true) : emptyPositions,
-    t = title.length ? pack(title, true) : emptyPositions,
-    raw = new Uint8Array(28 + b.length + t.length),
-    header = new Uint32Array(raw.buffer, 0, 7);
+  const bodyWidth = positionWidth(body),
+    titleWidth = positionWidth(title),
+    bodyBytes = 12 + Math.ceil((body.length * bodyWidth) / 32) * 4,
+    titleBytes = 12 + Math.ceil((title.length * titleWidth) / 32) * 4,
+    raw = new Uint8Array(28 + bodyBytes + titleBytes),
+    header = new Uint32Array(raw.buffer);
   header[0] = raw.length;
   header[1] = 2;
   header[2] = doc;
   header[3] = bl;
   header[4] = tl;
-  header[5] = b.length;
-  header[6] = t.length;
-  raw.set(b, 28);
-  raw.set(t, 28 + b.length);
+  header[5] = bodyBytes;
+  header[6] = titleBytes;
+  writePositions(header, 7, body, bodyWidth);
+  writePositions(header, 7 + bodyBytes / 4, title, titleWidth);
   return raw;
 }
 export interface Cursor {
