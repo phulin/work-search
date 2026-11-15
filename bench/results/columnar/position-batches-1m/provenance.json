@@ -1,0 +1,238 @@
+{
+  "kind": "Local 1M simulated comparisons only; no deployments or Cloudflare activity",
+  "controlRevision": "55fff24b543fe0bf3ec37daedf1e22de0a741b11",
+  "index": "work/complete-context-v2-1m",
+  "formatChanged": false,
+  "contextChanged": false,
+  "widePerformanceExactTotals": false,
+  "presentationChanged": false,
+  "requests": 1534,
+  "runs": [
+    {
+      "name": "focused-empty",
+      "manifest": {
+        "kind": "Local Node diagnostic with simulated R2/cache delays; not live Worker or client HTTP latency",
+        "generation": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
+        "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+        "analysis": "nfkc-lower-porter2-v1",
+        "documents": 1000000,
+        "format": "CWS1",
+        "model": {
+          "r2Ms": 20,
+          "sharedMs": 2,
+          "r2MiBPerSecond": 100,
+          "sharedMiBPerSecond": 1000,
+          "jitterMs": 0,
+          "seed": 20261113
+        },
+        "comparisonSeed": 20261113,
+        "sharedCacheMiB": 256,
+        "sharedBudget": 900,
+        "primeSharedBudget": 900,
+        "primePasses": 1,
+        "artificialDelays": true,
+        "cacheIsolation": "Independent caches per measured query/plan/repeat; one untimed same-query priming pass for warm conditions",
+        "condition": "fresh-namespace",
+        "plans": [
+          "control-N100-M1000",
+          "auto-N100-M1000"
+        ],
+        "repeats": 3,
+        "contracts": 29,
+        "contractFile": "work/phrase-planner-contract.json",
+        "contractSha256": "b72178db874aaa2ae3918f5ce0d9d68f4d0b60ba93ddff20bdb9a292fa1096f2",
+        "node": "v26.7.0",
+        "responseCaching": false,
+        "pairRouterSha256": "8a1db82b64546e8b05ca0722aa881a026159e69abfe7383a9291eb453e8c2ecd",
+        "exactPhraseDirectorySha256": "c2ef97f1904c067fd4774e6fa495b9b964dd02d5d9737815f6d59d113dc17a9b",
+        "includes": "Matching, exact ranking, metadata, query-relevant snippet and JSON serialization",
+        "preparedDownloads": 0,
+        "preparedBytes": 0,
+        "warmup": "Bounded cache population without artificial delays, using primeSharedBudget; measured delays follow artificialDelays",
+        "startedAt": "2026-11-15T01:31:52.216Z",
+        "implementationSha256": "3c7db8db74208f7b74377c2cf0c2bb5e224778a78eed3bb78bf4971a26085a7e",
+        "controlSource": "work/position-batches-control",
+        "controlIndex": "work/position-batches-control/index",
+        "controlGeneration": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
+        "controlRuntime": "frozen"
+      },
+      "requests": 174,
+      "scenarioMedianPercentiles": {
+        "note": "Percentiles of query/options medians; not production traffic or request-tail estimates.",
+        "before": {
+          "p50": 560.4975829999967,
+          "p95": 1675.688374999998,
+          "p99": 1976.2143750000032
+        },
+        "after": {
+          "p50": 548.4515829999873,
+          "p95": 1130.9605420000007,
+          "p99": 1932.0633750000015
+        }
+      },
+      "measuredRequestPercentiles": {
+        "note": "Empirical percentiles of this equally represented simulated workload; not production traffic.",
+        "before": {
+          "p50": 562.9664580000099,
+          "p95": 1675.688374999998,
+          "p99": 2004.5413750000007
+        },
+        "after": {
+          "p50": 544.025542000003,
+          "p95": 1130.9605420000007,
+          "p99": 2027.959750000009
+        }
+      },
+      "exactTotalSettings": {
+        "off": 22,
+        "on": 7
+      },
+      "materialWins": 6,
+      "materialRegressions": []
+    },
+    {
+      "name": "wide-empty",
+      "manifest": {
+        "kind": "Local Node diagnostic with simulated R2/cache delays; not live Worker or client HTTP latency",
+        "generation": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
+        "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+        "analysis": "nfkc-lower-porter2-v1",
+        "documents": 1000000,
+        "format": "CWS1",
+        "model": {
+          "r2Ms": 20,
+          "sharedMs": 2,
+          "r2MiBPerSecond": 100,
+          "sharedMiBPerSecond": 1000,
+          "jitterMs": 0,
+          "seed": 20261113
+        },
+        "comparisonSeed": 20261113,
+        "sharedCacheMiB": 256,
+        "sharedBudget": 900,
+        "primeSharedBudget": 900,
+        "primePasses": 1,
+        "artificialDelays": true,
+        "cacheIsolation": "Independent caches per measured query/plan/repeat; one untimed same-query priming pass for warm conditions",
+        "condition": "fresh-namespace",
+        "plans": [
+          "control-N100-M1000",
+          "auto-N100-M1000"
+        ],
+        "repeats": 3,
+        "contracts": 200,
+        "contractFile": "work/io-iteration/expanded-contract.json",
+        "contractSha256": "f38f8cb2bc6737e7124013e1420f8f966bfcd7909cb7d3d61474ea260d23b7e1",
+        "node": "v26.7.0",
+        "responseCaching": false,
+        "pairRouterSha256": "8a1db82b64546e8b05ca0722aa881a026159e69abfe7383a9291eb453e8c2ecd",
+        "exactPhraseDirectorySha256": "c2ef97f1904c067fd4774e6fa495b9b964dd02d5d9737815f6d59d113dc17a9b",
+        "includes": "Matching, exact ranking, metadata, query-relevant snippet and JSON serialization",
+        "preparedDownloads": 0,
+        "preparedBytes": 0,
+        "warmup": "Bounded cache population without artificial delays, using primeSharedBudget; measured delays follow artificialDelays",
+        "startedAt": "2026-11-15T01:19:32.210Z",
+        "implementationSha256": "3c7db8db74208f7b74377c2cf0c2bb5e224778a78eed3bb78bf4971a26085a7e",
+        "controlSource": "work/position-batches-control",
+        "controlIndex": "work/position-batches-control/index",
+        "controlGeneration": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
+        "controlRuntime": "frozen"
+      },
+      "requests": 1200,
+      "scenarioMedianPercentiles": {
+        "note": "Percentiles of query/options medians; not production traffic or request-tail estimates.",
+        "before": {
+          "p50": 392.0607079999754,
+          "p95": 1325.788166000042,
+          "p99": 1991.5419160000165
+        },
+        "after": {
+          "p50": 381.06600000000253,
+          "p95": 1024.2568329999922,
+          "p99": 1821.0012910000514
+        }
+      },
+      "measuredRequestPercentiles": {
+        "note": "Empirical percentiles of this equally represented simulated workload; not production traffic.",
+        "before": {
+          "p50": 392.0607079999754,
+          "p95": 1343.5131249999977,
+          "p99": 1997.3054999999877
+        },
+        "after": {
+          "p50": 383.0852920000034,
+          "p95": 1021.79779099999,
+          "p99": 1824.031375000006
+        }
+      },
+      "exactTotalSettings": {
+        "off": 200,
+        "on": 0
+      },
+      "materialWins": 36,
+      "materialRegressions": []
+    },
+    {
+      "name": "independent",
+      "manifest": {
+        "kind": "Local Node diagnostic with simulated R2/cache delays; not live Worker or client HTTP latency",
+        "generation": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
+        "corpusHash": "2d1b9cf2d7f0d610875de8e8f309fdc93f41c00dd777991b59865028d1a8580a",
+        "analysis": "nfkc-lower-porter2-v1",
+        "documents": 1000000,
+        "format": "CWS1",
+        "model": {
+          "r2Ms": 20,
+          "sharedMs": 2,
+          "r2MiBPerSecond": 100,
+          "sharedMiBPerSecond": 1000,
+          "jitterMs": 0,
+          "seed": 20261113
+        },
+        "comparisonSeed": 20261113,
+        "sharedCacheMiB": 256,
+        "sharedBudget": 900,
+        "primeSharedBudget": 900,
+        "primePasses": 1,
+        "artificialDelays": false,
+        "cacheIsolation": "Independent caches per measured query/plan/repeat; one untimed same-query priming pass for warm conditions",
+        "condition": "fresh-namespace",
+        "plans": [
+          "auto-N100-M1000"
+        ],
+        "repeats": 1,
+        "contracts": 160,
+        "contractFile": "work/io-iteration/oracle-160.json",
+        "contractSha256": "dfe3bbbe3a9aca3ebf9b577d2ffcd336b8a7f2a89758a5dbe0d40f886f206e80",
+        "node": "v26.7.0",
+        "responseCaching": false,
+        "pairRouterSha256": "8a1db82b64546e8b05ca0722aa881a026159e69abfe7383a9291eb453e8c2ecd",
+        "exactPhraseDirectorySha256": "c2ef97f1904c067fd4774e6fa495b9b964dd02d5d9737815f6d59d113dc17a9b",
+        "includes": "Matching, exact ranking, metadata, query-relevant snippet and JSON serialization",
+        "preparedDownloads": 0,
+        "preparedBytes": 0,
+        "warmup": "Bounded cache population without artificial delays, using primeSharedBudget; measured delays follow artificialDelays",
+        "startedAt": "2026-11-15T01:37:21.846Z",
+        "implementationSha256": "3c7db8db74208f7b74377c2cf0c2bb5e224778a78eed3bb78bf4971a26085a7e",
+        "controlSource": "work/position-batches-control",
+        "controlIndex": "work/position-batches-control/index",
+        "controlGeneration": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
+        "controlRuntime": "frozen"
+      },
+      "requests": 160,
+      "exactTotalSettings": {
+        "off": 160,
+        "on": 0
+      },
+      "materialWins": 0,
+      "materialRegressions": []
+    }
+  ],
+  "notes": [
+    "Cold comparisons randomize/interleave engines and clear both application and shared caches before every measured query/plan/repetition. The separate independent oracle also clears caches, with artificial delays disabled for correctness only.",
+    "Exact IDs/order, metadata, snippets and totals agree; oracle scores use relative tolerance 1e-11.",
+    "CPU counters are local process CPU, not native Worker measurements; no native retained/peak-memory measurement was performed.",
+    "Active-buffer accounting is an estimate; it does not establish retained or peak process memory.",
+    "The candidate's active-buffer estimate includes queued numeric evidence and positional backing stores; use dedicated position/phrase counters rather than treating accounting differences as native heap changes. Single indivisible windows/documents can exceed soft batch byte targets."
+  ]
+}

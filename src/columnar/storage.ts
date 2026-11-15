@@ -88,7 +88,7 @@ export interface Source {
     expectedSha256?: string,
   ): Promise<{ data: Uint8Array }>;
 }
-function packetGroups(refs: Ref[]) {
+function packetGroups(refs: Ref[], adjacentPages = false) {
   const groups: { ref: Ref; entries: { ref: Ref; index: number }[] }[] = [];
   for (const entry of refs
     .map((ref, index) => ({ ref, index }))
@@ -98,7 +98,10 @@ function packetGroups(refs: Ref[]) {
     if (
       group &&
       group.ref[0] === entry.ref[0] &&
-      entry.ref[1] <= group.ref[1] + group.ref[2] + PAGE &&
+      (adjacentPages ? Math.floor(entry.ref[1] / PAGE) * PAGE : entry.ref[1]) <=
+        (adjacentPages
+          ? Math.ceil((group.ref[1] + group.ref[2]) / PAGE) * PAGE
+          : group.ref[1] + group.ref[2] + PAGE) &&
       Math.max(group.ref[1] + group.ref[2], end) - group.ref[1] <= 8 * 1048576
     ) {
       group.ref[2] = Math.max(group.ref[1] + group.ref[2], end) - group.ref[1];
@@ -202,6 +205,10 @@ export class Reader {
     anchorIntersectionCandidates: 0,
     membershipCandidates: 0,
     positionIOWaves: 0,
+    positionBatchCount: 0,
+    maxPositionFootprintBytes: 0,
+    peakPositionNumericBytes: 0,
+    peakPositionBufferBytes: 0,
     lazyScoreWindows: 0,
     eagerScoreWindows: 0,
     eagerScoreFetchWindows: 0,
@@ -625,7 +632,7 @@ export class Reader {
     }
     return data;
   }
-  async packets(refs: Ref[]) {
+  async packets(refs: Ref[], adjacentPages = false) {
     this.stats.stages++;
     const result: Uint8Array[] = new Array(refs.length);
     const pending: Ref[] = [],
@@ -638,7 +645,7 @@ export class Reader {
         indices.push(i);
       }
     });
-    const groups = packetGroups(pending);
+    const groups = packetGroups(pending, adjacentPages);
     await Promise.all(
       groups.map(async (group) => {
         const descriptor = objectAt(this.root, group.ref[0]);
@@ -673,6 +680,33 @@ export class Reader {
           PAGE,
       0,
     );
+  }
+  /** Positions merge only overlapping/adjacent pages, without filling gaps.
+   * This is also the retained backing-store footprint used by the scheduler. */
+  positionFootprint(refs: Ref[]) {
+    return packetGroups(
+      refs.filter((r) => !this.seeded(r)),
+      true,
+    ).reduce(
+      (n, { ref: [object, offset, length] }) =>
+        n +
+        Math.min(
+          objectAt(this.root, object)!.size,
+          Math.ceil((offset + length) / PAGE) * PAGE,
+        ) -
+        Math.floor(offset / PAGE) * PAGE,
+      0,
+    );
+  }
+  async positions(refs: Ref[]) {
+    if (!refs.length) return [];
+    this.stats.wordPositionBlocks += refs.length;
+    this.stats.wordPositionBytes += refs.reduce((n, r) => n + r[2], 0);
+    const before = this.stats.requests + this.stats.sharedGets;
+    const raw = await this.packets(refs, true);
+    if (this.stats.requests + this.stats.sharedGets > before)
+      this.stats.positionIOWaves++;
+    return raw;
   }
   async prefetch(refs: Ref[]) {
     this.stats.stages++;

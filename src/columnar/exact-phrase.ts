@@ -11,6 +11,8 @@ import { lower, concat, view } from "./format.js";
 import { QueryResourceError } from "../query/evaluate.js";
 import { PairRouter, pairObjectKey } from "./pair-router.js";
 import { PairMembershipPacket } from "./pair-membership.js";
+import { leaves } from "./candidate-layout.js";
+import { PAGE, objectAt } from "./format.js";
 
 /** Boolean truth needs no occurrence list. Proximity and standalone rendering
  * still require genuine positions; membership is never fabricated into spans. */
@@ -205,40 +207,134 @@ export interface ExactPhrasePlan {
   alternativeCost: number;
   membershipOnly?: boolean;
 }
-/** Reprice a global stream after another Boolean branch has supplied actual
- * candidates. These proportional estimates choose execution, never prune it.
- * If both encoded work and occurrence work favor targeted verification, retain
- * the existing filtered block plan rather than scan unrelated pair occurrences.
- */
-export function filteredPhraseWork(
+/** Compare candidate-overlapping physical pages and fetch stages against a
+ * complete context scan. Cost estimates choose execution, never prune it. */
+export async function filteredPhraseWork(
   plan: ExactPhrasePlan,
-  candidates: number,
+  candidates: Uint32Array,
   terms: ReadonlyMap<string, DirectoryTerm>,
   field: "all" | "body" | "title",
+  reader: Reader,
 ) {
   let bytes = 0,
     occurrences = 0;
+  const pages = new Map<number, Set<number>>(),
+    bands = new Set<number>();
+  const completeOccurrences =
+    (field !== "title" ? plan.pair.bodyOccurrences : 0) +
+    (field !== "body" ? plan.pair.titleOccurrences : 0);
+  const missing = groups(plan.pair).filter(
+    (g) =>
+      !reader.namedResident(
+        `${plan.pair.directory.generation}/positions-${g.object}.bin@${g.offset}`,
+        g.length,
+      ),
+  );
+  const contextMs =
+    missing.reduce((n, g) => n + g.length, 0) / 104857.6 +
+    Math.ceil(missing.length / 6) * 20 +
+    completeOccurrences / 3333;
+  if (plan.pair.inline || plan.membershipOnly || !candidates.length)
+    return {
+      bytes: 0,
+      occurrences: 0,
+      completeOccurrences,
+      physicalBytes: 0,
+      missingBytes: 0,
+      gets: 0,
+      dependentStages: 0,
+      filteredMs: 0,
+      contextMs,
+      preferFiltered: !candidates.length,
+    };
   for (const name of new Set(plan.words)) {
     const t = terms.get(name)!;
-    const fraction = Math.min(1, candidates / Math.max(1, t.df));
-    bytes +=
-      [t.positional, ...(t.positionalParts ?? [])].reduce(
-        (n, r) => n + r[2],
-        0,
-      ) * fraction;
+    const fraction = Math.min(1, candidates.length / Math.max(1, t.df));
     occurrences +=
       ((field !== "title" ? t.bodyOccurrences : 0) +
         (field !== "body" ? t.titleOccurrences : 0)) *
       fraction;
   }
-  const completeOccurrences =
-    (field !== "title" ? plan.pair.bodyOccurrences : 0) +
-    (field !== "body" ? plan.pair.titleOccurrences : 0);
+  const names = [...new Set(plan.words)],
+    last = new Map<string, string>();
+  // Metadata exposes physical addresses without reading score/position data.
+  for (let at = 0; at < candidates.length;) {
+    const lo = Math.floor(candidates[at] / (8 * 16384)) * 8 * 16384,
+      hi = lo + 8 * 16384,
+      end = lower(candidates, hi),
+      selected = candidates.subarray(at, end);
+    for (const doc of selected) bands.add(Math.floor(doc / 16384));
+    await Promise.all(
+      names.map(async (name) => {
+        for (const block of await leaves(
+          reader,
+          terms.get(name)!.tree,
+          lo,
+          hi,
+        )) {
+          const row = lower(selected, block.first),
+            ref = block.positions;
+          if (row === selected.length || selected[row] > block.last || !ref[2])
+            continue;
+          const key = reader.key(ref);
+          if (last.get(name) === key) continue;
+          last.set(name, key);
+          bytes += ref[2];
+          let ps = pages.get(ref[0]);
+          if (!ps) {
+            ps = new Set();
+            pages.set(ref[0], ps);
+          }
+          for (
+            let p = Math.floor(ref[1] / PAGE);
+            p <= Math.floor((ref[1] + ref[2] - 1) / PAGE);
+            p++
+          )
+            ps.add(p);
+        }
+      }),
+    );
+    at = end;
+  }
+  let physicalBytes = 0,
+    missingBytes = 0,
+    gets = 0;
+  for (const [object, ps] of pages) {
+    let previous = -2,
+      span = 0;
+    for (const p of [...ps].sort((a, b) => a - b)) {
+      const n = Math.min(PAGE, objectAt(reader.root, object)!.size - p * PAGE);
+      physicalBytes += n;
+      if (reader.resident([object, p * PAGE, n])) continue;
+      missingBytes += n;
+      if (p !== previous + 1 || span === 32) {
+        gets++;
+        span = 0;
+      }
+      previous = p;
+      span++;
+    }
+  }
+  const dependentStages = missingBytes
+    ? Math.max(
+        Math.ceil(gets / 6),
+        Math.ceil(bands.size / 8),
+        Math.ceil(missingBytes / (4 * 1048576)),
+      )
+    : 0;
+  const filteredMs =
+    missingBytes / 104857.6 + dependentStages * 20 + occurrences / 3333;
   return {
     bytes,
     occurrences,
     completeOccurrences,
-    preferFiltered: bytes < plan.bytes && occurrences < completeOccurrences,
+    physicalBytes,
+    missingBytes,
+    gets,
+    dependentStages,
+    filteredMs,
+    contextMs,
+    preferFiltered: filteredMs < contextMs,
   };
 }
 /** Stable contiguous extents, independent of query matches and application

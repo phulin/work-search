@@ -1,3 +1,4 @@
+import { PositionBatches, verificationColumns } from "./position-batches.js";
 import { positionSpan } from "./positions.js";
 import {
   ExactPhraseExecution,
@@ -633,26 +634,33 @@ export class ColumnarIndex {
       // alternative. Do not replace a cheap, actually filtered set with a
       // corpus-wide context scan just because its unigram forecast was broad.
       if (exactPlans.length && (primaryExact || planned.kind === "blocks")) {
-        const useful = exactPlans.filter((p) => {
-          if (loadedMembership?.covered(p.words)) return false;
-          if (!primaryExact && loadedMembership) {
-            const work = filteredPhraseWork(
-              p,
-              loadedMembership.count,
-              terms as Map<string, DirectoryTerm>,
-              field,
-            );
-            if (work.preferFiltered) {
+        const phraseCandidates = loadedMembership
+          ? Uint32Array.from(loadedMembership.values()).filter(
+              (doc) => !presenceFilter || presenceFilter(doc),
+            )
+          : undefined;
+        const decisions = await Promise.all(
+          exactPlans.map(async (p) => {
+            if (loadedMembership?.covered(p.words)) return false;
+            if (!primaryExact && loadedMembership) {
+              const work = await filteredPhraseWork(
+                p,
+                phraseCandidates!,
+                terms as Map<string, DirectoryTerm>,
+                field,
+                reader,
+              );
               reader.stats.exactPhraseFilteredAlternatives.push({
                 words: p.words,
-                candidates: loadedMembership.count,
+                candidates: phraseCandidates!.length,
                 ...work,
               });
-              return false;
+              if (work.preferFiltered) return false;
             }
-          }
-          return true;
-        });
+            return true;
+          }),
+        );
+        const useful = exactPlans.filter((_, i) => decisions[i]);
         if (useful.length) {
           exact = new ExactPhraseExecution(useful, reader, field);
           reader.stats.exactPhrasePlans = describeExactPlans().filter((p) =>
@@ -1010,6 +1018,9 @@ export class ColumnarIndex {
       windowStart = 0,
       windowEnd = 0,
       prefetchedThrough = 0;
+    const positionBatches = new PositionBatches(reader),
+      bufferPositions = positions && wantedPositions.size > 0;
+    let positionPrimed = false;
     for (let bandIndex = 0; bandIndex < bands.length; bandIndex++) {
       const band = bands[bandIndex];
       // Candidate masks are generated in document order and reused by exact
@@ -1019,6 +1030,7 @@ export class ColumnarIndex {
         (bands.length >= 8 || candidateLookahead) &&
         bandIndex >= windowEnd
       ) {
+        await positionBatches.flush();
         let nextBands = bands.slice(bandIndex, bandIndex + LOOKAHEAD);
         windowStart = bandIndex;
         // Each positional iterator advances in order. Retain snapshots for
@@ -1353,7 +1365,21 @@ export class ColumnarIndex {
       );
       nc = scored.count;
       reader.stats.candidates += scored.visited;
-      const positionData = new Map<string, Uint8Array>();
+      const checkedDocs = bufferPositions
+          ? candidates.slice(0, nc)
+          : candidates.subarray(0, nc),
+        checkedScores = bufferPositions
+          ? values.slice(0, nc)
+          : values.subarray(0, nc),
+        checkedColumns = bufferPositions
+          ? verificationColumns(columns, checkedDocs, lo)
+          : columns;
+      const rowOf = (j: number, doc: number) => {
+        const c = checkedColumns[j],
+          row = lower(c.docs, doc);
+        return c.docs[row] === doc ? row : -1;
+      };
+      let positionData: ReadonlyMap<string, Uint8Array> = new Map();
       // Very sparse phrases use compact forward IDs. Broad phrases/proximity
       // retain the buffered positional path and avoid per-document forward I/O.
       const forward =
@@ -1372,38 +1398,28 @@ export class ColumnarIndex {
               pairOffset,
             )
           : undefined;
-      const loadPositions = async (from: number, to: number) => {
-        positionData.clear();
+      const positionRefs = (from: number, to: number) => {
         const refs = new Map<string, Ref>();
         for (const n of wantedPositions) {
           const j = nameIndex.get(n);
           if (j === undefined) continue;
-          const c = columns[j];
+          const c = checkedColumns[j];
           for (let i = from; i < to; i++) {
             if (
               (forward && forward[i] !== -2) ||
-              (needsWordPositions && !needsWordPositions(n, candidates[i])) ||
-              (!options.exactTotal && !heap.accepts(candidates[i], values[i]))
+              (needsWordPositions && !needsWordPositions(n, checkedDocs[i])) ||
+              (!options.exactTotal &&
+                !heap.accepts(checkedDocs[i], checkedScores[i]))
             )
               continue;
-            const row = c.handle[candidates[i] - lo] - 1;
+            const row = rowOf(j, checkedDocs[i]);
             if (row >= 0) {
               const ref = blocks[j][c.blockIndex[row]].positions;
               refs.set(reader.key(ref), ref);
             }
           }
         }
-        const beforeIO = reader.stats.requests + reader.stats.sharedGets;
-        reader.stats.wordPositionBlocks += refs.size;
-        reader.stats.wordPositionBytes += [...refs.values()].reduce(
-          (n, r) => n + r[2],
-          0,
-        );
-        const raw = await reader.many([...refs.values()]);
-        if (reader.stats.requests + reader.stats.sharedGets > beforeIO)
-          reader.stats.positionIOWaves++;
-        let i = 0;
-        for (const key of refs.keys()) positionData.set(key, raw[i++]);
+        return [...refs.values()];
       };
       const scratch = names.map(() => ({
         doc: -1,
@@ -1412,8 +1428,8 @@ export class ColumnarIndex {
       const direct = (name: string, doc: number, f: number) => {
         const j = nameIndex.get(name);
         if (j === undefined) return;
-        const c = columns[j],
-          row = c.handle[doc - lo] - 1;
+        const c = checkedColumns[j],
+          row = rowOf(j, doc);
         if (row < 0) return;
         const s = scratch[j];
         if (s.doc !== doc) {
@@ -1442,9 +1458,9 @@ export class ColumnarIndex {
         names.map((n, j) => [
           n,
           {
-            docs: columns[j].docs,
-            body: columns[j].body,
-            title: columns[j].title,
+            docs: checkedColumns[j].docs,
+            body: checkedColumns[j].body,
+            title: checkedColumns[j].title,
             bytes: new Uint8Array(0),
           },
         ]),
@@ -1471,94 +1487,138 @@ export class ColumnarIndex {
         ast.kind === "phrase" && exact?.covered(ast.terms)
           ? ast.terms
           : undefined;
-      for (let i = 0; i < nc; i++) {
-        if (positions && i % 256 === 0)
-          await loadPositions(i, Math.min(nc, i + 256));
-        const doc = candidates[i],
-          score = values[i];
-        if (!options.exactTotal && !heap.accepts(doc, score)) continue;
-        if (forward && forward[i] === -1) continue;
-        if (
-          match &&
-          !exactStandalone &&
-          (!forward || forward[i] === -2) &&
-          !match(doc)
-        )
-          continue;
-        total++;
-        if (!heap.accepts(doc, score)) continue;
-        let selected = -1;
-        for (const j of scoring) {
-          const c = columns[j],
-            r = c.handle[doc - lo] - 1;
-          if (r >= 0 && c.body[r]) {
-            selected = j;
-            break;
+      const check = (
+        from: number,
+        to: number,
+        data: ReadonlyMap<string, Uint8Array>,
+      ) => {
+        positionData = data;
+        for (let i = from; i < to; i++) {
+          const doc = checkedDocs[i],
+            score = checkedScores[i];
+          if (!options.exactTotal && !heap.accepts(doc, score)) continue;
+          if (forward && forward[i] === -1) continue;
+          if (
+            match &&
+            !exactStandalone &&
+            (!forward || forward[i] === -2) &&
+            !match(doc)
+          )
+            continue;
+          total++;
+          if (!heap.accepts(doc, score)) continue;
+          let selected = -1;
+          for (const j of scoring) {
+            const c = checkedColumns[j],
+              r = rowOf(j, doc);
+            if (r >= 0 && c.body[r]) {
+              selected = j;
+              break;
+            }
           }
-        }
-        const hasScoringBody = selected >= 0;
-        if (selected < 0)
-          selected = columns.findIndex((c) => !!c.handle[doc - lo]);
-        const c = columns[selected],
-          r = c ? c.handle[doc - lo] - 1 : -1;
-        let first: number | undefined =
-          forward && forward[i] >= 0 ? forward[i] : undefined;
-        if (exactStandalone && field !== "title")
-          first = exact!.evidence(exactStandalone, doc, 0)?.[0];
-        if (
-          first === undefined &&
-          match &&
-          field !== "title" &&
-          options.snippets !== false
-        ) {
-          if (ast.kind === "phrase" && !context && !covered(ast.terms)) {
-            const ps = ast.terms.map((n) => direct(n, doc, 0) ?? []);
-            let anchor = 0;
-            for (let j = 1; j < ps.length; j++)
-              if (ps[j].length < ps[anchor].length) anchor = j;
-            for (let j = 0; j < ps[anchor].length; j++) {
-              const start = ps[anchor][j] - anchor;
-              if (
-                start >= 0 &&
-                ps.every((a, k) => a[lower(a, start + k)] === start + k)
-              ) {
-                first = start;
-                break;
+          const hasScoringBody = selected >= 0;
+          if (selected < 0)
+            selected = checkedColumns.findIndex((_, j) => rowOf(j, doc) >= 0);
+          const c = checkedColumns[selected],
+            r = c ? rowOf(selected, doc) : -1;
+          let first: number | undefined =
+            forward && forward[i] >= 0 ? forward[i] : undefined;
+          if (exactStandalone && field !== "title")
+            first = exact!.evidence(exactStandalone, doc, 0)?.[0];
+          if (
+            first === undefined &&
+            match &&
+            field !== "title" &&
+            options.snippets !== false
+          ) {
+            if (ast.kind === "phrase" && !context && !covered(ast.terms)) {
+              const ps = ast.terms.map((n) => direct(n, doc, 0) ?? []);
+              let anchor = 0;
+              for (let j = 1; j < ps.length; j++)
+                if (ps[j].length < ps[anchor].length) anchor = j;
+              for (let j = 0; j < ps[anchor].length; j++) {
+                const start = ps[anchor][j] - anchor;
+                if (
+                  start >= 0 &&
+                  ps.every((a, k) => a[lower(a, start + k)] === start + k)
+                ) {
+                  first = start;
+                  break;
+                }
+              }
+            } else {
+              try {
+                first = match.firstBodySpan(doc)?.start;
+              } catch (e) {
+                if (!(e instanceof QueryResourceError)) throw e;
               }
             }
-          } else {
-            try {
-              first = match.firstBodySpan(doc)?.start;
-            } catch (e) {
-              if (!(e instanceof QueryResourceError)) throw e;
-            }
           }
+          heap.add({
+            doc,
+            score,
+            branch: r >= 0 ? blocks[selected][c.blockIndex[r]] : undefined,
+            row: r >= 0 ? c.blockRow[r] : doc % 4096,
+            first,
+            titleOnly:
+              field === "title" ||
+              (ast.kind === "phrase" && first === undefined) ||
+              (scoring.length > 0 && !hasScoringBody),
+          });
         }
-        heap.add({
-          doc,
-          score,
-          branch: r >= 0 ? blocks[selected][c.blockIndex[r]] : undefined,
-          row: r >= 0 ? c.blockRow[r] : doc % 4096,
-          first,
-          titleOnly:
-            field === "title" ||
-            (ast.kind === "phrase" && first === undefined) ||
-            (scoring.length > 0 && !hasScoringBody),
+        // Do not keep page-backed views from a consumed fetch batch alive
+        // through closures for windows that remain queued.
+        positionData = new Map();
+        for (const s of scratch) {
+          s.doc = -1;
+          s.fields[0] = s.fields[1] = undefined;
+        }
+      };
+      const numericBytes =
+        checkedDocs.byteLength +
+        checkedScores.byteLength +
+        (bufferPositions
+          ? checkedColumns.reduce(
+              (n, c) =>
+                n +
+                c.docs.byteLength +
+                c.body.byteLength +
+                c.title.byteLength +
+                c.blockIndex.byteLength +
+                c.blockRow.byteLength,
+              0,
+            )
+          : 0);
+      const finish = () => exact?.release(lo);
+      if (bufferPositions && nc) {
+        await positionBatches.add({
+          count: nc,
+          bytes: numericBytes,
+          refs: positionRefs,
+          run: check,
+          release: finish,
         });
+        // Establish an initial verified threshold before speculating across
+        // later score windows. Few-hit queries still batch after this first pass.
+        if (!positionPrimed) {
+          await positionBatches.flush();
+          positionPrimed = true;
+        }
+      } else {
+        check(0, nc, new Map());
+        finish();
       }
-      const active =
-        scoreBatches.reduce((s, batch) => s + batch.bytes, 0) +
-        fetchedBytes +
-        candidates.byteLength +
-        values.byteLength +
-        (exact?.bufferBytes ?? 0) +
-        [...positionData.values()].reduce((s, b) => s + b.length, 0);
       reader.stats.peakActiveBufferBytes = Math.max(
         reader.stats.peakActiveBufferBytes,
-        active + reader.stats.anchorBufferBytes,
+        scoreBatches.reduce((n, b) => n + b.bytes, 0) +
+          fetchedBytes +
+          numericBytes +
+          reader.stats.peakPositionBufferBytes +
+          (exact?.bufferBytes ?? 0) +
+          reader.stats.anchorBufferBytes,
       );
-      exact?.release(lo);
     }
+    await positionBatches.flush();
     const ranked = heap.values.sort(
         (a, b) => b.score - a.score || a.doc - b.doc,
       ),

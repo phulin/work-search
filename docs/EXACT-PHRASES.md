@@ -79,6 +79,32 @@ Prefetched encoded data remains bounded separately. The limit applies to
 active buffers, not cumulative transfer; a sparse phrase with fewer than K hits
 still scans and rejects the rest of its complete stream.
 
+After membership filtering, the continuation comparison inspects the actual
+candidate-overlapping positional block addresses. It prices their physical
+page footprint, application-resident pages, coalescible GETs and bounded fetch
+stages against a complete pair-context scan. It no longer scales total term
+bytes by candidate count divided by DF. Candidate IDs can be scattered across
+nearly every page even when the estimated logical payload is small. These
+estimates choose complete execution paths; they are never pruning bounds.
+
+When ordinary word positions are needed, scoring can run ahead across up to
+eight windows using the last verified competitive threshold. Only candidate
+IDs, exact scores, frequencies and posting-row handles are copied; full-band
+scoring workspaces are reused. Positional requirements are deduplicated across
+those windows and fetched in batches targeting at most 4 MiB of page-backed
+data. Adjacent pages may share a GET, but gaps of whole unused pages are not
+filled. The active batch retains its views through consumption independently
+of LRU eviction, then drops them. Candidate numeric storage has a separate
+4 MiB target; one indivisible document or scoring window can exceed these soft
+targets under the existing resource limits. There is no candidate cutoff.
+
+Verification consumes queued candidates in document order. Unverified scores
+never raise the threshold, and a candidate still must pass the full AST before
+entering the heap. A weaker threshold during lookahead may fetch or score extra
+work, which is measured separately from reduced fetch stages. Complete-context
+windows with no ordinary positions are verified immediately. Matching snippets
+and winner presentation use the existing algorithms.
+
 Two-word phrases used for Boolean truth can instead execute the existing sorted,
 field-aware pair membership lists. The planner compares complete context decoding
 against membership plus the ordinary positions still required for rendering.

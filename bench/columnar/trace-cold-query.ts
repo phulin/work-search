@@ -123,6 +123,7 @@ export async function traceColdQuery(
       r[name] = (...args: any[]) => runAs(phase, () => original(...args));
     };
   for (const name of ["scores", "prefetchScores"]) wrap(name, "score");
+  wrap("positions", "word-positions");
   wrap("json", "presentation");
   const branches = reader.branches.bind(reader);
   r.branches = (ref: Ref) =>
@@ -139,12 +140,12 @@ export async function traceColdQuery(
       );
   }
   const packets = reader.packets.bind(reader);
-  r.packets = (ranges: Ref[]) =>
+  r.packets = (ranges: Ref[], adjacentPages = false) =>
     runAs(
       scope.getStore() ??
         ranges.map((ref) => refs.get(reader.key(ref))).find(Boolean) ??
         "other",
-      () => packets(ranges),
+      () => packets(ranges, adjacentPages),
     );
   const named = reader.named.bind(reader);
   r.named = (key: string, n: number) =>
