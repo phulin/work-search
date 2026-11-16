@@ -40,6 +40,20 @@ unless `CWS_PREPARE_REMOTE=1` is explicitly set. `CWS_CAPTURE_DATA=FILE.json`
 records the required byte ranges during untimed preparation to size a portable
 dataset without copying the entire suffix index.
 
+To copy that measured coverage into a new directory, run:
+
+```sh
+yarn node --import tsx bench/columnar/export-suffix-data.ts \
+  INDEX_DIR SUFFIX_DIR CAPTURE.json NEW_DATA_DIR
+```
+
+The output contains `engine/`, `suffix/`, and `contract.json.gz`. Run the same
+benchmark with those directories and `CWS_CONTRACT_PATH=NEW_DATA_DIR/contract.json.gz`.
+Set that variable during export too if capture used a different query contract.
+The reader verifies data before timing, makes no network requests, and rejects
+queries needing missing ranges. This copy supports the captured experiments;
+keep the full index separately for new workloads and construction.
+
 ## Build and search
 
 Input is JSONL with `id`, `body`, and optional `title` and `metadata` fields.

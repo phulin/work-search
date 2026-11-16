@@ -101,6 +101,24 @@ immutable object generations.
 
 ## Other implemented engines and tools
 
+`src/suffix` provides an optional word-level suffix index alongside the term
+engine. Independently compressed document, position, canonical-occurrence and
+8/16-bit score columns support phrase intervals without reading ordinary word
+positions. Bundled routing, selected phrase intervals and ranking summaries
+reduce dependent reads. Quantized scores supply conservative bounds; final
+ranking uses exact BM25 inputs. Standalone phrases and covered conjunctions can
+rank through this layer. Other Boolean expressions use exact phrase evidence
+with the ordinary distinct-word scorer. A filtered phrase ranking shortcut
+returns only after full query verification proves that omitted rows cannot
+change top-K; otherwise it resumes complete execution.
+
+The suffix layer is experimental. Its current builder uses 32-bit global word
+positions and has been exercised on 1M documents; it is not ready for a 10M
+generation. `bench/columnar/run-suffix.ts` compares it against a Git revision
+using local bytes and simulated I/O, with empty application/shared caches per
+request. Portable range copies can reproduce fixed workloads without carrying
+every suffix column. They never substitute zeros for unavailable data.
+
 `src/global` implements the global paged engine and its CLI. `src/builder`,
 `src/format`, `src/query/engine.ts`, and `src/worker` implement the earlier bundled
 and paged formats. `demo/gateway-runtime.ts` routes queries to shard Workers;

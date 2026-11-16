@@ -28,6 +28,8 @@ import { SimulatedIO } from "./latency-model.js";
 import { benchmarkToken } from "./token.js";
 import { Session } from "node:inspector";
 import { unionReadRanges, type ReadRange } from "./read-ranges.js";
+import { loadRangeSnapshot } from "./range-snapshot.js";
+import type { Root } from "../../src/columnar/format.js";
 
 const captureData = process.env.CWS_CAPTURE_DATA,
   capturedEngine = new Map<string, ReadRange>(),
@@ -70,6 +72,11 @@ if (!output)
   );
 const assets = await loadServingAssets(index, servingOptions()),
   root = assets.root,
+  engineSnapshot = await loadRangeSnapshot(
+    index,
+    root.generation,
+    root.corpusHash!,
+  ),
   previous = JSON.parse(
     gunzipSync(
       await readFile(
@@ -130,6 +137,24 @@ const model = {
           ),
         )
       : undefined,
+  suffixSnapshot = manifest
+    ? await loadRangeSnapshot(suffixPath, manifest.generation, root.corpusHash!)
+    : undefined,
+  suffixRanges = suffixSnapshot
+    ? new RangeStorage(
+        {
+          generation: manifest.generation,
+          objects: Object.entries(
+            manifest.files as Record<string, { bytes: number; sha256: string }>,
+          ).map(([key, value]) => ({
+            key,
+            size: value.bytes,
+            sha256: value.sha256,
+          })),
+        } as Root,
+        suffixPath + "/local-ranges",
+      )
+    : undefined,
   forced = process.env.CWS_CONTINUATIONS?.split(","),
   suffixPlans = process.env.CWS_SUFFIX_PLANS?.split(","),
   plans = manifest
@@ -150,6 +175,13 @@ const model = {
     { encoding: "utf8" },
   ).trim(),
   frozen = resolve("work/suffix-control-" + controlCommit);
+if (
+  (engineSnapshot || suffixSnapshot) &&
+  process.env.CWS_PREPARE_REMOTE === "1"
+)
+  throw Error(
+    "Range snapshots are local-only; missing data must be prepared separately",
+  );
 if (
   forced &&
   (manifest || forced.some((p) => !["auto", "documents", "blocks"].includes(p)))
@@ -321,6 +353,7 @@ async function suffixRead(file: string, at: number, length: number) {
       offset: at,
       length,
     });
+  if (suffixRanges) return suffixRanges.read(file, at, length);
   let handle = files.get(file);
   if (!handle) files.set(file, (handle = open(suffixPath + "/" + file, "r")));
   const b = Buffer.allocUnsafe(length);
@@ -618,6 +651,10 @@ const provenance = {
   cacheCondition:
     "Empty application and shared caches for every timed request; filesystem/JIT priming is untimed.",
   fixtureRemoteEnabled: process.env.CWS_PREPARE_REMOTE === "1",
+  dataCoverage: {
+    engine: engineSnapshot ?? "local-index",
+    suffix: suffixSnapshot ?? "local-index",
+  },
   notes: [
     "Simulated I/O; local process CPU is not Worker CPU.",
     "Suffix and existing index requests share six simulated origin slots.",
@@ -630,7 +667,10 @@ try {
   // Load verified coverage before preparation too: a new planner may request
   // a smaller range inside an existing local packet, without any remote I/O.
   await storage.verify();
-  storage.prepare = true;
+  await suffixRanges?.verify();
+  // A portable copy already contains verified coverage. Do not duplicate its
+  // bytes into every assembled request shape during untimed preparation.
+  storage.prepare = !engineSnapshot;
   if (captureData)
     storage.capture = (r) =>
       capturedEngine.set(`${r.key}:${r.offset}:${r.length}`, r);
@@ -662,20 +702,19 @@ try {
     );
     console.log("Query data footprint", footprint);
   }
-  const completeObjects = await storage.completePreparation(
-    32 * 1048576,
-    (done, total, bytes) => {
-      if (done % 128 === 0 || done === total)
-        console.log(
-          "Prepared immutable objects",
-          done,
-          "/",
-          total,
-          bytes,
-          "bytes",
-        );
-    },
-  );
+  const completeObjects = engineSnapshot
+    ? { objects: 0, bytes: 0 }
+    : await storage.completePreparation(32 * 1048576, (done, total, bytes) => {
+        if (done % 128 === 0 || done === total)
+          console.log(
+            "Prepared immutable objects",
+            done,
+            "/",
+            total,
+            bytes,
+            "bytes",
+          );
+      });
   console.log("Prepared complete small objects", completeObjects);
   storage.prepare = false;
   const preparation = { ...(await storage.verify()), completeObjects };
