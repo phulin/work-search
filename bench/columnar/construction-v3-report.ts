@@ -19,6 +19,17 @@ for (const directory of directories) {
     .filter(Boolean)
     .map((line) => JSON.parse(line));
   const paths = [...new Set<string>(rows.map((r) => r.path))];
+  const acknowledged = new Set(
+    rows.filter((r) => r.status === 200 && !r.reused).map((r) => r.task),
+  );
+  const recovered = new Map<string, any>();
+  for (const row of rows)
+    if (row.originalWork && !acknowledged.has(row.task))
+      recovered.set(row.task, {
+        path: row.path,
+        task: row.task,
+        telemetry: row.originalWork,
+      });
   function summarize(selected: any[]) {
     const operations: Record<string, number> = {},
       failures: Record<string, number> = {};
@@ -47,9 +58,7 @@ for (const directory of directories) {
     }
     return {
       attempts: selected.length,
-      successes: selected.filter(
-        (r) => r.status === undefined || r.status === 200,
-      ).length,
+      successes: selected.filter((r) => r.status === 200).length,
       busy: selected.filter((r) => r.status === 503).length,
       errors: selected.filter(
         (r) =>
@@ -77,13 +86,18 @@ for (const directory of directories) {
     elapsedMs: first && last ? Date.parse(last) - Date.parse(first) : undefined,
     complete: !!last,
     totals: summarize(rows),
+    recoveredOriginalWork: {
+      tasks: [...recovered.keys()],
+      ...summarize([...recovered.values()]),
+    },
     phases: paths.map((path) => ({
       path,
       ...summarize(rows.filter((r) => r.path === path)),
     })),
     limitations: [
       "Summed request durations overlap and are not end-to-end elapsed time.",
-      "Counters include logged failed attempts and current receipt-reuse costs; original work is never added again.",
+      "Totals include logged attempts and current receipt-reuse costs. Recovered original work is separate and includes only tasks without an acknowledged non-reused success; it must be added to totals for known work. Its own receipt PUT is not recorded in the stored telemetry.",
+      "Unobserved failed/duplicate executions may have performed additional work. These counters are lower bounds, not exact billing totals.",
       "Worker CPU requires Cloudflare observations; codec timers from performance.now are not CPU measurements.",
       "The replacement logs coordinator upload/download traffic separately. Legacy controls omit some coordinator transfers and publication helper operations; their operation totals are lower bounds.",
       "Native memory peaks and cumulative allocations are not supplied by these request counters.",

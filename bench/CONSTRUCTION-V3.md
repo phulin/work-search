@@ -2,7 +2,8 @@
 
 The new implementation builds the existing serving format directly. It does not
 change matching, scores, pair context, snippets, or the public demo. The full court
-build that was already running was stopped; its checkpoints and objects remain.
+build that was already running was stopped. Its obsolete construction objects
+were removed after the replacement 1M build finished.
 
 ## Pipeline
 
@@ -54,13 +55,13 @@ validation repair, and two bookkeeping repairs required to publish the control.
 It retains the original construction algorithms.
 
 | 1,024 court documents; concurrency 4 | Control | Replacement |
-|---|---:|---:|
-| Base + pairs elapsed | 187 s | 89 s |
-| Logged GETs | 2,070 | 436 |
-| Logged PUTs | 1,064 | 221 |
-| Logged HEADs | 432 | 49 |
-| R2 bytes read | 982 MiB | 145 MiB |
-| R2 bytes written | 166 MiB | 139 MiB |
+| ------------------------------------ | ------: | ----------: |
+| Base + pairs elapsed                 |   187 s |        89 s |
+| Logged GETs                          |   2,070 |         436 |
+| Logged PUTs                          |   1,064 |         221 |
+| Logged HEADs                         |     432 |          49 |
+| R2 bytes read                        | 982 MiB |     145 MiB |
+| R2 bytes written                     | 166 MiB |     139 MiB |
 
 The control omits some coordinator transfers and helper verification operations;
 its operation/byte totals are lower bounds. The replacement includes coordinator
@@ -78,9 +79,32 @@ difference was 2.03e-16. Construction fixtures additionally test Unicode, stemmi
 repeated terms, empty fields, common-term continuation, duplicate delivery,
 corruption, missing objects, and changed-generation rejection.
 
-The 1M build has started on the isolated Worker. It is not yet validated.
+The 1M build finished at 23:18 UTC on November 15: 1,000,000 court cases and
+2,503,094 normalized/stemmed terms. Generation:
+`2a608b20c7d2c42f8310d1941e9216a1feb85c043b6bcf9cf069f26eac11f0dd`.
+The independent source scan verified query frequencies and global field totals.
+All 76 live query contracts passed IDs/order, scores, metadata, fields, proximity,
+Boolean conditions, and pagination; the largest relative score difference was zero.
+These live checks use exact totals off. The 8,192-document checks above additionally
+covered underfilled exact totals.
+
+Recorded work plus original work recovered from receipts totals at least 469,087
+GETs, 92,354 PUTs, 8,848 HEADs, 179.05 GB read and 97.62 GB written. Original
+receipts omit their own PUT, and unobserved duplicate executions can add work.
+The report separates these costs instead of counting receipt replays twice.
+Elapsed time was 4h41m, including downtime, retries, and long client timeouts;
+this is not an uninterrupted construction timing or a matched 1M comparison.
+Ingestion finished after 29m26s, catalogue construction at 49m14s, postings at
+1h39m31s, document packages at 1h47m58s, and pairs at 4h39m9s. Pair processing
+and recovery dominate the remaining elapsed time.
+
+The bundled term directory is 14.08 MB and document directory 6.26 MB. This
+generation includes 47,958 selected pairs. It does **not** contain the complete
+pair-membership/context sidecar used by the earlier local experiments. Search
+performance must be assessed with that difference explicit.
+
 Subsequent ingestion CPU changes and their separate native comparison are in
-[CONSTRUCTION-CPU.md](CONSTRUCTION-CPU.md). The running build retains its original
+[CONSTRUCTION-CPU.md](CONSTRUCTION-CPU.md). The completed build retained its original
 Worker code; its coordinator was resumed after a temporary download failure.
 Later pair-occurrence merging hit R2 same-object read throttling (10058).
 The coordinator now retries that specific transient error with bounded exponential
@@ -95,7 +119,7 @@ The largest occurrence merge completed in 379,792 ms wall time. The four-minute
 client timeout disconnected twice before a retry retrieved its successful receipt.
 The HTTP client timeout is now 15 minutes; the deployed Worker's CPU limit remains
 300,000 ms. This client change applies to subsequent coordinator processes. The
-active coordinator was left running rather than replaying completed selection work.
+coordinator was left running rather than replaying completed selection work.
 The engineering targets—20x fewer GETs, 2x fewer PUTs, and 3x faster elapsed—are
 not all met by the small matched run: writes meet the target, reads and time do not.
 Do not extrapolate its ratios to 1M or the full corpus.
@@ -128,14 +152,23 @@ codec measurements to Cloudflare CPU observations by CF-Ray.
 
 ## Remaining work
 
-The 1M and full-corpus gates remain. Native peak/retained memory and cumulative
-allocation have not been measured; analytics memory percentiles are not peaks.
+The full-corpus gate remains, together with the 1M search performance assessment.
+Native peak/retained memory and cumulative allocation have not been measured;
+analytics memory percentiles are not peaks.
 The constructor allows one active request per isolate and rejects excess work.
 A published root and HEAD checks do not independently re-decode every output byte;
-checksums are validated during construction and reading. Staging is retained for
-restarts until dependent validation finishes; automatic deletion of shared,
-content-addressed objects still needs a safe retention procedure. The default
-build commands have not yet switched away from the legacy coordinator, pending
+checksums are validated during construction and reading. On November 15, cleanup
+removed 44.02 GiB of local scratch data and submitted 2,254,951 obsolete R2 keys
+for deletion, including already absent keys. A scan of 131 retained roots protected
+185,297 source/serving references, including document groups. The temporary
+cleanup Worker independently rejected protected key hashes. All 8,847 remote
+objects required by the completed 1M generation were present with expected sizes
+after cleanup. Source archives, serving files, the frozen control, oracle results,
+and compressed construction evidence remain. The deleted checkpoints can no longer
+resume construction. The construction, oracle, and cleanup Workers were retired;
+the isolated search benchmark Worker remains.
+
+The default build commands have not yet switched away from the legacy coordinator, pending
 the 1M gate. Some small cold packets remain duplicated in serving objects and
 inline shards; there is no reread/copy pass, but those extra writes remain.
 

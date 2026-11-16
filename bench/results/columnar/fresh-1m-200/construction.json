@@ -1,0 +1,622 @@
+{
+  "directory": "work/construction-v3/pilot-1m-c",
+  "manifest": {
+    "identity": {
+      "format": "fresh-coordinator-v3",
+      "build": "fresh-1m-c",
+      "url": "https://work-search-cws-fresh-pilot-c.phulin.workers.dev",
+      "source": "e942ddeee0a58f3445688d49c29941cfde3dfc76f890e8b00593cbdeedf6d4e7",
+      "code": "fb58196eddbc27ba3d9ca6b86bf59d81e9b8c7ed66ad38844bb18956ea91e8cd",
+      "coordinator": "9944361f56c4bbf143ba651fe507c02671ded6b4ba5372e9750504ff9f1dd107",
+      "analysis": "nfkc-lower-porter2-v1",
+      "count": 1000000,
+      "width": 8,
+      "config": {
+        "codec": "delta-gzip-v3",
+        "blockBytes": 262144,
+        "containerBytes": 16777216,
+        "hotTerms": 1000000,
+        "pairTerms": 65536,
+        "pairBudget": 8589934592
+      }
+    },
+    "startedAt": "2026-11-15T18:37:02.220Z",
+    "startingCheckpoint": "empty",
+    "controlArchiveSha256": "71a29105af89bbfa058c0666093707e71f40d48ad62230bf61bdd2de60b849c4",
+    "coordinatorChanges": [
+      {
+        "at": "2026-11-15T19:17:27.564Z",
+        "previous": "ab2a427686e1e6fc587db88b1eebcf2372115a6b708e36714968d7222dd819dd",
+        "next": "8fa13c8d5d015388f799945823c2985910ec7256223333e41e281bf5378bf99c",
+        "reason": "Retry transport errors and temporary 429/502/503/504 responses during coordinator downloads. Worker code, task inputs, source, format and build configuration are unchanged."
+      },
+      {
+        "at": "2026-11-15T21:18:14.900Z",
+        "previous": "8fa13c8d5d015388f799945823c2985910ec7256223333e41e281bf5378bf99c",
+        "next": "9944361f56c4bbf143ba651fe507c02671ded6b4ba5372e9750504ff9f1dd107",
+        "reason": "Retry temporary R2 same-object read throttling (10058) with bounded exponential backoff and jitter. Worker code, source, format, parameters and task identities are unchanged."
+      }
+    ],
+    "dependencyChanges": [
+      {
+        "at": "2026-11-15T22:36:22.594Z",
+        "path": "scripts/construction-http.ts",
+        "previous": "ca57a81176f9d7214e3dcf94b17e417aaed55e91dc7b017b029f8aa957e48d20",
+        "next": "c451f1e46d985913d0acaac9380d9e03c0786c0d3aadcc6a080afbf33f99a0ee",
+        "reason": "Extend bounded throttling retries from GET to R2 PUT/HEAD/DELETE/LIST (10058). Worker, source, format, parameters, coordinator and task inputs are unchanged."
+      }
+    ]
+  },
+  "completed": {
+    "generation": "2a608b20c7d2c42f8310d1941e9216a1feb85c043b6bcf9cf069f26eac11f0dd",
+    "documents": 1000000,
+    "terms": 2503094,
+    "manifestRef": {
+      "key": "b0563e6dc0b03c4e3c7cf474a626656808ec134d6cd8e3c1a5a1863c501c733d/plan-0.bin",
+      "size": 13051448,
+      "sha256": "b0563e6dc0b03c4e3c7cf474a626656808ec134d6cd8e3c1a5a1863c501c733d"
+    },
+    "directoryRef": {
+      "key": "edd3529a86888070df3ff007d0988047b37f9d744099ba0e7d237ff6cefbdeba/plan-0.bin",
+      "size": 14082461,
+      "sha256": "edd3529a86888070df3ff007d0988047b37f9d744099ba0e7d237ff6cefbdeba"
+    },
+    "documentsRef": {
+      "key": "d27461848898e4294b1eca5abdb3df66e195665c94c88d884d36ba5d1f6b43bf/plan-0.bin",
+      "size": 6259064,
+      "sha256": "d27461848898e4294b1eca5abdb3df66e195665c94c88d884d36ba5d1f6b43bf"
+    },
+    "finishedAt": "2026-11-15T23:18:22.272Z",
+    "identity": {
+      "format": "fresh-coordinator-v3",
+      "build": "fresh-1m-c",
+      "url": "https://work-search-cws-fresh-pilot-c.phulin.workers.dev",
+      "source": "e942ddeee0a58f3445688d49c29941cfde3dfc76f890e8b00593cbdeedf6d4e7",
+      "code": "fb58196eddbc27ba3d9ca6b86bf59d81e9b8c7ed66ad38844bb18956ea91e8cd",
+      "coordinator": "9944361f56c4bbf143ba651fe507c02671ded6b4ba5372e9750504ff9f1dd107",
+      "analysis": "nfkc-lower-porter2-v1",
+      "count": 1000000,
+      "width": 8,
+      "config": {
+        "codec": "delta-gzip-v3",
+        "blockBytes": 262144,
+        "containerBytes": 16777216,
+        "hotTerms": 1000000,
+        "pairTerms": 65536,
+        "pairBudget": 8589934592
+      }
+    }
+  },
+  "elapsedMs": 16880052,
+  "complete": true,
+  "totals": {
+    "attempts": 31185,
+    "successes": 25745,
+    "busy": 5433,
+    "errors": 7,
+    "reused": 30,
+    "operations": {
+      "get": 466791,
+      "put": 91653,
+      "head": 8848
+    },
+    "failures": {
+      "get": 1,
+      "put": 1
+    },
+    "bytesRead": 173841116708,
+    "bytesWritten": 92421396116,
+    "workerWallMs": 69098445,
+    "clientMs": 80214552.80270046,
+    "decodedBytes": 63417385472,
+    "continuationDecodeBytes": 1297795962,
+    "coordinator": {
+      "downloadedBytes": 1475344554,
+      "uploadedBytes": 20341525
+    }
+  },
+  "recoveredOriginalWork": {
+    "tasks": [
+      "merge-0-105-0",
+      "merge-0-102-0",
+      "merge-0-101-0",
+      "merge-0-106-0",
+      "merge-0-107-0",
+      "merge-0-108-0",
+      "merge-0-109-inputs",
+      "stats-0-1432",
+      "stats-0-1436",
+      "stats-0-1435",
+      "stats-0-1430",
+      "stats-0-1433",
+      "stats-0-1425",
+      "stats-0-1429",
+      "stats-0-1434",
+      "occurrence-merge-0-1800",
+      "occurrence-merge-0-1798",
+      "occurrence-merge-0-1804",
+      "occurrence-merge-0-1806",
+      "occurrence-merge-0-1802",
+      "occurrence-merge-0-1803",
+      "occurrence-merge-3-38",
+      "occurrence-merge-3-41",
+      "occurrence-merge-3-37",
+      "occurrence-merge-3-39",
+      "occurrence-merge-3-42",
+      "occurrence-merge-3-40",
+      "occurrence-merge-3-43",
+      "occurrence-merge-6-0",
+      "occurrence-merge-7-0"
+    ],
+    "attempts": 30,
+    "successes": 0,
+    "busy": 0,
+    "errors": 0,
+    "reused": 0,
+    "operations": {
+      "get": 2296,
+      "put": 701
+    },
+    "failures": {},
+    "bytesRead": 5206260018,
+    "bytesWritten": 5200098413,
+    "workerWallMs": 928100,
+    "clientMs": 0,
+    "decodedBytes": 798832261,
+    "continuationDecodeBytes": 0,
+    "coordinator": {
+      "downloadedBytes": 0,
+      "uploadedBytes": 0
+    }
+  },
+  "phases": [
+    {
+      "path": "/ingest",
+      "attempts": 2306,
+      "successes": 2181,
+      "busy": 125,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 26560,
+        "put": 6543
+      },
+      "failures": {},
+      "bytesRead": 4372298690,
+      "bytesWritten": 4798765126,
+      "workerWallMs": 12483309,
+      "clientMs": 13941421.56754098,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/stage",
+      "attempts": 186,
+      "successes": 156,
+      "busy": 30,
+      "errors": 0,
+      "reused": 1,
+      "operations": {
+        "get": 156,
+        "put": 310
+      },
+      "failures": {},
+      "bytesRead": 701,
+      "bytesWritten": 329201642,
+      "workerWallMs": 104622,
+      "clientMs": 568179.769118998,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/summaries",
+      "attempts": 263,
+      "successes": 229,
+      "busy": 34,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 14681,
+        "put": 687
+      },
+      "failures": {},
+      "bytesRead": 325534066,
+      "bytesWritten": 110854894,
+      "workerWallMs": 951176,
+      "clientMs": 1051217.570037996,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/merge",
+      "attempts": 471,
+      "successes": 389,
+      "busy": 82,
+      "errors": 0,
+      "reused": 6,
+      "operations": {
+        "get": 43237,
+        "put": 1443
+      },
+      "failures": {},
+      "bytesRead": 10093928646,
+      "bytesWritten": 8927910906,
+      "workerWallMs": 5792747,
+      "clientMs": 6046406.436871003,
+      "decodedBytes": 41478783145,
+      "continuationDecodeBytes": 494566057,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/download",
+      "attempts": 4203,
+      "successes": 4094,
+      "busy": 109,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 4094
+      },
+      "failures": {},
+      "bytesRead": 1475337469,
+      "bytesWritten": 0,
+      "workerWallMs": 349076,
+      "clientMs": 934436.2443430065,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 1475344554,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/catalogue",
+      "attempts": 55,
+      "successes": 40,
+      "busy": 15,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 730,
+        "put": 384
+      },
+      "failures": {},
+      "bytesRead": 14493754,
+      "bytesWritten": 22799015,
+      "workerWallMs": 116803,
+      "clientMs": 130853.35749800049,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/pack-common",
+      "attempts": 2,
+      "successes": 1,
+      "busy": 1,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 263,
+        "put": 2
+      },
+      "failures": {},
+      "bytesRead": 7593353,
+      "bytesWritten": 7601644,
+      "workerWallMs": 20371,
+      "clientMs": 20644.531706999987,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/activate",
+      "attempts": 1,
+      "successes": 1,
+      "busy": 0,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 3,
+        "put": 1
+      },
+      "failures": {},
+      "bytesRead": 13285834,
+      "bytesWritten": 639,
+      "workerWallMs": 644,
+      "clientMs": 857.3083329999354,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/packages",
+      "attempts": 1643,
+      "successes": 1465,
+      "busy": 178,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 234479,
+        "put": 6368
+      },
+      "failures": {},
+      "bytesRead": 61359534513,
+      "bytesWritten": 21520314741,
+      "workerWallMs": 18764584,
+      "clientMs": 19465160.761368003,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/final",
+      "attempts": 772,
+      "successes": 695,
+      "busy": 77,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 27319,
+        "put": 4818
+      },
+      "failures": {},
+      "bytesRead": 30008952420,
+      "bytesWritten": 6210362681,
+      "workerWallMs": 7518304,
+      "clientMs": 7831352.8332829885,
+      "decodedBytes": 21938602327,
+      "continuationDecodeBytes": 803229905,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/merge-statistics",
+      "attempts": 5656,
+      "successes": 3967,
+      "busy": 1689,
+      "errors": 0,
+      "reused": 8,
+      "operations": {
+        "get": 55820,
+        "put": 44708
+      },
+      "failures": {},
+      "bytesRead": 29562825377,
+      "bytesWritten": 20284567803,
+      "workerWallMs": 8640097,
+      "clientMs": 9244200.36872601,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/selection",
+      "attempts": 1,
+      "successes": 1,
+      "busy": 0,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 1,
+        "put": 3
+      },
+      "failures": {},
+      "bytesRead": 0,
+      "bytesWritten": 1857266,
+      "workerWallMs": 762,
+      "clientMs": 3721.298375000013,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/occurrences",
+      "attempts": 1649,
+      "successes": 1465,
+      "busy": 184,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 7374,
+        "put": 3168
+      },
+      "failures": {},
+      "bytesRead": 5870018545,
+      "bytesWritten": 7654451535,
+      "workerWallMs": 3673373,
+      "clientMs": 4741906.47029601,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/merge-occurrences",
+      "attempts": 7812,
+      "successes": 6373,
+      "busy": 1432,
+      "errors": 7,
+      "reused": 15,
+      "operations": {
+        "get": 33530,
+        "put": 13879,
+        "head": 1
+      },
+      "failures": {
+        "get": 1,
+        "put": 1
+      },
+      "bytesRead": 24748352297,
+      "bytesWritten": 19642971676,
+      "workerWallMs": 7393508,
+      "clientMs": 10645410.606595034,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/finish-pairs",
+      "attempts": 2891,
+      "successes": 2325,
+      "busy": 566,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 12021,
+        "put": 4650
+      },
+      "failures": {},
+      "bytesRead": 4995256575,
+      "bytesWritten": 2740847571,
+      "workerWallMs": 2060189,
+      "clientMs": 4156561.3545959964,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/pair-directory",
+      "attempts": 3223,
+      "successes": 2325,
+      "busy": 898,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 6449,
+        "put": 4650
+      },
+      "failures": {},
+      "bytesRead": 967345986,
+      "bytesWritten": 146216716,
+      "workerWallMs": 1112711,
+      "clientMs": 1303473.327429986,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/object",
+      "attempts": 2,
+      "successes": 2,
+      "busy": 0,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "put": 2
+      },
+      "failures": {},
+      "bytesRead": 0,
+      "bytesWritten": 20341525,
+      "workerWallMs": 2020,
+      "clientMs": 6291.26991600031,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 20341525
+      }
+    },
+    {
+      "path": "/verify",
+      "attempts": 48,
+      "successes": 35,
+      "busy": 13,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 35,
+        "head": 8847,
+        "put": 35
+      },
+      "failures": {},
+      "bytesRead": 0,
+      "bytesWritten": 21200,
+      "workerWallMs": 110072,
+      "clientMs": 118280.01970700221,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    },
+    {
+      "path": "/publish",
+      "attempts": 1,
+      "successes": 1,
+      "busy": 0,
+      "errors": 0,
+      "reused": 0,
+      "operations": {
+        "get": 39,
+        "put": 2
+      },
+      "failures": {},
+      "bytesRead": 26358482,
+      "bytesWritten": 2309536,
+      "workerWallMs": 4077,
+      "clientMs": 4177.706959000323,
+      "decodedBytes": 0,
+      "continuationDecodeBytes": 0,
+      "coordinator": {
+        "downloadedBytes": 0,
+        "uploadedBytes": 0
+      }
+    }
+  ],
+  "limitations": [
+    "Summed request durations overlap and are not end-to-end elapsed time.",
+    "Totals include logged attempts and current receipt-reuse costs. Recovered original work is separate and includes only tasks without an acknowledged non-reused success; it must be added to totals for known work. Its own receipt PUT is not recorded in the stored telemetry.",
+    "Unobserved failed/duplicate executions may have performed additional work. These counters are lower bounds, not exact billing totals.",
+    "Worker CPU requires Cloudflare observations; codec timers from performance.now are not CPU measurements.",
+    "The replacement logs coordinator upload/download traffic separately. Legacy controls omit some coordinator transfers and publication helper operations; their operation totals are lower bounds.",
+    "Native memory peaks and cumulative allocations are not supplied by these request counters."
+  ]
+}

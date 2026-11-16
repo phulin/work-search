@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-15T23:55:22.918Z",
+  "files": [
+    {
+      "file": "keys.json.gz",
+      "uncompressedBytes": 236495942,
+      "uncompressedSha256": "b231510c7a37d969e68a8faae2044e30d23176d7d4539a43503247eb40dafdc3"
+    },
+    {
+      "file": "protected.json.gz",
+      "uncompressedBytes": 14457704,
+      "uncompressedSha256": "af90a419cb1e895edb5dcaa0668dd037d83c2f7c7fe0306c517782f1182e5090"
+    }
+  ],
+  "retiredWorkers": [
+    "work-search-cws-fresh-pilot-c",
+    "work-search-cws-oracle-v3-a",
+    "work-search-cws-cleanup-20261115"
+  ]
+}

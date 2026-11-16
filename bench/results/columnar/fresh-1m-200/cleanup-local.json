@@ -1,0 +1,153 @@
+{
+  "at": "2026-11-15T23:44:29.260Z",
+  "removed": [
+    {
+      "path": "work/columnar-complete-pairs-1m/scratch",
+      "allocatedBytes": 36325269504
+    },
+    {
+      "path": "work/columnar-complete-pairs-1m/checkpoint.bin",
+      "allocatedBytes": 26714112
+    },
+    {
+      "path": "work/verification-1m/directory.sqlite",
+      "allocatedBytes": 848097280
+    },
+    {
+      "path": "work/verification-1m/position-scratch",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/complete-context-v2-1m/context-checkpoints",
+      "allocatedBytes": 92209152
+    },
+    {
+      "path": "work/complete-context-v2-1m/context-catalog.bin",
+      "allocatedBytes": 71417856
+    },
+    {
+      "path": "work/complete-context-v2-1m/context-complete.bin",
+      "allocatedBytes": 91422720
+    },
+    {
+      "path": "work/full-flp/term-routes",
+      "allocatedBytes": 4410519552
+    },
+    {
+      "path": "work/construction-v3/pilot-1m-c/tasks",
+      "allocatedBytes": 4859387904
+    },
+    {
+      "path": "work/construction-v3/pilot-8192-c/tasks",
+      "allocatedBytes": 64413696
+    },
+    {
+      "path": "work/construction-v3/pilot-8192-b/tasks",
+      "allocatedBytes": 20897792
+    },
+    {
+      "path": "work/construction-v3/pilot-1024/tasks",
+      "allocatedBytes": 40251392
+    },
+    {
+      "path": "work/construction-v3/pilot-1024-b/tasks",
+      "allocatedBytes": 37445632
+    },
+    {
+      "path": "work/construction-v3/pilot-1024-c/tasks",
+      "allocatedBytes": 37445632
+    },
+    {
+      "path": "work/construction-v3/pilot-1m-c/ingests.json",
+      "allocatedBytes": 36286464
+    },
+    {
+      "path": "work/construction-v3/pilot-1m-c/intermediates.json",
+      "allocatedBytes": 30285824
+    },
+    {
+      "path": "work/construction-v3/pilot-1m-c/catalogue.json",
+      "allocatedBytes": 5689344
+    },
+    {
+      "path": "work/construction-v3/pilot-1m-c/postings.json",
+      "allocatedBytes": 65814528
+    },
+    {
+      "path": "work/construction-v3/pilot-1m-c/packages.json",
+      "allocatedBytes": 20258816
+    },
+    {
+      "path": "work/construction-v3/pilot-1m-c/pairs.json",
+      "allocatedBytes": 17522688
+    },
+    {
+      "path": "work/construction-v3/pilot-1m-c/pair-selection.json",
+      "allocatedBytes": 10702848
+    },
+    {
+      "path": "work/construction-v3/tail-cpu-control.err",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/construction-v3/tail-cpu-control.jsonl",
+      "allocatedBytes": 10358784
+    },
+    {
+      "path": "work/construction-v3/tail-monitor-c.err",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/construction-v3/tail-monitor-c.jsonl",
+      "allocatedBytes": 31461376
+    },
+    {
+      "path": "work/construction-v3/tail-packed-control-e.err",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/construction-v3/tail-packed-control-e.jsonl",
+      "allocatedBytes": 11440128
+    },
+    {
+      "path": "work/construction-v3/tail-packed-f.err",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/construction-v3/tail-packed-f.jsonl",
+      "allocatedBytes": 11440128
+    },
+    {
+      "path": "work/construction-v3/tail-pilot-a.err",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/construction-v3/tail-pilot-a.jsonl",
+      "allocatedBytes": 33476608
+    },
+    {
+      "path": "work/construction-v3/tail-pilot-c.err",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/construction-v3/tail-pilot-c.jsonl",
+      "allocatedBytes": 40497152
+    },
+    {
+      "path": "work/construction-v3/tail-pilot-d.err",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/construction-v3/tail-pilot-d.jsonl",
+      "allocatedBytes": 7077888
+    },
+    {
+      "path": "work/construction-v3/tail-pilot-e.err",
+      "allocatedBytes": 0
+    },
+    {
+      "path": "work/construction-v3/tail-pilot-e.jsonl",
+      "allocatedBytes": 3264512
+    }
+  ]
+}
