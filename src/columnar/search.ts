@@ -5,9 +5,11 @@ import {
   planExactPhrases,
   filteredPhraseWork,
   readExactPhrasePairs,
+  exactPairDescriptor,
 } from "./exact-phrase.js";
 import { scoreParameters } from "./scoring.js";
 import { executePhraseFrequencies } from "./phrase-frequency.js";
+import type { ExactPairDescriptor } from "./exact-phrase-directory.js";
 import { planTermFilter, readTermFilter } from "./term-filter.js";
 import { filterDocuments, type DocumentFilter } from "./document-filter.js";
 import { scoreLookahead, SCORE_LOOKAHEAD_WINDOWS } from "./score-lookahead.js";
@@ -586,7 +588,10 @@ export class ColumnarIndex {
         }
       : undefined;
     let packetCandidates: Uint32Array | undefined;
-    const refineMembership = async (complete = false) => {
+    const refineMembership = async (
+      complete = false,
+      alternativeMs = Infinity,
+    ) => {
       if (
         selection &&
         loadedMembership &&
@@ -617,8 +622,11 @@ export class ColumnarIndex {
           // Optional context must cost less than completing the current
           // candidates. Reserve half that upper limit for actual verification.
           readBudgetMs =
-            (verificationBytes / 104857.6 + Math.ceil(docs.length / 6) * 20) /
-            (2 * selections.length),
+            Math.min(
+              (verificationBytes / 104857.6 + Math.ceil(docs.length / 6) * 20) /
+                2,
+              alternativeMs / 2,
+            ) / selections.length,
           ids = new Map([...terms].map(([name, t]) => [name, t.id]));
         const enriched = await Promise.all(
           selections.map((s) =>
@@ -718,9 +726,15 @@ export class ColumnarIndex {
       // Optional context must beat the already chosen continuation. Do not
       // turn an efficient postings plan into hundreds of document GETs.
       if (
-        planned.kind === "documents" &&
+        (planned.kind === "documents" ||
+          (planned.kind === "blocks" && planned.continuationCost)) &&
         packages &&
-        (await refineMembership(true))
+        (await refineMembership(
+          true,
+          planned.continuationCost
+            ? planned.continuationCost.blockWork * 2.5
+            : Infinity,
+        ))
       ) {
         packages.membership = loadedMembership;
         planned = await this.chooseContinuation({
@@ -738,6 +752,51 @@ export class ColumnarIndex {
             packages,
           ),
         });
+      }
+      if (
+        !exact &&
+        planned.kind === "blocks" &&
+        selection &&
+        this.membership?.router.metadata.completeContext
+      ) {
+        const ids = new Map([...terms].map(([word, t]) => [t.id, word])),
+          routed = new Map<string, ExactPairDescriptor>();
+        for (const s of selection.selections.values())
+          for (const record of s.records) {
+            const a = ids.get(record.a),
+              b = ids.get(record.b);
+            if (a !== undefined && b !== undefined)
+              routed.set(
+                a + "\0" + b,
+                exactPairDescriptor(
+                  a,
+                  b,
+                  record,
+                  this.membership.router.metadata.generation,
+                ),
+              );
+          }
+        const repriced = planExactPhrases(
+          ast,
+          {
+            lookup: (a, b) =>
+              routed.get(a + "\0" + b) ??
+              this.membership?.exactPhrases?.lookup(a, b),
+          },
+          terms as Map<string, DirectoryTerm>,
+          {
+            ...planned,
+            expectedCandidates:
+              loadedMembership?.count ?? planned.expectedCandidates,
+          },
+          packages?.averageBytes ?? 16384,
+          field,
+          reader,
+          options,
+        );
+        const merged = new Map(exactPlans.map((p) => [p.words.join("\0"), p]));
+        for (const p of repriced) merged.set(p.words.join("\0"), p);
+        exactPlans.splice(0, exactPlans.length, ...merged.values());
       }
       // The measured candidate-document continuation remains a complete
       // alternative. Do not replace a cheap, actually filtered set with a

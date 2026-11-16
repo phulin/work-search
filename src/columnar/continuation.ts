@@ -97,10 +97,14 @@ export async function priceDocuments(
       covered,
     ),
     positionWaves = Math.ceil(layout.positionBands / SCORE_LOOKAHEAD_WINDOWS),
+    // A block expands all scoring columns, unlike complete-frequency scoring
+    // which reads frequencies only at matched rows. Include its CPU work.
+    scoreDecodeMs = layout.postings / 2000,
     blockWork =
       // There may be fewer than K verified matches. Do not assume ranking
       // bounds will discard half the physical footprint before verification.
       (layout.bytes - layout.residentBytes) / PAGE +
+      scoreDecodeMs / 2.5 +
       (Math.ceil(layout.candidateBands / SCORE_LOOKAHEAD_WINDOWS) +
         positionWaves) *
         WAVE,
@@ -112,6 +116,7 @@ export async function priceDocuments(
       pageGets: layout.gets,
       candidateBands: layout.candidateBands,
       positionWaves,
+      scoreDecodeMs,
       packageWork,
       blockWork,
       metadataBytes: reader.stats.bytes - before,

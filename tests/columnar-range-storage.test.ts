@@ -92,6 +92,12 @@ it("serves changed coalescing ranges from verified local coverage without remote
       path,
     );
     await source.verify();
+    // A concurrent preparation can create the exact requested filename after
+    // verification. Ignore its unverified bytes and use verified coverage.
+    const unverified = createHash("sha256")
+      .update(key + ":10:100")
+      .digest("hex");
+    await writeFile(path + "/" + unverified, Buffer.alloc(100, 255));
     expect(await source.read(key, 10, 100)).toEqual(bytes.subarray(10, 110));
     expect(await source.read(key, 64, 32)).toEqual(bytes.subarray(64, 96));
     expect(source.localAssemblies).toBe(2);

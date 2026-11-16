@@ -10,7 +10,10 @@ import { PairPacket } from "./pair-packet.js";
 import { lower, concat, view } from "./format.js";
 import { QueryResourceError } from "../query/evaluate.js";
 import { PairRouter, pairObjectKey } from "./pair-router.js";
-import { PairMembershipPacket } from "./pair-membership.js";
+import {
+  PairMembershipPacket,
+  type PairMembership,
+} from "./pair-membership.js";
 import { leaves } from "./candidate-layout.js";
 import { PAGE, objectAt } from "./format.js";
 
@@ -189,32 +192,41 @@ export async function readExactPhrasePairs(
       out.set(key, absent(p.a, p.b));
       continue;
     }
-    if (
-      r.completePositions &&
-      r.completePositions.generation !== router.metadata.generation
-    )
-      throw Error("Complete context generation mismatch");
-    if (!r.completePositions && !r.context)
-      throw Error("Incomplete pair context in complete generation");
-    out.set(key, {
-      a: p.a,
-      b: p.b,
-      df: r.df,
-      bodyDf: r.body.count,
-      titleDf: r.title.count,
-      bodyOccurrences: r.bodyOccurrences,
-      titleOccurrences: r.titleOccurrences,
-      directory: r.completePositions ?? {
-        a: r.a,
-        b: r.b,
-        generation: router.metadata.generation,
-        ranges: [],
-      },
-      inline: r.context,
-      membership: r,
-    });
+    out.set(key, exactPairDescriptor(p.a, p.b, r, router.metadata.generation));
   }
   return out;
+}
+
+/** Reuse a routed record after anchor estimates change, without another
+ * dictionary read or decoding its positions merely to construct a plan. */
+export function exactPairDescriptor(
+  a: string,
+  b: string,
+  r: PairMembership,
+  generation: string,
+): ExactPairDescriptor {
+  const directory = r.completePositions;
+  if (directory && directory.generation !== generation)
+    throw Error("Complete context generation mismatch");
+  if (!directory && !r.context)
+    throw Error("Incomplete pair context in complete generation");
+  return {
+    a,
+    b,
+    df: r.df,
+    bodyDf: r.body.count,
+    titleDf: r.title.count,
+    bodyOccurrences: r.bodyOccurrences,
+    titleOccurrences: r.titleOccurrences,
+    directory: directory ?? {
+      a: r.a,
+      b: r.b,
+      generation,
+      ranges: [],
+    },
+    inline: r.context,
+    membership: r,
+  };
 }
 
 export interface ExactPhrasePlan {

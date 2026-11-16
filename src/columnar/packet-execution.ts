@@ -274,6 +274,7 @@ export interface PacketPlan {
     pageGets: number;
     candidateBands: number;
     positionWaves?: number;
+    scoreDecodeMs?: number;
     packageWork: number;
     blockWork: number;
     metadataBytes: number;

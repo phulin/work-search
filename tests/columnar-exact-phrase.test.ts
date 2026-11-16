@@ -41,6 +41,7 @@ import {
   ExactPhraseExecution,
   planExactPhrases,
   readExactPhrasePairs,
+  exactPairDescriptor,
 } from "../src/columnar/exact-phrase.js";
 import {
   encodeCompletePairRanges,
@@ -176,6 +177,15 @@ it("executes routed inline and chunk-directory external context without a bundle
   expect(
     new ExactPhraseDirectory(hot.bytes).lookup("b", "c")!.directory,
   ).toEqual(ranges);
+  // Candidate generation has already fetched this packet. Replanning must
+  // use its complete context address without opening positions or a directory.
+  const existing = new PairMembershipPacket(members).lookup("b", "c", count)!,
+    reused = exactPairDescriptor("b", "c", existing, generation);
+  expect(reused.directory).toEqual(ranges);
+  expect(reused.membership).toBe(existing);
+  expect(() => exactPairDescriptor("b", "c", existing, "a".repeat(64))).toThrow(
+    "generation mismatch",
+  );
   const root = { generation, count, objects: [], hot: {} } as any,
     terms = new Map(
       words.map((w, id) => [

@@ -293,6 +293,7 @@ it("prices delayed positional reads separately and omits proved or resident posi
   const priced = await index.choose(context);
   expect(priced.kind).toBe("blocks");
   expect(priced.continuationCost?.positionWaves).toBeGreaterThan(0);
+  expect(priced.continuationCost?.scoreDecodeMs).toBe(5);
   const proved = await candidateLayout(
     ast,
     terms,

@@ -55,9 +55,9 @@ export class RangeStorage implements Source {
     });
     if (old) {
       if (old.length !== length) throw Error("Truncated prepared range");
-      if (!this.prepare && !this.receipts.has(file))
-        throw Error("Prepared range lacks a verified receipt");
-      return old;
+      if (this.prepare || this.receipts.has(file)) return old;
+      // Another preparation can add files after verify(). Ignore those files
+      // during replay; only the receipt snapshot may supply timed data below.
     }
     if (!this.prepare) {
       // Coalescing can request a different extent when asynchronous cache
