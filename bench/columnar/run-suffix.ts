@@ -126,6 +126,7 @@ if (
           "suffix16-scan",
           "suffix16-max",
           "suffix16-without-heads",
+          "suffix16-without-fences",
           "suffix8-max",
         ].includes(p),
     ))
@@ -161,7 +162,16 @@ const control = await import(
   previousSuffixSearch = manifest
     ? await import(pathToFileURL(frozen + "/src/suffix/search.ts").href)
     : undefined,
+  suffixFences = manifest?.files.fences
+    ? new Uint8Array(await readFile(suffixPath + "/fences"))
+    : undefined,
   files = new Map<string, ReturnType<typeof open>>();
+if (
+  suffixFences &&
+  createHash("sha256").update(suffixFences).digest("hex") !==
+    manifest.files.fences.sha256
+)
+  throw Error("Suffix fences digest differs");
 storage.include(
   [...new DocumentDirectory(assets.documents!).groups()].map((g) => ({
     key: g.key,
@@ -280,6 +290,7 @@ async function query(s: any, plan: string, prepare: boolean) {
       ? new SuffixReaderClass(
           selectedManifest,
           prepare ? suffixRead : suffixSource.read,
+          plan === "suffix16-without-fences" ? undefined : suffixFences,
         )
       : undefined;
   io.delaysEnabled = suffixIO.delaysEnabled = process.env.CWS_NO_DELAY !== "1";
@@ -298,7 +309,8 @@ async function query(s: any, plan: string, prepare: boolean) {
           rangeMax:
             plan.endsWith("-max") ||
             plan === "suffix-before" ||
-            plan === "suffix16-without-heads",
+            plan === "suffix16-without-heads" ||
+            plan === "suffix16-without-fences",
         });
   const body = JSON.stringify(actual),
     wallMs = performance.now() - start,
@@ -377,6 +389,7 @@ const provenance = {
         "rank",
         "quantized-rank",
         "ranking-heads",
+        "fences",
         "boolean-rank",
         "evidence",
         "format",

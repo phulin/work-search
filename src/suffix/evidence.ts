@@ -46,7 +46,9 @@ export class SuffixEvidence implements PhraseExecution {
     this.reserved += reserve;
     try {
       const interval =
-          "groups" in estimated ? await reader.expand(estimated) : estimated,
+          "groups" in estimated
+            ? await reader.expand(estimated, ["documents", "positions"])
+            : estimated,
         docValues: number[] = [],
         positionValues: number[] = [];
       for await (const batch of reader.scan(interval, [

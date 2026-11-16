@@ -9,6 +9,7 @@ import {
 import { comparePhrase, decodeSuffixKeys } from "./keys.js";
 import { decodeRankingHeads } from "./ranking-heads.js";
 import { quantizerForMaximum } from "./format.js";
+import { SuffixFences } from "./fences.js";
 export type SuffixRead = (
   file: string,
   offset: number,
@@ -59,12 +60,15 @@ export class SuffixReader {
   private pending = new Map<string, Promise<Uint8Array>>();
   private directories = new Lru<SuffixBlock[]>(4 * 1048576);
   private directoryPending = new Map<number, Promise<SuffixBlock[]>>();
+  private fences?: SuffixFences;
   constructor(
     readonly manifest: SuffixManifest,
     readonly source: SuffixRead,
+    fences?: Uint8Array,
   ) {
     if (manifest.format !== "word-suffix-1" || manifest.fixed.titleBoost !== 2)
       throw Error("Invalid suffix manifest");
+    if (fences) this.fences = new SuffixFences(fences, manifest);
   }
   async read(file: string, offset: number, length: number, compressed = true) {
     const key = `${file}:${offset}:${length}:${compressed}`;
@@ -157,11 +161,25 @@ export class SuffixReader {
       0,
     );
   }
-  async expand(interval: {
-    first: number;
-    end: number;
-    groups: SuffixManifest["directory"];
-  }) {
+  async expand(
+    interval: {
+      first: number;
+      end: number;
+      groups: SuffixManifest["directory"];
+    },
+    columns?: SuffixColumn[],
+  ) {
+    if (
+      this.fences &&
+      columns?.length &&
+      columns.every(
+        (c) => c === "keys" || c === "documents" || c === "positions",
+      )
+    )
+      return {
+        ...interval,
+        blocks: this.fences.blocks(interval.first, interval.end),
+      };
     const blocks = (
       await Promise.all(interval.groups.map((g) => this.directory(g)))
     )
@@ -210,6 +228,21 @@ export class SuffixReader {
         comparePhrase(d.high, phrase) >= 0 && comparePhrase(d.low, phrase) <= 0,
     );
     if (!groups.length) return { first: 0, end: 0, groups };
+    const bounds = this.fences?.bounds(phrase);
+    if (bounds) {
+      this.stats.boundaryWaves++;
+      const [first, end] = await Promise.all([
+        this.shortBoundary(bounds[0], phrase, false),
+        this.shortBoundary(bounds[1], phrase, true),
+      ]);
+      return {
+        first,
+        end,
+        groups: this.manifest.directory.filter(
+          (g) => g.first < end && g.end > first,
+        ),
+      };
+    }
     this.stats.boundaryWaves++;
     const edges = await Promise.all([
         this.directory(groups[0]),
@@ -254,7 +287,14 @@ export class SuffixReader {
         this.stats.skippedGroups++;
         continue;
       }
-      const ranking = group.ranking?.[phrase.length];
+      // A few mixed-prefix blocks are cheaper to scan than opening a summary
+      // for every other phrase in the directory group as well.
+      const overlap =
+          Math.min(interval.end, group.end) -
+          Math.max(interval.first, group.first),
+        head = group.ranking?.[phrase.length],
+        ranking =
+          head && (overlap > 16384 || head.length <= 16384) ? head : undefined;
       if (ranking) {
         const heads = decodeRankingHeads(
           await this.read("ranking", ranking.offset, ranking.length),
