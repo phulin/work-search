@@ -17,6 +17,9 @@ export class ScoreBatch {
   size = 0;
   private bodyLengths = new Uint32Array(BLOCK);
   private titleLengths = new Uint32Array(BLOCK);
+  private columnAt = new Int32Array(4);
+  private columnWidth = new Uint8Array(4);
+  frequencyIntegers = 0;
   constructor(
     readonly bandSize: number,
     readonly parameters: ScoreParameters,
@@ -40,7 +43,7 @@ export class ScoreBatch {
     this.b.fill(0);
     this.t.fill(0);
   }
-  append(raw: Uint8Array, block: number) {
+  append(raw: Uint8Array, block: number, candidates?: Uint8Array) {
     if (raw.length < 36 || view(raw).getUint32(0, true) !== 0x34534343)
       throw Error("Invalid scoring block");
     const v = view(raw),
@@ -48,22 +51,72 @@ export class ScoreBatch {
       start = this.count;
     if (!n || n > BLOCK || start + n > this.docs.length)
       throw Error("Invalid scoring block count");
-    let at = 24;
-    for (let i = 0; i < 3; i++) {
-      const length = v.getUint32(4 + i * 4, true),
-        target = i === 0 ? this.docs : i === 1 ? this.body : this.title;
-      if (!length && i) target.fill(0, start, start + n);
-      else if (unpackColumn(v, at, length, target, start) !== n)
-        throw Error("Invalid scoring columns");
-      at += length;
-    }
-    for (let i = 0; i < 2; i++) {
-      const length = v.getUint32(16 + i * 4, true),
-        target = i ? this.titleLengths : this.bodyLengths;
-      if (!length) target.fill(0, 0, n);
-      else if (unpackColumn(v, at, length, target) !== n)
-        throw Error("Invalid field length column");
-      at += length;
+    const docLength = v.getUint32(4, true);
+    if (unpackColumn(v, 24, docLength, this.docs, start) !== n)
+      throw Error("Invalid scoring documents");
+    let selected = 0;
+    if (candidates)
+      for (let row = 0; row < n; row++) {
+        const d = this.docs[start + row] - this.first;
+        if (d >= 0 && d < this.size && candidates[d]) selected++;
+      }
+    const sparse = !!candidates && selected <= n / 4;
+    this.frequencyIntegers = 0;
+    let at = 24 + docLength;
+    if (sparse) {
+      // Document IDs are deltas, but the four remaining columns have direct
+      // integer access. Decode only rows in the conservative candidate set.
+      this.body.fill(0, start, start + n);
+      this.title.fill(0, start, start + n);
+      for (let c = 0; c < 4; c++) {
+        const length = v.getUint32(8 + c * 4, true);
+        this.columnAt[c] = length ? at : -1;
+        this.columnWidth[c] = 0;
+        if (length) {
+          if (
+            length < 12 ||
+            at + length > raw.length ||
+            v.getUint32(at, true) !== n ||
+            v.getUint8(at + 9) !== 0
+          )
+            throw Error("Invalid scoring column");
+          const width = v.getUint8(at + 8);
+          if (width > 32 || length !== 12 + Math.ceil((n * width) / 32) * 4)
+            throw Error("Invalid scoring width");
+          this.columnWidth[c] = width;
+        }
+        at += length;
+      }
+      for (let row = 0; row < n; row++) {
+        const index = start + row,
+          d = this.docs[index] - this.first;
+        if (d < 0 || d >= this.size || !candidates![d]) continue;
+        const body = this.value(v, 0, row),
+          title = this.value(v, 1, row);
+        this.body[index] = body;
+        this.title[index] = title;
+        this.bodyLengths[row] = body ? this.value(v, 2, row) : 0;
+        this.titleLengths[row] = title ? this.value(v, 3, row) : 0;
+        this.frequencyIntegers += 2 + Number(!!body) + Number(!!title);
+      }
+    } else {
+      for (let i = 1; i < 3; i++) {
+        const length = v.getUint32(4 + i * 4, true),
+          target = i === 1 ? this.body : this.title;
+        if (!length) target.fill(0, start, start + n);
+        else if (unpackColumn(v, at, length, target, start) !== n)
+          throw Error("Invalid scoring columns");
+        at += length;
+      }
+      for (let i = 0; i < 2; i++) {
+        const length = v.getUint32(16 + i * 4, true),
+          target = i ? this.titleLengths : this.bodyLengths;
+        if (!length) target.fill(0, 0, n);
+        else if (unpackColumn(v, at, length, target) !== n)
+          throw Error("Invalid field length column");
+        at += length;
+      }
+      this.frequencyIntegers = 4 * n;
     }
     if (at !== raw.length) throw Error("Invalid scoring columns");
     for (let row = 0; row < n; row++) {
@@ -79,7 +132,7 @@ export class ScoreBatch {
         this.title[index] > this.titleLengths[row]
       )
         throw Error("Invalid field length");
-      if (d >= 0 && d < this.size) {
+      if (d >= 0 && d < this.size && (!candidates || candidates[d])) {
         this.handle[d] = index + 1;
         this.b[d] = contribution(
           this.body[index],
@@ -97,6 +150,17 @@ export class ScoreBatch {
     }
     this.count += n;
     return n;
+  }
+  private value(v: DataView, column: number, row: number) {
+    const at = this.columnAt[column],
+      width = this.columnWidth[column];
+    if (at < 0 || !width) return 0;
+    const bit = row * width,
+      offset = at + 12 + (bit >>> 5) * 4,
+      shift = bit & 31;
+    let x = v.getUint32(offset, true) >>> shift;
+    if (shift + width > 32) x |= v.getUint32(offset + 4, true) << (32 - shift);
+    return (x & (width === 32 ? 0xffffffff : 2 ** width - 1)) >>> 0;
   }
   columns() {
     const n = this.count;
@@ -122,7 +186,9 @@ export class ScoreBatch {
       this.b.byteLength +
       this.t.byteLength +
       this.bodyLengths.byteLength +
-      this.titleLengths.byteLength
+      this.titleLengths.byteLength +
+      this.columnAt.byteLength +
+      this.columnWidth.byteLength
     );
   }
 }

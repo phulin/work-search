@@ -88,9 +88,15 @@ const model = {
     : (forced ?? ["control", "candidate"]),
   repeats = Number(process.env.CWS_REPEATS ?? 3),
   startedAt = new Date().toISOString(),
-  controlCommit = execFileSync("git", ["rev-parse", "HEAD"], {
-    encoding: "utf8",
-  }).trim(),
+  controlCommit = execFileSync(
+    "git",
+    [
+      "rev-parse",
+      "--verify",
+      (process.env.CWS_CONTROL_COMMIT ?? "HEAD") + "^{commit}",
+    ],
+    { encoding: "utf8" },
+  ).trim(),
   frozen = resolve("work/suffix-control-" + controlCommit);
 if (
   forced &&
@@ -287,6 +293,7 @@ const provenance = {
         "term-filter",
         "continuation",
         "candidate-layout",
+        "score-batch",
         "format",
         "compact-integers",
         "exact-phrase",

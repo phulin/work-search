@@ -35,6 +35,7 @@ const counters = [
   "memoryHits",
   "scoreBlocksFetched",
   "scorePostingsDecoded",
+  "scoreFrequencyIntegers",
   "scoreIOWaves",
   "positionIOWaves",
   "anchorIOWaves",
