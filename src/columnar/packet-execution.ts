@@ -280,6 +280,9 @@ export interface PacketPlan {
     blockWork: number;
     metadataBytes: number;
     waveEstimateOnly?: boolean;
+    rankedWork?: number;
+    rankingBytes?: number;
+    rankingChecks?: number;
   };
   membershipAnchor?: MembershipAnchor;
   kind: "complete-terms" | "documents" | "blocks";

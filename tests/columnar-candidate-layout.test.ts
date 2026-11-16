@@ -7,6 +7,7 @@ import { Reader } from "../src/columnar/storage.js";
 import type { Root, Branch } from "../src/columnar/format.js";
 import type { PacketPlan } from "../src/columnar/packet-execution.js";
 import { candidateLayout } from "../src/columnar/candidate-layout.js";
+import { priceDocuments } from "../src/columnar/continuation.js";
 const generation = "a".repeat(64);
 class Planner extends ColumnarIndex {
   choose(c: ContinuationContext) {
@@ -53,6 +54,69 @@ function membership(count: number, values: () => Generator<number>) {
     evidence: () => undefined,
   };
 }
+it("compares score-ordered document verification with blocks without assuming all candidates verify", async () => {
+  const { root, reader } = fixture(1000000);
+  root.objects[0].size = 4 * 1048576;
+  const tree: Branch = {
+      first: 0,
+      last: 999999,
+      count: 1000000,
+      height: 0,
+      b: 10,
+      t: 0,
+      score: [0, 0, 400000],
+      positions: [0, 3 * 1048576, 400000],
+      locators: [0, 0, 0],
+    },
+    term = {
+      id: 1,
+      df: 1000000,
+      tree,
+      frequencies: [0, 0, 2 * 1048576] as [number, number, number],
+      positional: tree.positions,
+      bodyOccurrences: 2000000,
+      titleOccurrences: 0,
+    },
+    plan: PacketPlan = {
+      kind: "blocks",
+      frequencyBytes: 2 * 1048576,
+      positionBytes: 400000,
+      expectedCandidates: 600,
+      expectedDocumentBytes: 60000,
+      gets: 0,
+      dependentStages: 0,
+    },
+    candidates = Uint32Array.from({ length: 600 }, (_, i) => i * 1600),
+    context = {
+      root,
+      reader,
+      ast: { kind: "phrase" as const, terms: ["alpha", "alpha"] },
+      terms: new Map([["alpha", term]]),
+      options: { exactTotal: false },
+      plan,
+      packages: {
+        averageBytes: 100,
+        byteLength: () => 100,
+        load: async () => {
+          throw Error("Planning must not open documents");
+        },
+      },
+    },
+    ranked = await priceDocuments(context, candidates, () => true),
+    exhaustive = await priceDocuments(
+      { ...context, options: { exactTotal: true } },
+      candidates,
+      () => true,
+    );
+  expect(ranked.kind).toBe("documents");
+  expect(ranked.continuationCost?.rankingChecks).toBe(46);
+  expect(ranked.continuationCost!.rankedWork).toBeLessThan(
+    ranked.continuationCost!.blockWork,
+  );
+  expect(exhaustive.kind).toBe("blocks");
+  expect(exhaustive.continuationCost?.rankingChecks).toBeUndefined();
+  expect(reader.stats.requests).toBe(0);
+});
 it("prices physical pages rather than tiny logical score and position spans", async () => {
   const { root, index, reader } = fixture(1000),
     tree: Branch = {
@@ -293,7 +357,9 @@ it("prices delayed positional reads separately and omits proved or resident posi
       },
     };
   const priced = await index.choose(context);
-  expect(priced.kind).toBe("blocks");
+  // Cheap complete frequencies now make score-ordered verification preferable.
+  // The positional alternative still has to include its delayed fetch waves.
+  expect(priced.kind).toBe("documents");
   expect(priced.continuationCost?.positionWaves).toBeGreaterThan(0);
   expect(priced.continuationCost?.scoreDecodeMs).toBe(5);
   const proved = await candidateLayout(
