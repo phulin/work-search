@@ -1,4 +1,5 @@
 import { concat, u32, view, pack, unpack, lower } from "./format.js";
+import { packedAt } from "./compact-integers.js";
 export interface DocumentGroup {
   first: number;
   end: number;
@@ -75,6 +76,8 @@ export class DocumentDirectory {
   private offsets = new Uint32Array();
   private prefixes = new Uint32Array();
   private verificationBytes = new Uint32Array();
+  private lastKey = "";
+  private validated: Uint8Array;
   readonly count: number;
   constructor(readonly bytes: Uint8Array) {
     this.data = view(bytes);
@@ -89,6 +92,7 @@ export class DocumentDirectory {
       this.data.getUint32(12, true) !== header
     )
       throw Error("Invalid document group table");
+    this.validated = new Uint8Array(groups);
     this.firsts = new Uint32Array(groups);
     let next = 0,
       offset = header;
@@ -114,11 +118,22 @@ export class DocumentDirectory {
     if (next !== this.count || offset !== bytes.length)
       throw Error("Incomplete document group directory");
   }
-  lookup(doc: number) {
+  clear() {
+    this.last = -1;
+    this.lastKey = "";
+    this.offsets = new Uint32Array();
+    this.prefixes = new Uint32Array();
+    this.verificationBytes = new Uint32Array();
+    this.validated.fill(0);
+  }
+  private group(doc: number) {
     if (!Number.isInteger(doc) || doc < 0 || doc >= this.count)
       throw Error("Invalid document handle");
     let group = lower(this.firsts, doc);
     if (this.firsts[group] !== doc) group--;
+    return group;
+  }
+  private locate(doc: number, group = this.group(doc)) {
     const p = 16 + group * 48,
       first = this.firsts[group],
       end = this.data.getUint32(p + 4, true);
@@ -150,12 +165,39 @@ export class DocumentDirectory {
       this.prefixes = prefixes;
       this.verificationBytes = budgets;
       this.last = group;
+      this.lastKey = "";
+      this.validated[group] = 1;
     }
-    const sha256 = [...this.bytes.subarray(p + 16, p + 48)]
-      .map((n) => n.toString(16).padStart(2, "0"))
-      .join("");
+    return group;
+  }
+  /** Planning needs a numeric byte count, not a result locator or string key. */
+  verificationSize(doc: number) {
+    const group = this.group(doc),
+      row = doc - this.firsts[group];
+    if (!this.validated[group]) this.locate(doc, group);
+    if (this.last === group) return this.verificationBytes[row];
+    const p = 16 + group * 48,
+      at = this.data.getUint32(p + 8, true),
+      end = at + this.data.getUint32(p + 12, true),
+      start =
+        at +
+        8 +
+        this.data.getUint32(at, true) +
+        this.data.getUint32(at + 4, true);
+    return packedAt(this.bytes.subarray(start, end), row);
+  }
+  lookup(doc: number) {
+    const group = this.locate(doc),
+      first = this.firsts[group];
+    if (!this.lastKey) {
+      const p = 16 + group * 48,
+        sha256 = [...this.bytes.subarray(p + 16, p + 48)]
+          .map((n) => n.toString(16).padStart(2, "0"))
+          .join("");
+      this.lastKey = `${sha256}/plan-0.bin`;
+    }
     return {
-      key: `${sha256}/plan-0.bin`,
+      key: this.lastKey,
       first,
       offset: this.offsets[doc - first],
       length: this.offsets[doc - first + 1] - this.offsets[doc - first],

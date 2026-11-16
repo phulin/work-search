@@ -69,7 +69,7 @@ export async function searchWithSuffix(
     packages = {
       averageBytes: root.documentPackages.averageBytes,
       byteLength: (doc: number) =>
-        engine.documentDirectory!.lookup(doc).verificationBytes,
+        engine.documentDirectory!.verificationSize(doc),
       load: (doc: number) => load(doc),
     };
   const conjunction = scoredConjunction(ast),

@@ -81,15 +81,18 @@ interface ExternalMembers {
 const PACKET = 0x34505043,
   CONTEXT = 0x31584343;
 const NO_POSITIONS = new Uint32Array();
-function arrayMembers(docs: Uint32Array): Members {
-  return {
-    count: docs.length,
-    values: () => docs,
-    indexOf(doc) {
-      const row = lower(docs, doc);
-      return docs[row] === doc ? row : -1;
-    },
-  };
+class ArrayMembers implements Members {
+  readonly count: number;
+  constructor(readonly docs: Uint32Array) {
+    this.count = docs.length;
+  }
+  values() {
+    return this.docs;
+  }
+  indexOf(doc: number) {
+    const row = lower(this.docs, doc);
+    return this.docs[row] === doc ? row : -1;
+  }
 }
 function encodeField(rows: PairColumnRow["body"][]) {
   const spans: Uint8Array[] = [],
@@ -243,8 +246,8 @@ export class PairPacket {
       for (const docs of [bd, td])
         if (docs.some((d, i) => i > 0 && d <= docs[i - 1]))
           throw Error("Invalid pair document order");
-      body = arrayMembers(bd);
-      title = arrayMembers(td);
+      body = new ArrayMembers(bd);
+      title = new ArrayMembers(td);
       this.contextBytes = bytes.subarray(24 + bn + tn);
     }
     const ctx = this.contextBytes,
@@ -259,6 +262,30 @@ export class PairPacket {
       new ContextField(ctx.subarray(12, 12 + bn), body),
       new ContextField(ctx.subarray(12 + bn), title),
     ];
+    if (body instanceof ArrayMembers && title instanceof ArrayMembers) {
+      const bd = body.docs,
+        td = title.docs;
+      if (!bd.length) this.docs = td;
+      else if (!td.length) this.docs = bd;
+      else {
+        const merged = new Uint32Array(bd.length + td.length);
+        let b = 0,
+          t = 0,
+          n = 0;
+        while (b < bd.length || t < td.length) {
+          const doc = Math.min(
+            b < bd.length ? bd[b] : Infinity,
+            t < td.length ? td[t] : Infinity,
+          );
+          merged[n++] = doc;
+          if (bd[b] === doc) b++;
+          if (td[t] === doc) t++;
+        }
+        this.docs = merged.subarray(0, n);
+      }
+      if (!this.docs.length) throw Error("Pair context identity mismatch");
+      return;
+    }
     const merged = new Uint32Array(body.count + title.count),
       bi = body.values()[Symbol.iterator](),
       ti = title.values()[Symbol.iterator]();

@@ -1,7 +1,11 @@
 import type { Node } from "../query/parser.js";
 import type { Reader } from "./storage.js";
 import { lower } from "./format.js";
-import { readPairPositionChunks, type PairEvidence } from "./pair-positions.js";
+import {
+  pairPositionReads,
+  readPairPositionChunks,
+  type PairEvidence,
+} from "./pair-positions.js";
 import {
   mandatoryPhrases,
   pairKey,
@@ -543,7 +547,13 @@ export async function enrichMembershipPositions(
   reader: Reader,
   budget: number,
   completeStreams = false,
+  maxReadMs = Infinity,
+  ids?: Map<string, number>,
 ) {
+  const available = new Set<string>();
+  for (const r of selection.records)
+    if (r.context || r.supplementalContext) available.add(pairKey(r.a, r.b));
+  if (ids && pairPhraseCovered(available, ids, selection.words)) return false;
   // Complete streams have no per-document fences. Price their bounded GETs
   // against opening candidate records, then retain only relevant occurrences.
   // This is an optional necessary-condition refinement, never a cutoff.
@@ -564,27 +574,58 @@ export async function enrichMembershipPositions(
     })
     .sort((a, b) => a.cost - b.cost);
   const best = complete[0];
-  if (best && best.cost < Math.ceil(docs.length / 6) * 20 * 0.5) {
+  if (
+    best &&
+    best.cost < maxReadMs &&
+    best.cost < Math.ceil(docs.length / 6) * 20 * 0.5
+  ) {
     best.record.supplementalContext = await candidatePairContext(
       best.record.completePositions!,
       docs,
       reader,
       budget,
     );
+    if (best.record.supplementalContext) {
+      maxReadMs -= best.cost;
+      available.add(pairKey(best.record.a, best.record.b));
+      if (ids && pairPhraseCovered(available, ids, selection.words))
+        return true;
+    }
   }
   const choices = selection.records
     .filter((r) => r.positionDirectory && !r.supplementalContext)
-    .map((record) => ({
-      record,
-      bytes: record
-        .positionDirectory!.selected(docs)
-        .reduce((n, c) => n + c.length, 0),
-    }))
-    .sort((a, b) => a.bytes - b.bytes);
+    .map((record) => {
+      const chunks = record.positionDirectory!.selected(docs),
+        reads = pairPositionReads(chunks),
+        bytes = chunks.reduce((n, c) => n + c.length, 0),
+        cost =
+          reads.reduce((n, r) => n + r.length, 0) / 104857.6 +
+          Math.ceil(reads.length / 6) * 20,
+        covering =
+          !!ids &&
+          selection.words
+            .slice(1)
+            .some(
+              (b, at) =>
+                ids.get(selection.words[at]) === record.a &&
+                ids.get(b) === record.b &&
+                at <= 1 &&
+                selection.words.length - at - 2 <= 1,
+            );
+      return { record, bytes, cost, covering };
+    })
+    .sort((a, b) => Number(b.covering) - Number(a.covering) || a.cost - b.cost);
   let remaining = budget;
   const selected = choices.filter((c) => {
     if (c.bytes > remaining) return false;
+    if (c.cost > maxReadMs) {
+      reader.stats.pairPositionProductsSkipped++;
+      return false;
+    }
+    if (ids && pairPhraseCovered(available, ids, selection.words)) return false;
     remaining -= c.bytes;
+    maxReadMs -= c.cost;
+    available.add(pairKey(c.record.a, c.record.b));
     return true;
   });
   await Promise.all(

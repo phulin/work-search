@@ -347,8 +347,7 @@ export class ColumnarIndex {
           ? {
               averageBytes: this.root.documentPackages.averageBytes,
               byteLength: this.documentDirectory
-                ? (doc: number) =>
-                    this.documentDirectory!.lookup(doc).verificationBytes
+                ? (doc: number) => this.documentDirectory!.verificationSize(doc)
                 : undefined,
               load: (doc: number, wanted?: Set<number>, presentation = false) =>
                 reader.document(
@@ -384,12 +383,12 @@ export class ColumnarIndex {
       // and exact positions. Do not first fetch redundant pair/presence filters
       // just to rediscover a broad candidate set. Selective document plans keep
       // their existing continuation; compound queries still price intersections.
-      primaryExact =
+      bundledPrimaryExact =
         original.kind === "phrase" &&
         preliminary?.kind !== "documents" &&
         (bundledExactPlans.length > 0 || !!exact?.covered(original.terms)),
       membershipRead =
-        this.membership && !primaryExact && !exact
+        this.membership && !bundledPrimaryExact && !exact
           ? planMembershipAnchor(
               original,
               this.membership,
@@ -422,7 +421,7 @@ export class ColumnarIndex {
             }
           : preliminary,
       presenceRanks =
-        this.membership && !primaryExact
+        this.membership && !bundledPrimaryExact
           ? planCommonPresence(
               mandatory(original),
               this.membership,
@@ -497,6 +496,14 @@ export class ColumnarIndex {
             .map((p) => [p.words.join("\0"), p]),
         ).values(),
       ],
+      // A routed descriptor is as complete as a bundled one. Decide before
+      // refining candidate context or pricing document continuations; those
+      // paths can otherwise do the verification this stream already supplies.
+      primaryExact =
+        bundledPrimaryExact ||
+        (original.kind === "phrase" &&
+          preliminary?.kind !== "documents" &&
+          exactPlans.length > 0),
       ast = simplify(original, (t) => terms.has(t)),
       names = queryTerms(ast),
       positive = new Set(queryTerms(ast, true)),
@@ -578,10 +585,24 @@ export class ColumnarIndex {
         const selections = [...selection.selections.values()],
           budget = Math.floor(
             Math.min(4 * 1048576, verificationBytes / 2) / selections.length,
-          );
+          ),
+          // Optional context must cost less than completing the current
+          // candidates. Reserve half that upper limit for actual verification.
+          readBudgetMs =
+            (verificationBytes / 104857.6 + Math.ceil(docs.length / 6) * 20) /
+            (2 * selections.length),
+          ids = new Map([...terms].map(([name, t]) => [name, t.id]));
         const enriched = await Promise.all(
           selections.map((s) =>
-            enrichMembershipPositions(s, docs, reader, budget, complete),
+            enrichMembershipPositions(
+              s,
+              docs,
+              reader,
+              budget,
+              complete,
+              readBudgetMs,
+              ids,
+            ),
           ),
         );
         if (!enriched.some(Boolean)) return false;
@@ -598,7 +619,7 @@ export class ColumnarIndex {
       }
       return false;
     };
-    await refineMembership();
+    if (!primaryExact) await refineMembership();
     const packages = basePackages
       ? {
           ...basePackages,

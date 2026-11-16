@@ -155,15 +155,7 @@ export function* pairPositionChunks(
   if (batch.length) yield encode();
 }
 export type PairEvidence = Pick<PairPacket, "docs" | "count" | "phrase">;
-export async function readPairPositionChunks(
-  directory: PairPositionDirectory,
-  docs: Uint32Array,
-  read: (key: string, n: number) => Promise<Uint8Array>,
-  budget: number,
-  observe?: ConstructorParameters<typeof PairPacket>[1],
-): Promise<PairEvidence | undefined> {
-  const selected = directory.selected(docs);
-  if (selected.reduce((n, c) => n + c.length, 0) > budget) return;
+export function pairPositionReads(selected: readonly PairPositionChunk[]) {
   // Restart chunks can be much smaller than a useful GET. Join nearby chunks
   // without changing which rows are decoded. Bound both each transfer and its
   // overfetch; sparse candidates must not turn into a whole-list read.
@@ -190,6 +182,18 @@ export async function readPairPositionChunks(
       g.useful += c.length;
     } else groups.push({ chunks: [c], length: c.length, useful: c.length });
   }
+  return groups;
+}
+export async function readPairPositionChunks(
+  directory: PairPositionDirectory,
+  docs: Uint32Array,
+  read: (key: string, n: number) => Promise<Uint8Array>,
+  budget: number,
+  observe?: ConstructorParameters<typeof PairPacket>[1],
+): Promise<PairEvidence | undefined> {
+  const selected = directory.selected(docs);
+  if (selected.reduce((n, c) => n + c.length, 0) > budget) return;
+  const groups = pairPositionReads(selected);
   const packets = (
     await Promise.all(
       groups.map(async (g) => {

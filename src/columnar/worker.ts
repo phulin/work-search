@@ -225,6 +225,7 @@ export function createColumnarWorker(
           if (authorized && input.resetMemory) {
             memory.clear();
             directory?.clear();
+            index.documentDirectory?.clear();
           }
           const admitted = performance.now(),
             sharedBudget = { remaining: 900 },

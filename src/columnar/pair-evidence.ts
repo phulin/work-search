@@ -6,7 +6,7 @@ import type { Node } from "../query/parser.js";
 const EMPTY = new Uint32Array();
 export const pairKey = (a: number, b: number) => `${a}:${b}`;
 export function pairPhraseCovered(
-  packets: Map<string, PairEvidence>,
+  packets: Pick<ReadonlyMap<string, PairEvidence>, "has">,
   ids: Map<string, number>,
   words: string[],
 ) {

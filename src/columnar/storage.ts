@@ -221,6 +221,7 @@ export class Reader {
     pairContextIntegers: 0,
     pairPositionChunks: 0,
     pairPositionBytes: 0,
+    pairPositionProductsSkipped: 0,
     pairMembershipIntegers: 0,
     pairMembershipDecodedBytes: 0,
     pairMembershipRepeatedDecodedBytes: 0,
