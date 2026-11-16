@@ -7,6 +7,9 @@ import { DocumentDirectory } from "../../src/columnar/document-directory.js";
 // Produce an exact allowlist. Never infer that every content-addressed object in
 // the bucket is disposable: different indexes can share the same bytes.
 const [out, ...builds] = process.argv.slice(2);
+const retiredGeneration = process.env.CWS_RETIRE_GENERATION;
+if (retiredGeneration && !/^[a-f0-9]{64}$/.test(retiredGeneration))
+  throw Error("Invalid retired generation");
 if (!out || !builds.length)
   throw Error("Use OUTPUT_DIRECTORY BUILD_DIRECTORY...");
 await mkdir(out, { recursive: true });
@@ -48,10 +51,18 @@ const files = (
   .split("\n");
 for (const file of files) {
   const root = JSON.parse(await readFile(file, "utf8"));
+  const retired =
+    retiredGeneration !== undefined && root.generation === retiredGeneration;
+  const retain = (key: string, bytes = 0) => {
+    if (retired) candidates.set(key, Math.max(candidates.get(key) ?? 0, bytes));
+    else keep.add(key);
+  };
   rootFiles.push(file);
-  refs(root, (key) => keep.add(key));
+  refs(root, retain);
+  if (/^[a-f0-9]{64}$/.test(root.generation ?? ""))
+    retain(root.generation + "/root.json");
   for (const o of root.objects ?? [])
-    keep.add(o.key ?? root.generation + "/" + o.name);
+    retain(o.key ?? root.generation + "/" + o.name, o.size);
   if (root.documentPackages?.locators) {
     const dir = file.slice(0, file.lastIndexOf("/")),
       bytes = await readFile(dir + "/documents.bin");
@@ -64,12 +75,12 @@ for (const file of files) {
         )
           throw Error("Invalid historical document directory");
         for (let i = 0; i < groups; i++)
-          keep.add(
+          retain(
             bytes.subarray(32 + i * 48, 64 + i * 48).toString("hex") +
               "/plan-0.bin",
           );
       } else
-        for (const g of new DocumentDirectory(bytes).groups()) keep.add(g.key);
+        for (const g of new DocumentDirectory(bytes).groups()) retain(g.key);
     } catch (error) {
       throw Error(file + ": " + String(error));
     }

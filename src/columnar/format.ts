@@ -57,6 +57,16 @@ export interface Root {
   directory?: { sha256: string; bytes: number; terms: number };
   positionalPairs?: Record<string, PositionalPair>;
   pairDirectory?: { pairs: number; shards: PairDirectoryShard[] };
+  pairMembership?: {
+    generation: string;
+    pairs: number;
+    occurrences: number;
+    memberships: number;
+    completeContext: true;
+    objects?: { key: string; size: number; sha256: string }[];
+  };
+  metadataFields?: Record<string, "string" | "number" | "boolean">;
+  metadataObjects?: { key: string; size: number; sha256: string }[];
   documentPackages?: {
     generation: string;
     count: number;

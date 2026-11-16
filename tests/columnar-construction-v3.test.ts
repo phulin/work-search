@@ -515,6 +515,7 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
     await call("/packages", {
       task: "package-retry",
       catalogueRef,
+      metadataSchema: { court: "string", ordinal: "number" },
       generation: "c".repeat(64),
       first: 0,
       count: 257,
@@ -525,6 +526,7 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
   const retry = await call("/packages", {
     task: "package-retry",
     catalogueRef,
+    metadataSchema: { court: "string", ordinal: "number" },
     generation: "c".repeat(64),
     first: 0,
     count: 257,
@@ -560,6 +562,33 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
       ],
       257,
     );
+  const { buildCompletePairs } =
+    await import("../scripts/construction-complete-pairs.js");
+  let pairAllocation = 16384;
+  const completePairs = await buildCompletePairs(
+    catalogue,
+    catalogueRef,
+    [packaged],
+    async (path, task, body) => {
+      const objectBase =
+        path === "/finish-complete-pairs" ? pairAllocation : undefined;
+      if (objectBase !== undefined) pairAllocation += 16384;
+      return (
+        await call(path, {
+          ...body,
+          task,
+          ...(objectBase === undefined ? {} : { objectBase }),
+        })
+      ).output;
+    },
+    async (_task, value) => f.store.put(jsonBytes(value)),
+    async (rows, fn) => {
+      const results = [];
+      for (const [i, row] of rows.entries()) results.push(await fn(row, i));
+      return results;
+    },
+    4,
+  );
   const directoryBytes = assembleTieredDirectory(
     assembleTermDirectory(
       await Promise.all(
@@ -578,6 +607,14 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
       })),
     ),
   );
+  const metadataOutput = (
+    await call("/metadata", {
+      first: 0,
+      count: 257,
+      schema: { court: "string", ordinal: "number" },
+      parts: [{ first: 0, end: 257, metadataRef: packaged.metadataRef }],
+    })
+  ).output;
   const root: any = {
     format: "CWS1",
     analysis: ENGLISH_ANALYSIS,
@@ -589,6 +626,11 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
     documents: [],
     dictionaries: [],
     hot: {},
+    pairMembership: {
+      generation: completePairs.metadata.generation,
+      ...completePairs.coverage,
+    },
+    metadataFields: { court: "string", ordinal: "number" },
     objects: final.objects,
     directory: {
       sha256: await digest(directoryBytes),
@@ -609,6 +651,18 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
     },
   };
   root.generation = await generationFor(root);
+  const metadataIdentity = {
+    format: "CWM1",
+    baseGeneration: root.generation,
+    count: 257,
+    blockDocuments: 4096,
+    schema: root.metadataFields,
+    blocks: [metadataOutput.block],
+  };
+  const metadataManifest = {
+    generation: await digest(jsonBytes(metadataIdentity)),
+    ...metadataIdentity,
+  };
   const directoryRef = await f.store.put(directoryBytes),
     documentsRef = await f.store.put(documentBytes),
     groupKey = group.sha256 + "/plan-0.bin",
@@ -621,11 +675,21 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
       },
       directoryRef,
       documentsRef,
+      ...completePairs.objects,
+      ...metadataOutput.objects,
     ];
   await call("/verify", { task: "verify-outputs", objects: verifiedObjects });
   const publication = {
     root,
     catalogueRef,
+    metadataManifest,
+    pairCoverage: completePairs.coverage,
+    expectedPairOccurrences: packaged.completePairs.reduce(
+      (n: number, r: any) => n + r.occurrences,
+      0,
+    ),
+    pairObjects: completePairs.objects,
+    presence: completePairs.presence,
     terms: catalogue.terms,
     groups: [group],
     objects: verifiedObjects,
@@ -634,6 +698,18 @@ it("builds a fresh searchable generation without vocabulary jobs, survives cold 
     documentsRef,
   };
   for (const changed of [
+    { ...publication, metadataManifest: undefined },
+    { ...publication, metadataManifest: { ...metadataManifest, blocks: [] } },
+    { ...publication, pairCoverage: undefined },
+    {
+      ...publication,
+      pairCoverage: { ...publication.pairCoverage, completeContext: false },
+    },
+    {
+      ...publication,
+      expectedPairOccurrences: publication.expectedPairOccurrences + 1,
+    },
+    { ...publication, presence: { ...publication.presence, entries: [] } },
     { ...publication, groups: [{ ...group, first: 1 }] },
     { ...publication, terms: catalogue.terms - 1 },
     { ...publication, verifications: [{ task: "missing-receipt" }] },

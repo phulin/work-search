@@ -379,9 +379,13 @@ if (process.argv.includes("--deploy-only")) {
     serving.auxiliary.map((o) => o.key),
   );
   for (const item of serving.auxiliary) {
-    const data = await readFile(item.path),
+    const data = await readFile(item.path).catch((e: NodeJS.ErrnoException) => {
+        if (e.code === "ENOENT" && item.sha256) return undefined;
+        throw e;
+      }),
       h = heads.get(item.key)!;
     if (
+      data &&
       item.sha256 &&
       createHash("sha256").update(data).digest("hex") !== item.sha256
     )
@@ -389,7 +393,8 @@ if (process.argv.includes("--deploy-only")) {
     if (
       h.status !== 200 ||
       Number(h.headers["content-length"]) !== item.size ||
-      h.headers["x-sha256"] !== createHash("sha256").update(data).digest("hex")
+      h.headers["x-sha256"] !==
+        (data ? createHash("sha256").update(data).digest("hex") : item.sha256)
     )
       throw Error("Unpublished auxiliary object: " + item.key);
   }

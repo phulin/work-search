@@ -54,7 +54,7 @@ const data = raw.data.viewer.accounts[0],
   total = (rows: any[], key: string) =>
     rows.reduce((n, row) => n + (row.sum[key] ?? 0), 0),
   build = workers.filter((r) =>
-    r.dimensions.scriptName.startsWith("work-search-cws-build-"),
+    /^work-search-cws-(?:build-|fresh-)/.test(r.dimensions.scriptName),
   ),
   bucket = operations.filter(
     (r) => r.dimensions.bucketName === "work-search-demo",

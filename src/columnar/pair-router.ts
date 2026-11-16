@@ -62,6 +62,36 @@ export function encodePairRouter(
   );
   return concat([header, json, tree, table, common]);
 }
+/** Sorted hash boundaries route directly to packets without padding packets to
+ * prefix boundaries. Hashes only route: packet keys still prove identity. */
+export function encodeRangePairRouter(
+  metadata: PairRoutingMetadata,
+  leaves: {
+    h: number;
+    h2: number;
+    object: number;
+    offset: number;
+    bytes: number;
+    pairs: number;
+  }[],
+  common: Uint8Array,
+) {
+  const json = new TextEncoder().encode(JSON.stringify(metadata));
+  for (let i = 1; i < leaves.length; i++)
+    if (
+      leaves[i].h < leaves[i - 1].h ||
+      (leaves[i].h === leaves[i - 1].h && leaves[i].h2 <= leaves[i - 1].h2)
+    )
+      throw Error("Unsorted pair packet boundaries");
+  return concat([
+    u32([0x33525043, json.length, 0, leaves.length, common.length]),
+    json,
+    u32(
+      leaves.flatMap((l) => [l.h, l.h2, l.object, l.offset, l.bytes, l.pairs]),
+    ),
+    common,
+  ]);
+}
 /** A binary prefix trie routes directly to an authoritative self-contained
  * object. No term-ID discovery, per-pair address map or remote routing read. */
 export class PairRouter {
@@ -71,16 +101,22 @@ export class PairRouter {
   private common: PairMembershipPacket;
   private namespaces: Map<string, number>;
   private tailDf?: number;
+  private ranges: boolean;
   constructor(readonly bytes: Uint8Array) {
     const v = view(bytes);
-    if (bytes.length < 20 || v.getUint32(0, true) !== 0x32525043)
+    if (
+      bytes.length < 20 ||
+      ![0x32525043, 0x33525043].includes(v.getUint32(0, true))
+    )
       throw Error("Invalid pair router");
+    this.ranges = v.getUint32(0, true) === 0x33525043;
     const j = v.getUint32(4, true),
       n = v.getUint32(8, true),
       l = v.getUint32(12, true),
       c = v.getUint32(16, true),
       at = 20 + j;
-    if (at + n * 8 + l * 16 + c !== bytes.length)
+    const stride = this.ranges ? 24 : 16;
+    if (at + n * 8 + l * stride + c !== bytes.length || (this.ranges && n))
       throw Error("Invalid pair router spans");
     this.metadata = JSON.parse(
       new TextDecoder().decode(bytes.subarray(20, at)),
@@ -88,13 +124,41 @@ export class PairRouter {
     if (this.metadata.roots.length !== this.metadata.namespaces.length + 1)
       throw Error("Invalid pair namespaces");
     this.nodes = view(bytes.subarray(at, at + n * 8));
-    this.leaves = view(bytes.subarray(at + n * 8, at + n * 8 + l * 16));
-    this.common = new PairMembershipPacket(bytes.subarray(at + n * 8 + l * 16));
+    this.leaves = view(bytes.subarray(at + n * 8, at + n * 8 + l * stride));
+    this.common = new PairMembershipPacket(
+      bytes.subarray(at + n * 8 + l * stride),
+    );
     this.namespaces = new Map(
       this.metadata.namespaces.map((s, i) => [s, i + 1]),
     );
   }
   route(a: string, b: string): PairLeaf | undefined {
+    if (this.ranges) {
+      const h = pairHash(pairStringHash(a), pairStringHash(b)),
+        h2 = pairHash(pairStringHash("!" + a), pairStringHash("!" + b));
+      let lo = 0,
+        hi = this.leaves.byteLength / 24;
+      while (lo < hi) {
+        const m = (lo + hi) >>> 1,
+          x = this.leaves.getUint32(m * 24, true),
+          y = this.leaves.getUint32(m * 24 + 4, true);
+        if (x < h || (x === h && y <= h2)) lo = m + 1;
+        else hi = m;
+      }
+      if (!lo) return;
+      const at = (lo - 1) * 24;
+      return {
+        namespace: 0,
+        bits: 64,
+        prefix: this.leaves.getUint32(at, true),
+        suffix: this.leaves.getUint32(at + 4, true),
+        object: this.leaves.getUint32(at + 8, true),
+        offset: this.leaves.getUint32(at + 12, true),
+        bytes: this.leaves.getUint32(at + 16, true),
+        pairs: this.leaves.getUint32(at + 20, true),
+        crc32: 0,
+      };
+    }
     const ns = this.namespaces.get(a) ?? 0,
       h = ns
         ? pairStringHash(b)
@@ -147,12 +211,14 @@ export class PairRouter {
   }
   /** Logical packet addresses, each reached by one directly routed range read. */
   *packets() {
-    for (let at = 0; at < this.leaves.byteLength; at += 16)
+    const stride = this.ranges ? 24 : 16,
+      extra = this.ranges ? 8 : 0;
+    for (let at = 0; at < this.leaves.byteLength; at += stride)
       yield {
-        object: this.leaves.getUint32(at, true),
-        offset: this.leaves.getUint32(at + 4, true),
-        bytes: this.leaves.getUint32(at + 8, true),
-        pairs: this.leaves.getUint32(at + 12, true),
+        object: this.leaves.getUint32(at + extra, true),
+        offset: this.leaves.getUint32(at + extra + 4, true),
+        bytes: this.leaves.getUint32(at + extra + 8, true),
+        pairs: this.leaves.getUint32(at + extra + 12, true),
       };
   }
   /** Physical publication inventory; shared containers appear only once. */

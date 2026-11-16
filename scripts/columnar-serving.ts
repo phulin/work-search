@@ -90,6 +90,7 @@ export async function loadServingAssets(
     );
   if (
     options.membershipDir ||
+    root.pairMembership ||
     (await exists(join(membershipDir, "router.bin")))
   ) {
     router = await readFile(join(membershipDir, "router.bin"));
@@ -97,6 +98,14 @@ export async function loadServingAssets(
       presence = JSON.parse(
         await readFile(join(membershipDir, "presence.json"), "utf8"),
       );
+    if (
+      root.pairMembership &&
+      (routing.metadata.generation !== root.pairMembership.generation ||
+        !routing.metadata.completeContext ||
+        [...routing.packets()].reduce((n, p) => n + p.pairs, 0) !==
+          root.pairMembership.pairs)
+    )
+      throw Error("Required complete pair/context index mismatch");
     if (
       presence.generation !== routing.metadata.generation ||
       presence.entries.length <
@@ -137,12 +146,18 @@ export async function loadServingAssets(
   }
   if (
     options.metadataDir ||
+    root.metadataFields ||
     (await exists(join(metadataDir, "metadata.json")))
   ) {
     metadata = JSON.parse(
       await readFile(join(metadataDir, "metadata.json"), "utf8"),
     );
     new MetadataIndex(metadata!, root);
+    if (
+      root.metadataFields &&
+      JSON.stringify(metadata!.schema) !== JSON.stringify(root.metadataFields)
+    )
+      throw Error("Required metadata index mismatch");
     const { generation, ...identity } = metadata!;
     if (
       createHash("sha256").update(JSON.stringify(identity)).digest("hex") !==
@@ -170,7 +185,19 @@ export async function loadServingAssets(
     membership,
   );
   const uniqueAuxiliary = new Map<string, AuxiliaryObject>();
+  const publishedObjects = new Map(
+    [
+      ...(root.pairMembership?.objects ?? []),
+      ...(root.metadataObjects ?? []),
+    ].map((o) => [o.key, o]),
+  );
   for (const o of auxiliary) {
+    const published = publishedObjects.get(o.key);
+    if (
+      published &&
+      (published.size !== o.size || (o.sha256 && o.sha256 !== published.sha256))
+    )
+      throw Error("Auxiliary publication identity mismatch");
     const old = uniqueAuxiliary.get(o.key);
     if (
       old &&
@@ -178,7 +205,10 @@ export async function loadServingAssets(
         (old.sha256 && o.sha256 && old.sha256 !== o.sha256))
     )
       throw Error("Conflicting auxiliary identity");
-    uniqueAuxiliary.set(o.key, { ...o, sha256: o.sha256 ?? old?.sha256 });
+    uniqueAuxiliary.set(o.key, {
+      ...o,
+      sha256: o.sha256 ?? old?.sha256 ?? published?.sha256,
+    });
   }
   return {
     root,
@@ -308,13 +338,38 @@ export async function prepareServing(
   const a = await loadServingAssets(indexDir, options);
   if (!a.directory || !a.documents)
     throw Error("Replacement serving requires term and document directories");
-  let next = 0;
+  let next = 0,
+    remoteObjects = 0;
+  const publishedObjects = new Map(
+    [
+      ...(a.root.pairMembership?.objects ?? []),
+      ...(a.root.metadataObjects ?? []),
+    ].map((o) => [o.key, o]),
+  );
   await Promise.all(
     Array.from({ length: 16 }, async () => {
       for (;;) {
         const object = a.auxiliary[next++];
         if (!object) return;
-        if ((await stat(object.path)).size !== object.size)
+        const local = await stat(object.path).catch(
+          (e: NodeJS.ErrnoException) => {
+            if (
+              e.code === "ENOENT" &&
+              object.sha256 &&
+              publishedObjects.get(object.key)?.size === object.size &&
+              publishedObjects.get(object.key)?.sha256 === object.sha256
+            )
+              return undefined;
+            throw e;
+          },
+        );
+        // A Workers build already published these bytes. The deploy command
+        // checks their remote digests; preparing the bundle needs no download.
+        if (!local) {
+          remoteObjects++;
+          continue;
+        }
+        if (local.size !== object.size)
           throw Error("Local auxiliary size mismatch: " + object.key);
         if (
           object.key.endsWith("/metadata.bin") &&
@@ -387,7 +442,8 @@ export async function prepareServing(
     commonPairs: a.membership?.M,
     auxiliaryObjects: a.auxiliary.length,
     auxiliaryBytes: a.auxiliary.reduce((n, o) => n + o.size, 0),
-    auxiliaryLocalSizesVerified: true,
+    auxiliaryLocalSizesVerified: remoteObjects === 0,
+    auxiliaryRemoteObjects: remoteObjects,
     documentGroups: groups.length,
     documentPackageBytes: groups.reduce((n, g) => n + g.bytes, 0),
     publicationObjects: a.root.objects.length,

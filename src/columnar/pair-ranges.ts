@@ -53,3 +53,25 @@ export function decodeCompletePairRanges(data: Uint8Array): ExactPairRanges {
     ranges,
   };
 }
+
+/** Adjacent context packets form a directly scannable complete stream. */
+export function completePairRanges(directory: {
+  a: number;
+  b: number;
+  generation: string;
+  chunks: readonly { object: number; offset: number; length: number }[];
+}): ExactPairRanges {
+  const ranges: ExactPairRanges["ranges"] = [];
+  for (const c of directory.chunks) {
+    const p = ranges.at(-1);
+    if (p && p.object === c.object && p.offset + p.length === c.offset)
+      p.length += c.length;
+    else ranges.push({ object: c.object, offset: c.offset, length: c.length });
+  }
+  return {
+    a: directory.a,
+    b: directory.b,
+    generation: directory.generation,
+    ranges,
+  };
+}

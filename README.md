@@ -29,20 +29,31 @@ archived in R2.
 ```sh
 yarn install --frozen-lockfile
 yarn node --import tsx scripts/construction-source.ts work/full-flp/published.json
-yarn columnar:deploy:builder
-CWS_BUILD_CONCURRENCY=32 yarn build-index 1000000 work/cws-1m corpus-1m
-yarn node --import tsx scripts/build-pairs-in-workers.ts work/cws-1m work/cws-paired pairs-1m 1024
-yarn deploy work/cws-paired work-search-cws-example --deploy-only
+yarn columnar:deploy:builder work-search-cws-fresh-example work/court-cases-full/source/source-root.json
+CWS_BUILD_CONCURRENCY=8 yarn build-index 1000000 work/cws-1m corpus-1m https://work-search-cws-fresh-example.phulin.workers.dev work/court-cases-full/source/source-root.json
+yarn deploy work/cws-1m work-search-cws-example --deploy-only
 ```
 
-The optional accelerators are selected from corpus statistics. Missing
-accelerator data always falls back to complete exact verification. The default
+Fresh builds store every observed adjacent pair, including common words and the
+rare vocabulary, with previous/next tokens for every occurrence. Membership uses
+sorted integer lists. Context is inline for small records and independently
+chunked for larger records. Sorted runs merge with bounded buffers; the last merge
+and packet construction run in 64 independent hash ranges. Bundled routing reaches
+complete membership packets directly from normalized strings. Common-word and
+common-pair exclusions affect candidate selection, not stored coverage.
+
+The default
 `build-index`, `columnar:build` and `columnar:build:r2` commands all use the same
-constructor, taking document count, output directory and build ID.
+constructor, taking document count, output directory, build ID, constructor URL,
+and source root. The prior constructor is available as `columnar:resume:legacy`
+for existing runs. New builds also create filters for `opinion_id`, `cluster_id`,
+`date_filed` and `precedential_status`; `CWS_METADATA_SCHEMA` accepts a JSON object
+mapping other configured fields to `string`, `number` or `boolean`. Publication
+rejects incomplete pair/context coverage or missing configured metadata.
 
 ```sh
-CWS_REMOTE_URL=https://work-search-cws-upload.phulin.workers.dev yarn search-local work/cws-paired '"search engine"'
-CWS_REMOTE_URL=https://work-search-cws-upload.phulin.workers.dev yarn dev work/cws-paired
+CWS_REMOTE_URL=https://work-search-cws-upload.phulin.workers.dev yarn search-local work/cws-1m '"search engine"'
+CWS_REMOTE_URL=https://work-search-cws-upload.phulin.workers.dev yarn dev work/cws-1m
 ```
 
 `dev` runs workerd at `http://127.0.0.1:8787/search?q=court`; the CLI returns
@@ -86,13 +97,13 @@ output directory after changing construction code or source. Source generations
 and checksums prevent mixed inputs; the completed layout determines the serving
 generation and cache identity. The frozen benchmark control remains separate.
 Ingestion, intermediate merges, final term ranges, posting construction, and
-128-document package ranges run as independent jobs. Intermediate merges use
+bounded document ranges run as independent jobs. Intermediate merges use
 multiple balanced levels; the final term dictionary remains corpus-wide.
 One builder Worker handles concurrent invocations; `CWS_BUILD_CONCURRENCY` controls
-the number of outstanding requests, up to 128. Busy requests retry within that
+the number of outstanding requests, up to 64. Busy requests retry within that
 bounded window. Cloudflare may distribute invocations across
-isolates. A bounded queue serializes construction buffers within each
-isolate. Each job uses bounded buffers and overlapping R2 I/O.
+isolates. Each isolate accepts one construction request at a time to bound its
+buffers. Each job uses bounded buffers and overlapping R2 I/O.
 
 The native pipeline emits the common-term directory, compact cold-shard routing,
 complete term packets and self-contained document packages. Cold shards colocate

@@ -1,6 +1,7 @@
 import { concat, lower, pack, unpack, u32, view } from "./format.js";
 import { PairPacket } from "./pair-packet.js";
 import {
+  completePairRanges,
   isCompletePairRanges,
   decodeCompletePairRanges,
   type ExactPairRanges,
@@ -302,6 +303,7 @@ export class PairMembership {
         this.positionDirectory.b !== this.b
       )
         throw Error("Pair position directory identity mismatch");
+      this.completePositions = completePairRanges(this.positionDirectory);
     } else if (cn) {
       this.context = new PairPacket(bytes.subarray(at + bn + tn), observe, {
         a: this.a,

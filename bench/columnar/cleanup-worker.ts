@@ -35,7 +35,7 @@ export function cleanupWorker(protectedHashes: Uint8Array) {
         keys.some(
           (k) =>
             typeof k !== "string" ||
-            !/^(?:[a-f0-9]{64}\/(?:plan-\d+|stage-[a-f0-9]{64})\.bin|cws-fresh-v3\/[a-z0-9-]+\/[a-z0-9-]+\.json)$/.test(
+            !/^(?:[a-f0-9]{64}\/(?:(?:plan-\d+|stage-[a-f0-9]{64})\.bin|root\.json)|cws-fresh-v3\/[a-z0-9-]+\/[a-z0-9-]+\.json)$/.test(
               k,
             ),
         )

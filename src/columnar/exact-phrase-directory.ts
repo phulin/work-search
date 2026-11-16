@@ -4,27 +4,10 @@ import {
   encodePairMembershipPacket,
   type PairMembership,
 } from "./pair-membership.js";
-import { PairPositionDirectory } from "./pair-positions.js";
 import type { PairPacket } from "./pair-packet.js";
 import type { ExactPairRanges } from "./pair-ranges.js";
 export type { ExactPairRanges } from "./pair-ranges.js";
-export function completePairRanges(
-  directory: PairPositionDirectory,
-): ExactPairRanges {
-  const ranges: ExactPairRanges["ranges"] = [];
-  for (const c of directory.chunks) {
-    const p = ranges.at(-1);
-    if (p && p.object === c.object && p.offset + p.length === c.offset)
-      p.length += c.length;
-    else ranges.push({ object: c.object, offset: c.offset, length: c.length });
-  }
-  return {
-    a: directory.a,
-    b: directory.b,
-    generation: directory.generation,
-    ranges,
-  };
-}
+export { completePairRanges } from "./pair-ranges.js";
 
 export interface ExactPairDescriptor {
   a: string;

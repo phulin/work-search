@@ -150,6 +150,23 @@ it("prepares a coherent replacement Worker locally and refuses mixed metadata ge
     expect(report.metadataFields).toEqual(["court"]);
     expect(report.auxiliaryObjects).toBe(1);
     expect(report.auxiliaryLocalSizesVerified).toBe(true);
+    // Published construction objects need not be downloaded to prepare a bundle.
+    const column = Object.values(m.blocks[0].columns)[0],
+      path = dir + "/metadata/objects/" + column.key.split("/")[0] + ".bin";
+    root.metadataObjects = [
+      { key: column.key, size: column.bytes, sha256: column.key.split("/")[0] },
+    ];
+    await writeFile(dir + "/root.json", JSON.stringify(root));
+    const columnBytes = await readFile(path);
+    await rm(path);
+    const remote = await prepareServing(
+      dir,
+      dir + "/remote-prepared",
+      "work-search-cws-filter-test",
+    );
+    expect(remote.auxiliaryLocalSizesVerified).toBe(false);
+    expect(remote.auxiliaryRemoteObjects).toBe(1);
+    await writeFile(path, columnBytes);
     expect(fetch).not.toHaveBeenCalled();
     const entry = await readFile(dir + "/prepared/entry.ts", "utf8");
     expect(entry).toContain("new PairRouter");
@@ -194,6 +211,11 @@ it("prepares a coherent replacement Worker locally and refuses mixed metadata ge
     const bad = { ...m, baseGeneration: "f".repeat(64) };
     await writeFile(dir + "/metadata/metadata.json", JSON.stringify(bad));
     await expect(loadServingAssets(dir)).rejects.toThrow("generation");
+    await writeFile(dir + "/metadata/metadata.json", JSON.stringify(m));
+    root.metadataFields = { court: "string" };
+    await writeFile(dir + "/root.json", JSON.stringify(root));
+    await rm(dir + "/metadata/metadata.json");
+    await expect(loadServingAssets(dir)).rejects.toThrow();
     await writeFile(dir + "/metadata/metadata.json", JSON.stringify(m));
     await writeFile(dir + "/directory.bin", Uint8Array.of(0));
     await expect(loadServingAssets(dir)).rejects.toThrow("identity mismatch");

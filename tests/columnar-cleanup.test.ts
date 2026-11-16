@@ -4,7 +4,10 @@ import { cleanupWorker } from "../bench/columnar/cleanup-worker.js";
 
 describe("construction cleanup", () => {
   it("rejects retained keys, invalid batches and unauthenticated requests without deleting", async () => {
-    const keys = ["a", "b", "c"].map((c) => c.repeat(64) + "/plan-0.bin"),
+    const keys = [
+        ...["a", "b", "c"].map((c) => c.repeat(64) + "/plan-0.bin"),
+        "a".repeat(64) + "/root.json",
+      ],
       hashes = keys
         .map((k) => createHash("sha256").update(k).digest())
         .sort(Buffer.compare),
@@ -36,5 +39,8 @@ describe("construction cleanup", () => {
     const disposable = "d".repeat(64) + "/plan-0.bin";
     expect((await call([disposable])).status).toBe(200);
     expect(deleted).toEqual([[disposable]]);
+    const obsoleteRoot = "e".repeat(64) + "/root.json";
+    expect((await call([obsoleteRoot])).status).toBe(200);
+    expect(deleted.at(-1)).toEqual([obsoleteRoot]);
   });
 });

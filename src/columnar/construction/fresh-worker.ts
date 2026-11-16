@@ -17,29 +17,13 @@ import { assembleWords } from "../word-directory.js";
 import { concat, view } from "../format.js";
 import { finalMerge } from "./final-merge.js";
 import { finishDocumentGroup } from "./document-groups.js";
-import { NumericWriter, numericDocuments } from "./numeric-staging.js";
+import { NumericWriter } from "./numeric-staging.js";
 import {
-  documentGroupPairStatistics,
-  PairStatistics,
-} from "./pair-statistics.js";
-import {
-  storePairStatistics,
-  mergePairStatisticsRuns,
-  type PairStatisticsRun,
-} from "./pair-statistics-runs.js";
-import {
-  documentGroupPairRuns,
-  mergePairOccurrenceRuns,
-} from "./pair-occurrences.js";
-import type { NumericDocument } from "./analyzed-document.js";
-import { finishPairsJob } from "./pair-jobs.js";
-import { finishPairDirectoryJob } from "./pair-directory-job.js";
-import { StagingContainer } from "./staging-container.js";
-import {
-  storeSelection,
-  readSelection,
-  occurrenceSelection,
-} from "./selection-packets.js";
+  CompletePairWriter,
+  mergeCompletePairs,
+  finishCompletePairs,
+} from "./complete-pairs.js";
+import { finishMetadata } from "./metadata.js";
 
 const VERSION = "fresh-construction-v3";
 export function createFreshConstructionWorker(root: SourceRoot, code: string) {
@@ -203,6 +187,10 @@ export function createFreshConstructionWorker(root: SourceRoot, code: string) {
           input.runs = JSON.parse(
             new TextDecoder().decode(await store.get(input.runsRef)),
           );
+        if (input.runRef)
+          input.run = JSON.parse(
+            new TextDecoder().decode(await store.get(input.runRef)),
+          );
         const format = {
           codec: input.codec ?? "delta-gzip-v3",
           blockBytes: input.blockBytes ?? 262144,
@@ -252,8 +240,6 @@ export function createFreshConstructionWorker(root: SourceRoot, code: string) {
           );
         else if (path === "/stage")
           output = await store.put(jsonBytes(input.value), "plan-0.bin");
-        else if (path === "/selection")
-          output = await storeSelection(store, input.value);
         else if (path === "/pack-common") {
           const blocks: { first: string; count: number; data: Uint8Array }[] =
               [],
@@ -291,31 +277,13 @@ export function createFreshConstructionWorker(root: SourceRoot, code: string) {
         } else if (path === "/packages") {
           const a = await activate(store, input.catalogueRef),
             numeric = new NumericWriter(store, input.first, a.identity),
-            statistics: PairStatisticsRun[] = [],
-            physicalStatistics = new StagingContainer(store),
-            termIds = a.catalogue.pairTerms.map((t) => t.id);
-          let pending: NumericDocument[] = [],
-            tokens = 0;
-          const flush = async () => {
-            if (!pending.length || !termIds.length) return;
-            const data = documentGroupPairStatistics(
-              new Uint8Array(),
-              new Uint32Array(),
-              pending[0].doc,
-              termIds,
-              pending,
+            complete = new CompletePairWriter(
+              store,
+              input.first,
+              a.identity,
+              new Set(a.catalogue.pairTerms.slice(0, 200).map((w) => w.id)),
             );
-            statistics.push(
-              await storePairStatistics(
-                store,
-                new PairStatistics(data),
-                a.identity,
-                physicalStatistics,
-              ),
-            );
-            pending = [];
-            tokens = 0;
-          };
+          const metadata: Record<string, unknown>[] = [];
           const result = await finishDocumentGroup(
             source,
             store,
@@ -333,56 +301,41 @@ export function createFreshConstructionWorker(root: SourceRoot, code: string) {
             undefined,
             undefined,
             a.words.request(store),
-            async (row) => {
+            async (row, analyzed, ids) => {
               await numeric.append(row);
-              if (termIds.length) {
-                pending.push(row);
-                tokens += row.body.length + row.title.length;
-                if (tokens >= 131072) await flush();
-              }
+              await complete.append(row, analyzed, ids);
+              metadata.push(
+                Object.fromEntries(
+                  Object.keys(input.metadataSchema ?? {}).map((k) => [
+                    k,
+                    (
+                      analyzed.document.metadata as
+                        Record<string, unknown> | undefined
+                    )?.[k],
+                  ]),
+                ),
+              );
             },
           );
-          await flush();
-          await physicalStatistics.flush();
-          output = { ...result, numeric: await numeric.finish(), statistics };
-        } else if (path === "/merge-statistics")
-          output = await mergePairStatisticsRuns(store, input.runs);
-        else if (path === "/occurrences") {
-          const selection = await occurrenceSelection(
-            store,
-            input.selectionRef,
-          );
           output = {
-            runs: await documentGroupPairRuns(
-              store,
-              new Uint8Array(),
-              new Uint32Array(),
-              input.numeric.first,
-              selection,
-              input.selectionRef.sha256,
-              numericDocuments(store, input.numeric, input.catalogueRef.sha256),
-            ),
+            ...result,
+            numeric: await numeric.finish(),
+            completePairs: await complete.finish(),
+            metadataRef: await store.put(jsonBytes(metadata), "plan-0.bin"),
           };
-        } else if (path === "/merge-occurrences")
-          output = await mergePairOccurrenceRuns(
+        } else if (path === "/metadata") {
+          output = await finishMetadata(store, input);
+        } else if (path === "/merge-complete-pairs") {
+          output = await mergeCompletePairs(
             store,
             input.runs,
+            input.state,
+            input.byteBudget,
             input.range,
           );
-        else if (path === "/finish-pairs") {
-          const selected = await readSelection(
-            store,
-            input.selectionRef,
-            input.range,
-          );
-          output = await finishPairsJob(store, input, {
-            documents: selected.manifest.documents,
-            vocabulary: selected.manifest.vocabulary,
-            pairs: selected.pairs,
-          });
-        } else if (path === "/pair-directory")
-          output = await finishPairDirectoryJob(store, input);
-        else if (path === "/verify") {
+        } else if (path === "/finish-complete-pairs") {
+          output = await finishCompletePairs(store, input, input.byteBudget);
+        } else if (path === "/verify") {
           if (!Array.isArray(input.objects) || input.objects.length > 256)
             throw Error("Invalid object verification batch");
           for (let at = 0; at < input.objects.length; at += 4)
@@ -442,6 +395,48 @@ export function createFreshConstructionWorker(root: SourceRoot, code: string) {
             published.terms !== a.catalogue.terms
           )
             throw Error("Incomplete generation coverage");
+          const coverage = published.pairCoverage,
+            pair = published.root.pairMembership;
+          if (
+            !pair ||
+            !pair.completeContext ||
+            !coverage?.completeContext ||
+            coverage.documents !== documents ||
+            !Number.isSafeInteger(coverage.occurrences) ||
+            coverage.occurrences < 0 ||
+            coverage.occurrences !== published.expectedPairOccurrences ||
+            coverage.occurrences !== pair.occurrences ||
+            coverage.pairs !== pair.pairs ||
+            coverage.memberships !== pair.memberships ||
+            !Array.isArray(published.pairObjects) ||
+            !published.presence ||
+            published.presence.entries.length !==
+              Math.min(200, a.catalogue.pairTerms.length) ||
+            published.presence.generation !== pair.generation
+          )
+            throw Error("Incomplete pair membership/context coverage");
+          const verifiedKeys = new Set(
+            published.objects.map((o: any) => o.key),
+          );
+          if (published.pairObjects.some((o: any) => !verifiedKeys.has(o.key)))
+            throw Error("Unverified pair output");
+          if (published.root.metadataFields) {
+            const { MetadataIndex } = await import("../metadata-filter.js");
+            new MetadataIndex(published.metadataManifest, published.root);
+            const { generation, ...identity } = published.metadataManifest;
+            if (generation !== (await digest(jsonBytes(identity))))
+              throw Error("Metadata generation mismatch");
+            if (
+              JSON.stringify(published.metadataManifest.schema) !==
+                JSON.stringify(published.root.metadataFields) ||
+              published.metadataManifest.blocks.some((b: any) =>
+                Object.values(b.columns).some(
+                  (c: any) => !verifiedKeys.has(c.key),
+                ),
+              )
+            )
+              throw Error("Incomplete configured metadata index");
+          }
           let verified = 0;
           for (const batch of published.verifications) {
             const object = await env.INDEX.get(

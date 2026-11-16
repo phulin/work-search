@@ -1,3 +1,4 @@
+import { buildHotExactPhrases } from "../scripts/build-hot-exact-phrases.js";
 import { it, expect } from "vitest";
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -58,7 +59,7 @@ import { exhaustive } from "../bench/columnar/exhaustive.js";
 import { positionalMatcher } from "../src/query/evaluate.js";
 const generation = "b".repeat(64),
   empty = () => ({ positions: [], previous: [], next: [] });
-it("executes routed inline and complete external context without a bundled pair descriptor, including authoritative absence", async () => {
+it("executes routed inline and chunk-directory external context without a bundled pair descriptor, including authoritative absence", async () => {
   const docs = [
       [
         [0, 1, 2, 3],
@@ -121,7 +122,15 @@ it("executes routed inline and complete external context without a bundled pair 
             titleOccurrences: r.reduce((n, x) => n + x.title.length, 0),
             context:
               a === 1 && b === 2
-                ? encodeCompletePairRanges(ranges)
+                ? encodePairPositionDirectory(1, 2, generation, [
+                    {
+                      first: 0,
+                      last: count - 1,
+                      object: 0,
+                      offset: 0,
+                      length: positional.length,
+                    },
+                  ])
                 : encodePairPacket(a, b, r),
           },
           count,
@@ -158,6 +167,15 @@ it("executes routed inline and complete external context without a bundled pair 
         encodePairMembershipPacket([]),
       ),
     );
+  const hot = await buildHotExactPhrases(
+    router,
+    [{ a: "b", b: "c", df: rows(1, 2).length }],
+    async () => members,
+  );
+  expect(hot.descriptors).toBe(1);
+  expect(
+    new ExactPhraseDirectory(hot.bytes).lookup("b", "c")!.directory,
+  ).toEqual(ranges);
   const root = { generation, count, objects: [], hot: {} } as any,
     terms = new Map(
       words.map((w, id) => [

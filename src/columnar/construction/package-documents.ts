@@ -26,7 +26,11 @@ export async function finishPackageDocuments(
     lookup(names: string[]): Promise<Map<string, number>>;
     stats: { requests: number; bytes: number; hits: number; misses: number };
   },
-  numericSink?: (document: NumericDocument) => Promise<void>,
+  numericSink?: (
+    document: NumericDocument,
+    analyzed: AnalyzedDocument,
+    ids: Map<string, number>,
+  ) => Promise<void>,
 ) {
   if (
     !Number.isInteger(first) ||
@@ -114,7 +118,7 @@ export async function finishPackageDocuments(
       numeric = resolveDocument(doc, ids);
     const packet = await encodeAnalyzedDocumentPackage(doc, numeric);
     if (sink && (await sink(next, packet)) === false) break;
-    await numericSink?.(numeric);
+    await numericSink?.(numeric, doc, ids);
     while (writes.size >= 4) await Promise.race(writes);
     if (writeError) throw writeError;
     const write = (

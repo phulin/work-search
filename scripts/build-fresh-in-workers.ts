@@ -31,6 +31,10 @@ import {
 } from "../src/columnar/term-directory.js";
 import { encodeDocumentDirectory } from "../src/columnar/document-directory.js";
 import { ENGLISH_ANALYSIS } from "../src/query/analysis.js";
+import {
+  buildCompletePairs,
+  completePairRouter,
+} from "./construction-complete-pairs.js";
 import { OBJECT_GROUP } from "../src/columnar/construction/finish.js";
 
 const [countArg, out, build, url, sourcePath] = process.argv.slice(2),
@@ -74,8 +78,11 @@ const config = {
   blockBytes: Number(process.env.CWS_RUN_BLOCK_BYTES ?? 262144),
   containerBytes: Number(process.env.CWS_RUN_CONTAINER_BYTES ?? 16 * 1048576),
   hotTerms: Number(process.env.CWS_COMMON_TERMS ?? 1000000),
-  pairTerms: Number(process.env.CWS_PAIR_TERMS ?? 65536),
-  pairBudget: Number(process.env.CWS_PAIR_BUDGET_MIB ?? 8192) * 1048576,
+  commonWords: 200,
+  metadataSchema: JSON.parse(
+    process.env.CWS_METADATA_SCHEMA ??
+      '{"opinion_id":"number","cluster_id":"number","date_filed":"string","precedential_status":"string"}',
+  ) as Record<string, "string" | "number" | "boolean">,
 };
 const source = hash({ sourceRoot, count, analysis: ENGLISH_ANALYSIS }),
   identity = {
@@ -140,7 +147,7 @@ async function call(path: string, task: string, body: any = {}) {
   }
   const input = existing?.input ?? { ...body, build, task };
   if (!existing) {
-    if (["/final", "/finish-pairs", "/pair-directory"].includes(path)) {
+    if (["/final", "/finish-complete-pairs"].includes(path)) {
       const group = allocation++;
       if (group >= 262144) throw Error("Object allocation exhausted");
       await appendFile(
@@ -400,7 +407,7 @@ const catalogueBuild = phase("catalogue", async () => {
     hot = selectionThreshold([...histogram], Math.min(config.hotTerms, terms)),
     pair = selectionThreshold(
       [...histogram],
-      Math.min(config.pairTerms, terms),
+      Math.min(config.commonWords, terms),
     );
   const partitions: Catalogue["partitions"] = [],
     selections: any[] = [];
@@ -474,7 +481,7 @@ const catalogueBuild = phase("catalogue", async () => {
     pairTerms,
     commonBundle,
   };
-  if (pairTerms.length !== Math.min(config.pairTerms, terms))
+  if (pairTerms.length !== Math.min(config.commonWords, terms))
     throw Error("Pair vocabulary selection coverage mismatch");
   const ref = await stage("catalogue-manifest", catalogue);
   await call("/activate", "activate-catalogue", { catalogueRef: ref });
@@ -584,6 +591,7 @@ const packageBuild = phase("packages", async () => {
           generation: packageGeneration,
           first: next,
           count: end - next,
+          metadataSchema: config.metadataSchema,
         });
         if (r.first !== next || r.end <= next || r.end > end)
           throw Error("Package coverage mismatch");
@@ -595,101 +603,33 @@ const packageBuild = phase("packages", async () => {
   ).flat();
 });
 const [postings, packages] = await Promise.all([finalBuild, packageBuild]);
-const pairs = await phase("pairs", async () => {
-  if (!catalogue.pairTerms.length) return { outputs: [], directory: [] };
-  let runs = packages.flatMap((p) => p.statistics),
-    level = 0;
-  while (runs.length > 1) {
-    const groups = Array.from({ length: Math.ceil(runs.length / 4) }, (_, i) =>
-      runs.slice(i * 4, i * 4 + 4),
-    );
-    runs = await pool(groups, (g, i) =>
-      g.length === 1
-        ? Promise.resolve(g[0])
-        : call("/merge-statistics", `stats-${level}-${i}`, { runs: g }),
-    );
-    level++;
-  }
-  const { selectPairs } =
-    await import("../src/columnar/construction/pair-selection.js");
-  const { PairStatistics } =
-    await import("../src/columnar/construction/pair-statistics.js");
-  const selection = await selectPairs(
-    catalogue,
-    runs[0],
-    async (ref) => new PairStatistics(await download(ref)),
-    config.pairBudget,
+const metadata = await phase("metadata", async () => {
+  return pool(
+    Array.from({ length: Math.ceil(count / 4096) }, (_, i) => i),
+    async (i) =>
+      call("/metadata", `metadata-${i}`, {
+        first: i * 4096,
+        count: Math.min(4096, count - i * 4096),
+        schema: config.metadataSchema,
+        parts: packages
+          .filter((p) => p.first >= i * 4096 && p.first < (i + 1) * 4096)
+          .map((p) => ({
+            first: p.first,
+            end: p.end,
+            metadataRef: p.metadataRef,
+          })),
+      }),
   );
-  await writeFile(out + "/pair-selection.json", JSON.stringify(selection));
-  if (!selection.pairs.length) return { outputs: [], directory: [], selection };
-  const selectionRef = await call("/selection", "pair-selection", {
-    value: selection,
-  });
-  const occurrences = await pool(packages, (p, i) =>
-    call("/occurrences", `occurrences-${i}`, {
-      catalogueRef,
-      selectionRef,
-      numeric: p.numeric,
-    }),
-  );
-  let occurrenceRuns = occurrences.flatMap((o) => o.runs);
-  level = 0;
-  while (occurrenceRuns.length > 1) {
-    const groups = Array.from(
-      { length: Math.ceil(occurrenceRuns.length / 4) },
-      (_, i) => occurrenceRuns.slice(i * 4, i * 4 + 4),
-    );
-    occurrenceRuns = await pool(groups, (g, i) =>
-      g.length === 1
-        ? Promise.resolve(g[0])
-        : call("/merge-occurrences", `occurrence-merge-${level}-${i}`, {
-            runs: g,
-          }),
-    );
-    level++;
-  }
-  const finishingGroups: (typeof selection.pairs)[] = [];
-  let pending: typeof selection.pairs = [],
-    pendingBytes = 0;
-  for (const pair of selection.pairs) {
-    if (
-      pending.length &&
-      (pending.length >= 4096 || pendingBytes + pair.cost > 4 * 1048576)
-    ) {
-      finishingGroups.push(pending);
-      pending = [];
-      pendingBytes = 0;
-    }
-    pending.push(pair);
-    pendingBytes += pair.cost;
-  }
-  if (pending.length) finishingGroups.push(pending);
-  const outputs = await pool(finishingGroups, async (selected, i) => {
-    const range = {
-      firstKey: selected[0].key,
-      endKey: selected.at(-1)!.key + 1,
-    };
-    return call("/finish-pairs", `finish-pairs-${i}`, {
-      selectionRef,
-      run: occurrenceRuns[0],
-      range,
-    });
-  });
-  const directory = await pool(outputs, (o, i) =>
-    call("/pair-directory", `pair-directory-${i}`, {
-      pairs: Object.values(o.descriptors),
-      objects: o.objects,
-      objectIds: o.objects.map((_: any, n: number) => o.objectBase + n),
-    }),
-  );
-  return { outputs, directory, selection };
 });
+const pairs = await phase("pairs", () =>
+  buildCompletePairs(catalogue, catalogueRef, packages, call, stage, pool),
+);
 const completed = await phase("publication", async () => {
   const objects: Root["objects"] = [],
     objectIds: number[] = [],
     hot: any[] = [],
     cold: any[] = [];
-  for (const output of [...postings, ...pairs.outputs, ...pairs.directory])
+  for (const output of postings)
     output.objects.forEach((o: any, n: number) => {
       objects.push(o);
       objectIds.push(output.objectBase + n);
@@ -743,6 +683,8 @@ const completed = await phase("publication", async () => {
     documents: [],
     dictionaries: [],
     hot: {},
+    metadataFields: config.metadataSchema,
+    metadataObjects: metadata.flatMap((m) => m.objects),
     objects,
     objectIds,
     directory: {
@@ -763,17 +705,43 @@ const completed = await phase("publication", async () => {
       },
     },
   };
-  if (pairs.selection?.pairs.length)
-    root.pairDirectory = {
-      pairs: pairs.selection.pairs.length,
-      shards: pairs.directory
-        .flatMap((d: any) => d.shards)
-        .sort(
-          (a: any, b: any) =>
-            a.first[0] - b.first[0] || a.first[1] - b.first[1],
-        ),
-    };
+  root.pairMembership = {
+    generation: pairs.metadata.generation,
+    pairs: pairs.coverage.pairs,
+    occurrences: pairs.coverage.occurrences,
+    memberships: pairs.coverage.memberships,
+    completeContext: true,
+    objects: pairs.objects.map(({ key, size, sha256 }: any) => ({
+      key,
+      size,
+      sha256,
+    })),
+  };
   root.generation = await generationFor(root);
+  const metadataManifest = {
+    format: "CWM1",
+    generation: "",
+    baseGeneration: root.generation,
+    count,
+    blockDocuments: 4096,
+    schema: config.metadataSchema,
+    blocks: metadata.map((m) => m.block),
+  };
+  const { generation: _emptyMetadataGeneration, ...metadataIdentity } =
+    metadataManifest;
+  metadataManifest.generation = hash(metadataIdentity);
+  await mkdir(out + "/metadata", { recursive: true });
+  await writeFile(
+    out + "/metadata/metadata.json",
+    JSON.stringify(metadataManifest),
+  );
+  const router = completePairRouter(pairs, root.generation);
+  await mkdir(out + "/membership", { recursive: true });
+  await writeFile(out + "/membership/router.bin", router);
+  await writeFile(
+    out + "/membership/presence.json",
+    JSON.stringify(pairs.presence),
+  );
   await writeFile(out + "/root.json", JSON.stringify(root));
   await writeFile(out + "/directory.bin", directory);
   await writeFile(out + "/documents.bin", documents);
@@ -788,6 +756,8 @@ const completed = await phase("publication", async () => {
     })),
     directoryRef,
     documentsRef,
+    ...pairs.objects,
+    ...metadata.flatMap((m) => m.objects),
   ];
   const verifications = await pool(
     Array.from(
@@ -805,6 +775,13 @@ const completed = await phase("publication", async () => {
   const manifestRef = await stage("final-manifest", {
     root,
     catalogueRef,
+    pairCoverage: pairs.coverage,
+    expectedPairOccurrences: packages
+      .flatMap((p) => p.completePairs)
+      .reduce((n, r) => n + r.occurrences, 0),
+    metadataManifest,
+    pairObjects: pairs.objects,
+    presence: pairs.presence,
     terms: postings.reduce((n, p) => n + p.terms, 0),
     groups,
     objects: verifiedObjects,
