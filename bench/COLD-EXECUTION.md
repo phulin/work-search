@@ -293,7 +293,45 @@ rather than replaces that oracle. Results and intermediate experiments are under
 `bench/results/columnar/cold-routing-1m/`; `compare-cold.ts`, `compare-report.ts`
 and `profile-cold.ts` reproduce the measurement procedures.
 
-Remaining work is to repeat the full workload without overlapping search runs,
-investigate regressions with unchanged read/byte counts, and test concurrent
-memory and admission behavior. These samples do not establish production P99 or
-readiness for 10M documents. The suffix experiment remains separate.
+### Complete cold comparison after candidate score ordering
+
+The nonoverlapping repeat compares `43e7b4c` against `21ff91a` on the same 200
+queries, three randomized repetitions per engine. All 1,200 requests succeeded;
+ranked document IDs/order, display fields and snippets agreed. Native CPU samples
+were joined for all 600 requests per engine. The independent 76-query live
+oracle also passed. This comparison has no suffix index enabled.
+
+| Metric           |      Control P50/P95/P99 |  Candidate P50/P95/P99 |
+| ---------------- | -----------------------: | ---------------------: |
+| Client latency   | 1,105 / 3,140 / 4,343 ms | 976 / 2,567 / 3,111 ms |
+| Worker CPU       |   253 / 1,170 / 1,646 ms |   209 / 950 / 1,499 ms |
+| Worker wall time |   756 / 2,462 / 3,752 ms | 658 / 2,042 / 2,445 ms |
+
+The candidate scores a bounded conservative document set before scheduling
+expensive verification. Only verified matches raise the competitive threshold.
+It stops starting document reads when exact scores prove the remaining
+candidates cannot enter the heap, preserving cursor and tie ordering. Exact
+totals and unsupported conditions retain the exhaustive path. This is a query
+execution change; the corpus format, context and excerpt code are unchanged.
+
+For requests for admission, client median fell from 2,966 to 2,489 ms and CPU
+from 789 to 556 ms. Verification packages fell from 170 to 26 and total GETs
+from 224 to 100. The cost is more transfer: 10.03 to 27.87 MB, including 20.65 MB
+of complete frequency packets retained while scoring. Across the entire set,
+P99 transfer increased from 20.59 to 24.27 MB. Candidate buffer sizes and cache
+retention are reported separately; they are not measurements of isolate peak
+memory or cumulative allocations.
+
+Six hundred requests per engine remain insufficient for production tail
+estimates. Resampling whole scenarios gives approximate 95% intervals of
+3,651–4,537 ms for control P99 and 2,810–3,660 ms for candidate P99. These are
+workload statistics from BOS, not production traffic percentiles. The earlier
+sparse integer-decoding experiment was reverted because its local CPU results
+did not establish a native improvement.
+
+Raw responses, native observations, joined report and independent validation
+are `ranked-documents-cold-200{,-cpu,-report}.json.gz` and
+`ranked-documents-validation.json` in the results directory above. Worker
+versions, code, generations, request IDs, cache namespaces and options are in
+those artifacts. Concurrent memory/admission tests and 10M readiness remain
+unestablished. The suffix experiment is separate.
