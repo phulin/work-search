@@ -13,6 +13,7 @@ interface RangeReceipt {
 /** Preparation binds authenticated immutable range responses to local SHA-256
  * receipts. Timed runs have no network and do no checksum work. */
 export class RangeStorage implements Source {
+  capture?: (range: { key: string; offset: number; length: number }) => void;
   prepare = false;
   reads = 0;
   bytes = 0;
@@ -193,6 +194,7 @@ export class RangeStorage implements Source {
       }
   }
   async read(key: string, offset: number, length: number) {
+    this.capture?.({ key, offset, length });
     this.accessed.add(key);
     const id = key + ":" + offset + ":" + length;
     let task = this.pending.get(id);

@@ -37,7 +37,7 @@ const index = resolve(indexInput),
   contract = JSON.parse(
     gunzipSync(
       await readFile(
-        process.env.CWS_CONTRACT_PATH ?? "work/suffix-30-contract.json.gz",
+        process.env.CWS_CONTRACT_PATH ?? "bench/fixtures/1m-200.json.gz",
       ),
     ).toString(),
   ),

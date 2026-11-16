@@ -12,7 +12,8 @@ and [complete phrase execution](docs/EXACT-PHRASES.md).
 
 ## Setup
 
-Use Node.js 22.13 or newer, Yarn, and Rust/Cargo for the native builder and tests.
+Use Node.js 22.13 or newer, Yarn Classic, and Rust 1.93 or newer for the native
+builder and tests. Node 26 is recommended for reproducing the 1M experiments.
 The TypeScript corpus tools use Node's built-in SQLite support. Wrangler provides
 Cloudflare authentication; `.env.example` lists optional account and R2 settings.
 
@@ -22,6 +23,22 @@ yarn run check
 yarn builder:check
 yarn test
 ```
+
+A fresh cloud checkout can run these checks without Cloudflare credentials or
+local indexes. Tests build their own fixtures and run Workers locally. Install
+dependencies while network access is available; subsequent checks use local
+files. The 1M benchmark contracts are in `bench/fixtures`; their large index data
+is separate from Git and must be prepared before running those benchmarks.
+
+For a prepared 1M index and suffix data, run a cold comparison with exact totals
+off using `bench/columnar/run-suffix.ts INDEX_DIR SUFFIX_DIR OUTPUT.json.gz`.
+Set `CWS_SUFFIX_MANIFEST=manifest-numeric.json`,
+`CWS_SUFFIX_PLANS=control,suffix16-max`, and `CWS_CONTROL_COMMIT=21ff91a`.
+Historical controls require the corresponding Git commit to be available; fetch
+it from origin if the cloud checkout is shallow. No remote data reads occur
+unless `CWS_PREPARE_REMOTE=1` is explicitly set. `CWS_CAPTURE_DATA=FILE.json`
+records the required byte ranges during untimed preparation to size a portable
+dataset without copying the entire suffix index.
 
 ## Build and search
 

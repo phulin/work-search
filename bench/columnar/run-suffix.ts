@@ -27,6 +27,12 @@ import { RangeStorage } from "./range-storage.js";
 import { SimulatedIO } from "./latency-model.js";
 import { benchmarkToken } from "./token.js";
 import { Session } from "node:inspector";
+import { unionReadRanges, type ReadRange } from "./read-ranges.js";
+
+const captureData = process.env.CWS_CAPTURE_DATA,
+  capturedEngine = new Map<string, ReadRange>(),
+  capturedSuffix = new Map<string, ReadRange>();
+let captureSuffix = !!captureData;
 
 const profileDirectory = process.env.CWS_CPU_PROFILES_DIR;
 let profileSequence = 0;
@@ -67,8 +73,7 @@ const assets = await loadServingAssets(index, servingOptions()),
   previous = JSON.parse(
     gunzipSync(
       await readFile(
-        process.env.CWS_CONTRACT_PATH ??
-          "bench/results/columnar/fresh-1m-200/final-pass.json.gz",
+        process.env.CWS_CONTRACT_PATH ?? "bench/fixtures/1m-200.json.gz",
       ),
     ).toString(),
   );
@@ -310,6 +315,12 @@ storage.include(
   })),
 );
 async function suffixRead(file: string, at: number, length: number) {
+  if (captureSuffix)
+    capturedSuffix.set(`${file}:${at}:${length}`, {
+      key: file,
+      offset: at,
+      length,
+    });
   let handle = files.get(file);
   if (!handle) files.set(file, (handle = open(suffixPath + "/" + file, "r")));
   const b = Buffer.allocUnsafe(length);
@@ -573,6 +584,7 @@ const provenance = {
         "numeric-packets",
         "boolean-rank",
         "evidence",
+        "filtered-phrase",
         "format",
         "keys",
       ].map(async (name) => [
@@ -612,11 +624,37 @@ try {
   // a smaller range inside an existing local packet, without any remote I/O.
   await storage.verify();
   storage.prepare = true;
+  if (captureData)
+    storage.capture = (r) =>
+      capturedEngine.set(`${r.key}:${r.offset}:${r.length}`, r);
   for (const plan of plans)
     for (const s of scenarios) {
       await query(s, plan, true);
       console.log("Prepared", plan, s.sid);
     }
+  storage.capture = undefined;
+  captureSuffix = false;
+  if (captureData) {
+    const engine = unionReadRanges(capturedEngine.values()),
+      suffix = unionReadRanges(capturedSuffix.values());
+    const footprint = {
+      engineBytes: engine.reduce((n, r) => n + r.length, 0),
+      suffixBytes: suffix.reduce((n, r) => n + r.length, 0),
+    };
+    await mkdir(dirname(captureData), { recursive: true });
+    await writeFile(
+      captureData,
+      JSON.stringify({
+        generation: root.generation,
+        suffixGeneration: manifest.generation,
+        corpusHash: root.corpusHash,
+        engine,
+        suffix,
+        ...footprint,
+      }),
+    );
+    console.log("Query data footprint", footprint);
+  }
   const completeObjects = await storage.completePreparation(
     32 * 1048576,
     (done, total, bytes) => {
