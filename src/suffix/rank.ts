@@ -5,6 +5,7 @@ import {
   type SuffixColumn,
 } from "./format.js";
 import type { SuffixReader } from "./reader.js";
+import { rankQuantizedRows } from "./quantized-rank.js";
 export interface SuffixRankOptions {
   bits: 8 | 16;
   field?: "all" | "body" | "title";
@@ -22,6 +23,8 @@ export async function rankSuffix(
 ) {
   if (phrase.length < 2 || phrase.length > 5 || options.limit < 1)
     throw Error("Suffix score prefixes cover lengths 2–5");
+  if ((options.field ?? "all") === "all")
+    return rankQuantizedRows(reader, phrase, options, rescore);
   const interval = await reader.interval(phrase),
     heap = new Heap(options.limit),
     proven = new Heap(options.limit),

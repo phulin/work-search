@@ -305,7 +305,7 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
             actual.results.map((h) => h.doc),
             q + field,
           ).toEqual(expected.slice(0, 7).map((h) => h.doc));
-          if (scoredConjunction(ast))
+          if (scoredConjunction(ast) && field === "all")
             expect(actual.diagnostics.executor).toBe("suffix-boolean-ranked");
           for (const h of actual.results) {
             expect(h.score).toBeCloseTo(

@@ -76,6 +76,7 @@ import {
   intersectMembershipAnchor,
   enrichMembershipPositions,
   type MembershipSettings,
+  type MembershipAnchor,
 } from "./membership-anchor.js";
 import {
   planBooleanMembership as planMembershipAnchor,
@@ -93,7 +94,12 @@ export type PhraseExecution = Pick<
   | "truth"
   | "positionGuard"
   | "mask"
->;
+> & {
+  candidateAnchor?: (
+    ast: Node,
+    field: "all" | "body" | "title",
+  ) => MembershipAnchor | undefined;
+};
 export interface Options {
   /** Internal, generation-checked exact phrase evidence. Never read from HTTP input. */
   phraseExecution?: { generation: string; execution: PhraseExecution };
@@ -392,7 +398,9 @@ export class ColumnarIndex {
         preliminary?.kind !== "documents" &&
         (bundledExactPlans.length > 0 || !!exact?.covered(original.terms)),
       membershipRead =
-        this.membership && !bundledPrimaryExact && !exact
+        this.membership &&
+        !bundledPrimaryExact &&
+        (!exact || !!exact.candidateAnchor)
           ? planMembershipAnchor(
               original,
               this.membership,
@@ -401,6 +409,12 @@ export class ColumnarIndex {
               options.field,
               preliminary,
               options.exactTotal,
+              exact?.candidateAnchor
+                ? (phrase, field) =>
+                    exact!.covered(phrase.terms)
+                      ? exact!.candidateAnchor!(phrase, field)
+                      : undefined
+                : undefined,
             )
           : undefined,
       provedWords = membershipRead?.provedWords ?? new Set<string>(),
@@ -570,7 +584,7 @@ export class ColumnarIndex {
           ),
           unigramCandidates,
         )
-      : undefined;
+      : exact?.candidateAnchor?.(ast, field);
     reader.stats.anchorBufferBytes += loadedMembership?.bufferBytes ?? 0;
     if (unigramCandidates) {
       reader.stats.anchorUnigramCandidates = unigramCandidates.length;
@@ -851,7 +865,7 @@ export class ColumnarIndex {
           );
         }
       }
-      const result = exact
+      const phraseResult = exact
         ? await executePhraseFrequencies(
             ast,
             exact,
@@ -862,15 +876,23 @@ export class ColumnarIndex {
             packages,
             started,
           )
-        : await executePackets(
-            ast,
-            terms as Map<string, DirectoryTerm>,
-            queryRoot,
-            reader,
-            options,
-            packages,
-            planned,
-          );
+        : undefined;
+      // Exact evidence can reject most documents even when its frequency-only
+      // scorer does not support this Boolean form. Keep the already selected
+      // packet/document continuation before falling back to broad block work.
+      const result =
+        phraseResult ??
+        (!exact || planned.kind === "documents"
+          ? await executePackets(
+              ast,
+              terms as Map<string, DirectoryTerm>,
+              queryRoot,
+              reader,
+              options,
+              packages,
+              planned,
+            )
+          : undefined);
       if (result) return result;
       // Correlated terms can make an initially cheap document plan much larger
       // than its forecast. Before its block fallback, reprice pair evidence

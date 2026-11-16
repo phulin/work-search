@@ -2,6 +2,12 @@ import { lower } from "../columnar/format.js";
 import type { PhraseExecution } from "../columnar/search.js";
 import type { Node } from "../query/parser.js";
 import type { SuffixReader } from "./reader.js";
+import {
+  arrayCursor,
+  intersectCursors,
+  unionCursors,
+} from "../columnar/numeric-cursor.js";
+import type { MembershipAnchor } from "../columnar/membership-anchor.js";
 interface PhraseRows {
   docs: Uint32Array;
   offsets: [Uint32Array, Uint32Array];
@@ -14,6 +20,11 @@ export class SuffixEvidence implements PhraseExecution {
   private rows = new Map<string, PhraseRows>();
   private lo = 0;
   private hi = 0;
+  private reserved = 0;
+  private anchors = new WeakMap<
+    Node,
+    Map<string, MembershipAnchor | undefined>
+  >();
   async add(
     words: string[],
     ids: Uint32Array,
@@ -21,49 +32,122 @@ export class SuffixEvidence implements PhraseExecution {
     budget = 4 * 1048576,
   ) {
     if (this.covered(words)) return true;
-    const estimated = await reader.interval(ids);
-    if ((estimated.end - estimated.first) * 40 + this.bufferBytes > budget)
+    if (
+      reader.minimumRows(ids) * 40 + this.bufferBytes + this.reserved >
+      budget
+    )
       return false;
-    const interval = await reader.interval(ids),
-      docValues: number[] = [],
-      positionValues: number[] = [];
-    for await (const batch of reader.scan(interval, [
-      "documents",
-      "positions",
-    ])) {
-      const d = batch.columns.documents!,
-        p = batch.columns.positions!,
-        dv = new DataView(d.buffer, d.byteOffset, d.byteLength),
-        pv = new DataView(p.buffer, p.byteOffset, p.byteLength);
-      for (let i = batch.first; i < batch.end; i++) {
-        docValues.push(dv.getUint32(i * 4, true));
-        positionValues.push(pv.getUint32(i * 4, true));
+    const estimated =
+      ids.length <= 8
+        ? await reader.shortInterval(ids)
+        : await reader.interval(ids);
+    const reserve = (estimated.end - estimated.first) * 40;
+    if (reserve + this.bufferBytes + this.reserved > budget) return false;
+    this.reserved += reserve;
+    try {
+      const interval =
+          "groups" in estimated ? await reader.expand(estimated) : estimated,
+        docValues: number[] = [],
+        positionValues: number[] = [];
+      for await (const batch of reader.scan(interval, [
+        "documents",
+        "positions",
+      ])) {
+        const d = batch.columns.documents!,
+          p = batch.columns.positions!,
+          dv = new DataView(d.buffer, d.byteOffset, d.byteLength),
+          pv = new DataView(p.buffer, p.byteOffset, p.byteLength);
+        for (let i = batch.first; i < batch.end; i++) {
+          docValues.push(dv.getUint32(i * 4, true));
+          positionValues.push(pv.getUint32(i * 4, true));
+        }
       }
-    }
-    const docs = Uint32Array.from(docValues),
-      pos = Uint32Array.from(positionValues),
-      order = Uint32Array.from({ length: docs.length }, (_, i) => i);
-    order.sort((a, b) => docs[a] - docs[b] || pos[a] - pos[b]);
-    const unique: number[] = [],
-      starts: [number[], number[]] = [[], []],
-      offsets: [number[], number[]] = [[0], [0]];
-    let last = -1;
-    for (const i of order) {
-      if (docs[i] !== last) {
-        if (last >= 0)
-          for (const f of [0, 1]) offsets[f].push(starts[f].length);
-        unique.push((last = docs[i]));
+      const docs = Uint32Array.from(docValues),
+        pos = Uint32Array.from(positionValues),
+        order = Uint32Array.from({ length: docs.length }, (_, i) => i);
+      order.sort((a, b) => docs[a] - docs[b] || pos[a] - pos[b]);
+      const unique: number[] = [],
+        starts: [number[], number[]] = [[], []],
+        offsets: [number[], number[]] = [[0], [0]];
+      let last = -1;
+      for (const i of order) {
+        if (docs[i] !== last) {
+          if (last >= 0)
+            for (const f of [0, 1]) offsets[f].push(starts[f].length);
+          unique.push((last = docs[i]));
+        }
+        const f = pos[i] >= 2 ** 31 ? 1 : 0;
+        starts[f].push(pos[i] % 2 ** 31);
       }
-      const f = pos[i] >= 2 ** 31 ? 1 : 0;
-      starts[f].push(pos[i] % 2 ** 31);
+      if (last >= 0) for (const f of [0, 1]) offsets[f].push(starts[f].length);
+      this.rows.set(words.join("\0"), {
+        docs: Uint32Array.from(unique),
+        offsets: [Uint32Array.from(offsets[0]), Uint32Array.from(offsets[1])],
+        positions: [Uint32Array.from(starts[0]), Uint32Array.from(starts[1])],
+      });
+      this.anchors = new WeakMap();
+      return true;
+    } finally {
+      this.reserved -= reserve;
     }
-    if (last >= 0) for (const f of [0, 1]) offsets[f].push(starts[f].length);
-    this.rows.set(words.join("\0"), {
-      docs: Uint32Array.from(unique),
-      offsets: [Uint32Array.from(offsets[0]), Uint32Array.from(offsets[1])],
-      positions: [Uint32Array.from(starts[0]), Uint32Array.from(starts[1])],
-    });
-    return true;
+  }
+  /** Exact phrase lists also supply a conservative Boolean candidate stream.
+   * Unknown is the universe; OR requires both branches, and negative evidence
+   * is never subtracted from a superset. All work stays in sorted integers. */
+  candidateAnchor(
+    ast: Node,
+    field: "all" | "body" | "title",
+  ): MembershipAnchor | undefined {
+    const cached = this.anchors.get(ast);
+    if (cached?.has(field)) return cached.get(field);
+    const visit = (n: Node): Uint32Array | undefined => {
+      if (n.kind === "phrase") {
+        const row = this.rows.get(n.terms.join("\0"));
+        if (!row) return;
+        if (field === "all") return row.docs;
+        const f = field === "title" ? 1 : 0;
+        return row.docs.filter(
+          (_, i) => row.offsets[f][i + 1] > row.offsets[f][i],
+        );
+      }
+      if (n.kind === "empty") return EMPTY;
+      if (!("left" in n)) return;
+      const a = visit(n.left);
+      if (n.kind === "except") return a;
+      const b = visit(n.right);
+      if (n.kind === "or" && (!a || !b)) return;
+      if (!a) return b;
+      if (!b) return a;
+      const cursor =
+          n.kind === "or"
+            ? unionCursors(arrayCursor(a), arrayCursor(b))
+            : intersectCursors([arrayCursor(a), arrayCursor(b)]),
+        docs = new Uint32Array(
+          n.kind === "or" ? a.length + b.length : Math.min(a.length, b.length),
+        );
+      let count = 0;
+      for (let doc = cursor.next(); doc !== Infinity; doc = cursor.next())
+        docs[count++] = doc;
+      return docs.subarray(0, count);
+    };
+    const docs = visit(ast);
+    const result: MembershipAnchor | undefined = docs
+      ? {
+          count: docs.length,
+          bufferBytes: docs.buffer.byteLength,
+          values: function* () {
+            yield* docs;
+          },
+          has: (doc) => docs[lower(docs, doc)] === doc,
+          cursor: () => arrayCursor(docs),
+          covered: this.covered,
+          evidence: this.evidence,
+        }
+      : undefined;
+    const fields = cached ?? new Map<string, MembershipAnchor | undefined>();
+    fields.set(field, result);
+    this.anchors.set(ast, fields);
+    return result;
   }
   covered = (words: string[]) => this.rows.has(words.join("\0"));
   evidence = (words: string[], doc: number, field: number) => {
@@ -110,14 +194,21 @@ export class SuffixEvidence implements PhraseExecution {
       if (n.kind === "all") return 1;
       if (n.kind === "term") return 2;
       if (n.kind === "phrase") {
-        if (!this.covered(n.terms)) return 2;
+        const rows = this.rows.get(n.terms.join("\0"));
+        if (!rows) return 2;
         const a = new Uint8Array(size);
-        for (let i = 0; i < size; i++)
-          a[i] =
-            (field !== "title" && this.truth(n.terms, this.lo + i, 0)) ||
-            (field !== "body" && this.truth(n.terms, this.lo + i, 1))
-              ? 1
-              : 0;
+        for (
+          let i = lower(rows.docs, this.lo);
+          i < rows.docs.length && rows.docs[i] < this.hi;
+          i++
+        )
+          if (
+            field === "all" ||
+            (field !== "title" &&
+              rows.offsets[0][i + 1] > rows.offsets[0][i]) ||
+            (field !== "body" && rows.offsets[1][i + 1] > rows.offsets[1][i])
+          )
+            a[rows.docs[i] - this.lo] = 1;
         return a;
       }
       if (n.kind === "not") {

@@ -109,3 +109,45 @@ it("serves changed coalescing ranges from verified local coverage without remote
     await rm(path, { recursive: true, force: true });
   }
 });
+
+it("prepares complete touched objects so different speculative reads remain offline", async () => {
+  const path = await mkdtemp(join(tmpdir(), "cws-complete-ranges-")),
+    key = "a".repeat(64) + "/plan-0.bin",
+    data = Buffer.from(Array.from({ length: 64 }, (_, i) => i)),
+    sha = createHash("sha256").update(data).digest("hex"),
+    fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (_url, options) => {
+        const headers = new Headers(options?.headers),
+          offset = Number(headers.get("x-offset")),
+          length = Number(headers.get("x-length"));
+        return new Response(data.subarray(offset, offset + length), {
+          headers: { "x-generation": "a".repeat(64), "x-sha256": sha },
+        });
+      });
+  try {
+    const source = new RangeStorage(
+      {
+        generation: "a".repeat(64),
+        objects: [{ key, size: 64, sha256: sha }],
+      } as any,
+      path,
+      { url: "https://example.invalid", token: "test" },
+    );
+    source.prepare = true;
+    expect(await source.read(key, 10, 3)).toEqual(data.subarray(10, 13));
+    expect(await source.completePreparation()).toEqual({
+      objects: 1,
+      bytes: 64,
+    });
+    source.prepare = false;
+    await source.verify();
+    fetch.mockRejectedValue(Error("Network forbidden during timing"));
+    expect(await source.read(key, 40, 5)).toEqual(data.subarray(40, 45));
+    expect(source.reads).toBe(2);
+    expect(source.localAssemblies).toBe(1);
+  } finally {
+    fetch.mockRestore();
+    await rm(path, { recursive: true, force: true });
+  }
+});

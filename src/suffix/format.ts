@@ -227,6 +227,9 @@ export interface SuffixManifest {
     first: number;
     end: number;
     ref: SuffixRef;
+    scoreMaximum?: number[];
+    minDocument?: number;
+    ranking?: Partial<Record<number, SuffixRef>>;
   }[];
   files: Record<string, { bytes: number; sha256: string }>;
 }

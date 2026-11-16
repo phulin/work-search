@@ -57,10 +57,10 @@ const allScenarios = previous.scenarios.map((s: any, sid: number) => ({
   )?.result.results,
 }));
 if (
-  allScenarios.length !== 200 ||
+  !allScenarios.length ||
   allScenarios.some((s: any) => !s.expected || s.options.after)
 )
-  throw Error("Expected complete 200-query contract without old cursors");
+  throw Error("Expected complete query contract without old cursors");
 const selectedIds = process.env.CWS_QUERY_IDS?.split(",").map(Number),
   scenarios = allScenarios.filter(
     (s: any) => !selectedIds || selectedIds.includes(s.sid),
@@ -80,11 +80,22 @@ const model = {
   }),
   manifest =
     suffixPath !== "-"
-      ? JSON.parse(await readFile(suffixPath + "/manifest.json", "utf8"))
+      ? JSON.parse(
+          await readFile(
+            suffixPath +
+              "/" +
+              (process.env.CWS_SUFFIX_MANIFEST ?? "manifest.json"),
+            "utf8",
+          ),
+        )
       : undefined,
   forced = process.env.CWS_CONTINUATIONS?.split(","),
+  suffixPlans = process.env.CWS_SUFFIX_PLANS?.split(","),
   plans = manifest
-    ? ["control", "suffix16-scan", "suffix16-max", "suffix8-max"]
+    ? (suffixPlans ??
+      (process.env.CWS_COMPARE_SUFFIX === "1"
+        ? ["control", "suffix-before", "suffix16-max", "suffix8-max"]
+        : ["control", "suffix16-scan", "suffix16-max", "suffix8-max"]))
     : (forced ?? ["control", "candidate"]),
   repeats = Number(process.env.CWS_REPEATS ?? 3),
   startedAt = new Date().toISOString(),
@@ -103,6 +114,23 @@ if (
   (manifest || forced.some((p) => !["auto", "documents", "blocks"].includes(p)))
 )
   throw Error("Invalid forced continuation experiment");
+if (
+  suffixPlans &&
+  (!manifest ||
+    !suffixPlans.length ||
+    suffixPlans.some(
+      (p) =>
+        ![
+          "control",
+          "suffix-before",
+          "suffix16-scan",
+          "suffix16-max",
+          "suffix16-without-heads",
+          "suffix8-max",
+        ].includes(p),
+    ))
+)
+  throw Error("Invalid suffix benchmark plans");
 await mkdir(frozen, { recursive: true });
 if (
   !(await readFile(frozen + "/src/columnar/search.ts").then(
@@ -127,7 +155,20 @@ const control = await import(
   controlDocuments = await import(
     pathToFileURL(frozen + "/src/columnar/document-directory.ts").href
   ),
+  previousSuffixReader = manifest
+    ? await import(pathToFileURL(frozen + "/src/suffix/reader.ts").href)
+    : undefined,
+  previousSuffixSearch = manifest
+    ? await import(pathToFileURL(frozen + "/src/suffix/search.ts").href)
+    : undefined,
   files = new Map<string, ReturnType<typeof open>>();
+storage.include(
+  [...new DocumentDirectory(assets.documents!).groups()].map((g) => ({
+    key: g.key,
+    size: g.bytes,
+    sha256: g.key.split("/")[0],
+  })),
+);
 async function suffixRead(file: string, at: number, length: number) {
   let handle = files.get(file);
   if (!handle) files.set(file, (handle = open(suffixPath + "/" + file, "r")));
@@ -184,7 +225,7 @@ async function query(s: any, plan: string, prepare: boolean) {
       };
     }
   }
-  const frozen = plan === "control",
+  const frozen = plan === "control" || plan === "suffix-before",
     MemoryClass = frozen ? controlStorage.Memory : Memory,
     ReaderClass = frozen ? controlStorage.Reader : Reader,
     DirectoryClass = frozen ? controlDirectory.TermDirectory : TermDirectory,
@@ -224,8 +265,22 @@ async function query(s: any, plan: string, prepare: boolean) {
       (p: Promise<any>) => writes.push(p),
       { remaining: 900 },
     ),
+    SuffixReaderClass =
+      plan === "suffix-before"
+        ? previousSuffixReader!.SuffixReader
+        : SuffixReader,
+    selectedManifest =
+      plan === "suffix16-without-heads"
+        ? {
+            ...manifest,
+            directory: manifest.directory.map(({ ranking: _, ...g }: any) => g),
+          }
+        : manifest,
     suffix = manifest
-      ? new SuffixReader(manifest, prepare ? suffixRead : suffixSource.read)
+      ? new SuffixReaderClass(
+          selectedManifest,
+          prepare ? suffixRead : suffixSource.read,
+        )
       : undefined;
   io.delaysEnabled = suffixIO.delaysEnabled = process.env.CWS_NO_DELAY !== "1";
   const cpu = process.cpuUsage(),
@@ -234,9 +289,16 @@ async function query(s: any, plan: string, prepare: boolean) {
     start = performance.now(),
     actual = !plan.startsWith("suffix")
       ? await engine.search(s.q, reader, s.options)
-      : await searchWithSuffix(engine, suffix!, s.q, reader, s.options, {
+      : await (
+          plan === "suffix-before"
+            ? previousSuffixSearch!.searchWithSuffix
+            : searchWithSuffix
+        )(engine, suffix!, s.q, reader, s.options, {
           bits: plan.startsWith("suffix8") ? 8 : 16,
-          rangeMax: plan.endsWith("-max"),
+          rangeMax:
+            plan.endsWith("-max") ||
+            plan === "suffix-before" ||
+            plan === "suffix16-without-heads",
         });
   const body = JSON.stringify(actual),
     wallMs = performance.now() - start,
@@ -307,6 +369,26 @@ const provenance = {
       ]),
     ),
   ),
+  suffixSourceSha256: Object.fromEntries(
+    await Promise.all(
+      [
+        "reader",
+        "search",
+        "rank",
+        "quantized-rank",
+        "ranking-heads",
+        "boolean-rank",
+        "evidence",
+        "format",
+        "keys",
+      ].map(async (name) => [
+        name,
+        createHash("sha256")
+          .update(await readFile(`src/suffix/${name}.ts`))
+          .digest("hex"),
+      ]),
+    ),
+  ),
   model,
   ioDelaysEnabled: process.env.CWS_NO_DELAY !== "1",
   plans,
@@ -325,7 +407,7 @@ const provenance = {
     "Simulated I/O; local process CPU is not Worker CPU.",
     "Suffix and existing index requests share six simulated origin slots.",
     "Complete JSON responses include metadata and snippets.",
-    "200 query definitions and expected ranks use the same corpus as the previous 1M run; snippets may select a different valid occurrence.",
+    "Query definitions and expected ranks use the same 1M corpus; snippets may select a different valid occurrence.",
   ],
 };
 await mkdir(dirname(output), { recursive: true });
@@ -336,8 +418,10 @@ try {
       await query(s, plan, true);
       console.log("Prepared", plan, s.sid);
     }
+  const completeObjects = await storage.completePreparation();
+  console.log("Prepared complete small objects", completeObjects);
   storage.prepare = false;
-  const preparation = await storage.verify();
+  const preparation = { ...(await storage.verify()), completeObjects };
   if (process.argv.includes("--prepare-only")) {
     await writeFile(
       output,

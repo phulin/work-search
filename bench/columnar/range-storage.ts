@@ -1,7 +1,14 @@
-import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rename, open } from "node:fs/promises";
 import { createHash, randomUUID } from "node:crypto";
 import type { Source } from "../../src/columnar/storage.js";
 import type { Root } from "../../src/columnar/format.js";
+interface RangeReceipt {
+  file: string;
+  sha256: string;
+  bytes: number;
+  key: string;
+  offset: number;
+}
 
 /** Preparation binds authenticated immutable range responses to local SHA-256
  * receipts. Timed runs have no network and do no checksum work. */
@@ -12,10 +19,9 @@ export class RangeStorage implements Source {
   localAssemblies = 0;
   private pending = new Map<string, Promise<Uint8Array>>();
   private expected = new Map<string, { sha256: string; size: number }>();
-  private receipts = new Map<
-    string,
-    { file: string; sha256: string; bytes: number; key: string; offset: number }
-  >();
+  private accessed = new Set<string>();
+  private byKey = new Map<string, RangeReceipt[]>();
+  private receipts = new Map<string, RangeReceipt>();
   constructor(
     readonly root: Root,
     readonly directory: string,
@@ -55,7 +61,25 @@ export class RangeStorage implements Source {
     });
     if (old) {
       if (old.length !== length) throw Error("Truncated prepared range");
-      if (this.prepare || this.receipts.has(file)) return old;
+      if (this.receipts.has(file)) return old;
+      if (this.prepare) {
+        const receipt = await readFile(path + ".json", "utf8").then(
+          JSON.parse,
+          () => undefined,
+        );
+        if (receipt) {
+          if (
+            receipt.file !== file ||
+            receipt.key !== key ||
+            receipt.offset !== offset ||
+            receipt.bytes !== length ||
+            receipt.sha256 !== createHash("sha256").update(old).digest("hex")
+          )
+            throw Error("Corrupt prepared range");
+          this.receipts.set(file, receipt);
+          return old;
+        }
+      }
       // Another preparation can add files after verify(). Ignore those files
       // during replay; only the receipt snapshot may supply timed data below.
     }
@@ -63,7 +87,7 @@ export class RangeStorage implements Source {
       // Coalescing can request a different extent when asynchronous cache
       // completion changes. Assemble it only from already-verified local
       // coverage; timed queries must never download a missing range.
-      const spans = [...this.receipts.values()]
+      const spans = (this.byKey.get(key) ?? [])
           .filter(
             (r) =>
               r.key === key &&
@@ -91,11 +115,19 @@ export class RangeStorage implements Source {
         const data = Buffer.allocUnsafe(length);
         let at = offset;
         for (const span of selected) {
-          const raw = await readFile(this.directory + "/" + span.file),
-            end = Math.min(offset + length, span.offset + span.bytes);
-          if (raw.length !== span.bytes)
-            throw Error("Truncated verified range");
-          raw.copy(data, at - offset, at - span.offset, end - span.offset);
+          const end = Math.min(offset + length, span.offset + span.bytes),
+            handle = await open(this.directory + "/" + span.file, "r");
+          try {
+            if (
+              (await handle.stat()).size !== span.bytes ||
+              (await handle.read(data, at - offset, end - at, at - span.offset))
+                .bytesRead !==
+                end - at
+            )
+              throw Error("Truncated verified range");
+          } finally {
+            await handle.close();
+          }
           at = end;
         }
         this.localAssemblies++;
@@ -145,6 +177,7 @@ export class RangeStorage implements Source {
       }
   }
   async read(key: string, offset: number, length: number) {
+    this.accessed.add(key);
     const id = key + ":" + offset + ":" + length;
     let task = this.pending.get(id);
     if (!task) {
@@ -195,9 +228,47 @@ export class RangeStorage implements Source {
         throw Error("Corrupt prepared range");
       this.receipts.set(r.file, r);
     }
+    this.byKey.clear();
+    for (const receipt of this.receipts.values()) {
+      let rows = this.byKey.get(receipt.key);
+      if (!rows) this.byKey.set(receipt.key, (rows = []));
+      rows.push(receipt);
+    }
     return {
       ranges: this.receipts.size,
       bytes: [...this.receipts.values()].reduce((n, r) => n + r.bytes, 0),
     };
+  }
+  include(objects: Iterable<{ key: string; size: number; sha256: string }>) {
+    for (const object of objects) {
+      const old = this.expected.get(object.key);
+      if (old && (old.size !== object.size || old.sha256 !== object.sha256))
+        throw Error("Conflicting prepared object identity");
+      this.expected.set(object.key, object);
+    }
+  }
+  /** Speculative reads can vary with completion order. Keep every byte of each
+   * touched small object locally, rather than just the preparation run's trace. */
+  async completePreparation(maxBytes = 32 * 1048576) {
+    if (!this.prepare) throw Error("Complete objects outside preparation");
+    const objects = [...this.accessed].flatMap((key) => {
+      const object = this.expected.get(key);
+      return object && object.size <= maxBytes ? [{ key, ...object }] : [];
+    });
+    let next = 0,
+      bytes = 0;
+    await Promise.all(
+      Array.from({ length: 6 }, async () => {
+        for (;;) {
+          const object = objects[next++];
+          if (!object) break;
+          const raw = await this.read(object.key, 0, object.size);
+          if (createHash("sha256").update(raw).digest("hex") !== object.sha256)
+            throw Error("Prepared whole-object digest mismatch");
+          bytes += raw.length;
+        }
+      }),
+    );
+    return { objects: objects.length, bytes };
   }
 }

@@ -25,8 +25,26 @@ export async function executePhraseFrequencies(
   started: number,
 ) {
   if (!packages) return;
-  const phrases: string[][] = [],
+  const field = options.field ?? "all",
+    sourceAnchor = exact.candidateAnchor?.(ast, field),
+    phrases: string[][] = [],
     required = new Set<string>();
+  const phraseBoolean = (n: Node): boolean => {
+      if (n.kind === "phrase") return exact.covered(n.terms);
+      if (n.kind === "not") return phraseBoolean(n.child);
+      if (n.kind === "and" || n.kind === "or" || n.kind === "except")
+        return phraseBoolean(n.left) && phraseBoolean(n.right);
+      return n.kind === "all" || n.kind === "empty";
+    },
+    knownBoolean = !!sourceAnchor && phraseBoolean(ast);
+  const collect = (n: Node): void => {
+    if (n.kind === "phrase") phrases.push(n.terms);
+    else if (n.kind === "not") collect(n.child);
+    else if ("left" in n) {
+      collect(n.left);
+      collect(n.right);
+    }
+  };
   const covered = (n: Node): Node | undefined => {
     if (n.kind === "phrase" && exact.covered(n.terms)) {
       phrases.push(n.terms);
@@ -43,17 +61,20 @@ export async function executePhraseFrequencies(
       right = covered(n.right);
     return left && right ? { ...n, left, right } : undefined;
   };
-  const snippetAst = covered(ast);
+  if (knownBoolean) collect(ast);
+  const snippetAst = knownBoolean ? ast : covered(ast);
   if (!snippetAst || !phrases.length) return;
   for (const words of phrases) for (const word of words) required.delete(word);
   if (required.size > 65535) return;
   const plans = phrases.map((words) =>
     exact.plans.find((p) => p.words.join("\0") === words.join("\0")),
   );
-  if (plans.some((p) => !p || p.membershipOnly)) return;
+  if (plans.some((p) => p?.membershipOnly || (!p && !sourceAnchor))) return;
   const compound = ast.kind !== "phrase",
-    contextBytes = plans.reduce((n, p) => n + p!.bytes, 0),
-    parts = queryTerms(ast).flatMap((word) => {
+    contextBytes = sourceAnchor
+      ? exact.bufferBytes
+      : plans.reduce((n, p) => n + p!.bytes, 0),
+    parts = queryTerms(ast, true).flatMap((word) => {
       const term = terms.get(word)!;
       return [term.frequencies, ...(term.frequencyParts ?? [])].map((ref) => ({
         term,
@@ -62,16 +83,17 @@ export async function executePhraseFrequencies(
       }));
     }),
     frequencyBytes = parts.reduce((n, p) => n + p.ref[2], 0),
-    field = options.field ?? "all",
-    bound = Math.min(
-      ...plans.map((p) =>
-        field === "body"
-          ? p!.pair.bodyDf
-          : field === "title"
-            ? p!.pair.titleDf
-            : p!.pair.df,
+    bound =
+      sourceAnchor?.count ??
+      Math.min(
+        ...plans.map((p) =>
+          field === "body"
+            ? p!.pair.bodyDf
+            : field === "title"
+              ? p!.pair.titleDf
+              : p!.pair.df,
+        ),
       ),
-    ),
     physicalBytes = reader.packetFootprint(parts.map((p) => p.ref));
   // These constrain transfer and active buffers, never the answer. Larger
   // phrases retain the streamed block executor and its exact stopping proofs.
@@ -111,18 +133,32 @@ export async function executePhraseFrequencies(
         )
       : undefined;
   let count = 0;
-  for (let lo = 0; lo < root.count; lo += 16384) {
+  const cursor = sourceAnchor?.cursor();
+  let candidate = cursor?.next() ?? Infinity;
+  for (
+    let lo = cursor ? Math.floor(candidate / 16384) * 16384 : 0;
+    lo < root.count;
+    lo = cursor ? Math.floor(candidate / 16384) * 16384 : lo + 16384
+  ) {
     const hi = Math.min(root.count, lo + 16384);
     await exact.window(lo, hi);
-    const mask = exact.mask(ast, field),
-      selected: number[] = [];
-    for (let i = 0; i < mask.length; i++) if (mask[i]) selected.push(lo + i);
+    const selected: number[] = [];
+    if (cursor) {
+      while (candidate < hi) {
+        selected.push(candidate);
+        candidate = cursor.next();
+      }
+    } else {
+      const mask = exact.mask(ast, field);
+      for (let i = 0; i < mask.length; i++) if (mask[i]) selected.push(lo + i);
+    }
     const accepted = await filterDocuments(
       Uint32Array.from(selected),
       options.documentFilter,
       reader.stats,
     );
     for (const doc of accepted) {
+      if (knownBoolean && compound && !matcher!(doc)) continue;
       if (count >= bound) throw Error("Phrase matches exceed complete pair DF");
       docs[count] = doc;
       let start: number | undefined;

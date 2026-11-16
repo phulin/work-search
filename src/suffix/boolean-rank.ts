@@ -36,11 +36,13 @@ export async function rankSuffixConjunction(
   rescore: (documents: Uint32Array) => Promise<Float64Array>,
   budget = 4 * 1048576,
 ) {
-  const intervals = await Promise.all(phrases.map((p) => reader.interval(p)));
+  if (phrases.reduce((n, p) => n + reader.minimumRows(p) * 48, 0) > budget)
+    return;
+  const bounds = await Promise.all(phrases.map((p) => reader.shortInterval(p)));
   // Sorting and intersections need temporary arrays too, not just retained
   // scores. Bound their sum before opening payload columns.
-  if (intervals.reduce((n, r) => n + (r.end - r.first) * 48, 0) > budget)
-    return;
+  if (bounds.reduce((n, r) => n + (r.end - r.first) * 48, 0) > budget) return;
+  const intervals = await Promise.all(bounds.map((b) => reader.expand(b)));
   const field = options.field ?? "all",
     rows = await Promise.all(
       intervals.map(async (interval, i) => {

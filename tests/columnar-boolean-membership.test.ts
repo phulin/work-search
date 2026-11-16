@@ -16,6 +16,7 @@ import { PairRouter, encodePairRouter } from "../src/columnar/pair-router.js";
 import { Reader } from "../src/columnar/storage.js";
 import { parse } from "../src/query/parser.js";
 import { u32 } from "../src/columnar/format.js";
+import { arrayCursor } from "../src/columnar/numeric-cursor.js";
 const generation = "a".repeat(64),
   ids = new Map(["a", "b", "c", "d", "e", "f"].map((w, i) => [w, i]));
 const entries = [
@@ -101,6 +102,48 @@ const alternative = {
   positionBytes: 2048 * 1048576,
   expectedCandidates: 64,
 };
+it("combines already known phrase lists with unread pair branches, including same-field proximity", async () => {
+  for (const [q, expected] of [
+    ['"a b" AND ("c d" OR "e f")', [0, 1, 2, 4]],
+    ['"a b" W/5 ("c d" OR "e f")', [0, 4]],
+  ] as const) {
+    const { settings, reader } = fixture(),
+      plan = planBooleanMembership(
+        parse(q),
+        settings,
+        undefined,
+        16384,
+        "all",
+        alternative,
+        false,
+        (phrase, field) => {
+          if (phrase.terms.join(" ") !== "a b") return;
+          const docs = Uint32Array.from(
+            field === "body"
+              ? [0, 1, 4]
+              : field === "title"
+                ? [2]
+                : [0, 1, 2, 4],
+          );
+          return {
+            count: docs.length,
+            values: function* () {
+              yield* docs;
+            },
+            cursor: () => arrayCursor(docs),
+            has: (d) => docs.includes(d),
+            covered: (words) => words.join(" ") === "a b",
+            evidence: () => undefined,
+          };
+        },
+      )!;
+    expect(plan.pairs.every((p) => p.a !== "a" || p.b !== "b")).toBe(true);
+    const loaded = await readBooleanMembership(plan, reader, settings),
+      anchor = booleanMembershipAnchor(loaded, ids, "all");
+    expect([...anchor.values()]).toEqual(expected);
+    expect(anchor.covered(["a", "b"])).toBe(true);
+  }
+});
 async function candidates(q: string, field: "all" | "body" | "title" = "all") {
   const { settings, reader } = fixture(),
     plan = planBooleanMembership(

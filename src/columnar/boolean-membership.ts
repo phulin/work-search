@@ -27,6 +27,11 @@ import type { PairEvidence } from "./pair-positions.js";
 import { lower } from "./format.js";
 type Tree =
   | { kind: "phrase"; plan: PairReadPlan }
+  | {
+      kind: "known";
+      words: string[];
+      anchor: (field: "all" | "body" | "title") => MembershipAnchor;
+    }
   | { kind: "and" | "or" | "near"; left: Tree; right: Tree };
 export interface BooleanMembershipPlan {
   tree: Tree;
@@ -45,10 +50,16 @@ export function planBooleanMembership(
   field: "all" | "body" | "title" = "all",
   alternative?: FilterAlternative,
   exactTotal = false,
+  known?: (
+    phrase: Extract<Node, { kind: "phrase" }>,
+    field: "all" | "body" | "title",
+  ) => MembershipAnchor | undefined,
 ): BooleanMembershipPlan | undefined {
   const phrases = new Map<string, PairReadPlan | undefined>();
   function visit(n: Node): Tree | undefined {
     if (n.kind === "phrase") {
+      if (known?.(n, field))
+        return { kind: "known", words: n.terms, anchor: (f) => known(n, f)! };
       const key = JSON.stringify(n.terms);
       if (!phrases.has(key)) {
         let plan = planMembershipAnchor(
@@ -121,6 +132,7 @@ export function planBooleanMembership(
   let tree = visit(ast);
   if (!tree) return;
   function collect(n: Tree): PairReadPlan[] {
+    if (n.kind === "known") return [];
     return n.kind === "phrase"
       ? [n.plan]
       : [...collect(n.left), ...collect(n.right)];
@@ -155,6 +167,7 @@ export function planBooleanMembership(
     plans = [plan];
   }
   function estimate(n: Tree): number {
+    if (n.kind === "known") return n.anchor(field).count;
     if (n.kind === "phrase") return n.plan.expectedCandidates;
     const a = estimate(n.left),
       b = estimate(n.right);
@@ -163,6 +176,7 @@ export function planBooleanMembership(
       : Math.min(a, b);
   }
   function proved(n: Tree): Set<string> {
+    if (n.kind === "known") return new Set(n.words);
     if (n.kind === "phrase")
       return new Set(n.plan.pairs.flatMap((p) => [p.a, p.b]));
     const a = proved(n.left),
@@ -199,6 +213,7 @@ export function booleanMembershipAnchor(
   ids: Map<string, number>,
   field: "all" | "body" | "title",
 ): MembershipAnchor {
+  if (selection.tree.kind === "known") return selection.tree.anchor(field);
   if (selection.tree.kind === "phrase")
     return membershipAnchor(
       selection.selections.get(selection.tree.plan)!,
@@ -208,6 +223,7 @@ export function booleanMembershipAnchor(
   type Stream = { cursor: () => NumericCursor; has: (doc: number) => boolean };
   const cached = new Map<PairReadPlan, Map<string, MembershipAnchor>>();
   function compile(n: Tree, f: typeof field): Stream {
+    if (n.kind === "known") return n.anchor(f);
     if (n.kind === "phrase") {
       let fields = cached.get(n.plan);
       if (!fields) {
@@ -242,7 +258,16 @@ export function booleanMembershipAnchor(
         };
   }
   const filter = compile(selection.tree, field),
-    packets = new Map<string, PairEvidence>();
+    packets = new Map<string, PairEvidence>(),
+    known = new Map<string, Extract<Tree, { kind: "known" }>>();
+  const collectKnown = (n: Tree): void => {
+    if (n.kind === "known") known.set(n.words.join("\0"), n);
+    else if (n.kind !== "phrase") {
+      collectKnown(n.left);
+      collectKnown(n.right);
+    }
+  };
+  collectKnown(selection.tree);
   for (const s of selection.selections.values())
     for (const record of s.records)
       if (record.supplementalContext ?? record.context)
@@ -280,6 +305,7 @@ export function booleanMembershipAnchor(
     const c = cursor();
     for (let doc = c.next(); doc !== Infinity; doc = c.next()) yield doc;
   }
+  const evidence = pairPhraseEvidence(packets, ids);
   return {
     ...filter,
     has: docs ? (doc) => docs![lower(docs!, doc)] === doc : filter.has,
@@ -287,7 +313,12 @@ export function booleanMembershipAnchor(
     values,
     count,
     bufferBytes: docs?.buffer.byteLength ?? 0,
-    evidence: pairPhraseEvidence(packets, ids),
-    covered: (words) => pairPhraseCovered(packets, ids, words),
+    evidence: (words, doc, f) =>
+      known
+        .get(words.join("\0"))
+        ?.anchor(f ? "title" : "body")
+        .evidence(words, doc, f) ?? evidence(words, doc, f),
+    covered: (words) =>
+      known.has(words.join("\0")) || pairPhraseCovered(packets, ids, words),
   };
 }

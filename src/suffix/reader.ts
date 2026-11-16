@@ -7,6 +7,8 @@ import {
   type SuffixManifest,
 } from "./format.js";
 import { comparePhrase, decodeSuffixKeys } from "./keys.js";
+import { decodeRankingHeads } from "./ranking-heads.js";
+import { quantizerForMaximum } from "./format.js";
 export type SuffixRead = (
   file: string,
   offset: number,
@@ -17,6 +19,9 @@ export interface SuffixBatch {
   first: number;
   end: number;
   columns: Partial<Record<SuffixColumn, Uint8Array>>;
+  sourceRows?: Uint16Array;
+  excludedRows?: Uint16Array;
+  scoreBits?: 8 | 16;
 }
 async function inflate(raw: Uint8Array) {
   return new Uint8Array(
@@ -38,10 +43,22 @@ export class SuffixReader {
     rows: 0,
     rescoreCandidates: 0,
     skippedBlocks: 0,
+    skippedGroups: 0,
+    coalescedReads: 0,
+    coalescedExtraBytes: 0,
+    precisionRefinements: 0,
+    refinedRows: 0,
+    frequencyRescores: 0,
+    rankingReads: 0,
+    rankingBytes: 0,
+    rankingRows: 0,
+    rankingSkippedBlocks: 0,
   };
   private slots = new Semaphore(6);
   private cache = new Lru<Uint8Array>(8 * 1048576);
   private pending = new Map<string, Promise<Uint8Array>>();
+  private directories = new Lru<SuffixBlock[]>(4 * 1048576);
+  private directoryPending = new Map<number, Promise<SuffixBlock[]>>();
   constructor(
     readonly manifest: SuffixManifest,
     readonly source: SuffixRead,
@@ -58,6 +75,10 @@ export class SuffixReader {
       task = this.slots.run(async () => {
         this.stats.reads++;
         this.stats.bytes += length;
+        if (file === "ranking") {
+          this.stats.rankingReads++;
+          this.stats.rankingBytes += length;
+        }
         const raw = await this.source(file, offset, length);
         if (raw.length !== length) throw Error("Truncated suffix range");
         const data = compressed ? await inflate(raw) : raw;
@@ -98,10 +119,342 @@ export class SuffixReader {
         comparePhrase(b.high, short) >= 0 && comparePhrase(b.low, short) <= 0,
     );
   }
+  private async directory(group: SuffixManifest["directory"][number]) {
+    const key = String(group.ref.offset),
+      old = this.directories.get(key);
+    if (old) return old;
+    let task = this.directoryPending.get(group.ref.offset);
+    if (!task) {
+      task = (async () => {
+        const raw = await this.read(
+            "directory",
+            group.ref.offset,
+            group.ref.length,
+          ),
+          blocks = JSON.parse(new TextDecoder().decode(raw)) as SuffixBlock[];
+        // Account conservatively for parsed object overhead as well as bytes.
+        this.directories.set(key, blocks, raw.length * 4);
+        return blocks;
+      })();
+      this.directoryPending.set(group.ref.offset, task);
+    }
+    try {
+      return await task;
+    } finally {
+      this.directoryPending.delete(group.ref.offset);
+    }
+  }
+  minimumRows(phrase: Uint32Array) {
+    if (!phrase.length || phrase.some((x) => !x)) return 0;
+    const short = phrase.subarray(0, PREFIX_WORDS);
+    if (phrase.length > PREFIX_WORDS) return 0;
+    return this.manifest.directory.reduce(
+      (n, g) =>
+        n +
+        (comparePhrase(g.low, short) === 0 && comparePhrase(g.high, short) === 0
+          ? g.end - g.first
+          : 0),
+      0,
+    );
+  }
+  async expand(interval: {
+    first: number;
+    end: number;
+    groups: SuffixManifest["directory"];
+  }) {
+    const blocks = (
+      await Promise.all(interval.groups.map((g) => this.directory(g)))
+    )
+      .flat()
+      .filter(
+        (b) => b.first < interval.end && b.first + b.count > interval.first,
+      );
+    return { first: interval.first, end: interval.end, blocks };
+  }
+  private async shortBoundary(
+    block: SuffixBlock,
+    phrase: Uint32Array,
+    upper: boolean,
+  ) {
+    if (!upper && comparePhrase(block.low, phrase) === 0) return block.first;
+    if (upper && comparePhrase(block.high, phrase) === 0)
+      return block.first + block.count;
+    const keys = decodeSuffixKeys(
+      await this.column(block, "keys"),
+      block.count,
+    );
+    let lo = 0,
+      hi = block.count;
+    while (lo < hi) {
+      const m = (lo + hi) >>> 1,
+        cmp = comparePhrase(
+          keys.subarray(m * PREFIX_WORDS, (m + 1) * PREFIX_WORDS),
+          phrase,
+        );
+      if (cmp < 0 || (upper && cmp === 0)) lo = m + 1;
+      else hi = m;
+    }
+    return block.first + lo;
+  }
+  /** Short phrases need just the two edge groups to establish exact bounds.
+   * Interior directories remain unopened until their score bound is competitive. */
+  async shortInterval(phrase: Uint32Array) {
+    if (
+      !phrase.length ||
+      phrase.length > PREFIX_WORDS ||
+      phrase.some((x) => !x)
+    )
+      return { first: 0, end: 0, groups: [] as SuffixManifest["directory"] };
+    const groups = this.manifest.directory.filter(
+      (d) =>
+        comparePhrase(d.high, phrase) >= 0 && comparePhrase(d.low, phrase) <= 0,
+    );
+    if (!groups.length) return { first: 0, end: 0, groups };
+    this.stats.boundaryWaves++;
+    const edges = await Promise.all([
+        this.directory(groups[0]),
+        this.directory(groups.at(-1)!),
+      ]),
+      select = (blocks: SuffixBlock[]) =>
+        blocks.filter(
+          (b) =>
+            comparePhrase(b.high, phrase) >= 0 &&
+            comparePhrase(b.low, phrase) <= 0,
+        );
+    const left = select(edges[0]),
+      right = select(edges[1]);
+    if (!left.length || !right.length)
+      return { first: 0, end: 0, groups: [] as SuffixManifest["directory"] };
+    this.stats.boundaryWaves++;
+    const [first, end] = await Promise.all([
+      this.shortBoundary(left[0], phrase, false),
+      this.shortBoundary(right.at(-1)!, phrase, true),
+    ]);
+    return {
+      first,
+      end,
+      groups: groups.filter((g) => g.first < end && g.end > first),
+    };
+  }
+  async *rankedScan(
+    phrase: Uint32Array,
+    columns: SuffixColumn[],
+    admit: (maximum: number) => boolean,
+  ): AsyncGenerator<SuffixBatch> {
+    const interval = await this.shortInterval(phrase),
+      index = phrase.length - 2,
+      maximum = (g: SuffixManifest["directory"][number]) =>
+        g.scoreMaximum?.[index] ?? Infinity;
+    interval.groups.sort(
+      (a, b) =>
+        maximum(b) - maximum(a) || (a.minDocument ?? 0) - (b.minDocument ?? 0),
+    );
+    for (const group of interval.groups) {
+      if (!admit(maximum(group))) {
+        this.stats.skippedGroups++;
+        continue;
+      }
+      const ranking = group.ranking?.[phrase.length];
+      if (ranking) {
+        const heads = decodeRankingHeads(
+          await this.read("ranking", ranking.offset, ranking.length),
+          phrase.length,
+          group.first,
+          group.end,
+        ).filter(
+          (h) =>
+            h.block.first < interval.end &&
+            h.block.first + h.block.count > interval.first,
+        );
+        heads.sort(
+          (a, b) =>
+            b.block.scoreMaximum[index] - a.block.scoreMaximum[index] ||
+            a.block.minDocument - b.block.minDocument,
+        );
+        const active = heads.filter((h) => {
+          if (admit(h.block.scoreMaximum[index])) return true;
+          this.stats.skippedBlocks++;
+          return false;
+        });
+        for (const head of active) {
+          const selected = Uint16Array.from(
+              { length: head.rows.length },
+              (_, i) => i,
+            ).filter((i) => {
+              const row = head.block.first + head.rows[i];
+              return row >= interval.first && row < interval.end;
+            }),
+            rows = Uint16Array.from(selected, (i) => head.rows[i]),
+            codes = Uint16Array.from(selected, (i) => head.codes[i]),
+            docs = Uint32Array.from(selected, (i) => head.docs[i]),
+            positions = Uint32Array.from(selected, (i) => head.positions[i]),
+            flags = new Uint16Array(selected.length).fill(
+              canonicalBit(phrase.length, "all"),
+            );
+          this.stats.rankingRows += rows.length;
+          this.stats.rows += rows.length;
+          yield {
+            block: head.block,
+            first: 0,
+            end: rows.length,
+            sourceRows: rows,
+            scoreBits: 16,
+            columns: {
+              documents: new Uint8Array(docs.buffer),
+              positions: new Uint8Array(positions.buffer),
+              flags: new Uint8Array(flags.buffer),
+              [`score16-${phrase.length}`]: new Uint8Array(codes.buffer),
+            },
+          };
+        }
+        const byFirst = new Map(active.map((h) => [h.block.first, h])),
+          remainder = (h: (typeof heads)[number]) => {
+            const q = quantizerForMaximum(h.block.scoreMaximum[index], 16);
+            return (
+              Math.min(q.maximum, (h.remainder + 1) * q.step) +
+              128 * Number.EPSILON * Math.max(1, q.maximum)
+            );
+          },
+          needs = (h: (typeof heads)[number]) =>
+            !h.complete && admit(remainder(h));
+        for (const h of active)
+          if (!needs(h)) this.stats.rankingSkippedBlocks++;
+        for await (const batch of this.scan(
+          { ...interval, blocks: active.map((h) => h.block) },
+          columns,
+          (b) => needs(byFirst.get(b.first)!),
+          4,
+        )) {
+          batch.excludedRows = byFirst
+            .get(batch.block.first)!
+            .rows.slice()
+            .sort();
+          yield batch;
+        }
+        continue;
+      }
+      const blocks = (await this.directory(group)).filter(
+        (b) => b.first < interval.end && b.first + b.count > interval.first,
+      );
+      blocks.sort(
+        (a, b) =>
+          b.scoreMaximum[index] - a.scoreMaximum[index] ||
+          a.minDocument - b.minDocument,
+      );
+      const eager =
+        blocks.length <= 2 &&
+        blocks.reduce(
+          (n, b) => n + b.columns.documents.length + b.columns.positions.length,
+          0,
+        ) <= 65536;
+      const selectedColumns = eager
+        ? [...new Set([...columns, "documents" as const, "positions" as const])]
+        : columns;
+      yield* this.scan(
+        { ...interval, blocks },
+        selectedColumns,
+        (b) => admit(b.scoreMaximum[index]),
+        4,
+      );
+    }
+  }
   async column(block: SuffixBlock, name: SuffixColumn) {
     const ref = block.columns[name];
     if (!ref) throw Error("Missing suffix column");
     return this.read(name, ref.offset, ref.length);
+  }
+  /** Compression frames stay independent; adjacent selected frames can share
+   * one physical range request. Small gaps buy fewer cold requests while the
+   * extent and decoded scan batches bound active memory. */
+  async columns(blocks: SuffixBlock[], names: SuffixColumn[]) {
+    type Job = {
+      file: SuffixColumn;
+      offset: number;
+      length: number;
+      key: string;
+    };
+    const jobs: Job[] = [],
+      seen = new Set<string>();
+    for (const block of blocks)
+      for (const file of names) {
+        const ref = block.columns[file];
+        if (!ref) throw Error("Missing suffix column");
+        const key = `${file}:${ref.offset}:${ref.length}:true`;
+        if (seen.has(key) || this.cache.get(key) || this.pending.has(key))
+          continue;
+        seen.add(key);
+        jobs.push({ file, ...ref, key });
+      }
+    jobs.sort((a, b) => a.file.localeCompare(b.file) || a.offset - b.offset);
+    for (let at = 0; at < jobs.length;) {
+      const first = jobs[at++],
+        group = [first];
+      let end = first.offset + first.length;
+      while (
+        at < jobs.length &&
+        jobs[at].file === first.file &&
+        jobs[at].offset <= end + 4096 &&
+        jobs[at].offset + jobs[at].length - first.offset <= 262144
+      ) {
+        const next = jobs[at++];
+        group.push(next);
+        end = Math.max(end, next.offset + next.length);
+      }
+      const task = this.slots.run(async () => {
+        this.stats.reads++;
+        this.stats.bytes += end - first.offset;
+        if (group.length > 1) {
+          this.stats.coalescedReads++;
+          this.stats.coalescedExtraBytes +=
+            end - first.offset - group.reduce((n, j) => n + j.length, 0);
+        }
+        const raw = await this.source(
+          first.file,
+          first.offset,
+          end - first.offset,
+        );
+        if (raw.length !== end - first.offset)
+          throw Error("Truncated suffix range");
+        return Promise.all(
+          group.map(async (j) => {
+            const data = await inflate(
+              raw.subarray(
+                j.offset - first.offset,
+                j.offset - first.offset + j.length,
+              ),
+            );
+            this.stats.decodedBytes += data.length;
+            this.cache.set(j.key, data, data.length);
+            return data;
+          }),
+        );
+      });
+      group.forEach((job, i) => {
+        const part = task.then((values) => values[i]);
+        this.pending.set(job.key, part);
+        void part
+          .finally(() => {
+            if (this.pending.get(job.key) === part)
+              this.pending.delete(job.key);
+          })
+          .catch(() => {});
+      });
+    }
+    return new Map(
+      await Promise.all(
+        blocks.map(
+          async (b) =>
+            [
+              b,
+              Object.fromEntries(
+                await Promise.all(
+                  names.map(async (name) => [name, await this.column(b, name)]),
+                ),
+              ),
+            ] as const,
+        ),
+      ),
+    );
   }
   private async compareLong(offset: number, phrase: Uint32Array) {
     let used = 0;
@@ -200,28 +553,24 @@ export class SuffixReader {
     interval: Awaited<ReturnType<SuffixReader["interval"]>>,
     columns: SuffixColumn[],
     admit?: (block: SuffixBlock) => boolean,
+    batchSize = 16,
   ): AsyncGenerator<SuffixBatch> {
     // Fixed batches bound decoded bytes independently of total interval size.
-    for (let i = 0; i < interval.blocks.length; i += 16) {
-      const selected = interval.blocks.slice(i, i + 16).filter((b) => {
+    for (let i = 0; i < interval.blocks.length; i += batchSize) {
+      const selected = interval.blocks.slice(i, i + batchSize).filter((b) => {
         if (!admit || admit(b)) return true;
         this.stats.skippedBlocks++;
         return false;
       });
       if (!selected.length) continue;
       this.stats.scanBatches++;
-      const batches = await Promise.all(
-        selected.map(async (block) => ({
-          block,
-          first: Math.max(0, interval.first - block.first),
-          end: Math.min(block.count, interval.end - block.first),
-          columns: Object.fromEntries(
-            await Promise.all(
-              columns.map(async (n) => [n, await this.column(block, n)]),
-            ),
-          ),
-        })),
-      );
+      const fetched = await this.columns(selected, columns);
+      const batches = selected.map((block) => ({
+        block,
+        first: Math.max(0, interval.first - block.first),
+        end: Math.min(block.count, interval.end - block.first),
+        columns: fetched.get(block)!,
+      }));
       for (const batch of batches) {
         this.stats.rows += batch.end - batch.first;
         yield batch;

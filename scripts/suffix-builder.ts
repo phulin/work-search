@@ -332,6 +332,10 @@ export async function buildSuffixIndex(
       first: blocks[0].first,
       end: blocks.at(-1)!.first + blocks.at(-1)!.count,
       ref: { offset: dirOffset, length: raw.length },
+      scoreMaximum: Array.from({ length: 4 }, (_, p) =>
+        Math.max(...blocks.map((b) => b.scoreMaximum[p])),
+      ),
+      minDocument: Math.min(...blocks.map((b) => b.minDocument)),
     });
     dirOffset += raw.length;
     blocks = [];
