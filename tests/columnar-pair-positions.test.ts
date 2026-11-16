@@ -111,3 +111,54 @@ it("keeps complete pair membership small and independently fetches exact context
     expect(read).toEqual([]);
   }
 });
+it("joins nearby tiny context chunks while preserving exact candidate rows and bounding overfetch", async () => {
+  const data: Uint8Array[] = [],
+    chunks = [];
+  let offset = 0;
+  for (let doc = 0; doc < 4000; doc++) {
+    const raw = encodePairPacket(1, 2, [
+      { doc, body: [{ position: doc % 10, previous: 3, next: 4 }], title: [] },
+    ]);
+    chunks.push({
+      first: doc,
+      last: doc,
+      object: 0,
+      offset,
+      length: raw.length,
+    });
+    data.push(raw);
+    offset += raw.length;
+  }
+  const object = new Uint8Array(offset);
+  let at = 0;
+  for (const bytes of data) {
+    object.set(bytes, at);
+    at += bytes.length;
+  }
+  const directory = new PairPositionDirectory(
+      encodePairPositionDirectory(1, 2, "a".repeat(64), chunks),
+    ),
+    docs = Uint32Array.from({ length: 2000 }, (_, i) => i * 2),
+    reads: { offset: number; length: number }[] = [];
+  const evidence = await readPairPositionChunks(
+    directory,
+    docs,
+    async (key, n) => {
+      const offset = Number(key.split("@")[1]);
+      reads.push({ offset, length: n });
+      return object.subarray(offset, offset + n);
+    },
+    object.length,
+  );
+  expect(reads.length).toBeLessThan(10);
+  expect(reads.every((r) => r.length <= 262144)).toBe(true);
+  expect(reads.reduce((n, r) => n + r.length, 0)).toBeLessThanOrEqual(
+    2 * directory.selected(docs).reduce((n, c) => n + c.length, 0),
+  );
+  for (let row = 0; row < docs.length; row++) {
+    expect(evidence!.count(row, 0)).toBe(1);
+    expect([...evidence!.phrase(row, 0, [3, 1, 2, 4], 1).starts]).toEqual(
+      [(docs[row] % 10) - 1].filter((p) => p >= 0),
+    );
+  }
+});

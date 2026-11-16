@@ -164,22 +164,59 @@ export async function readPairPositionChunks(
 ): Promise<PairEvidence | undefined> {
   const selected = directory.selected(docs);
   if (selected.reduce((n, c) => n + c.length, 0) > budget) return;
-  const packets = await Promise.all(
-    selected.map(async (c) => {
-      const p = new PairPacket(
-        await read(directory.address(c), c.length),
-        observe,
-      );
-      if (
-        p.a !== directory.a ||
-        p.b !== directory.b ||
-        p.docs[0] !== c.first ||
-        p.docs.at(-1) !== c.last
-      )
-        throw Error("Pair positional identity mismatch");
-      return { chunk: c, packet: p };
-    }),
-  );
+  // Restart chunks can be much smaller than a useful GET. Join nearby chunks
+  // without changing which rows are decoded. Bound both each transfer and its
+  // overfetch; sparse candidates must not turn into a whole-list read.
+  const groups: {
+    chunks: PairPositionChunk[];
+    length: number;
+    useful: number;
+  }[] = [];
+  for (const c of selected) {
+    const g = groups.at(-1),
+      first = g?.chunks[0],
+      end = first ? first.offset + g!.length : 0,
+      span = first ? c.offset + c.length - first.offset : 0;
+    if (
+      g &&
+      first!.object === c.object &&
+      c.offset >= end &&
+      c.offset - end <= 1024 &&
+      span <= 262144 &&
+      span <= 2 * (g.useful + c.length)
+    ) {
+      g.chunks.push(c);
+      g.length = span;
+      g.useful += c.length;
+    } else groups.push({ chunks: [c], length: c.length, useful: c.length });
+  }
+  const packets = (
+    await Promise.all(
+      groups.map(async (g) => {
+        const first = g.chunks[0],
+          raw = await read(directory.address(first), g.length);
+        if (raw.length !== g.length)
+          throw Error("Truncated pair positional range");
+        return g.chunks.map((c) => {
+          const at = c.offset - first.offset,
+            // Do not retain overfetched gaps through the decoded packet views.
+            bytes =
+              g.useful === g.length
+                ? raw.subarray(at, at + c.length)
+                : raw.slice(at, at + c.length),
+            p = new PairPacket(bytes, observe);
+          if (
+            p.a !== directory.a ||
+            p.b !== directory.b ||
+            p.docs[0] !== c.first ||
+            p.docs.at(-1) !== c.last
+          )
+            throw Error("Pair positional identity mismatch");
+          return { chunk: c, packet: p };
+        });
+      }),
+    )
+  ).flat();
   function* forDoc(doc: number) {
     let lo = 0,
       hi = packets.length;
