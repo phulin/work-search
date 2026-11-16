@@ -42,7 +42,7 @@ if (
   previous.health.analysis !== root.analysis
 )
   throw Error("Different 1M corpus");
-const scenarios = previous.scenarios.map((s: any, sid: number) => ({
+const allScenarios = previous.scenarios.map((s: any, sid: number) => ({
   ...s,
   sid,
   options: { ...s.options, exactTotal: false, metadata: true, snippets: true },
@@ -51,10 +51,15 @@ const scenarios = previous.scenarios.map((s: any, sid: number) => ({
   )?.result.results,
 }));
 if (
-  scenarios.length !== 200 ||
-  scenarios.some((s: any) => !s.expected || s.options.after)
+  allScenarios.length !== 200 ||
+  allScenarios.some((s: any) => !s.expected || s.options.after)
 )
   throw Error("Expected complete 200-query contract without old cursors");
+const selectedIds = process.env.CWS_QUERY_IDS?.split(",").map(Number),
+  scenarios = allScenarios.filter(
+    (s: any) => !selectedIds || selectedIds.includes(s.sid),
+  );
+if (!scenarios.length) throw Error("Empty query selection");
 const model = {
     r2Ms: 20,
     r2MiBPerSecond: 100,
@@ -73,10 +78,13 @@ const model = {
       : undefined,
   plans = manifest
     ? ["control", "suffix16-scan", "suffix16-max", "suffix8-max"]
-    : ["control"],
+    : ["control", "candidate"],
   repeats = Number(process.env.CWS_REPEATS ?? 3),
   startedAt = new Date().toISOString(),
-  frozen = resolve("work/suffix-control-a08e7fe");
+  controlCommit = execFileSync("git", ["rev-parse", "HEAD"], {
+    encoding: "utf8",
+  }).trim(),
+  frozen = resolve("work/suffix-control-" + controlCommit);
 await mkdir(frozen, { recursive: true });
 if (
   !(await readFile(frozen + "/src/columnar/search.ts").then(
@@ -85,7 +93,7 @@ if (
   ))
 )
   execFileSync("tar", ["-x", "-C", frozen], {
-    input: execFileSync("git", ["archive", "a08e7fe", "src"], {
+    input: execFileSync("git", ["archive", controlCommit, "src"], {
       maxBuffer: 32 * 1048576,
     }),
   });
@@ -190,13 +198,12 @@ async function query(s: any, plan: string, prepare: boolean) {
   const cpu = process.cpuUsage(),
     before = process.memoryUsage(),
     start = performance.now(),
-    actual =
-      plan === "control"
-        ? await engine.search(s.q, reader, s.options)
-        : await searchWithSuffix(engine, suffix!, s.q, reader, s.options, {
-            bits: plan.startsWith("suffix8") ? 8 : 16,
-            rangeMax: plan.endsWith("-max"),
-          });
+    actual = !plan.startsWith("suffix")
+      ? await engine.search(s.q, reader, s.options)
+      : await searchWithSuffix(engine, suffix!, s.q, reader, s.options, {
+          bits: plan.startsWith("suffix8") ? 8 : 16,
+          rangeMax: plan.endsWith("-max"),
+        });
   const body = JSON.stringify(actual),
     wallMs = performance.now() - start,
     usage = process.cpuUsage(cpu),
@@ -226,9 +233,33 @@ const provenance = {
   index,
   suffixGeneration: manifest?.generation,
   code: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
-  control: "a08e7fe",
+  control: controlCommit,
+  sourceSha256: Object.fromEntries(
+    await Promise.all(
+      [
+        "search",
+        "packet-execution",
+        "membership-anchor",
+        "boolean-membership",
+        "numeric-cursor",
+        "pair-membership",
+        "storage",
+        "phrase-frequency",
+      ].map(async (name) => [
+        name,
+        createHash("sha256")
+          .update(await readFile(`src/columnar/${name}.ts`))
+          .digest("hex"),
+      ]),
+    ),
+  ),
   model,
   plans,
+  scenarios: scenarios.map((s: any) => ({
+    sid: s.sid,
+    q: s.q,
+    options: s.options,
+  })),
   repeats,
   exactTotal: false,
   N: 100,

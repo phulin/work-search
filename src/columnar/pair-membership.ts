@@ -7,6 +7,7 @@ import {
   type ExactPairRanges,
 } from "./pair-ranges.js";
 import { encodeVarints, readVarint } from "./compact-integers.js";
+import { unionCursors } from "./numeric-cursor.js";
 import {
   PairPositionDirectory,
   isPairPositionDirectory,
@@ -162,16 +163,47 @@ export class Membership {
       block = 0,
       position = 0,
       column: Uint32Array | undefined;
+    const next = (): number => {
+      if (this.docs)
+        return row < this.docs.length ? this.docs[row++] : Infinity;
+      if (!column || position === column.length) {
+        if (block === this.blocks) return Infinity;
+        column = this.block(block++);
+        position = 0;
+      }
+      return column[position++];
+    };
     return {
-      next: (): number => {
-        if (this.docs)
-          return row < this.docs.length ? this.docs[row++] : Infinity;
-        if (!column || position === column.length) {
-          if (block === this.blocks) return Infinity;
-          column = this.block(block++);
-          position = 0;
+      next,
+      advance: (target: number): number => {
+        if (this.docs) {
+          row = Math.max(row, lower(this.docs, target));
+          return next();
         }
-        return column[position++];
+        if (
+          column &&
+          position < column.length &&
+          column[column.length - 1] >= target
+        ) {
+          position = Math.max(position, lower(column, target));
+          return next();
+        }
+        let lo = block,
+          hi = this.blocks;
+        while (lo < hi) {
+          const mid = (lo + hi) >>> 1;
+          if (this.index!.getUint32(4 + mid * 12, true) < target) lo = mid + 1;
+          else hi = mid;
+        }
+        if (lo === this.blocks) {
+          block = this.blocks;
+          column = undefined;
+          return Infinity;
+        }
+        column = this.block(lo);
+        block = lo + 1;
+        position = lower(column, target);
+        return next();
       },
     };
   }
@@ -346,18 +378,7 @@ export class PairMembership {
   }
   cursor(field: "all" | "body" | "title") {
     if (field !== "all") return this[field].cursor();
-    const a = this.body.cursor(),
-      b = this.title.cursor();
-    let x = a.next(),
-      y = b.next();
-    return {
-      next: () => {
-        const doc = Math.min(x, y);
-        if (x === doc) x = a.next();
-        if (y === doc) y = b.next();
-        return doc;
-      },
-    };
+    return unionCursors(this.body.cursor(), this.title.cursor());
   }
 }
 export function encodePairMembershipPacket(

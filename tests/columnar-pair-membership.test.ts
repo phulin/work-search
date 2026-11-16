@@ -25,6 +25,36 @@ import {
 import { parse } from "../src/query/parser.js";
 import { pairObjectKey } from "../src/columnar/pair-router.js";
 import { u32 } from "../src/columnar/format.js";
+import { intersectCursors } from "../src/columnar/numeric-cursor.js";
+it("skips untouched membership blocks when intersecting sparse candidates with a common pair", () => {
+  const docs = Uint32Array.from({ length: 100000 }, (_, i) => i * 2),
+    encoded = encodeMembership(docs, 200001);
+  let decoded = 0;
+  const membership = new Membership(
+      encoded.data,
+      encoded.mode,
+      docs.length,
+      200001,
+      (_block, integers) => (decoded += integers),
+    ),
+    sparse = Uint32Array.of(0, 10000, 20000, 180000, 199998);
+  let row = 0;
+  const c = intersectCursors([
+      membership.cursor(),
+      { next: () => sparse[row++] ?? Infinity },
+    ]),
+    actual: number[] = [];
+  for (let doc = c.next(); doc !== Infinity; doc = c.next()) actual.push(doc);
+  expect(actual).toEqual([...sparse]);
+  expect(decoded).toBeLessThanOrEqual(10 * 128);
+  const seek = membership.cursor();
+  expect(seek.advance(255)).toBe(256);
+  expect(seek.next()).toBe(258);
+  expect(seek.advance(0)).toBe(260);
+  expect(seek.advance(200000)).toBe(Infinity);
+  expect(seek.next()).toBe(Infinity);
+  expect(seek.advance(Infinity)).toBe(Infinity);
+});
 it("prices saved candidate request waves even when numeric verification records are small", () => {
   const router = new PairRouter(
       encodePairRouter(

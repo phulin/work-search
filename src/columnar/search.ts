@@ -543,6 +543,7 @@ export class ColumnarIndex {
           unigramCandidates,
         )
       : undefined;
+    reader.stats.anchorBufferBytes += loadedMembership?.bufferBytes ?? 0;
     if (unigramCandidates) {
       reader.stats.anchorUnigramCandidates = unigramCandidates.length;
       reader.stats.anchorIntersectionCandidates = loadedMembership?.count ?? 0;
@@ -780,6 +781,92 @@ export class ColumnarIndex {
             planned,
           );
       if (result) return result;
+      // Correlated terms can make an initially cheap document plan much larger
+      // than its forecast. Before its block fallback, reprice pair evidence
+      // against the actual anchor intersection. Reuse that exact candidate set
+      // throughout; this is a new continuation, never a recall cutoff.
+      if (
+        !exact &&
+        packetCandidates &&
+        !loadedMembership &&
+        this.membership &&
+        packages
+      ) {
+        const packetTerms = terms as Map<string, DirectoryTerm>,
+          alternative = {
+            ...planned,
+            kind: "blocks" as const,
+            frequencyBytes: [...packetTerms.values()].reduce(
+              (n, t) =>
+                n +
+                t.frequencies[2] +
+                (t.frequencyParts ?? []).reduce((n, r) => n + r[2], 0),
+              0,
+            ),
+            positionBytes: [...packetTerms].reduce(
+              (n, [name, t]) =>
+                n +
+                (wantedPositions.has(name)
+                  ? t.positional[2] +
+                    (t.positionalParts ?? []).reduce((n, r) => n + r[2], 0)
+                  : 0),
+              0,
+            ),
+            expectedCandidates: packetCandidates.length,
+          },
+          retry = planMembershipAnchor(
+            ast,
+            this.membership,
+            terms,
+            packages.averageBytes,
+            field,
+            alternative,
+            options.exactTotal,
+          );
+        if (retry) {
+          reader.stats.pairReplanIOWaves++;
+          reader.stats.pairReplanCandidatesBefore = packetCandidates.length;
+          const evidence = await readMembershipAnchor(
+            retry,
+            reader,
+            this.membership,
+          );
+          loadedMembership = intersectMembershipAnchor(
+            membershipAnchor(
+              evidence,
+              new Map([...terms].map(([name, term]) => [name, term.id])),
+              field,
+            ),
+            packetCandidates,
+          );
+          reader.stats.anchorBufferBytes += loadedMembership.bufferBytes ?? 0;
+          reader.stats.pairReplanCandidatesAfter = loadedMembership.count;
+          reader.stats.membershipCandidates = loadedMembership.count;
+          reader.stats.plannedPairPackets += retry.pairs.length;
+          packages.membership = loadedMembership;
+          planned = await this.chooseContinuation({
+            ast,
+            terms: terms as Map<string, DirectoryTerm>,
+            root: queryRoot,
+            reader,
+            options,
+            packages,
+            plan: alternative,
+          });
+          if (planned.kind === "documents") {
+            const resumed = await executePackets(
+              ast,
+              terms as Map<string, DirectoryTerm>,
+              queryRoot,
+              reader,
+              options,
+              packages,
+              planned,
+            );
+            if (resumed) return resumed;
+          }
+        }
+      }
     }
     const scoring = names
         .map((n, i) => (positive.has(n) ? i : -1))

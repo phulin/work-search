@@ -1,5 +1,49 @@
 # Cold search execution, 1M court cases
 
+## Further candidate execution changes
+
+Sorted membership cursors now use their existing restart tables to seek past
+unneeded blocks, including through nested unions and intersections. Compound
+pair evidence retains its final sorted intersection when it fits within
+256 KiB; larger sets keep streaming. Intermediate branches calculate cardinality
+only when requested, rather than counting every branch before intersection.
+
+When a unigram document forecast proves too optimistic, the executor now prices
+pair evidence again against the actual anchor intersection before falling back
+to blocks. Newly filtered IDs feed directly into document or block execution.
+This introduces one optional discovery wave; it does not truncate candidates.
+
+Local 1M comparisons used empty application/shared caches, simulated 20 ms origin
+latency and 100 MiB/s per-read bandwidth, six shared request slots, exact totals
+off, and complete responses. These are diagnostic measurements, not live claims:
+
+| Query                                              | Repetitions per version | Simulated median, before → after | Local CPU median |      GETs |      Transfer |
+| -------------------------------------------------- | ----------------------: | -------------------------------: | ---------------: | --------: | ------------: |
+| Requests for admission                             |                       7 |                 1,173 → 1,103 ms |     382 → 264 ms | 224 → 224 |     unchanged |
+| Section 1407 remand / pretrial proceedings         |                       5 |                     934 → 400 ms |     347 → 144 ms |  102 → 57 | 34.5 → 3.9 MB |
+| Small Business Administration / sovereign immunity |                       5 |                     639 → 545 ms |     275 → 153 ms |  66 → 106 | 13.9 → 5.3 MB |
+
+Admission membership decoding fell from 907,750 to 167,903 integers; repeated
+decoded membership bytes fell from 3,287,336 to 327,948. The remand anchor had
+152 actual candidates despite a forecast of nine; pair evidence reduced it to
+24 before verification. The SBA case reduced 815 candidates to 77, but its
+increased GET count requires live evaluation. The unchanged broad controls in
+the five-query replan pilot moved by about −4% to +3% in simulated latency.
+
+The separate 20-query check preserved every ranked ID, score within tolerance,
+metadata and a query-relevant snippet. Its CPU/latency observations overlap
+local tests and the suffix build and should not be used to claim small timing
+differences. The full suite passed 96 files / 345 tests, including exhaustive
+matching, fields, repeated terms, ties, cursors and randomized mixed seek/next
+operations. Machine-readable evidence is in `membership-reuse-local.json.gz`,
+`membership-bottom20-local.json.gz`, and `correlated-anchors-local.json.gz` under
+`bench/results/columnar/cold-routing-1m/`.
+
+The suffix comparison now freezes the current ordinary engine when it starts,
+so subsequent generic query improvements cannot be credited to the suffix
+index. Its local comparison driver also supports selected queries and records
+source hashes for uncommitted experiments.
+
 The planner now prices optional pair context before reading it, avoids pairs whose
 context is already proved, and executes routed complete phrase descriptors the
 same way as bundled descriptors. Planning reads numeric document sizes without

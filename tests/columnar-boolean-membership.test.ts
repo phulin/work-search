@@ -228,3 +228,32 @@ it("preserves the existing plan for standalone phrases", () => {
     expect(plan?.plans).toEqual(old ? [old] : undefined);
   }
 });
+it("reconsiders pair evidence when actual correlated anchors invalidate a cheap document forecast", async () => {
+  const { settings, reader } = fixture(),
+    ast = parse('"a b" AND rare'),
+    forecast = {
+      kind: "documents" as const,
+      frequencyBytes: 1024,
+      positionBytes: 0,
+      expectedCandidates: 1,
+    };
+  expect(
+    planBooleanMembership(ast, settings, undefined, 16384, "all", forecast),
+  ).toBeUndefined();
+  const retry = planBooleanMembership(ast, settings, undefined, 16384, "all", {
+    ...alternative,
+    expectedCandidates: 50,
+  });
+  expect(retry).toBeDefined();
+  const actual = Uint32Array.of(0, 3, 4, 5, 6),
+    selected = intersectMembershipAnchor(
+      booleanMembershipAnchor(
+        await readBooleanMembership(retry!, reader, settings),
+        ids,
+        "all",
+      ),
+      actual,
+    );
+  expect([...selected.values()]).toEqual([0, 4]);
+  expect(selected.count).toBe(2);
+});

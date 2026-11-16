@@ -15,7 +15,11 @@ import {
 import { PairMembershipPacket, PairMembership } from "./pair-membership.js";
 import { PairRouter, pairObjectKey } from "./pair-router.js";
 import type { PairPacket } from "./pair-packet.js";
-import { intersectCursors, unionCursors } from "./numeric-cursor.js";
+import {
+  advanceCursor,
+  intersectCursors,
+  unionCursors,
+} from "./numeric-cursor.js";
 import { candidatePairContext } from "./candidate-pair-context.js";
 
 export interface MembershipSettings {
@@ -171,6 +175,7 @@ export interface MembershipSelection {
 }
 export interface MembershipAnchor {
   count: number;
+  bufferBytes?: number;
   values(): Generator<number>;
   has(doc: number): boolean;
   cursor(): { next(): number };
@@ -200,6 +205,7 @@ export function intersectMembershipAnchor(
   const selected = docs.subarray(0, count);
   return {
     ...anchor,
+    bufferBytes: (anchor.bufferBytes ?? 0) + docs.buffer.byteLength,
     count,
     values: function* () {
       yield* selected;
@@ -512,14 +518,16 @@ export function membershipAnchor(
         records.map((r) => (f ? r.title : r.body).cursor()),
       );
       if (!packets.size) return base;
+      const accept = (doc: number) => {
+        for (; doc !== Infinity; doc = base.next()) {
+          const exact = evidence(selection.words, doc, f);
+          if (exact === undefined || exact.length) return doc;
+        }
+        return Infinity;
+      };
       return {
-        next: () => {
-          for (let doc = base.next(); doc !== Infinity; doc = base.next()) {
-            const exact = evidence(selection.words, doc, f);
-            if (exact === undefined || exact.length) return doc;
-          }
-          return Infinity;
-        },
+        next: () => accept(base.next()),
+        advance: (target: number) => accept(advanceCursor(base, target)),
       };
     };
     return field === "body"
@@ -532,12 +540,26 @@ export function membershipAnchor(
     const c = cursor();
     for (let doc = c.next(); doc !== Infinity; doc = c.next()) yield doc;
   }
-  let count = direct ? (field === "all" ? direct.df : direct[field].count) : 0;
-  if (!direct) {
-    const c = cursor();
-    while (c.next() !== Infinity) count++;
-  }
-  return { count, values, has, cursor, evidence, covered };
+  let count = direct
+    ? field === "all"
+      ? direct.df
+      : direct[field].count
+    : undefined;
+  return {
+    get count() {
+      if (count === undefined) {
+        count = 0;
+        const c = cursor();
+        while (c.next() !== Infinity) count++;
+      }
+      return count;
+    },
+    values,
+    has,
+    cursor,
+    evidence,
+    covered,
+  };
 }
 
 /** Price all required chunks before I/O. An unselected product is unknown. */

@@ -20,6 +20,14 @@ const variants = (
   sessions = Number(process.env.CWS_SESSIONS ?? 3),
   warmup = process.env.CWS_WARMUP !== "0",
   token = await benchmarkToken();
+if (
+  ![count, cap, sessions].every((n) => Number.isSafeInteger(n) && n > 0) ||
+  !Number.isFinite(rate) ||
+  rate <= 0
+)
+  throw Error(
+    "Invalid request count, arrival rate, concurrency or session count",
+  );
 const heldout = JSON.parse(
     await readFile("work/columnar-bench/heldout.json", "utf8"),
   ),
@@ -250,6 +258,19 @@ async function call(
     }
     const result = clientWorker ? envelope.body : envelope,
       want = query.oracle ?? oracle[query.q];
+    if (
+      result.generation !== health[name].generation ||
+      result.telemetry?.version?.id !== health[name].version?.id
+    )
+      throw Error("Deployment changed during load comparison");
+    if (
+      condition === "fresh-namespace" &&
+      (!result.diagnostics.applicationReset ||
+        result.diagnostics.namespace !== options.cacheNamespace)
+    )
+      throw Error("Cold cache condition was not applied");
+    if (query.options?.exactTotal === false && result.total !== undefined)
+      throw Error("Exact totals must be off");
     row.diagnostics = result.diagnostics;
     row.telemetry = result.telemetry;
     row.colo = result.colo;

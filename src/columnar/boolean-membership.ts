@@ -19,10 +19,12 @@ import {
 import {
   intersectCursors,
   unionCursors,
+  arrayCursor,
   type NumericCursor,
 } from "./numeric-cursor.js";
 import type { PairPacket } from "./pair-packet.js";
 import type { PairEvidence } from "./pair-positions.js";
+import { lower } from "./format.js";
 type Tree =
   | { kind: "phrase"; plan: PairReadPlan }
   | { kind: "and" | "or" | "near"; left: Tree; right: Tree };
@@ -248,19 +250,43 @@ export function booleanMembershipAnchor(
           pairKey(record.a, record.b),
           (record.supplementalContext ?? record.context)!,
         );
-  const cursor = filter.cursor;
+  const stream = filter.cursor;
+  // Retain a small final intersection once. Pricing, context refinement and
+  // scoring reuse it instead of repeatedly decoding its larger input lists.
+  // Broad results retain streaming execution with a fixed 256 KiB ceiling.
+  const limit = 65536;
+  let docs: Uint32Array | undefined = new Uint32Array(128);
   let count = 0;
-  const c = cursor();
-  while (c.next() !== Infinity) count++;
+  const c = stream();
+  for (let doc = c.next(); doc !== Infinity; doc = c.next()) {
+    if (docs) {
+      if (count === limit) docs = undefined;
+      else {
+        if (count === docs.length) {
+          const grown: Uint32Array = new Uint32Array(
+            Math.min(limit, docs.length * 2),
+          );
+          grown.set(docs);
+          docs = grown;
+        }
+        docs![count] = doc;
+      }
+    }
+    count++;
+  }
+  docs = docs?.subarray(0, count);
+  const cursor = docs ? () => arrayCursor(docs!) : stream;
   function* values() {
     const c = cursor();
     for (let doc = c.next(); doc !== Infinity; doc = c.next()) yield doc;
   }
   return {
     ...filter,
+    has: docs ? (doc) => docs![lower(docs!, doc)] === doc : filter.has,
     cursor,
     values,
     count,
+    bufferBytes: docs?.buffer.byteLength ?? 0,
     evidence: pairPhraseEvidence(packets, ids),
     covered: (words) => pairPhraseCovered(packets, ids, words),
   };
