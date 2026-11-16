@@ -36,6 +36,24 @@ function membershipPhrases(ast: Node) {
   return eligible;
 }
 
+// A phrase occurring only below NOT or on the right of EXCEPT cannot supply
+// the displayed match span. Do not charge its membership plan for positions
+// that rendering will never request. Positional Boolean matching is still
+// guarded separately by membershipPhrases (notably for nested proximity).
+function snippetPhrases(ast: Node) {
+  const phrases = new Set<string>();
+  const visit = (n: Node): void => {
+    if (n.kind === "phrase") phrases.add(n.terms.join("\0"));
+    else if (n.kind === "not") return;
+    else if ("left" in n) {
+      visit(n.left);
+      if (n.kind !== "except") visit(n.right);
+    }
+  };
+  visit(ast);
+  return phrases;
+}
+
 /** One routed discovery wave. Every record has complete context: tiny records
  * already contain it; larger records directly address their complete stream.
  * Prefer a covering pair whose packet is already required by candidate planning.
@@ -63,6 +81,7 @@ export async function readExactPhrasePairs(
     return out;
   const wanted = new Map<string, { a: string; b: string }>();
   const membership = membershipPhrases(ast);
+  const rendered = snippetPhrases(ast);
   const visit = (n: Node): void => {
     if (n.kind === "phrase") {
       if (n.terms.length < 2 || n.terms.length > 4) return;
@@ -87,7 +106,9 @@ export async function readExactPhrasePairs(
               terms,
               options.field ?? "all",
               reader,
-              options,
+              rendered.has(p.a + "\0" + p.b)
+                ? options
+                : { ...options, snippets: false },
               leaf.bytes,
             ))
         );
@@ -461,6 +482,7 @@ export function planExactPhrases(
   visit(ast);
   const result: ExactPhrasePlan[] = [];
   const truthOnly = membershipPhrases(ast);
+  const rendered = snippetPhrases(ast);
   for (const words of phrases.values()) {
     if (
       words.length < 2 ||
@@ -494,7 +516,16 @@ export function planExactPhrases(
           !!pair.membership &&
           !pair.inline &&
           truthOnly.has(words.join("\0")) &&
-          membershipIsCheaper(pair, words, terms, field, reader, presentation),
+          membershipIsCheaper(
+            pair,
+            words,
+            terms,
+            field,
+            reader,
+            rendered.has(words.join("\0"))
+              ? presentation
+              : { ...presentation, snippets: false },
+          ),
         gs = membershipOnly ? [] : fullGroups,
         bytes = gs.reduce((n, g) => n + g.length, 0),
         occ = membershipOnly

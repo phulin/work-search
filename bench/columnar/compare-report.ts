@@ -25,6 +25,10 @@ function distribution(a: number[]) {
 }
 const counters = [
   "requests",
+  "r2Reads",
+  "r2HeaderMs",
+  "r2BodyMs",
+  "r2MaxHeaderMs",
   "bytes",
   "sharedGets",
   "sharedPuts",

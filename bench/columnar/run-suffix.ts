@@ -287,6 +287,9 @@ const provenance = {
         "term-filter",
         "continuation",
         "candidate-layout",
+        "format",
+        "compact-integers",
+        "exact-phrase",
       ].map(async (name) => [
         name,
         createHash("sha256")
@@ -296,6 +299,7 @@ const provenance = {
     ),
   ),
   model,
+  ioDelaysEnabled: process.env.CWS_NO_DELAY !== "1",
   plans,
   scenarios: scenarios.map((s: any) => ({
     sid: s.sid,

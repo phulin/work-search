@@ -423,9 +423,9 @@ it("prices dependent winner positions before choosing membership over complete c
         } as DirectoryTerm,
       ]),
     );
-  const plan = (bytes: number, occurrences: number) =>
+  const plan = (bytes: number, occurrences: number, query = '"b c" OR x') =>
     planExactPhrases(
-      parse('"b c" OR x'),
+      parse(query),
       {
         lookup: () => ({
           a: "b",
@@ -458,6 +458,13 @@ it("prices dependent winner positions before choosing membership over complete c
   expect(plan(200000, 10000).membershipOnly).toBe(false);
   // Very large occurrence scans can still make membership the cold winner.
   expect(plan(32000000, 50000000).membershipOnly).toBe(true);
+  expect(plan(200000, 10000, 'x AND NOT "b c"').membershipOnly).toBe(true);
+  expect(plan(200000, 10000, 'x NOT "b c"').membershipOnly).toBe(true);
+  // A second use can still need real spans for matching or presentation.
+  expect(plan(200000, 10000, '"b c" OR NOT "b c"').membershipOnly).toBe(false);
+  expect(plan(200000, 10000, 'x AND NOT ("b c" /3 x)').membershipOnly).toBe(
+    false,
+  );
 });
 function product(
   rows: PairColumnRow[],

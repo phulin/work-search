@@ -4,6 +4,42 @@ import { PacketObjects } from "../src/columnar/packet-objects.js";
 import { ColumnarR2 } from "../src/columnar/r2.js";
 import { Reader } from "../src/columnar/storage.js";
 import type { Root } from "../src/columnar/format.js";
+import { pack, unpackColumn, view } from "../src/columnar/format.js";
+
+it("decodes every integer width across packed word boundaries and preserves destination guards", () => {
+  let seed = 9827;
+  const random = () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0);
+  for (let width = 0; width <= 32; width++)
+    for (const count of [0, 1, 2, 31, 32, 33, 127, 128, 129])
+      for (const delta of [false, true]) {
+        const max = width === 32 ? 0xffffffff : 2 ** width - 1,
+          values = Uint32Array.from({ length: count }, (_, i) =>
+            i === 1 ? max : (random() & max) >>> 0,
+          );
+        if (delta) values.sort();
+        const raw = pack(values, delta),
+          wrapped = new Uint8Array(raw.length + 7),
+          out = new Uint32Array(count + 4).fill(1234567);
+        wrapped.set(raw, 3);
+        expect(unpackColumn(view(wrapped), 3, raw.length, out, 2)).toBe(count);
+        expect([...out.subarray(2, count + 2)]).toEqual([...values]);
+        expect([...out.subarray(0, 2), ...out.subarray(count + 2)]).toEqual([
+          1234567, 1234567, 1234567, 1234567,
+        ]);
+        expect(() =>
+          unpackColumn(view(wrapped), 3, raw.length - 1, out, 2),
+        ).toThrow();
+      }
+  const overflow = pack(Uint32Array.of(0xffffffff), true);
+  view(overflow).setUint32(4, 0xffffffff, true);
+  overflow[8] = 32;
+  const invalid = new Uint8Array(16);
+  invalid.set(overflow.subarray(0, 12));
+  view(invalid).setUint32(12, 1, true);
+  expect(() =>
+    unpackColumn(view(invalid), 0, invalid.length, new Uint32Array(1)),
+  ).toThrow("overflow");
+});
 
 it("independently addresses empty, singleton, repeated and full-width positional spans", () => {
   let seed = 79;

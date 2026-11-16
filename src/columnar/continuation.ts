@@ -4,7 +4,9 @@ import { PACKAGE_CONCURRENCY } from "./package-batches.js";
 import { PAGE } from "./format.js";
 import { SCORE_LOOKAHEAD_WINDOWS } from "./score-lookahead.js";
 const BAND = 16384,
-  WAVE = 8;
+  // Cold live comparisons make request waits much more expensive than a
+  // 256 KiB transfer. Start at 60 ms per six-read wave / 2.5 ms per page.
+  WAVE = 24;
 /** Price actual sorted candidates before package I/O. Cost estimates select an
  * exact continuation; they are never matching or ranking bounds. */
 export async function priceDocuments(

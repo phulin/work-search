@@ -99,6 +99,7 @@ export function createColumnarWorker(
           isolate,
           sequence,
           cacheNamespace: env.CACHE_NAMESPACE ?? "default",
+          sharedPageCache: env.PAGE_CACHE !== "0",
           pageBytes: 262144,
           version: env.CF_VERSION_METADATA,
         });
@@ -247,9 +248,10 @@ export function createColumnarWorker(
           }
           const admitted = performance.now(),
             sharedBudget = { remaining: 900 },
+            r2 = new ColumnarR2(env.INDEX),
             reader = new Reader(
               root,
-              new ColumnarR2(env.INDEX),
+              r2,
               memory,
               shared,
               namespace,
@@ -267,6 +269,9 @@ export function createColumnarWorker(
                 sharedBudget,
               )
             : undefined;
+          r2.timings = reader.stats;
+          if (pairReader)
+            (pairReader.source as ColumnarR2).timings = pairReader.stats;
           if (input.filter !== undefined) {
             if (!metadata)
               throw new QuerySyntaxError(

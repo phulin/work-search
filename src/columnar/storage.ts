@@ -152,6 +152,10 @@ export class Reader {
   sharedWrites = new Set<Promise<void>>();
   sharedWriteBytes = 0;
   stats = {
+    r2Reads: 0,
+    r2HeaderMs: 0,
+    r2BodyMs: 0,
+    r2MaxHeaderMs: 0,
     exactPhraseDiscoveryReads: 0,
     exactPhraseDiscoveryBytes: 0,
     exactPhraseDiscoveryWaves: 0,
