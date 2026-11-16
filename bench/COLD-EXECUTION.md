@@ -44,6 +44,44 @@ so subsequent generic query improvements cannot be credited to the suffix
 index. Its local comparison driver also supports selected queries and records
 source hashes for uncommitted experiments.
 
+## Complete lists after matching
+
+Complete-frequency execution also covers conjunctions made entirely of exact
+phrase streams. It scores the original distinct words, including overlap
+between phrases, and uses the existing positional evaluator for snippet spans.
+The compound budget is 20 MiB of frequencies, 24 MiB estimated page footprint,
+8 MiB cumulative context, 262,144 candidate upper bound, and at most 24 MiB
+for frequency bytes plus candidate/score arrays. Context remains streamed and
+released before score retrieval. No phrase-score addition is used.
+
+In a five-repetition local 1M pilot, `"under the circumstances" AND "in light of"`
+changed from 1,317 to 727 ms simulated median, 904 to 744 ms local CPU, 116 to
+65 GETs, and 29.2 to 24.3 MB. Four other queries retained their original plans;
+their simulated medians ranged from −20% on a 65 ms query to +5%. These small
+samples establish an experiment to validate live, not population percentiles.
+Fields, nested conjunctions, repeated phrases, overlapping words, exact totals,
+metadata filters and cursors match the exhaustive small-corpus engine, including
+full snippets.
+
+Ordinary complete-term and unigram-anchor reads now use directly addressed
+extents too. A request retains complete packets so later block access can reuse
+their subranges. The complete-term planner retains its existing transfer and
+decoded-memory budgets. Decoders avoid copying an already owned full packet;
+page-backed subarrays still copy to prevent retaining uncharged backing pages.
+Ten selective queries, five repetitions each, preserved results and reduced
+transfer on nine; packet assembly copies disappeared on all three queries that
+had them. Simulated medians were essentially unchanged (−2% to +3%). For example,
+the remand query fell from 3.88 to 3.10 MB with the same 57 GETs and about 363 ms.
+Native latency and cache fragmentation still require evaluation.
+
+Evidence: `conjunction-frequency-local.json.gz` and
+`complete-terms-direct-local.json.gz` in the same results directory. The full
+suite passed 96 files / 345 tests; the added local-range and complete-packet
+tests also passed. The local range source can assemble an unfamiliar coalesced
+extent from already-verified local coverage; uncovered ranges still fail
+instead of making network requests inside a timed run. Assembly counts and
+harness hashes are recorded separately.
+
 The planner now prices optional pair context before reading it, avoids pairs whose
 context is already proved, and executes routed complete phrase descriptors the
 same way as bundled descriptors. Planning reads numeric document sizes without

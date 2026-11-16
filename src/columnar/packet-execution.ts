@@ -73,7 +73,14 @@ function columns(
   parameters: ScoreParameters,
 ): Columns {
   if (view(raw).getUint32(0, true) === 0x34465443)
-    return decodeTermPacket(Uint8Array.from(raw), id, positionBase, parameters);
+    return decodeTermPacket(
+      raw.byteOffset === 0 && raw.byteLength === raw.buffer.byteLength
+        ? raw
+        : Uint8Array.from(raw),
+      id,
+      positionBase,
+      parameters,
+    );
   const s = decodeScores(raw, parameters),
     b = new Float64Array(s.docs.length),
     t = new Float64Array(s.docs.length);
@@ -221,7 +228,7 @@ async function readTerms(
         }),
       );
   }
-  const data = await reader.packets(refs),
+  const data = await reader.completePackets(refs),
     cols = names.map((name) =>
       completeColumns(
         terms.get(name)!,

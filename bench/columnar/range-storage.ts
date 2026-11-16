@@ -9,6 +9,7 @@ export class RangeStorage implements Source {
   prepare = false;
   reads = 0;
   bytes = 0;
+  localAssemblies = 0;
   private pending = new Map<string, Promise<Uint8Array>>();
   private expected = new Map<string, { sha256: string; size: number }>();
   private receipts = new Map<
@@ -57,6 +58,49 @@ export class RangeStorage implements Source {
       if (!this.prepare && !this.receipts.has(file))
         throw Error("Prepared range lacks a verified receipt");
       return old;
+    }
+    if (!this.prepare) {
+      // Coalescing can request a different extent when asynchronous cache
+      // completion changes. Assemble it only from already-verified local
+      // coverage; timed queries must never download a missing range.
+      const spans = [...this.receipts.values()]
+          .filter(
+            (r) =>
+              r.key === key &&
+              r.offset < offset + length &&
+              r.offset + r.bytes > offset,
+          )
+          .sort((a, b) => a.offset - b.offset || b.bytes - a.bytes),
+        selected: typeof spans = [];
+      let end = offset;
+      for (let i = 0; end < offset + length;) {
+        let best: (typeof spans)[number] | undefined;
+        while (i < spans.length && spans[i].offset <= end) {
+          const span = spans[i++];
+          if (
+            span.offset + span.bytes >
+            (best ? best.offset + best.bytes : end)
+          )
+            best = span;
+        }
+        if (!best) break;
+        selected.push(best);
+        end = best.offset + best.bytes;
+      }
+      if (end >= offset + length) {
+        const data = Buffer.allocUnsafe(length);
+        let at = offset;
+        for (const span of selected) {
+          const raw = await readFile(this.directory + "/" + span.file),
+            end = Math.min(offset + length, span.offset + span.bytes);
+          if (raw.length !== span.bytes)
+            throw Error("Truncated verified range");
+          raw.copy(data, at - offset, at - span.offset, end - span.offset);
+          at = end;
+        }
+        this.localAssemblies++;
+        return data;
+      }
     }
     if (!this.prepare || !this.remote)
       throw Error("Missing prepared range: " + id);

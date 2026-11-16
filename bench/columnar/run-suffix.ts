@@ -196,6 +196,7 @@ async function query(s: any, plan: string, prepare: boolean) {
       : undefined;
   io.delaysEnabled = suffixIO.delaysEnabled = process.env.CWS_NO_DELAY !== "1";
   const cpu = process.cpuUsage(),
+    localAssemblies = storage.localAssemblies,
     before = process.memoryUsage(),
     start = performance.now(),
     actual = !plan.startsWith("suffix")
@@ -223,6 +224,7 @@ async function query(s: any, plan: string, prepare: boolean) {
     io: { engine: { ...io.calls }, suffix: { ...suffixIO.calls } },
     memory: { before, after },
     correct: true,
+    localRangeAssemblies: storage.localAssemblies - localAssemblies,
   };
 }
 const provenance = {
@@ -234,6 +236,16 @@ const provenance = {
   suffixGeneration: manifest?.generation,
   code: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
   control: controlCommit,
+  harnessSha256: Object.fromEntries(
+    await Promise.all(
+      ["run-suffix", "range-storage", "latency-model"].map(async (name) => [
+        name,
+        createHash("sha256")
+          .update(await readFile(`bench/columnar/${name}.ts`))
+          .digest("hex"),
+      ]),
+    ),
+  ),
   sourceSha256: Object.fromEntries(
     await Promise.all(
       [

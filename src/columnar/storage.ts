@@ -121,12 +121,18 @@ export class Reader {
   private inline = new Map<number, { ref: Ref; data: Uint8Array }[]>();
   /** A validated dictionary shard can carry its own complete small postings. */
   seed(ref: Ref, data: Uint8Array) {
+    if (this.retainPacket(ref, data))
+      this.stats.inlinePostingBytes += data.length;
+  }
+  private retainPacket(ref: Ref, data: Uint8Array) {
     if (!ref[2] || ref[2] !== data.length) throw Error("Invalid seeded range");
     const spans = this.inline.get(ref[0]) ?? [];
-    if (spans.some((s) => s.ref[1] === ref[1] && s.ref[2] === ref[2])) return;
+    if (spans.some((s) => s.ref[1] === ref[1] && s.ref[2] === ref[2]))
+      return false;
     spans.push({ ref: [...ref], data });
     this.inline.set(ref[0], spans);
-    this.stats.inlinePostingBytes += data.length;
+    this.stats.retainedPacketBytes += data.length;
+    return true;
   }
   private seeded(ref: Ref) {
     const span = this.inline
@@ -183,6 +189,7 @@ export class Reader {
     metadataFilterBlocks: 0,
     metadataFilterBytes: 0,
     inlinePostingBytes: 0,
+    retainedPacketBytes: 0,
     termDirectoryRanges: 0,
     termDirectoryBytes: 0,
     termDirectoryMatches: 0,
@@ -700,7 +707,11 @@ export class Reader {
           ref[1] + ref[2] > object.size
         )
           throw Error("Invalid complete packet range");
-        return this.named(`${key}@${ref[1]}`, ref[2]);
+        const data = await this.named(`${key}@${ref[1]}`, ref[2]);
+        // A later block continuation can use subranges of an already-read
+        // anchor without fetching its pages again. Retention is request-local.
+        this.retainPacket(ref, data);
+        return data;
       }),
     );
   }

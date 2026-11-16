@@ -8,6 +8,8 @@ import { filterDocuments } from "./document-filter.js";
 import { BLOCK, unpackColumn, view, type Root } from "./format.js";
 import { contribution, scoreParameters } from "./scoring.js";
 import { Heap } from "./top-k.js";
+import { queryTerms } from "../query/parser.js";
+import { positionalMatcher, QueryResourceError } from "../query/evaluate.js";
 
 function valueAt(v: DataView, offset: number, width: number, row: number) {
   if (offset < 0 || !width) return 0;
@@ -32,12 +34,23 @@ export async function executePhraseFrequencies(
   packages: CandidatePackages | undefined,
   started: number,
 ) {
-  if (ast.kind !== "phrase" || !packages || !exact.covered(ast.terms)) return;
-  const plan = exact.plans.find(
-    (p) => p.words.join("\0") === ast.terms.join("\0"),
+  if (!packages) return;
+  const phrases: string[][] = [];
+  const covered = (n: Node): boolean => {
+    if (n.kind === "phrase" && exact.covered(n.terms)) {
+      phrases.push(n.terms);
+      return true;
+    }
+    return n.kind === "and" && covered(n.left) && covered(n.right);
+  };
+  if (!covered(ast)) return;
+  const plans = phrases.map((words) =>
+    exact.plans.find((p) => p.words.join("\0") === words.join("\0")),
   );
-  if (!plan || plan.membershipOnly) return;
-  const parts = [...new Set(ast.terms)].flatMap((word) => {
+  if (plans.some((p) => !p || p.membershipOnly)) return;
+  const compound = ast.kind !== "phrase",
+    contextBytes = plans.reduce((n, p) => n + p!.bytes, 0),
+    parts = queryTerms(ast).flatMap((word) => {
       const term = terms.get(word)!;
       return [term.frequencies, ...(term.frequencyParts ?? [])].map((ref) => ({
         term,
@@ -46,21 +59,25 @@ export async function executePhraseFrequencies(
     }),
     frequencyBytes = parts.reduce((n, p) => n + p.ref[2], 0),
     field = options.field ?? "all",
-    bound =
-      field === "body"
-        ? plan.pair.bodyDf
-        : field === "title"
-          ? plan.pair.titleDf
-          : plan.pair.df,
+    bound = Math.min(
+      ...plans.map((p) =>
+        field === "body"
+          ? p!.pair.bodyDf
+          : field === "title"
+            ? p!.pair.titleDf
+            : p!.pair.df,
+      ),
+    ),
     physicalBytes = reader.packetFootprint(parts.map((p) => p.ref));
   // These constrain transfer and active buffers, never the answer. Larger
   // phrases retain the streamed block executor and its exact stopping proofs.
   if (
     !parts.every((p) => p.ref[2]) ||
-    frequencyBytes > 16 * 1048576 ||
-    physicalBytes > 20 * 1048576 ||
-    plan.bytes > 4 * 1048576 ||
-    bound > 131072
+    frequencyBytes > (compound ? 20 : 16) * 1048576 ||
+    physicalBytes > (compound ? 24 : 20) * 1048576 ||
+    contextBytes > (compound ? 8 : 4) * 1048576 ||
+    bound > (compound ? 262144 : 131072) ||
+    frequencyBytes + bound * 17 > 24 * 1048576
   )
     return;
   const estimatedBlockBytes = parts.reduce(
@@ -77,7 +94,18 @@ export async function executePhraseFrequencies(
   const docs = new Uint32Array(bound),
     first = new Uint32Array(bound),
     titleOnly = new Uint8Array(bound),
-    boost = options.titleBoost ?? 2;
+    boost = options.titleBoost ?? 2,
+    matcher = compound
+      ? positionalMatcher(
+          ast,
+          new Map(),
+          field,
+          undefined,
+          { spans: 262144, scratchSpans: 1048576, checks: 100000000 },
+          exact.evidence,
+          exact.truth,
+        )
+      : undefined;
   let count = 0;
   for (let lo = 0; lo < root.count; lo += 16384) {
     const hi = Math.min(root.count, lo + 16384);
@@ -92,10 +120,22 @@ export async function executePhraseFrequencies(
     );
     for (const doc of accepted) {
       if (count >= bound) throw Error("Phrase matches exceed complete pair DF");
-      const body = exact.evidence(ast.terms, doc, 0)!;
       docs[count] = doc;
-      first[count] = body.length ? body[0] : 0xffffffff;
-      titleOnly[count] = Number(field === "title" || !body.length);
+      let start: number | undefined;
+      if (ast.kind === "phrase") {
+        const body = exact.evidence(ast.terms, doc, 0)!;
+        start = body[0];
+        titleOnly[count] = Number(field === "title" || !body.length);
+      } else {
+        titleOnly[count] = 1;
+        if (field !== "title" && options.snippets !== false)
+          try {
+            start = matcher!.firstBodySpan(doc)?.start;
+          } catch (e) {
+            if (!(e instanceof QueryResourceError)) throw e;
+          }
+      }
+      first[count] = start ?? 0xffffffff;
       count++;
     }
     exact.release(lo);
@@ -184,6 +224,7 @@ export async function executePhraseFrequencies(
           2 + Number(!!body) + Number(!!title);
         if (body > bodyLength || title > titleLength)
           throw Error("Invalid field length");
+        if (compound && field !== "title" && body) titleOnly[wanted] = 0;
         scores[wanted] +=
           (field !== "title"
             ? contribution(body, bodyLength, parameters.avgBody, parameters.idf)

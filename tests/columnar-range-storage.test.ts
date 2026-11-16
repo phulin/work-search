@@ -1,49 +1,61 @@
-import { it, expect, vi } from "vitest";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { expect, it } from "vitest";
+import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { RangeStorage } from "../bench/columnar/range-storage.js";
 import { createHash } from "node:crypto";
-it("prepares immutable ranges once, replays without network or checksumming, and rejects damaged preparation", async () => {
-  const directory = await mkdtemp(join(tmpdir(), "columnar-ranges-")),
-    key = "a".repeat(64) + "/plan-0.bin",
-    data = Uint8Array.of(7, 8, 9),
-    root = {
-      generation: "a".repeat(64),
-      objects: [{ key, sha256: "b".repeat(64), size: 100 }],
-    } as any,
-    fetch = vi.spyOn(globalThis, "fetch").mockImplementation(
-      async () =>
-        new Response(data, {
-          headers: {
-            "x-sha256": "b".repeat(64),
-            "x-generation": "a".repeat(64),
-          },
-        }),
-    );
+import { RangeStorage } from "../bench/columnar/range-storage.js";
+
+it("serves changed coalescing ranges from verified local coverage without remote I/O", async () => {
+  const path = await mkdtemp(join(tmpdir(), "cws-ranges-"));
   try {
-    const source = new RangeStorage(root, directory, {
-      url: "https://example.invalid",
-      token: "test",
-    });
-    source.prepare = true;
-    expect([...(await source.read(key, 10, 3))]).toEqual([...data]);
-    const replay = new RangeStorage(root, directory);
-    await replay.verify();
-    fetch.mockRejectedValue(Error("Network forbidden in replay"));
-    expect([...(await replay.read(key, 10, 3))]).toEqual([...data]);
-    await expect(replay.read(key, 30, 3)).rejects.toThrow(
+    const key = "a".repeat(64) + "/plan-0.bin",
+      bytes = Buffer.from(Array.from({ length: 256 }, (_, i) => i));
+    for (const [offset, length] of [
+      [0, 64],
+      [32, 96],
+      [160, 32],
+    ]) {
+      const data = bytes.subarray(offset, offset + length),
+        file = `${offset}-${length}`;
+      await writeFile(path + "/" + file, data);
+      await writeFile(
+        path + "/" + file + ".json",
+        JSON.stringify({
+          file,
+          key,
+          offset,
+          bytes: length,
+          sha256: createHash("sha256").update(data).digest("hex"),
+        }),
+      );
+    }
+    const source = new RangeStorage(
+      {
+        format: "CWS1",
+        count: 1,
+        avgBody: 1,
+        avgTitle: 1,
+        analysis: "nfkc-lower-porter2-v1",
+        corpusHash: "c".repeat(64),
+        dictionaries: [],
+        documents: [],
+        hot: {},
+        generation: "b".repeat(64),
+        objects: [
+          { key, name: "plan-0.bin", size: 256, sha256: "a".repeat(64) },
+        ],
+      },
+      path,
+    );
+    await source.verify();
+    expect(await source.read(key, 10, 100)).toEqual(bytes.subarray(10, 110));
+    expect(await source.read(key, 64, 32)).toEqual(bytes.subarray(64, 96));
+    expect(source.localAssemblies).toBe(2);
+    await expect(source.read(key, 100, 80)).rejects.toThrow(
       "Missing prepared range",
     );
-    const file = createHash("sha256")
-      .update(key + ":10:3")
-      .digest("hex");
-    await writeFile(directory + "/" + file, Uint8Array.of(7, 8, 0));
-    await expect(new RangeStorage(root, directory).verify()).rejects.toThrow(
-      "Corrupt",
-    );
+    expect(source.reads).toBe(0);
   } finally {
-    fetch.mockRestore();
-    await rm(directory, { recursive: true, force: true });
+    await rm(path, { recursive: true, force: true });
   }
 });

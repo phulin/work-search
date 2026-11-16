@@ -142,58 +142,73 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
       '"Court alpha"',
       '"beta beta"',
       '"long long"',
+      '"alpha beta" AND "Court alpha"',
+      '"alpha beta" AND "beta gamma"',
+      '"alpha beta" AND "alpha beta"',
+      '"alpha beta" AND ("beta gamma" AND "Court alpha")',
     ]) {
       const ast = parse(q);
-      if (ast.kind !== "phrase") throw Error("Expected phrase");
       const names = queryTerms(ast),
-        selected = new Map(terms.filter(([w]) => names.includes(w))),
-        words = ast.terms.map((w) => ids.get(w)!),
-        rows: PairRow[] = docs.flatMap((d, doc) => {
-          const fields = [d.body, d.title].map((text) => {
-            const tokens = tokenize(text).map((w) => ids.get(w)!);
-            return tokens.flatMap((id, p) =>
-              id === words[0] && tokens[p + 1] === words[1]
-                ? [
-                    {
-                      position: p,
-                      previous: tokens[p - 1],
-                      next: tokens[p + 2],
-                    },
-                  ]
-                : [],
-            );
-          });
-          return fields.some((f) => f.length)
-            ? [{ doc, body: fields[0], title: fields[1] }]
-            : [];
-        }),
-        plan: ExactPhrasePlan = {
-          words: ast.terms,
-          ids: words,
-          at: 0,
-          bytes: 0,
-          groups: [],
-          cost: 0,
-          alternativeCost: Infinity,
-          pair: {
-            a: ast.terms[0],
-            b: ast.terms[1],
-            df: rows.length,
-            bodyDf: rows.filter((r) => r.body.length).length,
-            titleDf: rows.filter((r) => r.title.length).length,
-            bodyOccurrences: rows.reduce((n, r) => n + r.body.length, 0),
-            titleOccurrences: rows.reduce((n, r) => n + r.title.length, 0),
-            directory: {
-              a: words[0],
-              b: words[1],
-              generation: root.generation,
-              ranges: [],
+        selected = new Map(terms.filter(([w]) => names.includes(w)));
+      const phraseWords: string[][] = [];
+      const collect = (n: typeof ast): void => {
+        if (n.kind === "phrase") phraseWords.push(n.terms);
+        else if (n.kind === "and") {
+          collect(n.left);
+          collect(n.right);
+        }
+      };
+      collect(ast);
+      const plans = phraseWords.map((names): ExactPhrasePlan => {
+        const words = names.map((w) => ids.get(w)!),
+          rows: PairRow[] = docs.flatMap((d, doc) => {
+            const fields = [d.body, d.title].map((text) => {
+              const tokens = tokenize(text).map((w) => ids.get(w)!);
+              return tokens.flatMap((id, p) =>
+                id === words[0] && tokens[p + 1] === words[1]
+                  ? [
+                      {
+                        position: p,
+                        previous: tokens[p - 1],
+                        next: tokens[p + 2],
+                      },
+                    ]
+                  : [],
+              );
+            });
+            return fields.some((f) => f.length)
+              ? [{ doc, body: fields[0], title: fields[1] }]
+              : [];
+          }),
+          plan: ExactPhrasePlan = {
+            words: names,
+            ids: words,
+            at: 0,
+            bytes: 0,
+            groups: [],
+            cost: 0,
+            alternativeCost: Infinity,
+            pair: {
+              a: names[0],
+              b: names[1],
+              df: rows.length,
+              bodyDf: rows.filter((r) => r.body.length).length,
+              titleDf: rows.filter((r) => r.title.length).length,
+              bodyOccurrences: rows.reduce((n, r) => n + r.body.length, 0),
+              titleOccurrences: rows.reduce((n, r) => n + r.title.length, 0),
+              directory: {
+                a: words[0],
+                b: words[1],
+                generation: root.generation,
+                ranges: [],
+              },
+              inline: rows.length
+                ? new PairPacket(encodePairPacket(words[0], words[1], rows))
+                : undefined,
             },
-            inline: rows.length
-              ? new PairPacket(encodePairPacket(words[0], words[1], rows))
-              : undefined,
-          },
-        };
+          };
+        return plan;
+      });
       for (const field of ["all", "body", "title"] as const)
         for (const exactTotal of [false, true]) {
           const options: Options = {
@@ -207,7 +222,7 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
           };
           for (let page = 0; page < 2; page++) {
             const reader = new Reader(root, objects.source),
-              execution = new ExactPhraseExecution([plan], reader, field),
+              execution = new ExactPhraseExecution(plans, reader, field),
               loaded: number[] = [],
               result = await executePhraseFrequencies(
                 ast,

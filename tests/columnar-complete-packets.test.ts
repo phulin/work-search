@@ -40,6 +40,8 @@ it("reads a complete immutable extent once without page assembly, and scopes cac
   expect(reads).toBe(1);
   expect(reader.stats.bytes).toBe(ref[2]);
   expect(reader.stats.deduplicated).toBe(1);
+  expect(await reader.packet([0, 100, 500])).toEqual(bytes.subarray(100, 600));
+  expect(reads).toBe(1);
   expect(await reader.completePackets([ref])).toEqual([a]);
   expect(reads).toBe(1);
   await Promise.all(reader.sharedWrites);
