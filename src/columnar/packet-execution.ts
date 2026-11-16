@@ -43,6 +43,9 @@ import { Heap, type Hit } from "./top-k.js";
 import { bm25 } from "../query/engine.js";
 import type { MembershipAnchor } from "./membership-anchor.js";
 export interface CandidatePackages {
+  /** A candidate subset needs a proof that omitted documents cannot change
+   * top-k. Decline the strategy before presentation if that proof fails. */
+  proveCompletion?(ranked: readonly Hit[]): boolean;
   fallbackCandidates?(docs: Uint32Array): void;
   membership?: MembershipAnchor;
   presenceFilter?: (doc: number) => boolean;
@@ -949,8 +952,9 @@ export async function executePackets(
       }
     }
   }
-  const ranked = heap.values.sort((a, b) => b.score - a.score || a.doc - b.doc),
-    display = performance.now(),
+  const ranked = heap.values.sort((a, b) => b.score - a.score || a.doc - b.doc);
+  if (packages?.proveCompletion?.(ranked) === false) return;
+  const display = performance.now(),
     resultRequests = reader.stats.requests,
     resultBytes = reader.stats.bytes,
     resultSharedGets = reader.stats.sharedGets,

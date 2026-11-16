@@ -372,6 +372,46 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
       covered: () => false,
       evidence: () => undefined,
     };
+    // A ranked prefix with valid matches is still not a complete answer when
+    // its omitted-document proof fails. Decline before fetching presentation.
+    {
+      const ast = parse("alpha"),
+        selected = await directory.lookup(queryTerms(ast)),
+        reader = new Reader(root, objects.source),
+        anchor = {
+          ...membership,
+          count: 5,
+          *values() {
+            for (let doc = 0; doc < 5; doc++) yield doc;
+          },
+        },
+        proof = vi.fn((ranked: readonly { score: number }[]) => {
+          expect(ranked).toHaveLength(5);
+          return false;
+        }),
+        pkgs = {
+          averageBytes: 500,
+          proveCompletion: proof,
+          load: async (doc: number) =>
+            new DocumentPackage(packages.get(doc)!, doc),
+        },
+        got = await executePackets(
+          ast,
+          selected,
+          root,
+          reader,
+          { limit: 20 },
+          pkgs,
+          {
+            ...packetPlan(ast, selected, root, {}, pkgs),
+            kind: "documents",
+            membershipAnchor: anchor,
+          },
+        );
+      expect(got).toBeUndefined();
+      expect(proof).toHaveBeenCalledOnce();
+      expect(reader.stats.resultRequests).toBe(0);
+    }
     // A small one-shot candidate stream must survive declining the optional
     // score-first plan. This used to exhaust the stream during planning.
     {

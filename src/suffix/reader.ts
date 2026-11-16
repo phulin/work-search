@@ -93,6 +93,8 @@ export class SuffixReader {
     intervalHits: 0,
     phraseRankHits: 0,
     remotePhraseRankHits: 0,
+    filteredRankAttempts: 0,
+    filteredRankHits: 0,
     membershipRows: 0,
     intersectionCandidates: 0,
     numericPackets: 0,
@@ -195,10 +197,10 @@ export class SuffixReader {
         throw Error("Numeric suffix packet generation mismatch");
     }
   }
-  /** The omitted-score bound must lose strictly, including possible ties.
-   * Cursor/deeper pages keep the complete suffix scan. */
-  async phraseRanking(phrase: Uint32Array, limit: number, after?: unknown) {
-    if (after || limit < 1) return;
+  /** A bounded set of exact phrase matches and an upper bound for every
+   * omitted document. Additional conditions must be verified before pruning. */
+  async phraseRankingRecord(phrase: Uint32Array, limit = 1) {
+    if (limit < 1) return;
     let record = this.phraseRanks?.lookup(phrase),
       remote = false;
     if (!record && this.phraseRankIndex) {
@@ -218,11 +220,19 @@ export class SuffixReader {
       remote = true;
     }
     if (!record || record.entries.length < limit) return;
+    return { ...record, remote };
+  }
+  /** The omitted-score bound must lose strictly, including possible ties.
+   * Cursor/deeper pages keep the complete suffix scan. */
+  async phraseRanking(phrase: Uint32Array, limit: number, after?: unknown) {
+    if (after || limit < 1) return;
+    const record = await this.phraseRankingRecord(phrase, limit);
+    if (!record) return;
     const ordered = record.entries.slice().sort((a, b) => b.lower - a.lower),
       threshold = ordered[limit - 1].lower;
     if (record.tailUpper >= threshold) return;
     this.stats.phraseRankHits++;
-    if (remote) this.stats.remotePhraseRankHits++;
+    if (record.remote) this.stats.remotePhraseRankHits++;
     return ordered
       .filter((e) => e.upper >= threshold)
       .sort((a, b) => a.doc - b.doc);

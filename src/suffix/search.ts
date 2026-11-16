@@ -5,7 +5,11 @@ import { lower } from "../columnar/format.js";
 import type { ColumnarIndex, Options } from "../columnar/search.js";
 import type { Reader } from "../columnar/storage.js";
 import { packagePipeline } from "../columnar/package-batches.js";
-import { packageResult, packetPlan } from "../columnar/packet-execution.js";
+import {
+  executePackets,
+  packageResult,
+  packetPlan,
+} from "../columnar/packet-execution.js";
 import { Heap } from "../columnar/top-k.js";
 import type { DocumentPackage } from "../columnar/document-package.js";
 import { rankSuffix } from "./rank.js";
@@ -14,6 +18,8 @@ import { SuffixEvidence } from "./evidence.js";
 import type { SuffixReader } from "./reader.js";
 import { scoreCompleteCandidates } from "../columnar/frequency-scores.js";
 import { commonWordExclusions } from "../columnar/membership-anchor.js";
+import { arrayCursor } from "../columnar/numeric-cursor.js";
+import { filteredRankingPhrase } from "./filtered-phrase.js";
 
 /** Optional phrase layer. Mandatory phrases supply conservative score bounds;
  * finalists and other Boolean forms retain exact distinct-word scoring. */
@@ -61,12 +67,20 @@ export async function searchWithSuffix(
     }
   };
   visit(ast);
+  const filteredPhrase =
+    !standalone &&
+    !conjunction &&
+    !options.after &&
+    (options.field ?? "all") === "all"
+      ? filteredRankingPhrase(ast)
+      : undefined;
   if (!standalone && !conjunction && engine.membership) {
     // A short pair packet proves a two-word Boolean condition in one wave.
     // Suffix positions require boundary discovery and two aligned columns;
     // keep that work only where proximity actually needs occurrence positions.
     const eligible = phrases.filter(
       (words) =>
+        words === filteredPhrase ||
         words.length !== 2 ||
         positions.has(words.join("\0")) ||
         (engine.membership!.router.route(words[0], words[1])?.bytes ??
@@ -110,6 +124,81 @@ export async function searchWithSuffix(
   // its phrase intervals. Compare that path before opening score columns too.
   if (!standalone && ordinaryPlan && ordinaryPlan.kind !== "blocks")
     return engine.search(q, reader, options);
+  if (filteredPhrase) {
+    const record = await suffix.phraseRankingRecord(
+      ids(filteredPhrase),
+      options.limit ?? 20,
+    );
+    if (record) {
+      suffix.stats.filteredRankAttempts++;
+      const docs = Uint32Array.from(record.entries, (e) => e.doc).sort(),
+        anchor = {
+          count: docs.length,
+          bufferBytes: docs.byteLength,
+          values: function* () {
+            yield* docs;
+          },
+          has: (doc: number) => docs[lower(docs, doc)] === doc,
+          cursor: () => arrayCursor(docs),
+          covered: () => false,
+          evidence: () => undefined,
+        },
+        result = await executePackets(
+          ast,
+          terms,
+          root,
+          reader,
+          options,
+          {
+            ...packages,
+            proveCompletion: (ranked) =>
+              ranked.length === (options.limit ?? 20) &&
+              ranked[ranked.length - 1].score > record.tailUpper,
+          },
+          {
+            kind: "documents",
+            frequencyBytes: 0,
+            positionBytes: 0,
+            expectedCandidates: docs.length,
+            expectedDocumentBytes: docs.reduce(
+              (n, d) => n + packages.byteLength(d),
+              0,
+            ),
+            gets: docs.length,
+            dependentStages: 1,
+            membershipAnchor: anchor,
+          },
+        );
+      if (result) {
+        suffix.stats.filteredRankHits++;
+        return {
+          ...result!,
+          total: undefined,
+          diagnostics: {
+            ...result!.diagnostics,
+            executor: "suffix-filtered-ranked",
+            suffix: { ...suffix.stats },
+            wallMs: performance.now() - started,
+          },
+        };
+      }
+    }
+    // Failed or unavailable ranking records do not override the existing cheap
+    // pair-membership choice for two-word Boolean conditions.
+    if (engine.membership) {
+      for (let i = phrases.length - 1; i >= 0; i--) {
+        const words = phrases[i];
+        if (
+          words.length === 2 &&
+          !positions.has(words.join("\0")) &&
+          (engine.membership.router.route(words[0], words[1])?.bytes ??
+            Infinity) <= 1048576
+        )
+          phrases.splice(i, 1);
+      }
+      if (!phrases.length) return engine.search(q, reader, options);
+    }
+  }
   // Stored scores cover both fields. Field-restricted searches use exact
   // suffix evidence with the ordinary scorer rather than weak all-field bounds.
   if ((standalone || conjunction) && field === "all") {

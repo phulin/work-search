@@ -41,6 +41,9 @@ import { parse, queryTerms } from "../src/query/parser.js";
 import { tokenize } from "../src/query/tokenize.js";
 import { exhaustive } from "../bench/columnar/exhaustive.js";
 import { bm25 } from "../src/query/engine.js";
+import { filteredRankingPhrase } from "../src/suffix/filtered-phrase.js";
+import { collectPhraseRanking } from "../scripts/suffix-phrase-ranking.js";
+import { encodePhraseRanks } from "../src/suffix/phrase-ranks.js";
 
 it("uses suffix matches with the term scorer for nested Boolean/proximity queries and keeps presentation and cursors exact", async () => {
   const directory = await mkdtemp(join(tmpdir(), "suffix-search-"));
@@ -205,10 +208,28 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
         directory,
         root.generation,
       ),
+      sourceSuffix = async (file: string, at: number, n: number) =>
+        (await readFile(directory + "/" + file)).subarray(at, at + n),
+      ranks = encodePhraseRanks(
+        await Promise.all(
+          [
+            [1, 2],
+            [2, 3],
+            [1, 2, 3, 4],
+          ].map((words) =>
+            collectPhraseRanking(
+              new SuffixReader(manifest, sourceSuffix),
+              Uint32Array.from(words),
+            ),
+          ),
+        ),
+        root.generation,
+        manifest.rows,
+      ),
       suffix = () =>
-        new SuffixReader(manifest, async (file, at, n) =>
-          (await readFile(directory + "/" + file)).subarray(at, at + n),
-        );
+        new SuffixReader(manifest, sourceSuffix, undefined, {
+          phraseRanks: ranks,
+        });
     const flagsOnly = suffix(),
       proof = new SuffixEvidence();
     for (const words of [
@@ -267,6 +288,9 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
       '("a b" AND "c d") AND "x x"',
       '"a b" OR "c d"',
       '"a b" AND NOT "b c"',
+      '"a b" AND NOT x',
+      '"a b" AND NOT ("b c" OR x)',
+      '"a b c d" AND NOT x',
       'NOT ("a b" OR "d a")',
       '("a b" OR c) W/2 d',
       '"a b" W/3 "c d"',
@@ -579,4 +603,21 @@ it("uses phrase score bounds for mandatory phrases while retaining distinct-word
     '"a b c d e f" AND "g h"',
   ])
     expect(scoredConjunction(parse(q)), q).toBeUndefined();
+});
+
+it("requires a mandatory phrase with the complete scored vocabulary before using filtered ranking bounds", () => {
+  for (const q of [
+    '"a b" AND NOT c',
+    '"a b" % (c W/2 d)',
+    '"a b a" AND (a OR NOT x)',
+  ])
+    expect(filteredRankingPhrase(parse(q))).toBeDefined();
+  for (const q of [
+    '"a b" OR NOT c',
+    '"a b" AND c',
+    'NOT "a b"',
+    '"a b" OR c',
+    '"a b" W/2 c',
+  ])
+    expect(filteredRankingPhrase(parse(q))).toBeUndefined();
 });
