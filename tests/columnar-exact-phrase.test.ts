@@ -1038,7 +1038,7 @@ it("executes exact pair phrases inside Boolean/proximity expressions with the or
       Uint32Array.from(phraseWords, (w) => ids.get(w)!),
       {
         minimumRows: () => 0,
-        shortInterval: async () => ({
+        numericInterval: async () => ({
           first: 0,
           end: phraseDocs.length,
           blocks: [],

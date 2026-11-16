@@ -44,6 +44,9 @@ const index = resolve(indexInput),
   selected: number[] = process.env.CWS_QUERY_IDS
     ? process.env.CWS_QUERY_IDS.split(",").map(Number)
     : contract.scenarios.map((_: unknown, i: number) => i),
+  modes = (process.env.CWS_NATIVE_PLANS ?? "control,suffix").split(","),
+  concurrency = Number(process.env.CWS_NATIVE_CONCURRENCY ?? 1),
+  memoryProfile = process.env.CWS_NATIVE_MEMORY_PROFILE === "1",
   storage = new RangeStorage(assets.root, index + "/local-ranges"),
   model = {
     r2Ms: 20,
@@ -55,6 +58,13 @@ const index = resolve(indexInput),
   },
   jobs = new Map<string, any>(),
   handles = new Map<string, ReturnType<typeof open>>();
+if (
+  modes.some((m) => m !== "control" && m !== "suffix") ||
+  !Number.isInteger(concurrency) ||
+  concurrency < 1 ||
+  concurrency > 16
+)
+  throw Error("Invalid native benchmark plans or concurrency");
 await mkdir(frozenRoot, { recursive: true });
 if (
   !(await readFile(frozenRoot + "/src/columnar/search.ts").then(
@@ -101,6 +111,13 @@ const data: Record<string, Uint8Array> = {
     ? {
         "suffix-rank-index.bin": await readFile(
           suffixDir + "/" + manifest.phraseRankIndex,
+        ),
+      }
+    : {}),
+  ...(manifest.numericPackets
+    ? {
+        "suffix-numeric-index.bin": await readFile(
+          suffixDir + "/" + manifest.numericPackets.index,
         ),
       }
     : {}),
@@ -160,7 +177,7 @@ async function worker(mode: string) {
  import {ExactPhraseDirectory} from ${JSON.stringify(source + "/columnar/exact-phrase-directory.ts")};
  import {Reader,Memory,Lru} from ${JSON.stringify(source + "/columnar/storage.ts")};
  ${!frozen ? `import {SuffixReader} from ${JSON.stringify(resolve("src/suffix/reader.ts"))};import {searchWithSuffix} from ${JSON.stringify(resolve("src/suffix/search.ts"))};` : ""}
- const root=${JSON.stringify(assets.root)}, manifest=${JSON.stringify(manifest)}, documents=new DocumentDirectory(${variable("documents.bin")}),
+ const isolateId=crypto.randomUUID(),root=${JSON.stringify(assets.root)}, manifest=${JSON.stringify(manifest)}, documents=new DocumentDirectory(${variable("documents.bin")}),
  settings={router:new PairRouter(${variable("router.bin")}),exactPhrases:new ExactPhraseDirectory(${variable("exact.bin")}),presence:${JSON.stringify(assets.membership?.presence)},N:100,M:1000};
  export default {async fetch(request,env){
  if(new URL(request.url).pathname==='/__gc') {const available=typeof globalThis.gc==='function';if(available)globalThis.gc();return Response.json({available});}
@@ -175,9 +192,9 @@ async function worker(mode: string) {
  shared={get:async key=>{const r=await invoke('sharedGet',key);return r.headers.get('hit')==='1'?new Uint8Array(await r.arrayBuffer()):undefined;},put:async(key,bytes)=>{await invoke('sharedPut',key,0,0,undefined,bytes);}},
  memory=new Memory();memory.pages=new Lru(12*1048576);memory.decoded=new Lru(4*1048576);
  const writes=[], reader=new Reader(root,source,memory,shared,run,p=>writes.push(p),{remaining:900}), start=performance.now();
- ${!frozen ? `const suffix=new SuffixReader(manifest,(file,offset,length)=>read('suffix',file,offset,length),${variable("suffix-fences.bin")},{intervals:${variable("suffix-intervals.bin")},phraseRanks:${variable("suffix-ranks.bin")},${manifest.phraseRankIndex ? `phraseRankIndex:${variable("suffix-rank-index.bin")}` : ""}});` : ""}
+ ${!frozen ? `const suffix=new SuffixReader(manifest,(file,offset,length)=>read('suffix',file,offset,length),${variable("suffix-fences.bin")},{intervals:${variable("suffix-intervals.bin")},phraseRanks:${variable("suffix-ranks.bin")},${manifest.numericPackets ? `numericIndex:${variable("suffix-numeric-index.bin")},` : ""}${manifest.phraseRankIndex ? `phraseRankIndex:${variable("suffix-rank-index.bin")}` : ""}});` : ""}
  const result=${frozen ? "await engine.search(input.q,reader,input.options)" : "await searchWithSuffix(engine,suffix,input.q,reader,input.options,{bits:16,rangeMax:true})"};
- const response=JSON.stringify({result,wallMs:performance.now()-start,${!frozen ? "suffixBuffers:suffix.buffers," : ""}retainedPageBytes:memory.pages.bytes,retainedDecodedBytes:memory.decoded.bytes});
+ const response=JSON.stringify({result,requestId:run,isolateId,wallMs:performance.now()-start,${!frozen ? "suffixBuffers:suffix.buffers," : ""}retainedPageBytes:memory.pages.bytes,retainedDecodedBytes:memory.decoded.bytes});
  await Promise.all(writes);return new Response(response,{headers:{'content-type':'application/json'}});
  }};`;
   await mkdir(moduleRoot, { recursive: true });
@@ -296,12 +313,13 @@ async function worker(mode: string) {
     heap,
     scriptSha256: createHash("sha256").update(js).digest("hex"),
     samples: [heap],
+    activeSamples: [],
   };
 }
 const workers: any = {},
   rows: any[] = [];
 try {
-  for (const mode of ["control", "suffix"]) workers[mode] = await worker(mode);
+  for (const mode of modes) workers[mode] = await worker(mode);
   let seed = 879133;
   const random = () =>
       (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32,
@@ -309,7 +327,7 @@ try {
     tasks = selected
       .flatMap((sid) =>
         Array.from({ length: repeats }, (_, repeat) =>
-          ["control", "suffix"].map((mode) => ({
+          modes.map((mode) => ({
             sid,
             repeat,
             mode,
@@ -318,7 +336,7 @@ try {
         ).flat(),
       )
       .sort((a, b) => a.order - b.order);
-  for (const task of tasks) {
+  const runTask = async (task: (typeof tasks)[number]) => {
     const s = contract.scenarios[task.sid],
       runId = randomUUID(),
       job = {
@@ -372,6 +390,52 @@ try {
       io: { engine: job.engine.calls, suffix: job.suffix.calls },
       correct: true,
     });
+    console.log(
+      rows.length,
+      "/",
+      tasks.length,
+      task.mode,
+      task.sid,
+      Math.round(wallMs) + "ms",
+    );
+  };
+  for (let at = 0; at < tasks.length; at += concurrency) {
+    let sampling = memoryProfile;
+    const chunk = tasks.slice(at, at + concurrency),
+      activeModes = [...new Set(chunk.map((t) => t.mode))];
+    if (memoryProfile)
+      await Promise.all(
+        activeModes.map(async (mode) => {
+          const collected: any = await (
+            await workers[mode].mf.dispatchFetch("http://native/__gc")
+          ).json();
+          if (!collected.available)
+            throw Error(
+              "Memory profiling requires MINIFLARE_WORKERD_V8_FLAGS=--expose-gc",
+            );
+        }),
+      );
+    const profiles = memoryProfile
+      ? activeModes.map(async (mode) => {
+          while (sampling) {
+            const heap = await workers[mode].inspector.send(
+              "Runtime.getHeapUsage",
+            );
+            workers[mode].activeSamples.push({
+              at: performance.now(),
+              requests: chunk.filter((t) => t.mode === mode).length,
+              ...heap,
+            });
+            await new Promise((r) => setTimeout(r, 20));
+          }
+        })
+      : [];
+    try {
+      await Promise.all(chunk.map(runTask));
+    } finally {
+      sampling = false;
+      await Promise.all(profiles);
+    }
     await writeFile(
       out + "/results.json.gz",
       gzipSync(
@@ -384,18 +448,12 @@ try {
           }).trim(),
           model,
           applicationCaches: "All application caches are new for every request",
+          concurrency,
+          memoryProfile,
           v8Flags: process.env.MINIFLARE_WORKERD_V8_FLAGS ?? null,
           rows,
         }),
       ),
-    );
-    console.log(
-      rows.length,
-      "/",
-      tasks.length,
-      task.mode,
-      task.sid,
-      Math.round(wallMs) + "ms",
     );
   }
   const memory: any = {};
@@ -416,6 +474,7 @@ try {
       scriptSha256: w.scriptSha256,
       startupHeap: w.heap,
       postRequestSamples: w.samples,
+      activeSamples: w.activeSamples,
       beforeGC: before,
       retained,
     };
@@ -431,6 +490,15 @@ try {
           encoding: "utf8",
         }).trim(),
         model,
+        corpus: {
+          generation: assets.root.generation,
+          count: assets.root.count,
+          hash: assets.root.corpusHash,
+        },
+        applicationCaches: "All application caches are new for every request",
+        v8Flags: process.env.MINIFLARE_WORKERD_V8_FLAGS ?? null,
+        concurrency,
+        memoryProfile,
         rows,
         memory,
         completedAt: new Date().toISOString(),
