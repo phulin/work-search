@@ -1,4 +1,5 @@
 import { Semaphore, Lru } from "../columnar/storage.js";
+import { gunzipSync } from "node:zlib";
 import {
   PREFIX_WORDS,
   canonicalBit,
@@ -32,13 +33,8 @@ export interface SuffixBatch {
   scoreBits?: 8 | 16;
 }
 async function inflate(raw: Uint8Array) {
-  return new Uint8Array(
-    await new Response(
-      new Response(raw as BodyInit).body!.pipeThrough(
-        new DecompressionStream("gzip"),
-      ),
-    ).arrayBuffer(),
-  );
+  // Keep a compact backing store instead of retaining the zlib output slab.
+  return new Uint8Array(gunzipSync(raw));
 }
 type Cache<T> = Pick<Lru<T>, "get" | "set" | "bytes" | "peak">;
 export interface SuffixCaches {
@@ -102,6 +98,7 @@ export class SuffixReader {
     numericPackets: 0,
     numericBytes: 0,
     numericUnusedBlocks: 0,
+    positionIntegers: 0,
     memoryHits: 0,
   };
   private slots = new Semaphore(6);
@@ -250,6 +247,8 @@ export class SuffixReader {
         if (raw.length !== length) throw Error("Truncated suffix range");
         const data = compressed ? await inflate(raw) : raw;
         this.stats.decodedBytes += data.length;
+        if (compressed && file === "positions")
+          this.stats.positionIntegers += data.length / 4;
         this.cache.set(key, data, data.length);
         return data;
       });
@@ -486,6 +485,8 @@ export class SuffixReader {
       task = (async () => {
         const data = await inflate(frame);
         this.stats.decodedBytes += data.length;
+        if (name === "positions")
+          this.stats.positionIntegers += data.length / 4;
         this.cache.set(key, data, data.length);
         return data;
       })();
@@ -854,6 +855,8 @@ export class SuffixReader {
               ),
             );
             this.stats.decodedBytes += data.length;
+            if (j.file === "positions")
+              this.stats.positionIntegers += data.length / 4;
             this.cache.set(j.key, data, data.length);
             return data;
           }),
