@@ -210,6 +210,18 @@ export class Reader {
     scoreBlocksDecoded: 0,
     scorePostingsDecoded: 0,
     scoreFrequencyIntegers: 0,
+    documentRankingCandidates: 0,
+    documentRankingBytes: 0,
+    documentRankingSkipped: 0,
+    documentRankingAlternative: undefined as
+      | {
+          candidates: number;
+          bytes: number;
+          savedWaitMs: number;
+          readMs: number;
+          decodeMs: number;
+        }
+      | undefined,
     scoreFetchWaves: 0,
     scoreIOWaves: 0,
     anchorIOWaves: 0,

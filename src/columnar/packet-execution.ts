@@ -35,6 +35,7 @@ import {
   PACKAGE_WINNER_BYTES,
 } from "./package-batches.js";
 import { priceDocuments } from "./continuation.js";
+import { rankDocumentCandidates } from "./ranked-documents.js";
 import type { Reader } from "./storage.js";
 import type { Options } from "./search.js";
 import { renderResults } from "./render.js";
@@ -692,8 +693,24 @@ export async function executePackets(
     // Metadata remains bounded; package reads run continuously across its
     // filtered prefixes rather than waiting for each six-package batch.
     async function* documents() {
+      if (ranked) {
+        for (let at = 0; at < ranked.order.length; at++) {
+          const i = ranked.order[at];
+          const doc = ranked.docs[i],
+            score = ranked.scores[i];
+          if (!eligible(doc, score)) continue;
+          // Unstarted candidates are in exact score/tie order. Pending reads
+          // still drain and verify: only verified heap entries set this bound.
+          if (!heap.accepts(doc, score)) {
+            reader.stats.documentRankingSkipped = ranked.docs.length - at;
+            return;
+          }
+          yield doc;
+        }
+        return;
+      }
       if (!options.documentFilter) {
-        yield* selected();
+        yield* ranking?.candidates ?? selected();
         return;
       }
       for await (const docs of filteredDocumentBatches(
@@ -703,6 +720,18 @@ export async function executePackets(
       ))
         yield* docs;
     }
+    const ranking =
+      !options.documentFilter && !options.exactTotal
+        ? await rankDocumentCandidates(
+            selected(),
+            ast,
+            terms,
+            root,
+            reader,
+            options,
+          )
+        : undefined;
+    const ranked = ranking?.ranked;
     reader.stats.stages++;
     for await (const { item: doc, value: pkg } of packagePipeline(
       documents(),
@@ -733,7 +762,7 @@ export async function executePackets(
       const f = pkg!.frequencies(),
         lists = new Map<string, DecodedPostings>();
       active(pkg);
-      let score = 0;
+      let score = ranked ? ranked.scores[lower(ranked.docs, doc)] : 0;
       for (const name of names) {
         const t = terms.get(name)!,
           row = lower(f.ids, t.id),
@@ -746,7 +775,7 @@ export async function executePackets(
           title: Uint32Array.of(title),
           bytes: new Uint8Array(),
         });
-        if (positive.has(name))
+        if (!ranked && positive.has(name))
           score +=
             (field !== "title"
               ? bm25(b, t.df, root.count, pkg.bodyLength, root.avgBody)

@@ -1555,9 +1555,7 @@ export class ColumnarIndex {
       let nc = 0,
         fetchedBytes = 0;
       const append = (j: number, k: number, raw: Uint8Array) => {
-        const n = scoreBatches[j].append(raw, k, candidateMask);
-        reader.stats.scoreFrequencyIntegers +=
-          scoreBatches[j].frequencyIntegers;
+        const n = scoreBatches[j].append(raw, k);
         reader.stats.postings += n;
         reader.stats.scorePostingsDecoded += n;
         reader.stats.scoreBlocksDecoded++;

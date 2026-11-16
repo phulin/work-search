@@ -294,6 +294,8 @@ const provenance = {
         "continuation",
         "candidate-layout",
         "score-batch",
+        "frequency-scores",
+        "ranked-documents",
         "format",
         "compact-integers",
         "exact-phrase",

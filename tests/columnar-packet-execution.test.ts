@@ -372,86 +372,134 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
       covered: () => false,
       evidence: () => undefined,
     };
+    // A small one-shot candidate stream must survive declining the optional
+    // score-first plan. This used to exhaust the stream during planning.
+    {
+      const ast = parse('"rare alpha"'),
+        terms = await directory.lookup(queryTerms(ast)),
+        anchor = {
+          ...membership,
+          count: 5,
+          *values() {
+            for (let doc = 0; doc < 5; doc++) yield doc;
+          },
+        },
+        options = { limit: 7, exactTotal: false },
+        pkgs = {
+          averageBytes: 500,
+          membership: anchor,
+          load: async (doc: number) =>
+            new DocumentPackage(packages.get(doc)!, doc),
+        },
+        got = await executePackets(
+          ast,
+          terms,
+          root,
+          new Reader(root, objects.source),
+          options,
+          pkgs,
+          {
+            ...packetPlan(ast, terms, root, options, pkgs),
+            kind: "documents",
+            membershipAnchor: anchor,
+          },
+        ),
+        expected = await control.search(
+          '"rare alpha"',
+          new Reader(before, original.source),
+          options,
+        );
+      expect(got!.results).toEqual(expected.results);
+      expect(got!.diagnostics.packageCandidates).toBe(5);
+    }
     for (const q of [
       '("alpha beta" OR "beta gamma") AND NOT "rare alpha"',
       '"alpha beta" /3 gamma',
+      '"beta beta"',
     ]) {
       const ast = parse(q),
         terms = await directory.lookup(queryTerms(ast));
-      for (const field of ["all", "body", "title"] as const) {
-        const options: Options = {
-            field,
-            limit: 7,
-            titleBoost: 3.25,
-            exactTotal: true,
-          },
-          pkgs = {
-            averageBytes: 500,
-            byteLength: (doc: number) => packages.get(doc)!.length,
-            load: async (doc: number) => {
-              // Later IDs finish first. Exact totals, ties and search-after
-              // must remain independent of network completion order.
-              if (doc % 6 === 0) await new Promise((r) => setTimeout(r, 1));
-              return new DocumentPackage(packages.get(doc)!, doc);
+      for (const field of ["all", "body", "title"] as const)
+        for (const exactTotal of [false, true]) {
+          const options: Options = {
+              field,
+              limit: 7,
+              titleBoost: 3.25,
+              exactTotal,
             },
-            membership,
-          },
-          plan = {
-            ...packetPlan(ast, terms, root, options, pkgs),
-            kind: "documents" as const,
-            membershipAnchor: membership,
-          },
-          expected = await control.search(
-            q,
-            new Reader(before, original.source),
-            options,
-          ),
-          got = await executePackets(
-            ast,
-            terms,
-            root,
-            new Reader(root, objects.source),
-            options,
-            pkgs,
-            plan,
-          );
-        expect(got!.total).toBe(expected.total);
-        expect(got!.diagnostics.packageCandidates).toBe(600);
-        expect(got!.results.map((h) => h.id)).toEqual(
-          expected.results.map((h) => h.id),
-        );
-        got!.results.forEach((h, i) =>
-          expect(h.score).toBeCloseTo(expected.results[i].score, 11),
-        );
-        expect(got!.diagnostics.peakPackageBatchBytes).toBeLessThanOrEqual(
-          4 * 1048576,
-        );
-        expect(got!.diagnostics.peakWinnerPackageBytes).toBeLessThanOrEqual(
-          4 * 1048576,
-        );
-        if (got!.results.length) {
-          const last = got!.results.at(-1)!;
-          const after = { score: last.score, doc: last.doc };
-          const expectedNext = await control.search(
+            pkgs = {
+              averageBytes: 500,
+              byteLength: (doc: number) => packages.get(doc)!.length,
+              load: async (doc: number) => {
+                // Later IDs finish first. Exact totals, ties and search-after
+                // must remain independent of network completion order.
+                if (doc % 6 === 0) await new Promise((r) => setTimeout(r, 1));
+                return new DocumentPackage(packages.get(doc)!, doc);
+              },
+              membership,
+            },
+            plan = {
+              ...packetPlan(ast, terms, root, options, pkgs),
+              kind: "documents" as const,
+              membershipAnchor: membership,
+            },
+            expected = await control.search(
               q,
               new Reader(before, original.source),
-              { ...options, after },
+              options,
             ),
-            next = await executePackets(
+            got = await executePackets(
               ast,
               terms,
               root,
               new Reader(root, objects.source),
-              { ...options, after },
+              options,
               pkgs,
               plan,
             );
-          expect(next!.total).toBe(expectedNext.total);
-          expect(next!.results.map((h) => h.id)).toEqual(
-            expectedNext.results.map((h) => h.id),
+          expect(got!.total).toBe(expected.total);
+          if (exactTotal || !got!.results.length)
+            expect(got!.diagnostics.packageCandidates).toBe(600);
+          else {
+            expect(got!.diagnostics.documentRankingCandidates).toBe(600);
+            expect(got!.diagnostics.packageCandidates).toBeLessThan(600);
+            expect(got!.diagnostics.documentRankingSkipped).toBeGreaterThan(0);
+          }
+          expect(got!.results.map((h) => h.id)).toEqual(
+            expected.results.map((h) => h.id),
           );
+          got!.results.forEach((h, i) =>
+            expect(h.score).toBeCloseTo(expected.results[i].score, 11),
+          );
+          expect(got!.diagnostics.peakPackageBatchBytes).toBeLessThanOrEqual(
+            4 * 1048576,
+          );
+          expect(got!.diagnostics.peakWinnerPackageBytes).toBeLessThanOrEqual(
+            4 * 1048576,
+          );
+          if (got!.results.length) {
+            const last = got!.results.at(-1)!;
+            const after = { score: last.score, doc: last.doc };
+            const expectedNext = await control.search(
+                q,
+                new Reader(before, original.source),
+                { ...options, after },
+              ),
+              next = await executePackets(
+                ast,
+                terms,
+                root,
+                new Reader(root, objects.source),
+                { ...options, after },
+                pkgs,
+                plan,
+              );
+            expect(next!.total).toBe(expectedNext.total);
+            expect(next!.results.map((h) => h.id)).toEqual(
+              expectedNext.results.map((h) => h.id),
+            );
+          }
         }
-      }
     }
     for (const q of [
       "alpha",
