@@ -33,11 +33,19 @@ it("reads a complete immutable extent once without page assembly, and scopes cac
     },
     memory = new Memory();
   memory.pages = new Lru(2 * 1048576);
-  const reader = new Reader(root, source, memory, cache, "first"),
-    [a, b] = await reader.completePackets([ref, ref]);
+  const reader = new Reader(root, source, memory, cache, "first");
+  expect(reader.completeFootprint([ref, ref])).toBe(ref[2]);
+  expect(reader.packetFootprint([ref])).toBeGreaterThan(ref[2]);
+  const [a, b] = await reader.completePackets([ref, ref]);
+  expect(reader.completeFootprint([ref])).toBe(0);
   expect(a).toEqual(bytes.subarray(31, 31 + ref[2]));
   expect(b).toBe(a);
   expect(reads).toBe(1);
+  const next = new Reader(root, source, memory, cache, "first");
+  expect(next.completeFootprint([ref])).toBe(0);
+  expect(
+    new Reader(root, source, memory, cache, "other").completeFootprint([ref]),
+  ).toBe(ref[2]);
   expect(reader.stats.bytes).toBe(ref[2]);
   expect(reader.stats.deduplicated).toBe(1);
   expect(await reader.packet([0, 100, 500])).toEqual(bytes.subarray(100, 600));
@@ -75,12 +83,14 @@ it("uses seeded data and retains page reads for sources without immutable extent
       },
     },
   );
+  expect(reader.completeFootprint([ref, ref])).toBe(PAGE);
   expect((await reader.completePackets([ref]))[0]).toEqual(
     bytes.subarray(17, 17 + 8192),
   );
   expect(reads).toBe(1);
   const seeded: Ref = [0, PAGE, 7];
   reader.seed(seeded, bytes.slice(PAGE));
+  expect(reader.completeFootprint([seeded, ref])).toBe(0);
   expect((await reader.completePackets([seeded]))[0]).toEqual(
     bytes.slice(PAGE),
   );

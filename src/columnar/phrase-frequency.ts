@@ -94,7 +94,7 @@ export async function executePhraseFrequencies(
               : p!.pair.df,
         ),
       ),
-    physicalBytes = reader.packetFootprint(parts.map((p) => p.ref));
+    physicalBytes = reader.completeFootprint(parts.map((p) => p.ref));
   // These constrain transfer and active buffers, never the answer. Larger
   // phrases retain the streamed block executor and its exact stopping proofs.
   if (

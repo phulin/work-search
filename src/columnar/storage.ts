@@ -709,30 +709,54 @@ export class Reader {
     return Promise.all(
       refs.map(async (ref) => {
         if (this.resident(ref)) return this.packet(ref);
-        const object = objectAt(this.root, ref[0]);
-        if (!object) throw Error("Invalid complete packet object");
-        const key = object.key ?? `${this.root.generation}/${object.name}`;
-        if (
-          !object.key ||
-          !this.source.readNamed ||
-          !/^[a-f0-9]{64}\/plan-\d+\.bin$/.test(key)
-        )
-          return this.packet(ref);
-        if (
-          !Number.isSafeInteger(ref[1]) ||
-          !Number.isSafeInteger(ref[2]) ||
-          ref[1] < 0 ||
-          ref[2] < 1 ||
-          ref[1] + ref[2] > object.size
-        )
-          throw Error("Invalid complete packet range");
-        const data = await this.named(`${key}@${ref[1]}`, ref[2]);
+        const address = this.completeAddress(ref);
+        if (!address) return this.packet(ref);
+        const data = await this.named(address, ref[2]);
         // A later block continuation can use subranges of an already-read
         // anchor without fetching its pages again. Retention is request-local.
         this.retainPacket(ref, data);
         return data;
       }),
     );
+  }
+  private completeAddress(ref: Ref) {
+    const object = objectAt(this.root, ref[0]);
+    if (!object) throw Error("Invalid complete packet object");
+    const key = object.key;
+    if (
+      !key ||
+      !this.source.readNamed ||
+      !/^[a-f0-9]{64}\/plan-\d+\.bin$/.test(key)
+    )
+      return;
+    if (
+      !Number.isSafeInteger(ref[1]) ||
+      !Number.isSafeInteger(ref[2]) ||
+      ref[1] < 0 ||
+      ref[2] < 1 ||
+      ref[1] + ref[2] > object.size
+    )
+      throw Error("Invalid complete packet range");
+    return `${key}@${ref[1]}`;
+  }
+  /** Transfer estimate for completePackets(), rather than page-based packets().
+   * Stable extents transfer only their own bytes; resident/duplicate extents
+   * need no additional read. Shared-cache availability remains unknown. */
+  completeFootprint(refs: Ref[]) {
+    const seen = new Set<string>();
+    let bytes = 0;
+    for (const ref of refs) {
+      if (this.resident(ref)) continue;
+      const address = this.completeAddress(ref),
+        identity = address ? `${address}:${ref[2]}` : ref.join(":");
+      if (seen.has(identity)) continue;
+      seen.add(identity);
+      if (address) {
+        const key = `${this.root.generation}/${this.namespace}/named/${identity}`;
+        if (!this.memory.pages.entries.has(key)) bytes += ref[2];
+      } else bytes += this.packetFootprint([ref]);
+    }
+    return bytes;
   }
   /** Conservative physical transfer footprint, including page alignment and
    * the same range coalescing used by packets(). No bytes are decoded here. */
