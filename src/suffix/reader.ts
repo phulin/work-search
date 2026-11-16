@@ -54,6 +54,7 @@ export class SuffixReader {
     rankingBytes: 0,
     rankingRows: 0,
     rankingSkippedBlocks: 0,
+    rankingPrefetchUnused: 0,
   };
   private slots = new Semaphore(6);
   private cache = new Lru<Uint8Array>(8 * 1048576);
@@ -65,10 +66,18 @@ export class SuffixReader {
     readonly manifest: SuffixManifest,
     readonly source: SuffixRead,
     fences?: Uint8Array,
+    readonly tuning: { rankingLookahead?: number } = {},
   ) {
     if (manifest.format !== "word-suffix-1" || manifest.fixed.titleBoost !== 2)
       throw Error("Invalid suffix manifest");
     if (fences) this.fences = new SuffixFences(fences, manifest);
+    if (
+      tuning.rankingLookahead !== undefined &&
+      (!Number.isInteger(tuning.rankingLookahead) ||
+        tuning.rankingLookahead < 1 ||
+        tuning.rankingLookahead > 6)
+    )
+      throw Error("Invalid suffix ranking lookahead");
   }
   async read(file: string, offset: number, length: number, compressed = true) {
     const key = `${file}:${offset}:${length}:${compressed}`;
@@ -282,120 +291,173 @@ export class SuffixReader {
       (a, b) =>
         maximum(b) - maximum(a) || (a.minDocument ?? 0) - (b.minDocument ?? 0),
     );
-    for (const group of interval.groups) {
-      if (!admit(maximum(group))) {
-        this.stats.skippedGroups++;
-        continue;
+    const headFor = (group: SuffixManifest["directory"][number]) => {
+        const overlap =
+            Math.min(interval.end, group.end) -
+            Math.max(interval.first, group.first),
+          head = group.ranking?.[phrase.length];
+        return head && (overlap > 16384 || head.length <= 16384)
+          ? head
+          : undefined;
+      },
+      lookahead = this.tuning.rankingLookahead ?? 6,
+      prefetched = new Map<
+        SuffixManifest["directory"][number],
+        { task: Promise<Uint8Array>; bytes: number }
+      >();
+    let buffered = 0;
+    const fill = (from: number) => {
+      for (
+        let i = from;
+        i < interval.groups.length && prefetched.size < lookahead;
+        i++
+      ) {
+        const group = interval.groups[i],
+          ref = headFor(group);
+        if (!ref || prefetched.has(group) || !admit(maximum(group))) continue;
+        if (buffered + ref.length > 1048576 && prefetched.size) break;
+        const task = this.read("ranking", ref.offset, ref.length);
+        void task.catch(() => {});
+        prefetched.set(group, { task, bytes: ref.length });
+        buffered += ref.length;
       }
-      // A few mixed-prefix blocks are cheaper to scan than opening a summary
-      // for every other phrase in the directory group as well.
-      const overlap =
-          Math.min(interval.end, group.end) -
-          Math.max(interval.first, group.first),
-        head = group.ranking?.[phrase.length],
-        ranking =
-          head && (overlap > 16384 || head.length <= 16384) ? head : undefined;
-      if (ranking) {
-        const heads = decodeRankingHeads(
-          await this.read("ranking", ranking.offset, ranking.length),
-          phrase.length,
-          group.first,
-          group.end,
-        ).filter(
-          (h) =>
-            h.block.first < interval.end &&
-            h.block.first + h.block.count > interval.first,
-        );
-        heads.sort(
-          (a, b) =>
-            b.block.scoreMaximum[index] - a.block.scoreMaximum[index] ||
-            a.block.minDocument - b.block.minDocument,
-        );
-        const active = heads.filter((h) => {
-          if (admit(h.block.scoreMaximum[index])) return true;
-          this.stats.skippedBlocks++;
-          return false;
-        });
-        for (const head of active) {
-          const selected = Uint16Array.from(
-              { length: head.rows.length },
-              (_, i) => i,
-            ).filter((i) => {
-              const row = head.block.first + head.rows[i];
-              return row >= interval.first && row < interval.end;
-            }),
-            rows = Uint16Array.from(selected, (i) => head.rows[i]),
-            codes = Uint16Array.from(selected, (i) => head.codes[i]),
-            docs = Uint32Array.from(selected, (i) => head.docs[i]),
-            positions = Uint32Array.from(selected, (i) => head.positions[i]),
-            flags = new Uint16Array(selected.length).fill(
-              canonicalBit(phrase.length, "all"),
-            );
-          this.stats.rankingRows += rows.length;
-          this.stats.rows += rows.length;
-          yield {
-            block: head.block,
-            first: 0,
-            end: rows.length,
-            sourceRows: rows,
-            scoreBits: 16,
-            columns: {
-              documents: new Uint8Array(docs.buffer),
-              positions: new Uint8Array(positions.buffer),
-              flags: new Uint8Array(flags.buffer),
-              [`score16-${phrase.length}`]: new Uint8Array(codes.buffer),
+    };
+    try {
+      for (const [groupIndex, group] of interval.groups.entries()) {
+        fill(groupIndex);
+        if (!admit(maximum(group))) {
+          this.stats.skippedGroups++;
+          const unused = prefetched.get(group);
+          if (unused) {
+            this.stats.rankingPrefetchUnused++;
+            buffered -= unused.bytes;
+            prefetched.delete(group);
+          }
+          continue;
+        }
+        // A few mixed-prefix blocks are cheaper to scan than opening a summary
+        // for every other phrase in the directory group as well.
+        const ranking = headFor(group);
+        if (ranking) {
+          const ready = prefetched.get(group),
+            raw = ready
+              ? await ready.task
+              : await this.read("ranking", ranking.offset, ranking.length);
+          if (ready) {
+            buffered -= ready.bytes;
+            prefetched.delete(group);
+          }
+          if (lookahead > 1) fill(groupIndex + 1);
+          const heads = decodeRankingHeads(
+            raw,
+            phrase.length,
+            group.first,
+            group.end,
+          ).filter(
+            (h) =>
+              h.block.first < interval.end &&
+              h.block.first + h.block.count > interval.first,
+          );
+          heads.sort(
+            (a, b) =>
+              b.block.scoreMaximum[index] - a.block.scoreMaximum[index] ||
+              a.block.minDocument - b.block.minDocument,
+          );
+          const active = heads.filter((h) => {
+            if (admit(h.block.scoreMaximum[index])) return true;
+            this.stats.skippedBlocks++;
+            return false;
+          });
+          for (const head of active) {
+            const selected = Uint16Array.from(
+                { length: head.rows.length },
+                (_, i) => i,
+              ).filter((i) => {
+                const row = head.block.first + head.rows[i];
+                return row >= interval.first && row < interval.end;
+              }),
+              rows = Uint16Array.from(selected, (i) => head.rows[i]),
+              codes = Uint16Array.from(selected, (i) => head.codes[i]),
+              docs = Uint32Array.from(selected, (i) => head.docs[i]),
+              positions = Uint32Array.from(selected, (i) => head.positions[i]),
+              flags = new Uint16Array(selected.length).fill(
+                canonicalBit(phrase.length, "all"),
+              );
+            this.stats.rankingRows += rows.length;
+            this.stats.rows += rows.length;
+            yield {
+              block: head.block,
+              first: 0,
+              end: rows.length,
+              sourceRows: rows,
+              scoreBits: 16,
+              columns: {
+                documents: new Uint8Array(docs.buffer),
+                positions: new Uint8Array(positions.buffer),
+                flags: new Uint8Array(flags.buffer),
+                [`score16-${phrase.length}`]: new Uint8Array(codes.buffer),
+              },
+            };
+          }
+          const byFirst = new Map(active.map((h) => [h.block.first, h])),
+            remainder = (h: (typeof heads)[number]) => {
+              const q = quantizerForMaximum(h.block.scoreMaximum[index], 16);
+              return (
+                Math.min(q.maximum, (h.remainder + 1) * q.step) +
+                128 * Number.EPSILON * Math.max(1, q.maximum)
+              );
             },
-          };
+            needs = (h: (typeof heads)[number]) =>
+              !h.complete && admit(remainder(h));
+          for (const h of active)
+            if (!needs(h)) this.stats.rankingSkippedBlocks++;
+          for await (const batch of this.scan(
+            { ...interval, blocks: active.map((h) => h.block) },
+            columns,
+            (b) => needs(byFirst.get(b.first)!),
+            4,
+          )) {
+            batch.excludedRows = byFirst
+              .get(batch.block.first)!
+              .rows.slice()
+              .sort();
+            yield batch;
+          }
+          continue;
         }
-        const byFirst = new Map(active.map((h) => [h.block.first, h])),
-          remainder = (h: (typeof heads)[number]) => {
-            const q = quantizerForMaximum(h.block.scoreMaximum[index], 16);
-            return (
-              Math.min(q.maximum, (h.remainder + 1) * q.step) +
-              128 * Number.EPSILON * Math.max(1, q.maximum)
-            );
-          },
-          needs = (h: (typeof heads)[number]) =>
-            !h.complete && admit(remainder(h));
-        for (const h of active)
-          if (!needs(h)) this.stats.rankingSkippedBlocks++;
-        for await (const batch of this.scan(
-          { ...interval, blocks: active.map((h) => h.block) },
-          columns,
-          (b) => needs(byFirst.get(b.first)!),
+        const blocks = (await this.directory(group)).filter(
+          (b) => b.first < interval.end && b.first + b.count > interval.first,
+        );
+        blocks.sort(
+          (a, b) =>
+            b.scoreMaximum[index] - a.scoreMaximum[index] ||
+            a.minDocument - b.minDocument,
+        );
+        const eager =
+          blocks.length <= 2 &&
+          blocks.reduce(
+            (n, b) =>
+              n + b.columns.documents.length + b.columns.positions.length,
+            0,
+          ) <= 65536;
+        const selectedColumns = eager
+          ? [
+              ...new Set([
+                ...columns,
+                "documents" as const,
+                "positions" as const,
+              ]),
+            ]
+          : columns;
+        yield* this.scan(
+          { ...interval, blocks },
+          selectedColumns,
+          (b) => admit(b.scoreMaximum[index]),
           4,
-        )) {
-          batch.excludedRows = byFirst
-            .get(batch.block.first)!
-            .rows.slice()
-            .sort();
-          yield batch;
-        }
-        continue;
+        );
       }
-      const blocks = (await this.directory(group)).filter(
-        (b) => b.first < interval.end && b.first + b.count > interval.first,
-      );
-      blocks.sort(
-        (a, b) =>
-          b.scoreMaximum[index] - a.scoreMaximum[index] ||
-          a.minDocument - b.minDocument,
-      );
-      const eager =
-        blocks.length <= 2 &&
-        blocks.reduce(
-          (n, b) => n + b.columns.documents.length + b.columns.positions.length,
-          0,
-        ) <= 65536;
-      const selectedColumns = eager
-        ? [...new Set([...columns, "documents" as const, "positions" as const])]
-        : columns;
-      yield* this.scan(
-        { ...interval, blocks },
-        selectedColumns,
-        (b) => admit(b.scoreMaximum[index]),
-        4,
-      );
+    } finally {
+      await Promise.allSettled([...this.pending.values()]);
     }
   }
   async column(block: SuffixBlock, name: SuffixColumn) {

@@ -208,3 +208,41 @@ it("coalesces adjacent compressed columns while preserving each independently de
     );
   }
 });
+
+it("overlaps bounded ranking reads, preserves the answer, and drains unused reads before returning", async () => {
+  for (const lookahead of [1, 6]) {
+    const { reader: base, scores, installHeads } = fixture();
+    installHeads();
+    let active = 0,
+      peak = 0;
+    const reader = new SuffixReader(
+      base.manifest,
+      async (file, at, n) => {
+        if (file === "ranking") {
+          active++;
+          peak = Math.max(peak, active);
+          await new Promise((resolve) => setTimeout(resolve, 3));
+        }
+        try {
+          return await base.source(file, at, n);
+        } finally {
+          if (file === "ranking") active--;
+        }
+      },
+      undefined,
+      { rankingLookahead: lookahead },
+    );
+    const result = await rankSuffix(
+      reader,
+      Uint32Array.of(1, 2),
+      { bits: 16, limit: 10, rangeMax: true },
+      async (docs) => Float64Array.from(docs, (d) => scores[d]),
+    );
+    expect(result.map((h) => h.doc)).toEqual(
+      Array.from({ length: 10 }, (_, i) => i),
+    );
+    expect(active).toBe(0);
+    expect(peak).toBe(lookahead === 1 ? 1 : 3);
+    if (lookahead === 6) expect(reader.stats.rankingPrefetchUnused).toBe(2);
+  }
+});

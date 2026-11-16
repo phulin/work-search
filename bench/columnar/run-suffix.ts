@@ -157,6 +157,7 @@ if (
           "suffix16-max",
           "suffix16-without-heads",
           "suffix16-without-fences",
+          "suffix16-serial",
           "suffix8-max",
         ].includes(p),
     ))
@@ -321,6 +322,7 @@ async function query(s: any, plan: string, prepare: boolean) {
           selectedManifest,
           prepare ? suffixRead : suffixSource.read,
           plan === "suffix16-without-fences" ? undefined : suffixFences,
+          { rankingLookahead: plan === "suffix16-serial" ? 1 : 6 },
         )
       : undefined;
   io.delaysEnabled = suffixIO.delaysEnabled = process.env.CWS_NO_DELAY !== "1";
@@ -341,7 +343,8 @@ async function query(s: any, plan: string, prepare: boolean) {
             plan.endsWith("-max") ||
             plan === "suffix-before" ||
             plan === "suffix16-without-heads" ||
-            plan === "suffix16-without-fences",
+            plan === "suffix16-without-fences" ||
+            plan === "suffix16-serial",
         });
   const body = JSON.stringify(actual),
     wallMs = performance.now() - start,
