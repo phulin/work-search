@@ -47,6 +47,9 @@ const index = resolve(indexInput),
   modes = (process.env.CWS_NATIVE_PLANS ?? "control,suffix").split(","),
   concurrency = Number(process.env.CWS_NATIVE_CONCURRENCY ?? 1),
   memoryProfile = process.env.CWS_NATIVE_MEMORY_PROFILE === "1",
+  collectDuringRequests =
+    process.env.CWS_NATIVE_COLLECT_DURING_REQUESTS === "1",
+  allocationProfile = process.env.CWS_NATIVE_ALLOCATIONS === "1",
   storage = new RangeStorage(assets.root, index + "/local-ranges"),
   model = {
     r2Ms: 20,
@@ -324,6 +327,19 @@ const workers: any = {},
   rows: any[] = [];
 try {
   for (const mode of modes) workers[mode] = await worker(mode);
+  if (allocationProfile)
+    for (const w of Object.values<any>(workers)) {
+      try {
+        await w.inspector.send("HeapProfiler.startSampling", {
+          samplingInterval: 32768,
+          includeObjectsCollectedByMajorGC: true,
+          includeObjectsCollectedByMinorGC: true,
+        });
+        w.allocations = { enabled: true, samplingInterval: 32768 };
+      } catch (error) {
+        w.allocations = { unavailable: String(error) };
+      }
+    }
   let seed = 879133;
   const random = () =>
       (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32,
@@ -423,12 +439,15 @@ try {
     const profiles = memoryProfile
       ? activeModes.map(async (mode) => {
           while (sampling) {
+            if (collectDuringRequests)
+              await workers[mode].mf.dispatchFetch("http://native/__gc");
             const heap = await workers[mode].inspector.send(
               "Runtime.getHeapUsage",
             );
             workers[mode].activeSamples.push({
               at: performance.now(),
               requests: chunk.filter((t) => t.mode === mode).length,
+              afterCollection: collectDuringRequests,
               ...heap,
             });
             await new Promise((r) => setTimeout(r, 20));
@@ -457,6 +476,8 @@ try {
             "Isolate-wide LRUs; request namespaces prevent cross-request hits",
           concurrency,
           memoryProfile,
+          collectDuringRequests,
+          allocationProfile,
           v8Flags: process.env.MINIFLARE_WORKERD_V8_FLAGS ?? null,
           rows,
         }),
@@ -465,6 +486,22 @@ try {
   }
   const memory: any = {};
   for (const [mode, w] of Object.entries<any>(workers)) {
+    if (w.allocations?.enabled) {
+      try {
+        const { profile } = await w.inspector.send("HeapProfiler.stopSampling");
+        const sum = (node: any): number =>
+          (node.selfSize ?? 0) +
+          (node.children ?? []).reduce((n: number, c: any) => n + sum(c), 0);
+        w.allocations = {
+          ...w.allocations,
+          sampledAllocationEstimateBytes: sum(profile.head),
+          samples: profile.samples?.length ?? 0,
+          profile,
+        };
+      } catch (error) {
+        w.allocations = { ...w.allocations, unavailable: String(error) };
+      }
+    }
     const before = await w.inspector.send("Runtime.getHeapUsage");
     const collected: any = await (
       await w.mf.dispatchFetch("http://native/__gc")
@@ -484,6 +521,7 @@ try {
       activeSamples: w.activeSamples,
       beforeGC: before,
       retained,
+      allocations: w.allocations,
     };
   }
   await writeFile(
@@ -508,6 +546,8 @@ try {
         v8Flags: process.env.MINIFLARE_WORKERD_V8_FLAGS ?? null,
         concurrency,
         memoryProfile,
+        collectDuringRequests,
+        allocationProfile,
         rows,
         memory,
         completedAt: new Date().toISOString(),

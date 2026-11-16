@@ -105,6 +105,12 @@ it("serves changed coalescing ranges from verified local coverage without remote
       "Missing prepared range",
     );
     expect(source.reads).toBe(0);
+    source.prepare = true;
+    expect(await source.read(key, 20, 80)).toEqual(bytes.subarray(20, 100));
+    const prepared = new RangeStorage(source.root, path);
+    await prepared.verify();
+    expect(await prepared.read(key, 20, 80)).toEqual(bytes.subarray(20, 100));
+    expect(prepared.localAssemblies).toBe(0);
   } finally {
     await rm(path, { recursive: true, force: true });
   }

@@ -565,6 +565,9 @@ const provenance = {
 };
 await mkdir(dirname(output), { recursive: true });
 try {
+  // Load verified coverage before preparation too: a new planner may request
+  // a smaller range inside an existing local packet, without any remote I/O.
+  await storage.verify();
   storage.prepare = true;
   for (const plan of plans)
     for (const s of scenarios) {

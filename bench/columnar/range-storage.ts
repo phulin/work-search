@@ -85,7 +85,7 @@ export class RangeStorage implements Source {
       // Another preparation can add files after verify(). Ignore those files
       // during replay; only the receipt snapshot may supply timed data below.
     }
-    if (!this.prepare) {
+    {
       // Coalescing can request a different extent when asynchronous cache
       // completion changes. Assemble it only from already-verified local
       // coverage; timed queries must never download a missing range.
@@ -133,6 +133,20 @@ export class RangeStorage implements Source {
           at = end;
         }
         this.localAssemblies++;
+        if (this.prepare) {
+          const receipt = {
+            file,
+            sha256: createHash("sha256").update(data).digest("hex"),
+            bytes: length,
+            key,
+            offset,
+          };
+          const temp = path + "." + randomUUID();
+          await writeFile(temp, data);
+          await rename(temp, path);
+          await writeFile(path + ".json", JSON.stringify(receipt));
+          this.receipts.set(file, receipt);
+        }
         return data;
       }
     }
