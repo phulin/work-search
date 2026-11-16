@@ -159,6 +159,7 @@ if (
           "suffix16-without-fences",
           "suffix16-serial",
           "suffix16-without-intervals",
+          "suffix16-without-phrase-ranks",
           "suffix8-max",
         ].includes(p),
     ))
@@ -200,6 +201,9 @@ const control = await import(
   suffixIntervals = manifest?.files.intervals
     ? new Uint8Array(await readFile(suffixPath + "/intervals"))
     : undefined,
+  suffixPhraseRanks = manifest?.phraseRanks
+    ? new Uint8Array(await readFile(suffixPath + "/" + manifest.phraseRanks))
+    : undefined,
   files = new Map<string, ReturnType<typeof open>>();
 if (
   suffixFences &&
@@ -213,6 +217,12 @@ if (
     manifest.files.intervals.sha256
 )
   throw Error("Suffix intervals digest differs");
+if (
+  suffixPhraseRanks &&
+  createHash("sha256").update(suffixPhraseRanks).digest("hex") !==
+    manifest.files[manifest.phraseRanks].sha256
+)
+  throw Error("Suffix phrase rankings digest differs");
 storage.include(
   [...new DocumentDirectory(assets.documents!).groups()].map((g) => ({
     key: g.key,
@@ -338,6 +348,10 @@ async function query(s: any, plan: string, prepare: boolean) {
               plan === "suffix16-without-intervals"
                 ? undefined
                 : suffixIntervals,
+            phraseRanks:
+              plan === "suffix16-without-phrase-ranks"
+                ? undefined
+                : suffixPhraseRanks,
           },
         )
       : undefined;
@@ -361,7 +375,8 @@ async function query(s: any, plan: string, prepare: boolean) {
             plan === "suffix16-without-heads" ||
             plan === "suffix16-without-fences" ||
             plan === "suffix16-serial" ||
-            plan === "suffix16-without-intervals",
+            plan === "suffix16-without-intervals" ||
+            plan === "suffix16-without-phrase-ranks",
         });
   const body = JSON.stringify(actual),
     wallMs = performance.now() - start,
@@ -445,6 +460,7 @@ const provenance = {
         "ranking-heads",
         "fences",
         "intervals",
+        "phrase-ranks",
         "boolean-rank",
         "evidence",
         "format",

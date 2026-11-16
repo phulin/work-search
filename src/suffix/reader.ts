@@ -11,6 +11,7 @@ import { decodeRankingHeads } from "./ranking-heads.js";
 import { quantizerForMaximum } from "./format.js";
 import { SuffixFences } from "./fences.js";
 import { PhraseIntervals } from "./intervals.js";
+import { PhraseRanks } from "./phrase-ranks.js";
 export type SuffixRead = (
   file: string,
   offset: number,
@@ -57,6 +58,7 @@ export class SuffixReader {
     rankingSkippedBlocks: 0,
     rankingPrefetchUnused: 0,
     intervalHits: 0,
+    phraseRankHits: 0,
   };
   private slots = new Semaphore(6);
   private cache = new Lru<Uint8Array>(8 * 1048576);
@@ -65,11 +67,13 @@ export class SuffixReader {
   private directoryPending = new Map<number, Promise<SuffixBlock[]>>();
   private fences?: SuffixFences;
   private intervals?: PhraseIntervals;
+  private phraseRanks?: PhraseRanks;
   get buffers() {
     return {
       bundledBytes:
         (this.fences?.bytes.byteLength ?? 0) +
-        (this.intervals?.bytes.byteLength ?? 0),
+        (this.intervals?.bytes.byteLength ?? 0) +
+        (this.phraseRanks?.bytes.byteLength ?? 0),
       retainedColumnBytes: this.cache.bytes,
       peakRetainedColumnBytes: this.cache.peak,
       retainedDirectoryBytes: this.directories.bytes,
@@ -83,6 +87,7 @@ export class SuffixReader {
     readonly options: {
       rankingLookahead?: number;
       intervals?: Uint8Array;
+      phraseRanks?: Uint8Array;
     } = {},
   ) {
     if (manifest.format !== "word-suffix-1" || manifest.fixed.titleBoost !== 2)
@@ -101,6 +106,27 @@ export class SuffixReader {
         manifest.corpusGeneration,
         manifest.rows,
       );
+    if (options.phraseRanks)
+      this.phraseRanks = new PhraseRanks(
+        options.phraseRanks,
+        manifest.corpusGeneration,
+        manifest.rows,
+        manifest.count,
+      );
+  }
+  /** The omitted-score bound must lose strictly, including possible ties.
+   * Cursor/deeper pages keep the complete suffix scan. */
+  phraseRanking(phrase: Uint32Array, limit: number, after?: unknown) {
+    if (after || limit < 1) return;
+    const record = this.phraseRanks?.lookup(phrase);
+    if (!record || record.entries.length < limit) return;
+    const ordered = record.entries.slice().sort((a, b) => b.lower - a.lower),
+      threshold = ordered[limit - 1].lower;
+    if (record.tailUpper >= threshold) return;
+    this.stats.phraseRankHits++;
+    return ordered
+      .filter((e) => e.upper >= threshold)
+      .sort((a, b) => a.doc - b.doc);
   }
   async read(file: string, offset: number, length: number, compressed = true) {
     const key = `${file}:${offset}:${length}:${compressed}`;

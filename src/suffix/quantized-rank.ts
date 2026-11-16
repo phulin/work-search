@@ -17,6 +17,30 @@ export async function rankQuantizedRows(
   options: SuffixRankOptions,
   rescore: (documents: Uint32Array) => Promise<Float64Array>,
 ) {
+  const bundled = options.rangeMax
+    ? reader.phraseRanking(phrase, options.limit, options.after)
+    : undefined;
+  if (bundled) {
+    reader.stats.rescoreCandidates += bundled.length;
+    const scores = await rescore(Uint32Array.from(bundled, (e) => e.doc));
+    if (scores.length !== bundled.length)
+      throw Error("Incomplete suffix score completion");
+    return bundled
+      .map((e, i) => {
+        const score = scores[i];
+        if (!Number.isFinite(score) || score < e.lower || score > e.upper)
+          throw Error("Suffix quantization bound violated");
+        return {
+          doc: e.doc,
+          score,
+          row: e.doc % 4096,
+          first: e.position % 2 ** 31,
+          titleOnly: e.position >= 2 ** 31,
+        };
+      })
+      .sort((a, b) => b.score - a.score || a.doc - b.doc)
+      .slice(0, options.limit);
+  }
   const heap = new Heap(options.limit),
     proven = new Heap(options.limit),
     refined = new Heap(options.limit),

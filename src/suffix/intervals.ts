@@ -101,4 +101,21 @@ export class PhraseIntervals {
       end: this.view.getUint32(at + 20, true),
     };
   }
+  *entries(): Generator<PhraseInterval> {
+    for (let i = 0; i < this.count; i++) {
+      const at = HEADER + i * RECORD,
+        length = this.view.getUint8(at),
+        words = Array.from(
+          { length },
+          (_, j) =>
+            this.view.getUint16(at + 1 + j * 3, true) +
+            this.view.getUint8(at + 3 + j * 3) * 65536,
+        );
+      yield {
+        words,
+        first: this.view.getUint32(at + 16, true),
+        end: this.view.getUint32(at + 20, true),
+      };
+    }
+  }
 }

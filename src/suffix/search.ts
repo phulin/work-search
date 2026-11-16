@@ -79,7 +79,15 @@ export async function searchWithSuffix(
     };
   const conjunction = scoredConjunction(ast),
     standalone =
-      ast.kind === "phrase" && ast.terms.length >= 2 && ast.terms.length <= 5;
+      ast.kind === "phrase" && ast.terms.length >= 2 && ast.terms.length <= 5,
+    ordinaryPlan =
+      terms.size === queryTerms(ast).length
+        ? packetPlan(ast, terms, root, options, packages)
+        : undefined;
+  // A selective ordinary anchor can disprove a conjunction before fetching
+  // its phrase intervals. Compare that path before opening score columns too.
+  if (!standalone && ordinaryPlan?.kind === "documents")
+    return engine.search(q, reader, options);
   // Stored scores cover both fields. Field-restricted searches use exact
   // suffix evidence with the ordinary scorer rather than weak all-field bounds.
   if ((standalone || conjunction) && field === "all") {
@@ -254,10 +262,7 @@ export async function searchWithSuffix(
   }
   // Keep cheap complete-term and candidate-document plans before interval I/O.
   // General Boolean ranking retains the original distinct-word term scorer.
-  if (
-    terms.size === queryTerms(ast).length &&
-    packetPlan(ast, terms, root, options, packages).kind !== "blocks"
-  )
+  if (ordinaryPlan?.kind === "complete-terms")
     return engine.search(q, reader, options);
   const evidence = new SuffixEvidence();
   await Promise.all(
