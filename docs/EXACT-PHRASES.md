@@ -7,11 +7,10 @@ four-token phrase only the middle pair covers the whole expression. For three
 tokens either edge pair can cover it. Longer phrases retain ordinary exact
 verification; no partial context is treated as proof.
 
-Every observed pair has complete positions and one previous/next token per
-occurrence, separately by field. On the retained 1M corpus this covers
-44,995,185 pairs and 1,497,515,111 occurrences. The 44,529,289 small pairs retain
-their complete inline context; every remaining pair (465,896) has a complete
-external stream. N=100/M=1000 affects candidate planning only, never storage.
+Complete context construction retains positions and one previous/next token
+per occurrence, separately by field. Small pairs keep inline context; larger
+pairs have complete external streams. Common-anchor exclusions affect candidate
+planning, never storage coverage.
 
 The bundle contains hot descriptors for 2,000 corpus-ranked pairs. This is a
 metadata allocation, not a coverage limit. All other descriptors are reached
@@ -33,7 +32,6 @@ The positional payload uses the existing independently decodable pair packets,
 bounded by 128 documents and encoded bytes. Packets are self-framing. Complete
 execution therefore needs extent addresses, not one bundled route per packet.
 This avoids bundling a route for every chunk or a descriptor for every pair.
-Complete external streams occupy 14,905,267,963 bytes in 889 immutable objects.
 
 The builder streams complete-pair occurrence partitions and emits 32 MiB immutable
 containers. It verifies every external pair's total and per-field document and
@@ -44,7 +42,6 @@ No corpus text is read during query verification. Four local construction
 processes handle disjoint partitions. Counted scatter fills one bounded numeric
 partition buffer instead of appending millions of small files. Deterministic ID
 reservations allow independent, resumable output; they reserve no storage bytes.
-The largest numeric partition buffer in this build was 468,664,288 bytes.
 
 ## Planning and execution
 
@@ -129,51 +126,20 @@ order. Only verified matches update the competitive threshold. Exact totals and
 search-after retain their existing behavior. Winner presentation uses the same
 metadata, passages and excerpt selection.
 
-Counters separate pair-source bytes/ranges/occurrences from ordinary word-position
-blocks and integers, score blocks/postings/waves, winner reads and active-buffer
-estimates. Buffer accounting is not a native heap-peak measurement. New local
-and live comparisons must distinguish application reuse from shared-page reuse
-and a genuinely new isolate.
+## Construction and validation
 
-## Reproduce the retained 1M experiment
-
-The context builder consumes the complete-pair construction's streaming
-occurrence partitions, vocabulary and corpus statistics, and the current base
-index's membership packets. It does not require an obsolete serving decoder.
-Its output links immutable base assets locally and owns its new positional
-objects. Retain the base index while using that local view.
+The context builder consumes complete-pair occurrence partitions, vocabulary,
+corpus statistics, and the base index's membership packets. It links immutable
+base assets locally and owns its new positional objects. Retain the base index
+while using that local view.
 
 ```sh
 CWS_CONTEXT_CONCURRENCY=4 yarn node --import tsx scripts/build-exact-phrases.ts \
-  work/columnar-complete-pairs-1m work/verification-1m work/complete-context-v2-1m
-
-yarn node --import tsx scripts/validate-pair-context.ts work/complete-context-v2-1m
-
-CWS_EXACT_LABEL=complete-context CWS_REPRESENTATIVE_REPEATS=3 \
-  yarn node --import tsx bench/columnar/run-exact-phrases.ts
-
-# Publish only this independent context generation, then deploy an isolated trial.
-yarn node --import tsx scripts/publish-exact-phrases.ts work/complete-context-v2-1m
-CWS_MEMBERSHIP_DIR=work/complete-context-v2-1m \
-  yarn node --import tsx scripts/deploy-columnar.ts \
-  work/complete-context-v2-1m work-search-cws-phrase-1m --deploy-only
+  PAIR_BUILD_DIR BASE_INDEX_DIR OUTPUT_DIR
+yarn node --import tsx scripts/validate-pair-context.ts OUTPUT_DIR
 ```
 
-Local comparisons expect the separately frozen pre-change source and base index
-views described in the benchmark report. The builder and serving runtime have no
-dependency on that benchmark control.
-
-## Rejected experiments and remaining costs
-
-A storage-budget selection and a subsequent top-2,000 pool omitted useful
-complete phrase sources. Both coverage restrictions were rejected; only the
-bundled metadata now uses the corpus-ranked hot pool.
-Per-chunk bundled directories were replaced with extents. Per-document async
-emission was replaced with numeric batches. Repeated binary searches while
-building candidate masks were replaced with numeric Boolean truth columns.
-
-Forcing a global pair scan displaced cheap candidate-document continuations and
-regressed admission and Rule 16. The normal path now retains those measured
-alternatives. Exact phrase execution still leaves scoring work: broad match sets
-can touch many score pages and fetch waves. This change does not redesign the
-score layout, context encoding, presentation format or excerpt algorithm.
+Validation checks complete stream coverage and field counts against membership.
+Publication and serving verify generation identity before combining context with
+the base index. Runtime counters distinguish pair-source reads, ordinary word
+positions, score blocks, winner reads, and active buffer accounting.

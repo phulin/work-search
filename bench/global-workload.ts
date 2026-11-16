@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 const workload = JSON.parse(
-  await readFile("bench/results/flp100k-queries.json", "utf8"),
+  await readFile("bench/fixtures/flp-queries.json", "utf8"),
 );
 const evaluation = workload.eval ?? workload.test ?? workload.queries;
 if (!Array.isArray(evaluation)) throw Error("Missing evaluation workload");

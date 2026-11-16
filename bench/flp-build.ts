@@ -1,8 +1,9 @@
 import { build } from "../src/builder/build.js";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { repack } from "./repack.js";
 const prefix = process.env.FLP_PREFIX ?? "flp";
 const buildsFile = `bench/results/${prefix}-builds.json`;
+await mkdir("bench/results", { recursive: true });
 const root = process.env.FLP_ROOT ?? "bench/generated/flp",
   workload = (await readFile(root + "/training.txt", "utf8"))
     .split("\n")

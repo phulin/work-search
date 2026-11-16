@@ -33,7 +33,7 @@ if (
 }
 
 const workload = JSON.parse(
-  await readFile("bench/results/flp100k-queries.json", "utf8"),
+  await readFile("bench/fixtures/flp-queries.json", "utf8"),
 ).train.map((q: any) => q.q);
 if (
   !(await stat(out + "/manifest.json").then(

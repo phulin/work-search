@@ -1,28 +1,58 @@
-import { it, expect } from "vitest";
+import { it, expect, onTestFinished } from "vitest";
 import { Miniflare } from "miniflare";
 import { spawnSync } from "node:child_process";
 import { readFile, mkdtemp, writeFile, rm, readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { pageIndex } from "../src/builder/page-index.js";
 import { build } from "../src/builder/build.js";
 it("executes actual bundled Worker in workerd with local and ranged R2 postings", async () => {
+  const root = await mkdtemp(join(tmpdir(), "worker-runtime-")),
+    dist = join(root, "dist");
+  onTestFinished(() => rm(root, { recursive: true, force: true }));
+  // Compile this engine explicitly: the root Wrangler config serves the
+  // columnar engine and points at generated deployment data.
+  await writeFile(join(root, "bundle.bin"), new Uint8Array());
+  await writeFile(
+    join(root, "entry.ts"),
+    `import binary from './bundle.bin';
+import {openIndex} from ${JSON.stringify(resolve("src/format/paged.ts"))};
+import {R2Storage} from ${JSON.stringify(resolve("src/storage/r2.ts"))};
+import {handler} from ${JSON.stringify(resolve("src/worker/handler.ts"))};
+import {SearchRuntime} from ${JSON.stringify(resolve("src/query/runtime.ts"))};
+const index=openIndex(new Uint8Array(binary));let runtime;
+export default {fetch(request,env){
+  runtime??=new SearchRuntime(Number(env.CACHE_MIB??4)*1048576);
+  return handler(index,new R2Storage(env.INDEX,index.generation),env.DIAGNOSTICS==='true',runtime)(request);
+}};`,
+  );
+  const config = join(root, "wrangler.json");
+  await writeFile(
+    config,
+    JSON.stringify({
+      name: "legacy-worker-test",
+      main: join(root, "entry.ts"),
+      compatibility_date: "2026-11-01",
+      rules: [{ type: "Data", globs: ["**/*.bin"], fallthrough: true }],
+    }),
+  );
   const dry = spawnSync(
     process.execPath,
     [
       "node_modules/wrangler/bin/wrangler.js",
       "deploy",
       "--dry-run",
+      "--config",
+      config,
       "--outdir",
-      "dist",
+      dist,
     ],
     { encoding: "utf8" },
   );
   expect(dry.status, dry.stdout + dry.stderr).toBe(0);
-  const binaryName = (await readFile("dist/index.js", "utf8")).match(
+  const binaryName = (await readFile(join(dist, "entry.js"), "utf8")).match(
     /["\']\.\/([^"\']+\.bin)["\']/,
   )![1];
-  const root = await mkdtemp(join(tmpdir(), "worker-runtime-"));
   await writeFile(
     join(root, "docs"),
     [
@@ -69,15 +99,15 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
   ] as const) {
     const mf = new Miniflare({
       modules: [
-        { type: "ESModule", path: join(process.cwd(), "dist/index.js") },
+        { type: "ESModule", path: join(dist, "entry.js") },
         {
           type: "Data",
-          path: join(process.cwd(), "dist", binaryName),
+          path: join(dist, binaryName),
           contents: await readFile(join(root, name, "bundle.bin")),
         },
       ],
-      modulesRoot: process.cwd(),
-      scriptPath: join(process.cwd(), "dist/index.js"),
+      modulesRoot: root,
+      scriptPath: join(dist, "entry.js"),
       r2Buckets: ["INDEX"],
       bindings: { DIAGNOSTICS: "true", CACHE_MIB: "0" },
     });
@@ -160,15 +190,15 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
   }
   const cachedWorker = new Miniflare({
     modules: [
-      { type: "ESModule", path: join(process.cwd(), "dist/index.js") },
+      { type: "ESModule", path: join(dist, "entry.js") },
       {
         type: "Data",
-        path: join(process.cwd(), "dist", binaryName),
+        path: join(dist, binaryName),
         contents: await readFile(join(root, "remote", "bundle.bin")),
       },
     ],
-    modulesRoot: process.cwd(),
-    scriptPath: join(process.cwd(), "dist/index.js"),
+    modulesRoot: root,
+    scriptPath: join(dist, "entry.js"),
     r2Buckets: ["INDEX"],
     bindings: { DIAGNOSTICS: "true", CACHE_MIB: "2" },
   });
@@ -200,5 +230,4 @@ it("executes actual bundled Worker in workerd with local and ranged R2 postings"
   } finally {
     await cachedWorker.dispose();
   }
-  await rm(root, { recursive: true, force: true });
 }, 60000);

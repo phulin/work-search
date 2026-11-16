@@ -11,12 +11,12 @@ import { resolve } from "node:path";
 import { spawn } from "node:child_process";
 import { benchmarkToken } from "../bench/columnar/token.js";
 
-const [out] = process.argv.slice(2);
-if (!out)
-  throw Error("Use OUTPUT_DIRECTORY; it must be an empty benchmark directory");
-const archive = gunzipSync(
-  await readFile("bench/columnar/control/construction-v2.tar.gz"),
-);
+const [out, archivePath] = process.argv.slice(2);
+if (!out || !archivePath)
+  throw Error(
+    "Usage: prepare-construction-control.ts EMPTY_OUTPUT_DIRECTORY CONTROL_ARCHIVE.tar.gz",
+  );
+const archive = gunzipSync(await readFile(archivePath));
 const archiveSha256 = createHash("sha256").update(archive).digest("hex");
 if (
   archiveSha256 !==

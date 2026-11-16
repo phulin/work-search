@@ -11,3 +11,15 @@ work/
 __pycache__/
 
 /target/
+
+# Generated experiment output belongs outside version control.
+.DS_Store
+bench/**/results/
+bench/**/*.md
+bench/rust-builder/profiles/
+bench/columnar/control/*.tar.gz
+*.cpuprofile
+*.cpuprofile.gz
+*.heapprofile
+*.heapprofile.gz
+data/*-research/

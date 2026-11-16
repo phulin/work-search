@@ -25,14 +25,9 @@ For a numeric record no larger than the complete-read threshold, the initial rea
 contains all its numeric data. For larger records, the initial read contains
 only the header and term-block directory. The executor fetches selected frequency
 blocks in parallel, then the required stable position chunks in parallel. It
-never scans a forward token array to find a query term. Chunk sizes of 16, 32,
-and 64 KiB are supported; the first full 1M construction uses 32 KiB position
-chunks and a 1 MiB complete-numeric first-read threshold. A 32 KiB threshold
-was rejected after simulated reads exposed excessive dependent requests for
-long candidates; 128 KiB still added dozens of reads to some candidate sets.
-Every numeric record in the retained 1M corpus fits below 1 MiB (the largest is
-606,182 bytes). The threshold can change by rebuilding the bundled document
-directory, without rewriting document payloads.
+never scans a forward token array to find a query term. Position chunk sizes of 16, 32, and 64 KiB are supported. The complete-numeric
+first-read threshold is recorded in the bundled document directory and can be
+changed by rebuilding that directory without rewriting document payloads.
 
 Candidate verification does not fetch display metadata or text. Winners fetch
 metadata and the existing independently compressed passage chunks by direct
@@ -82,28 +77,11 @@ inline context. It has no frequency-rank or storage-budget coverage cutoff.
 The [complete phrase design](EXACT-PHRASES.md) describes routed EPR1 extents,
 bounded construction, coverage validation and independently executable phrases.
 
-## Construction and experiments
+## Construction
 
 Production document construction writes CDP4 directly from corpus partitions.
-`bench/columnar/rebuild-compact.ts` is a local migration tool for the retained
-1M corpus; obsolete decoders are imported only from a separately frozen source
-tree, not retained in production. Its document conversion is bounded to one
-source container and one output document group, plus one document's working
-arrays. Term conversion uses bounded caches and an on-disk SQLite directory.
-
 `scripts/build-exact-phrases.ts` builds complete context and rewrites routed
-membership packets with direct extents. The obsolete subset-only builder was
-removed. `bench/columnar/attach-pair-positions.ts` remains a historical conversion
-tool for frozen benchmark data.
-`bench/columnar/build-verification-control.ts` reconstructs the frozen CDP3
-arrangement with exactly the candidate's compressed passage bytes, so format
-comparisons do not measure an excerpt change. The simulation harness supports
-separate control and candidate roots on identical corpus input.
-
-Rejected approaches: fetching full document text for rejected candidates;
-retaining a second legacy production decoder; scanning complete token arrays
-for selective verification; fetching an arbitrary number of context chunks
-before deciding whether they are economical. Broad buffered pair-position scans
-are now implemented by the complete phrase executor. Separate selected phrase
-postings, document reordering and a new word-membership layer remain future
-experiments.
+membership packets with direct extents. Construction validates pair counts,
+field counts, generation identity, and coverage before publication. Local
+migration and comparison helpers remain under `bench/columnar`; their generated
+inputs and outputs are kept outside version control.

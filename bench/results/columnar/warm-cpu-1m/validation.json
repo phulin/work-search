@@ -1,9 +1,0 @@
-{
-  "sourceOracleContracts": 160,
-  "repositoryTests": 246,
-  "testFiles": 66,
-  "exactRankScores": true,
-  "sourceSearchSha256": "271bea1ff3be689f53f6be613eba28a86690d3338d57c23dd8f4a3fb1fa74760",
-  "kernelSha256": "57d219718b7e73214d41c71864b242188767bb89efeecd31e22759c389f19f51",
-  "note": "Independent exhaustive tests cover Boolean/phrase negation, fields, noninteger boosts, ties, pagination, exact totals and false phrase leaders. All work local."
-}

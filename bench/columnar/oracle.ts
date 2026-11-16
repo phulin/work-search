@@ -8,7 +8,7 @@ import { demoWorkload } from "../demo-workload.js";
 import { globalQueries } from "../global-workload.js";
 const existing = [...demoWorkload, ...globalQueries],
   data = JSON.parse(
-    await readFile("bench/results/flp100k-queries.json", "utf8"),
+    await readFile("bench/fixtures/flp-queries.json", "utf8"),
   );
 const heldout = (data.eval ?? data.test ?? data.queries).filter(
   (q: any) => !existing.some((p) => p.q === q.q),

@@ -1,6 +1,0 @@
-{
-  "revision": "b322b8b1ee7028ae4c84c24109c8f7fff886c453",
-  "originalSearchSha256": "fa780e690d76ab3662d7907c7dceea70e6ba8325d68589f262a315dcdc992d6d",
-  "instrumentedSearchSha256": "4cdbf775b65938718373e6d820851e38cccaa297ec2c4a95af03e8abc93ba406",
-  "changes": "Counter-only annotations: same many()/prefetch() calls, same decode and execution order. Reader.scores defaults to many(), without coalescing."
-}
