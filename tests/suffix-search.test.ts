@@ -276,17 +276,20 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
             .sort((a, b) => b.score - a.score || a.doc - b.doc),
           options = { field, limit: 7, exactTotal: false },
           evidence = new SuffixEvidence();
-        const collect = async (n: ReturnType<typeof parse>): Promise<void> => {
+        const collect = async (
+          n: ReturnType<typeof parse>,
+          target = evidence,
+        ): Promise<void> => {
           if (n.kind === "phrase")
-            await evidence.add(
+            await target.add(
               n.terms,
               Uint32Array.from(n.terms, (w) => ids.get(w)!),
               suffix(),
             );
-          else if (n.kind === "not") await collect(n.child);
+          else if (n.kind === "not") await collect(n.child, target);
           else if ("left" in n) {
-            await collect(n.left);
-            await collect(n.right);
+            await collect(n.left, target);
+            await collect(n.right, target);
           }
         };
         await collect(ast);
@@ -297,6 +300,22 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
         expect(
           result.results.map((h) => h.doc),
           q + field,
+        ).toEqual(expected.slice(0, 7).map((h) => h.doc));
+        const staged = new SuffixEvidence(),
+          parallel = await engine.search(q, new Reader(root, source), {
+            ...options,
+            phraseExecution: {
+              generation: root.generation,
+              execution: staged,
+              prepare: async () => {
+                await collect(ast, staged);
+                return true;
+              },
+            },
+          });
+        expect(
+          parallel.results.map((h) => h.doc),
+          q + field + " staged",
         ).toEqual(expected.slice(0, 7).map((h) => h.doc));
         for (const bits of [8, 16] as const) {
           const actual = await searchWithSuffix(
@@ -386,6 +405,48 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
           }
         }
       }
+    let unblock!: () => void,
+      called = 0;
+    const gate = new Promise<void>((resolve) => {
+      unblock = resolve;
+    });
+    class PendingDictionary extends ColumnarIndex {
+      override async terms(...args: Parameters<ColumnarIndex["terms"]>) {
+        const found = super.terms(...args);
+        await gate;
+        return found;
+      }
+    }
+    const concurrent = new PendingDictionary(
+        root,
+        undefined,
+        td,
+        undefined,
+        dd,
+      ),
+      pendingResult = await concurrent.search(
+        '"a b" AND "c d"',
+        new Reader(root, source),
+        {
+          limit: 7,
+          phraseExecution: {
+            generation: root.generation,
+            execution: new SuffixEvidence(),
+            prepare: async () => {
+              called++;
+              unblock();
+              return false;
+            },
+          },
+        },
+      ),
+      ordinary = await engine.search(
+        '"a b" AND "c d"',
+        new Reader(root, source),
+        { limit: 7 },
+      );
+    expect(called).toBe(1);
+    expect(pendingResult.results).toEqual(ordinary.results);
     const sparse = new SuffixEvidence();
     await sparse.add(["a", "b"], Uint32Array.of(1, 2), suffix());
     await sparse.window(1000, 1008);

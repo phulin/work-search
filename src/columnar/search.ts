@@ -103,7 +103,13 @@ export type PhraseExecution = Pick<
 };
 export interface Options {
   /** Internal, generation-checked exact phrase evidence. Never read from HTTP input. */
-  phraseExecution?: { generation: string; execution: PhraseExecution };
+  phraseExecution?: {
+    generation: string;
+    execution: PhraseExecution;
+    /** Starts after initial read planning, alongside the other necessary reads.
+     * False means the optional source supplied no usable evidence. */
+    prepare?: () => Promise<boolean>;
+  };
   documentFilter?: DocumentFilter;
   mode?: "and" | "or";
   limit?: number;
@@ -516,6 +522,9 @@ export class ColumnarIndex {
             options,
             exact?.covered,
           ),
+          options.phraseExecution?.prepare?.().then((available) => {
+            if (!available) exact = undefined;
+          }),
         ]),
       allExactPlans = [
         ...bundledExactPlans,
@@ -576,6 +585,12 @@ export class ColumnarIndex {
     reader.stats.plannedPresenceLists = presenceRanks.length;
     reader.stats.estimatedPairCandidates =
       membershipRead?.expectedCandidates ?? 0;
+    const supplied = selection
+        ? exact?.candidateAnchor?.(ast, field)
+        : undefined,
+      suppliedCandidates = supplied
+        ? Uint32Array.from(supplied.values())
+        : undefined;
     let loadedMembership = selection
       ? intersectMembershipAnchor(
           membershipAnchor(
@@ -586,7 +601,15 @@ export class ColumnarIndex {
           unigramCandidates,
         )
       : exact?.candidateAnchor?.(ast, field);
-    reader.stats.anchorBufferBytes += loadedMembership?.bufferBytes ?? 0;
+    if (loadedMembership && suppliedCandidates) {
+      loadedMembership = intersectMembershipAnchor(
+        loadedMembership,
+        suppliedCandidates,
+      );
+    }
+    reader.stats.anchorBufferBytes +=
+      (loadedMembership?.bufferBytes ?? 0) +
+      (suppliedCandidates?.byteLength ?? 0);
     if (unigramCandidates) {
       reader.stats.anchorUnigramCandidates = unigramCandidates.length;
       reader.stats.anchorIntersectionCandidates = loadedMembership?.count ?? 0;
@@ -610,15 +633,17 @@ export class ColumnarIndex {
       if (
         selection &&
         loadedMembership &&
-        [...selection.selections.values()].some((s) =>
-          s.records.some(
-            (r) =>
-              (!r.supplementalContext && r.positionDirectory) ||
-              (complete &&
-                s.words.length > 2 &&
-                r.completePositions &&
-                !r.supplementalContext),
-          ),
+        [...selection.selections.values()].some(
+          (s) =>
+            !exact?.covered(s.words) &&
+            s.records.some(
+              (r) =>
+                (!r.supplementalContext && r.positionDirectory) ||
+                (complete &&
+                  s.words.length > 2 &&
+                  r.completePositions &&
+                  !r.supplementalContext),
+            ),
         )
       ) {
         const docs = Uint32Array.from(
@@ -630,7 +655,9 @@ export class ColumnarIndex {
             ? docs.reduce((n, doc) => n + basePackages.byteLength!(doc), 0)
             : docs.length * (basePackages?.averageBytes ?? 16384);
         if (complete && docs.length < 128) return false;
-        const selections = [...selection.selections.values()],
+        const selections = [...selection.selections.values()].filter(
+            (s) => !exact?.covered(s.words),
+          ),
           budget = Math.floor(
             Math.min(4 * 1048576, verificationBytes / 2) / selections.length,
           ),
@@ -658,12 +685,15 @@ export class ColumnarIndex {
         );
         if (!enriched.some(Boolean)) return false;
         loadedMembership = intersectMembershipAnchor(
-          membershipAnchor(
-            selection,
-            new Map([...terms].map(([name, t]) => [name, t.id])),
-            field,
+          intersectMembershipAnchor(
+            membershipAnchor(
+              selection,
+              new Map([...terms].map(([name, t]) => [name, t.id])),
+              field,
+            ),
+            unigramCandidates,
           ),
-          unigramCandidates,
+          suppliedCandidates,
         );
         reader.stats.membershipCandidates = loadedMembership.count;
         return true;

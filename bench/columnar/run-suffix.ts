@@ -102,7 +102,7 @@ const model = {
     sharedMs: 2,
     sharedMiBPerSecond: 1000,
     jitterMs: 0,
-    seed: 879133,
+    seed: Number(process.env.CWS_SEED ?? 879133),
   },
   storage = new RangeStorage(
     root,
@@ -207,7 +207,13 @@ const control = await import(
       )
     : undefined,
   suffixBeforeFences = plans.includes("suffix-before")
-    ? new Uint8Array(await readFile(suffixPath + "/fences"))
+    ? new Uint8Array(
+        await readFile(
+          suffixPath +
+            "/" +
+            (process.env.CWS_BEFORE_FENCES ?? manifest.fences ?? "fences"),
+        ),
+      )
     : undefined,
   suffixIntervals = manifest?.files.intervals
     ? new Uint8Array(await readFile(suffixPath + "/intervals"))
@@ -448,6 +454,12 @@ const provenance = {
   documents: root.count,
   index,
   suffixGeneration: manifest?.generation,
+  beforeFences: plans.includes("suffix-before")
+    ? {
+        file: process.env.CWS_BEFORE_FENCES ?? manifest.fences ?? "fences",
+        sha256: createHash("sha256").update(suffixBeforeFences!).digest("hex"),
+      }
+    : undefined,
   code: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
   control: controlCommit,
   harnessSha256: Object.fromEntries(
@@ -573,7 +585,7 @@ try {
       output,
       gzipSync(JSON.stringify({ ...provenance, preparation, rows: [] })),
     );
-    let seed = 879133;
+    let seed = model.seed;
     const random = () => {
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
       return seed / 2 ** 32;

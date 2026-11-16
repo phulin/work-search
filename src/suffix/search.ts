@@ -43,24 +43,44 @@ export async function searchWithSuffix(
   )
     return engine.search(q, reader, options);
   const ast = parse(q, options.mode, tokenizerFor(root.analysis)),
-    phrases: string[][] = [];
-  const visit = (n: Node): void => {
-    if (
-      n.kind === "phrase" &&
-      n.terms.length > 1 &&
-      !phrases.some((p) => p.join("\0") === n.terms.join("\0"))
-    )
-      phrases.push(n.terms);
-    else if (n.kind === "not") visit(n.child);
+    phrases: string[][] = [],
+    positions = new Set<string>(),
+    conjunction = scoredConjunction(ast),
+    standalone =
+      ast.kind === "phrase" && ast.terms.length >= 2 && ast.terms.length <= 5;
+  const visit = (n: Node, needsPositions = false): void => {
+    if (n.kind === "phrase") {
+      if (n.terms.length <= 1) return;
+      const key = n.terms.join("\0");
+      if (!phrases.some((p) => p.join("\0") === key)) phrases.push(n.terms);
+      if (needsPositions) positions.add(key);
+    } else if (n.kind === "not") visit(n.child, needsPositions);
     else if ("left" in n) {
-      visit(n.left);
-      visit(n.right);
+      visit(n.left, needsPositions || n.kind === "near");
+      visit(n.right, needsPositions || n.kind === "near");
     }
   };
   visit(ast);
+  if (!standalone && !conjunction && engine.membership) {
+    // A short pair packet proves a two-word Boolean condition in one wave.
+    // Suffix positions require boundary discovery and two aligned columns;
+    // keep that work only where proximity actually needs occurrence positions.
+    const eligible = phrases.filter(
+      (words) =>
+        words.length !== 2 ||
+        positions.has(words.join("\0")) ||
+        (engine.membership!.router.route(words[0], words[1])?.bytes ??
+          Infinity) > 1048576,
+    );
+    phrases.splice(0, phrases.length, ...eligible);
+  }
   if (!phrases.length) return engine.search(q, reader, options);
-  const terms = await engine.directory.lookup(queryTerms(ast), reader),
-    ids = (words: string[]) =>
+  const terms = await engine.directory.lookupBundled(queryTerms(ast));
+  // A rare word must not make every ordinary candidate read wait for term-ID
+  // discovery solely to enable this optional phrase source.
+  if (terms.size !== queryTerms(ast).length)
+    return engine.search(q, reader, options);
+  const ids = (words: string[]) =>
       Uint32Array.from(words, (w) => terms.get(w)?.id ?? 0),
     scoredWords = queryTerms(ast, true),
     field = options.field ?? "all",
@@ -82,13 +102,10 @@ export async function searchWithSuffix(
         engine.documentDirectory!.verificationSize(doc),
       load: (doc: number) => load(doc),
     };
-  const conjunction = scoredConjunction(ast),
-    standalone =
-      ast.kind === "phrase" && ast.terms.length >= 2 && ast.terms.length <= 5,
-    ordinaryPlan =
-      terms.size === queryTerms(ast).length
-        ? packetPlan(ast, terms, root, options, packages)
-        : undefined;
+  const ordinaryPlan =
+    terms.size === queryTerms(ast).length
+      ? packetPlan(ast, terms, root, options, packages)
+      : undefined;
   // A selective ordinary anchor can disprove a conjunction before fetching
   // its phrase intervals. Compare that path before opening score columns too.
   if (!standalone && ordinaryPlan && ordinaryPlan.kind !== "blocks")
@@ -270,14 +287,21 @@ export async function searchWithSuffix(
   if (ordinaryPlan?.kind === "complete-terms")
     return engine.search(q, reader, options);
   const evidence = new SuffixEvidence();
-  await Promise.all(
-    phrases.map((words) => evidence.add(words, ids(words), suffix)),
-  );
-  if (!phrases.some((p) => evidence.covered(p)))
+  const prepare = async () => {
+    await Promise.all(
+      phrases.map((words) => evidence.add(words, ids(words), suffix)),
+    );
+    return phrases.some((p) => evidence.covered(p));
+  };
+  if (ast.kind === "phrase" && !(await prepare()))
     return engine.search(q, reader, options);
   const result = await engine.search(q, reader, {
     ...options,
-    phraseExecution: { generation: root.generation, execution: evidence },
+    phraseExecution: {
+      generation: root.generation,
+      execution: evidence,
+      prepare: ast.kind === "phrase" ? undefined : prepare,
+    },
   });
   return {
     ...result,
