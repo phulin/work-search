@@ -176,10 +176,14 @@ async function worker(mode: string) {
  import {PairRouter} from ${JSON.stringify(source + "/columnar/pair-router.ts")};
  import {ExactPhraseDirectory} from ${JSON.stringify(source + "/columnar/exact-phrase-directory.ts")};
  import {Reader,Memory,Lru} from ${JSON.stringify(source + "/columnar/storage.ts")};
- ${!frozen ? `import {SuffixReader} from ${JSON.stringify(resolve("src/suffix/reader.ts"))};import {searchWithSuffix} from ${JSON.stringify(resolve("src/suffix/search.ts"))};` : ""}
- const isolateId=crypto.randomUUID(),root=${JSON.stringify(assets.root)}, manifest=${JSON.stringify(manifest)}, documents=new DocumentDirectory(${variable("documents.bin")}),
+ ${!frozen ? `import {SuffixReader,SuffixMemory} from ${JSON.stringify(resolve("src/suffix/reader.ts"))};import {searchWithSuffix} from ${JSON.stringify(resolve("src/suffix/search.ts"))};` : ""}
+ let isolateId;
+ const root=${JSON.stringify(assets.root)}, manifest=${JSON.stringify(manifest)}, documents=new DocumentDirectory(${variable("documents.bin")}),
  settings={router:new PairRouter(${variable("router.bin")}),exactPhrases:new ExactPhraseDirectory(${variable("exact.bin")}),presence:${JSON.stringify(assets.membership?.presence)},N:100,M:1000};
+ const pages=new Lru(12*1048576),decoded=new Lru(4*1048576)${!frozen ? ",suffixMemory=new SuffixMemory(manifest.generation)" : ""};
+ const scoped=(cache,namespace)=>({get:key=>cache.get(namespace+':'+key),set:(key,value,bytes)=>cache.set(namespace+':'+key,value,bytes),get bytes(){return cache.bytes;},get peak(){return cache.peak;}});
  export default {async fetch(request,env){
+ isolateId??=crypto.randomUUID();
  if(new URL(request.url).pathname==='/__gc') {const available=typeof globalThis.gc==='function';if(available)globalThis.gc();return Response.json({available});}
  const directory=new TermDirectory(${variable("directory.bin")},root.count),engine=new ColumnarIndex(root,undefined,directory,undefined,documents,settings);
  const input=await request.json(), run=input.runId;
@@ -190,9 +194,9 @@ async function worker(mode: string) {
  source={read:(key,offset,length)=>read('read',key,offset,length),readPage:async(key,offset,length)=>({data:await read('read',key,offset,length)}),
  readNamed:(key,length)=>read('named',key,0,length),readWhole:async(key,range)=>{const r=await invoke('whole',key,0,0,range);return {data:new Uint8Array(await r.arrayBuffer()),sha256:r.headers.get('sha256')??undefined};}},
  shared={get:async key=>{const r=await invoke('sharedGet',key);return r.headers.get('hit')==='1'?new Uint8Array(await r.arrayBuffer()):undefined;},put:async(key,bytes)=>{await invoke('sharedPut',key,0,0,undefined,bytes);}},
- memory=new Memory();memory.pages=new Lru(12*1048576);memory.decoded=new Lru(4*1048576);
+ memory=new Memory();memory.pages=scoped(pages,run);memory.decoded=scoped(decoded,run);
  const writes=[], reader=new Reader(root,source,memory,shared,run,p=>writes.push(p),{remaining:900}), start=performance.now();
- ${!frozen ? `const suffix=new SuffixReader(manifest,(file,offset,length)=>read('suffix',file,offset,length),${variable("suffix-fences.bin")},{intervals:${variable("suffix-intervals.bin")},phraseRanks:${variable("suffix-ranks.bin")},${manifest.numericPackets ? `numericIndex:${variable("suffix-numeric-index.bin")},` : ""}${manifest.phraseRankIndex ? `phraseRankIndex:${variable("suffix-rank-index.bin")}` : ""}});` : ""}
+ ${!frozen ? `const suffix=new SuffixReader(manifest,(file,offset,length)=>read('suffix',file,offset,length),${variable("suffix-fences.bin")},{memory:suffixMemory.scoped(run),intervals:${variable("suffix-intervals.bin")},phraseRanks:${variable("suffix-ranks.bin")},${manifest.numericPackets ? `numericIndex:${variable("suffix-numeric-index.bin")},` : ""}${manifest.phraseRankIndex ? `phraseRankIndex:${variable("suffix-rank-index.bin")}` : ""}});` : ""}
  const result=${frozen ? "await engine.search(input.q,reader,input.options)" : "await searchWithSuffix(engine,suffix,input.q,reader,input.options,{bits:16,rangeMax:true})"};
  const response=JSON.stringify({result,requestId:run,isolateId,wallMs:performance.now()-start,${!frozen ? "suffixBuffers:suffix.buffers," : ""}retainedPageBytes:memory.pages.bytes,retainedDecodedBytes:memory.decoded.bytes});
  await Promise.all(writes);return new Response(response,{headers:{'content-type':'application/json'}});
@@ -448,6 +452,8 @@ try {
           }).trim(),
           model,
           applicationCaches: "All application caches are new for every request",
+          cacheBudgets:
+            "Isolate-wide LRUs; request namespaces prevent cross-request hits",
           concurrency,
           memoryProfile,
           v8Flags: process.env.MINIFLARE_WORKERD_V8_FLAGS ?? null,
@@ -496,6 +502,8 @@ try {
           hash: assets.root.corpusHash,
         },
         applicationCaches: "All application caches are new for every request",
+        cacheBudgets:
+          "Isolate-wide LRUs; request namespaces prevent cross-request hits",
         v8Flags: process.env.MINIFLARE_WORKERD_V8_FLAGS ?? null,
         concurrency,
         memoryProfile,

@@ -40,7 +40,39 @@ async function inflate(raw: Uint8Array) {
     ).arrayBuffer(),
   );
 }
-/** No process-wide state: cold requests retain only bounded decoded columns. */
+type Cache<T> = Pick<Lru<T>, "get" | "set" | "bytes" | "peak">;
+export interface SuffixCaches {
+  generation: string;
+  columns: Cache<Uint8Array>;
+  directories: Cache<SuffixBlock[]>;
+}
+/** One bounded immutable-data budget per isolate and generation. In-flight
+ * operations stay request-local; another request cannot own their I/O. */
+export class SuffixMemory implements SuffixCaches {
+  readonly columns = new Lru<Uint8Array>(8 * 1048576);
+  readonly directories = new Lru<SuffixBlock[]>(4 * 1048576);
+  constructor(readonly generation: string) {}
+  /** Distinct namespaces enforce cold reads while sharing the total budget. */
+  scoped(namespace: string): SuffixCaches {
+    const scope = <T>(cache: Cache<T>): Cache<T> => ({
+      get: (key) => cache.get(namespace + ":" + key),
+      set: (key, value, bytes) =>
+        cache.set(namespace + ":" + key, value, bytes),
+      get bytes() {
+        return cache.bytes;
+      },
+      get peak() {
+        return cache.peak;
+      },
+    });
+    return {
+      generation: this.generation,
+      columns: scope(this.columns),
+      directories: scope(this.directories),
+    };
+  }
+}
+/** Query state is local; immutable decoded columns may use an isolate budget. */
 export class SuffixReader {
   readonly stats = {
     reads: 0,
@@ -70,11 +102,12 @@ export class SuffixReader {
     numericPackets: 0,
     numericBytes: 0,
     numericUnusedBlocks: 0,
+    memoryHits: 0,
   };
   private slots = new Semaphore(6);
-  private cache = new Lru<Uint8Array>(8 * 1048576);
+  private cache: Cache<Uint8Array>;
   private pending = new Map<string, Promise<Uint8Array>>();
-  private directories = new Lru<SuffixBlock[]>(4 * 1048576);
+  private directories: Cache<SuffixBlock[]>;
   private directoryPending = new Map<number, Promise<SuffixBlock[]>>();
   private fences?: SuffixFences;
   private intervals?: PhraseIntervals;
@@ -106,8 +139,14 @@ export class SuffixReader {
       phraseRanks?: Uint8Array;
       phraseRankIndex?: Uint8Array;
       numericIndex?: Uint8Array;
+      memory?: SuffixCaches;
     } = {},
   ) {
+    const memory = options.memory ?? new SuffixMemory(manifest.generation);
+    if (memory.generation !== manifest.generation)
+      throw Error("Suffix memory generation mismatch");
+    this.cache = memory.columns;
+    this.directories = memory.directories;
     if (manifest.format !== "word-suffix-1" || manifest.fixed.titleBoost !== 2)
       throw Error("Invalid suffix manifest");
     if (fences) this.fences = new SuffixFences(fences, manifest);
@@ -194,7 +233,10 @@ export class SuffixReader {
   async read(file: string, offset: number, length: number, compressed = true) {
     const key = `${file}:${offset}:${length}:${compressed}`;
     const old = this.cache.get(key);
-    if (old) return old;
+    if (old) {
+      this.stats.memoryHits++;
+      return old;
+    }
     let task = this.pending.get(key);
     if (!task) {
       task = this.slots.run(async () => {
@@ -275,13 +317,21 @@ export class SuffixReader {
     if (known) return known.end - known.first;
     const short = phrase.subarray(0, PREFIX_WORDS);
     if (phrase.length > PREFIX_WORDS) return 0;
-    return this.manifest.directory.reduce(
-      (n, g) =>
-        n +
-        (comparePhrase(g.low, short) === 0 && comparePhrase(g.high, short) === 0
-          ? g.end - g.first
-          : 0),
-      0,
+    const edges = this.fences?.bounds(phrase),
+      interior = edges
+        ? Math.max(0, edges[1].first - edges[0].first - edges[0].count)
+        : 0;
+    return Math.max(
+      interior,
+      this.manifest.directory.reduce(
+        (n, g) =>
+          n +
+          (comparePhrase(g.low, short) === 0 &&
+          comparePhrase(g.high, short) === 0
+            ? g.end - g.first
+            : 0),
+        0,
+      ),
     );
   }
   async expand(

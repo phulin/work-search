@@ -12,11 +12,57 @@ import {
   NumericDirectoryBuilder,
   NumericDirectory,
 } from "../src/suffix/numeric-packets.js";
-import { SuffixReader } from "../src/suffix/reader.js";
+import { SuffixReader, SuffixMemory } from "../src/suffix/reader.js";
 import { rankSuffix } from "../src/suffix/rank.js";
 import { rankSuffixConjunction } from "../src/suffix/boolean-rank.js";
 import { bm25 } from "../src/query/engine.js";
-import type { SuffixBlock, FixedScores } from "../src/suffix/format.js";
+import type {
+  SuffixBlock,
+  SuffixManifest,
+  FixedScores,
+} from "../src/suffix/format.js";
+
+it("bounds shared suffix memory across cold request namespaces and rejects another generation", async () => {
+  const generation = "a".repeat(64),
+    memory = new SuffixMemory(generation),
+    manifest = {
+      format: "word-suffix-1",
+      generation,
+      fixed: { titleBoost: 2 },
+    } as SuffixManifest;
+  let reads = 0;
+  const source = async () => {
+      reads++;
+      return Uint8Array.of(1, 2, 3);
+    },
+    first = new SuffixReader(manifest, source, undefined, { memory }),
+    second = new SuffixReader(manifest, source, undefined, { memory }),
+    cold = new SuffixReader(manifest, source, undefined, {
+      memory: memory.scoped("different-request"),
+    });
+  expect(await first.read("example", 0, 3, false)).toEqual(
+    Uint8Array.of(1, 2, 3),
+  );
+  await second.read("example", 0, 3, false);
+  expect(reads).toBe(1);
+  await cold.read("example", 0, 3, false);
+  expect(reads).toBe(2);
+  expect(
+    () =>
+      new SuffixReader(
+        { ...manifest, generation: "b".repeat(64) },
+        source,
+        undefined,
+        { memory },
+      ),
+  ).toThrow("generation mismatch");
+  const buffer = new Uint8Array(2 * 1048576);
+  for (let i = 0; i < 8; i++)
+    memory.scoped(String(i)).columns.set("large", buffer, buffer.length);
+  expect(memory.columns.bytes).toBeLessThanOrEqual(8 * 1048576);
+  expect(memory.scoped("0").columns.get("large")).toBeUndefined();
+  expect(memory.scoped("7").columns.get("large")).toBe(buffer);
+});
 
 it("routes wide numeric addresses across restarts and rejects incomplete or mismatched generations", () => {
   const corpus = "a".repeat(64),

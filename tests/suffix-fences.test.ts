@@ -121,6 +121,7 @@ it("resolves phrase intervals from bundled fences across repeated prefixes, bloc
       matching = keys
         .map((k, i) => (comparePhrase(k, phrase) === 0 ? i : -1))
         .filter((i) => i >= 0);
+    expect(reader.minimumRows(phrase)).toBeLessThanOrEqual(matching.length);
     if (matching.length) {
       expect([a.first, a.end]).toEqual([b.first, b.end]);
       expect([a.first, a.end]).toEqual([matching[0], matching.at(-1)! + 1]);
