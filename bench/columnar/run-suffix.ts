@@ -104,10 +104,16 @@ const model = {
     jitterMs: 0,
     seed: 879133,
   },
-  storage = new RangeStorage(root, index + "/local-ranges", {
-    url: "https://work-search-cws-upload.phulin.workers.dev",
-    token: await benchmarkToken(),
-  }),
+  storage = new RangeStorage(
+    root,
+    index + "/local-ranges",
+    process.env.CWS_PREPARE_REMOTE === "1"
+      ? {
+          url: "https://work-search-cws-upload.phulin.workers.dev",
+          token: await benchmarkToken(),
+        }
+      : undefined,
+  ),
   manifest =
     suffixPath !== "-"
       ? JSON.parse(
@@ -521,6 +527,7 @@ const provenance = {
   M: 1000,
   cacheCondition:
     "Empty application and shared caches for every timed request; filesystem/JIT priming is untimed.",
+  fixtureRemoteEnabled: process.env.CWS_PREPARE_REMOTE === "1",
   notes: [
     "Simulated I/O; local process CPU is not Worker CPU.",
     "Suffix and existing index requests share six simulated origin slots.",

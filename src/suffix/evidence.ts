@@ -197,20 +197,20 @@ export class SuffixEvidence implements PhraseExecution {
       if (n.kind === "phrase") {
         const rows = this.rows.get(n.terms.join("\0"));
         if (!rows) return 2;
-        const a = new Uint8Array(size);
-        for (
-          let i = lower(rows.docs, this.lo);
-          i < rows.docs.length && rows.docs[i] < this.hi;
-          i++
-        )
+        const first = lower(rows.docs, this.lo),
+          end = lower(rows.docs, this.hi);
+        if (first === end) return 0;
+        if (field === "all" && end - first === size) return 1;
+        let a: Uint8Array<ArrayBuffer> | undefined;
+        for (let i = first; i < end; i++)
           if (
             field === "all" ||
             (field !== "title" &&
               rows.offsets[0][i + 1] > rows.offsets[0][i]) ||
             (field !== "body" && rows.offsets[1][i + 1] > rows.offsets[1][i])
           )
-            a[rows.docs[i] - this.lo] = 1;
-        return a;
+            (a ??= new Uint8Array(size))[rows.docs[i] - this.lo] = 1;
+        return a ?? 0;
       }
       if (n.kind === "not") {
         const a = visit(n.child);
@@ -218,8 +218,10 @@ export class SuffixEvidence implements PhraseExecution {
         for (let i = 0; i < size; i++) if (a[i] !== 2) a[i] = 1 - a[i];
         return a;
       }
-      const a = visit(n.left),
-        b = visit(n.right),
+      const a = visit(n.left);
+      if (a === 0 && n.kind !== "or") return 0;
+      if (a === 1 && n.kind === "or") return 1;
+      const b = visit(n.right),
         table = TRUTH_TABLES[n.kind];
       if (typeof a === "number" && typeof b === "number")
         return table[a * 3 + b];

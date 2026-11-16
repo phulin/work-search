@@ -386,6 +386,23 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
           }
         }
       }
+    const sparse = new SuffixEvidence();
+    await sparse.add(["a", "b"], Uint32Array.of(1, 2), suffix());
+    await sparse.window(1000, 1008);
+    expect([...sparse.mask(parse('"a b" AND c'), "all")]).toEqual(
+      Array(8).fill(0),
+    );
+    expect([...sparse.mask(parse('NOT "a b"'), "all")]).toEqual(
+      Array(8).fill(1),
+    );
+    expect([...sparse.mask(parse('"a b" OR c'), "all")]).toEqual(
+      Array(8).fill(1),
+    );
+    expect([...sparse.mask(parse('c W/2 "a b"'), "all")]).toEqual(
+      Array(8).fill(0),
+    );
+    await sparse.window(1, 2);
+    expect([...sparse.mask(parse('"a b" OR c'), "all")]).toEqual([1]);
     const bounded = suffix();
     expect(
       await rankSuffixConjunction(
