@@ -754,7 +754,12 @@ export class Reader {
       if (address) {
         const key = `${this.root.generation}/${this.namespace}/named/${identity}`;
         if (!this.memory.pages.entries.has(key)) bytes += ref[2];
-      } else bytes += this.packetFootprint([ref]);
+      } else {
+        const object = objectAt(this.root, ref[0])!;
+        bytes +=
+          Math.min(object.size, Math.ceil((ref[1] + ref[2]) / PAGE) * PAGE) -
+          Math.floor(ref[1] / PAGE) * PAGE;
+      }
     }
     return bytes;
   }

@@ -155,13 +155,47 @@ it("returns exact sorted field-aware supersets for nested Boolean expressions fr
           false,
         )!;
       expect(selected).toBeDefined();
-      expect([
+      const got = [
         ...(await readTermFilter(selected, f.terms, f.root, f.reader, field)),
-      ]).toEqual(expected[field]);
+      ];
+      // A cheaper AND side may deliberately keep extra documents. Every true
+      // query match must survive, in a unique sorted stream with its DF bound.
+      expect(got).toEqual([...new Set(got)].sort((a, b) => a - b));
+      expect(got).toEqual(expect.arrayContaining([...expected[field]]));
+      expect(got.length).toBeLessThanOrEqual(selected.tree.df);
       expect(f.reader.stats.wordPositionIntegers).toBe(0);
       expect(f.reader.stats.booleanTermFilterWaves).toBe(1);
       expect(f.reader.stats.booleanTermFilterTerms).toBe(
         new Set(selected.names).size,
       );
     }
+});
+it("keeps a cheap OR filter instead of adding a costly AND list that makes all filtering lose", () => {
+  const f = fixture();
+  for (const [name, df, bytes] of [
+    ["c", 300, 10000],
+    ["d", 265, 10000],
+    ["e", 40000, 500000],
+  ] as const) {
+    const t = f.terms.get(name)!;
+    t.df = df;
+    t.frequencies = [0, 0, bytes];
+  }
+  const selected = planTermFilter(
+    parse('"a b" AND (c OR d) AND e'),
+    f.terms,
+    root,
+    {
+      ...alternative,
+      frequencyBytes: 3 * 1048576,
+      positionBytes: 7.5 * 1048576,
+    },
+    5706,
+    new Set(),
+    new Set(),
+    10000,
+    false,
+  );
+  expect(selected?.names.sort()).toEqual(["c", "d"]);
+  expect(f.reader.stats.requests).toBe(0);
 });

@@ -36,6 +36,7 @@ export function planTermFilter(
 ): TermFilterPlan | undefined {
   if (!alternative || alternative.kind !== "blocks" || candidates <= 128)
     return;
+  const prices = new WeakMap<Tree, { gain: number; work: number }>();
   const info = (tree: Tree) => {
     const names = new Set<string>();
     const visit = (n: Tree): void => {
@@ -62,6 +63,24 @@ export function planTermFilter(
   const fits = (tree: Tree) => {
     const plan = info(tree);
     return plan.bytes <= 1048576 && plan.postings * 28 <= 4 * 1048576;
+  };
+  const price = (tree: Tree) => {
+    const old = prices.get(tree);
+    if (old) return old;
+    const plan = info(tree),
+      expected = Math.min(candidates, (candidates * tree.df) / root.count),
+      gain = savedWork(
+        { ...alternative, expectedCandidates: candidates },
+        expected,
+        root.count,
+        documentBytes,
+        exactTotal,
+      ),
+      work =
+        plan.bytes + plan.postings * 28 + Math.ceil(plan.gets / 6) * 262144,
+      result = { gain, work };
+    prices.set(tree, result);
+    return result;
   };
   const term = (word: string): Tree | undefined => {
     if (proved.has(word) || excluded.has(word)) return;
@@ -99,20 +118,20 @@ export function planTermFilter(
       right,
       df: Math.min(left.df, right.df),
     };
-    return fits(tree) ? tree : left.df <= right.df ? left : right;
+    // Either AND side is a valid conservative filter. Do not add another large
+    // complete list when its extra decoding erases the estimated savings.
+    // OR still requires both sides, and is never reduced this way.
+    const choices = fits(tree) ? [tree, left, right] : [left, right];
+    return choices.sort((a, b) => {
+      const x = price(a),
+        y = price(b);
+      return y.gain - y.work - (x.gain - x.work) || a.df - b.df;
+    })[0];
   };
   const tree = visit(ast);
   if (!tree) return;
   const plan = info(tree),
-    expected = Math.min(candidates, (candidates * tree.df) / root.count),
-    gain = savedWork(
-      { ...alternative, expectedCandidates: candidates },
-      expected,
-      root.count,
-      documentBytes,
-      exactTotal,
-    ),
-    work = plan.bytes + plan.postings * 28 + Math.ceil(plan.gets / 6) * 262144;
+    { gain, work } = price(tree);
   return gain > work ? { tree, ...plan } : undefined;
 }
 

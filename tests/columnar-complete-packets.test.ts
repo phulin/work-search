@@ -89,6 +89,7 @@ it("uses seeded data and retains page reads for sources without immutable extent
   );
   expect(reads).toBe(1);
   const seeded: Ref = [0, PAGE, 7];
+  expect(reader.completeFootprint([seeded])).toBe(7);
   reader.seed(seeded, bytes.slice(PAGE));
   expect(reader.completeFootprint([seeded, ref])).toBe(0);
   expect((await reader.completePackets([seeded]))[0]).toEqual(

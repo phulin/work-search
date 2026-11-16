@@ -309,8 +309,25 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
             actual.results.map((h) => h.doc),
             q + field,
           ).toEqual(expected.slice(0, 7).map((h) => h.doc));
-          if (scoredConjunction(ast) && field === "all")
-            expect(actual.diagnostics.executor).toBe("suffix-boolean-ranked");
+          if (scoredConjunction(ast) && field === "all") {
+            // Exercise additive phrase ranking even when the automatic planner
+            // correctly prefers this tiny corpus's complete-term read.
+            const ranked = await rankSuffixConjunction(
+              suffix(),
+              scoredConjunction(ast)!.map((words) =>
+                Uint32Array.from(words, (w) => ids.get(w)!),
+              ),
+              { bits, limit: 7, rangeMax: true },
+              async (docs) =>
+                Float64Array.from(
+                  docs,
+                  (d) => expected.find((e) => e.doc === d)!.score,
+                ),
+            );
+            expect(ranked!.map((h) => h.doc)).toEqual(
+              expected.slice(0, 7).map((h) => h.doc),
+            );
+          }
           for (const h of actual.results) {
             expect(h.score).toBeCloseTo(
               expected.find((e) => e.doc === h.doc)!.score,

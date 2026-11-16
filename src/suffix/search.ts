@@ -13,6 +13,7 @@ import { rankSuffixConjunction, scoredConjunction } from "./boolean-rank.js";
 import { SuffixEvidence } from "./evidence.js";
 import type { SuffixReader } from "./reader.js";
 import { scoreCompleteCandidates } from "../columnar/frequency-scores.js";
+import { commonWordExclusions } from "../columnar/membership-anchor.js";
 
 /** Optional phrase layer. Disjoint mandatory phrases have additive scores;
  * overlapping words and other Boolean forms retain distinct-word scoring. */
@@ -73,6 +74,9 @@ export async function searchWithSuffix(
       ),
     packages = {
       averageBytes: root.documentPackages.averageBytes,
+      excludedWords: engine.membership
+        ? commonWordExclusions(engine.membership)
+        : undefined,
       byteLength: (doc: number) =>
         engine.documentDirectory!.verificationSize(doc),
       load: (doc: number) => load(doc),
@@ -86,7 +90,7 @@ export async function searchWithSuffix(
         : undefined;
   // A selective ordinary anchor can disprove a conjunction before fetching
   // its phrase intervals. Compare that path before opening score columns too.
-  if (!standalone && ordinaryPlan?.kind === "documents")
+  if (!standalone && ordinaryPlan && ordinaryPlan.kind !== "blocks")
     return engine.search(q, reader, options);
   // Stored scores cover both fields. Field-restricted searches use exact
   // suffix evidence with the ordinary scorer rather than weak all-field bounds.
