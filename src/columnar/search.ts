@@ -78,7 +78,21 @@ import {
   readBooleanMembership as readMembershipAnchor,
   booleanMembershipAnchor as membershipAnchor,
 } from "./boolean-membership.js";
+export type PhraseExecution = Pick<
+  ExactPhraseExecution,
+  | "plans"
+  | "covered"
+  | "window"
+  | "release"
+  | "bufferBytes"
+  | "evidence"
+  | "truth"
+  | "positionGuard"
+  | "mask"
+>;
 export interface Options {
+  /** Internal, generation-checked exact phrase evidence. Never read from HTTP input. */
+  phraseExecution?: { generation: string; execution: PhraseExecution };
   documentFilter?: DocumentFilter;
   mode?: "and" | "or";
   limit?: number;
@@ -290,7 +304,12 @@ export class ColumnarIndex {
     options: Options = {},
     pairs?: { root: PairRoot; reader: Reader },
   ) {
-    let exact: ExactPhraseExecution | undefined;
+    if (
+      options.phraseExecution &&
+      options.phraseExecution.generation !== this.root.generation
+    )
+      throw Error("Phrase evidence generation mismatch");
+    let exact: PhraseExecution | undefined = options.phraseExecution?.execution;
     if (this.heads && !this.directory && !options.documentFilter) {
       const ast = parse(q, options.mode, tokenizerFor(this.root.analysis)),
         started = performance.now();
@@ -368,9 +387,9 @@ export class ColumnarIndex {
       primaryExact =
         original.kind === "phrase" &&
         preliminary?.kind !== "documents" &&
-        bundledExactPlans.length > 0,
+        (bundledExactPlans.length > 0 || !!exact?.covered(original.terms)),
       membershipRead =
-        this.membership && !primaryExact
+        this.membership && !primaryExact && !exact
           ? planMembershipAnchor(
               original,
               this.membership,
@@ -443,16 +462,18 @@ export class ColumnarIndex {
                 this.root,
               )
             : undefined,
-          readExactPhrasePairs(
-            original,
-            this.membership?.router,
-            this.membership?.exactPhrases,
-            reader,
-            preliminary,
-            membershipRead?.pairs,
-            bundled,
-            options,
-          ),
+          exact
+            ? Promise.resolve(new Map())
+            : readExactPhrasePairs(
+                original,
+                this.membership?.router,
+                this.membership?.exactPhrases,
+                reader,
+                preliminary,
+                membershipRead?.pairs,
+                bundled,
+                options,
+              ),
         ]),
       allExactPlans = [
         ...bundledExactPlans,
@@ -617,15 +638,16 @@ export class ColumnarIndex {
         options,
         packages,
       );
-      queryRoot = primaryExact
-        ? this.root
-        : await lookupRemotePairs(
-            ast,
-            terms as Map<string, DirectoryTerm>,
-            this.root,
-            reader,
-            planned,
-          );
+      queryRoot =
+        primaryExact || exact
+          ? this.root
+          : await lookupRemotePairs(
+              ast,
+              terms as Map<string, DirectoryTerm>,
+              this.root,
+              reader,
+              planned,
+            );
       if (queryRoot !== this.root)
         planned = packetPlan(
           ast,
@@ -671,7 +693,11 @@ export class ColumnarIndex {
       // The measured candidate-document continuation remains a complete
       // alternative. Do not replace a cheap, actually filtered set with a
       // corpus-wide context scan just because its unigram forecast was broad.
-      if (exactPlans.length && (primaryExact || planned.kind === "blocks")) {
+      if (
+        !exact &&
+        exactPlans.length &&
+        (primaryExact || planned.kind === "blocks")
+      ) {
         const phraseCandidates = loadedMembership
           ? Uint32Array.from(loadedMembership.values()).filter(
               (doc) => !presenceFilter || presenceFilter(doc),
