@@ -189,8 +189,7 @@ export class SuffixEvidence implements PhraseExecution {
     // Three-valued Boolean evaluation: positions establish phrases, but words
     // and proximity relations remain unknown until the normal exact evaluator.
     const size = this.hi - this.lo;
-    type Truth = number | Uint8Array;
-    const at = (x: Truth, i: number) => (typeof x === "number" ? x : x[i]);
+    type Truth = number | Uint8Array<ArrayBuffer>;
     const visit = (n: Node): Truth => {
       if (n.kind === "empty") return 0;
       if (n.kind === "all") return 1;
@@ -215,43 +214,46 @@ export class SuffixEvidence implements PhraseExecution {
       }
       if (n.kind === "not") {
         const a = visit(n.child);
-        return typeof a === "number"
-          ? a === 2
-            ? 2
-            : 1 - a
-          : a.map((v) => (v === 2 ? 2 : 1 - v));
+        if (typeof a === "number") return a === 2 ? 2 : 1 - a;
+        for (let i = 0; i < size; i++) if (a[i] !== 2) a[i] = 1 - a[i];
+        return a;
       }
       const a = visit(n.left),
         b = visit(n.right),
-        out = new Uint8Array(size);
-      for (let i = 0; i < size; i++) {
-        const x = at(a, i),
-          y = at(b, i);
-        out[i] =
-          n.kind === "or"
-            ? x === 1 || y === 1
-              ? 1
-              : x === 0 && y === 0
-                ? 0
-                : 2
-            : n.kind === "except"
-              ? x === 0 || y === 1
-                ? 0
-                : x === 1 && y === 0
-                  ? 1
-                  : 2
-              : x === 0 || y === 0
-                ? 0
-                : n.kind !== "near" && x === 1 && y === 1
-                  ? 1
-                  : 2;
+        table = TRUTH_TABLES[n.kind];
+      if (typeof a === "number" && typeof b === "number")
+        return table[a * 3 + b];
+      // Every recursive result owns its temporary array. Reuse it instead of
+      // allocating another window and branching on the operator per document.
+      if (typeof a === "number" || typeof b === "number") {
+        const left = typeof a === "number",
+          scalar = (left ? a : b) as number,
+          array = (left ? b : a) as Uint8Array<ArrayBuffer>,
+          x = table[left ? scalar * 3 : scalar],
+          y = table[left ? scalar * 3 + 1 : 3 + scalar],
+          z = table[left ? scalar * 3 + 2 : 6 + scalar];
+        if (x === y && y === z) return x;
+        if (x === 0 && y === 1 && z === 2) return array;
+        for (let i = 0; i < size; i++)
+          array[i] =
+            table[left ? scalar * 3 + array[i] : array[i] * 3 + scalar];
+        return array;
       }
-      return out;
+      for (let i = 0; i < size; i++) a[i] = table[a[i] * 3 + b[i]];
+      return a;
     };
     const value = visit(ast);
-    return typeof value === "number"
-      ? new Uint8Array(size).fill(value === 0 ? 0 : 1)
-      : value.map((v) => (v === 0 ? 0 : 1));
+    if (typeof value === "number")
+      return new Uint8Array(size).fill(value === 0 ? 0 : 1);
+    for (let i = 0; i < size; i++) if (value[i]) value[i] = 1;
+    return value;
   }
 }
 const EMPTY = new Uint32Array();
+// False / true / unknown. Phrase membership alone cannot prove proximity.
+const TRUTH_TABLES = {
+  and: [0, 0, 0, 0, 1, 2, 0, 2, 2],
+  or: [0, 1, 2, 1, 1, 1, 2, 1, 2],
+  except: [0, 0, 0, 1, 0, 2, 2, 0, 2],
+  near: [0, 0, 0, 0, 2, 2, 0, 2, 2],
+} as const;

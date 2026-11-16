@@ -223,6 +223,10 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
       '("a b" OR c) W/2 d',
       '"a b" W/3 "c d"',
       '("a b" AND c) OR (d AND NOT "b c")',
+      'NOT (("a b" AND x) OR ("c d" AND NOT x))',
+      '("a b" OR NOT x) AND ("c d" OR x)',
+      'NOT ("a b" W/2 "c d")',
+      '("a b" % "c d") OR ("b c" AND NOT x)',
     ];
     for (const q of queries)
       for (const field of ["all", "body", "title"] as const) {
