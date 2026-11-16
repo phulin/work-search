@@ -1,7 +1,7 @@
 import { pageIndex } from "../src/builder/page-index.js";
 import { readFile } from "node:fs/promises";
 const queries = JSON.parse(
-  await readFile("bench/results/flp100k-queries.json", "utf8"),
+  await readFile("bench/fixtures/flp-queries.json", "utf8"),
 ).train.map((x: any) => x.q);
 const step = Number(process.argv[2]),
   budget = Number(process.argv[3] ?? 8);

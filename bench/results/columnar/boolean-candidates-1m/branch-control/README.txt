@@ -1,1 +1,0 @@
-Branch-only ablation: remove the .txt suffix and overlay these three columnar files on a src archive of 0a72b2c. Serving source is the ordinary src/columnar tree; this frozen copy is only a benchmark control.

@@ -1,7 +1,0 @@
-{
-  "at": "2026-11-15T23:49:01.223Z",
-  "requestedKeys": 2254951,
-  "batches": 2255,
-  "protectedKeys": 185297,
-  "note": "R2 deletion is idempotent; acknowledged keys include already absent objects. Byte estimates are not measured storage reclaimed."
-}

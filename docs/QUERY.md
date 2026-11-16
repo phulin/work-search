@@ -1,6 +1,6 @@
 # Terms-and-connectors query language
 
-This is a documented **Lexis-style subset**, not an exact clone of every Lexis product or its automatic linguistic expansions. Matching is deterministic over the engine's NFKC-normalized, lowercased Unicode letter/number tokens. Stop words are retained and counted in distances.
+This is a documented **Lexis-style subset**, not an exact clone of every Lexis product or its automatic linguistic expansions. Matching is deterministic over Unicode letter/number tokens. The index generation selects analysis: NFKC normalization and lowercasing, with English Porter2 stemming for `nfkc-lower-porter2-v1`. Queries use the same analysis as ingestion. Stop words are retained and counted in distances.
 
 ## Supported expressions
 
@@ -43,38 +43,39 @@ Grouped proximity supports OR alternatives, phrases, nested proximity, and conju
 
 The basic order follows [Lexis connector priority](https://www.lexisnexis.com/documents/pdf/20110823020727_large.pdf); fixed distances follow [Lexis Advance's /25 and /75 definitions](https://www.lexisnexis.com/pdf/advance-your-research/search-commands-comparisons.pdf?P05=). Product-specific behavior beyond the rules above is not claimed.
 
-## Ranking, I/O and limits
+## Ranking and execution
 
-The AST determines the exact matching document set; BM25 then ranks matching documents using the distinct positively occurring query terms and the existing title boost. Negated-only terms do not add score. A double negation restores positive scoring. Scores are term-based, with no extra phrase/proximity bonus. Ties use internal input order. `total` remains exact. Pure complement-only matches have score zero.
+The AST determines the exact matching set. BM25 ranks matches using distinct
+positive query terms, body/title frequencies, and the configured title boost.
+Negated-only terms contribute no score; double negation restores positive
+scoring. Phrases and proximity add no separate score bonus. Ties use internal
+document order. Field restriction applies to matching and scoring.
 
-The dictionary stays bundled. The planner prunes missing-term clauses before fetching postings: an impossible AND/phrase/proximity returns without R2 reads, while an OR can retain its other branches. Each surviving frequency stream is fetched at most once. Positions are fetched separately only for location-dependent terms, at most once per term. All jobs share concurrency four. Each stream kind uses the same decoder for local and remote bytes. ID-only queries still need no metadata reads, and fully embedded phrase/connector queries can make zero R2 requests. Metadata remains a separate opt-in step.
+The columnar planner simplifies impossible clauses, then chooses complete term
+packets, anchor/document verification, or block retrieval. Conservative filters
+never discard an unknown match. Positional conditions use exact spans; only
+verified matches update the competitive threshold. Metadata filters apply before
+top-K selection. See [architecture](ARCHITECTURE.md) for storage and execution.
 
-Plain Boolean queries read, checksum and decode only frequency payloads; they never access positional payloads, locally or remotely, and do not allocate positional-offset arrays. Phrase/proximity queries allocate one u32 byte offset per posting, retain compressed position bytes, and decode positions only for one candidate document at a time into reusable per-term buffers. Boolean existence checks stop at the first valid phrase/proximity match, while nested compound expressions retain the locations their parents need. Scratch retains at most the observed per-term field-frequency peaks; conservative guard accounting includes buffer growth. No positions are expanded for the full corpus. Candidate sets are sorted; evaluation never stores a corpus-sized map of spans. Lengths keep their compressed block cache and reusable scoring result.
-
-Safeguards: 2,048 query characters, 16 distinct terms, 256 lexer tokens, 256 tokens per phrase, 32 nesting levels, numeric distance 1–255, limit 1–100, at most 4,096 materialized compound spans per field/operand/document and 32,768 retained compound-span slots per query and ten million span comparisons/checks per query. Estimated encoded/decoded working sets are bounded by the lesser of 56 MiB and `104 MiB - bundle bytes`, with an additional per-document position-allocation check. Resource exhaustion returns **503**, not partial results or a false zero count. Common-term positional queries can be expensive, and the per-query guard cannot guarantee safety for many concurrent requests in one isolate. Large corpora/common phrases generally need Workers Paid CPU allowances.
+`total=false` omits the count and permits exact top-K pruning. `total=true`
+computes an exact count. Both retain exact ranking and tie order. Generation-bound
+search-after supports pagination. Resource limits return an explicit error;
+they never silently truncate matching documents.
 
 ## Examples
 
 ```sh
-npm run build-index -- --input corpus.jsonl --out indexes/terms-v4 --budget-mib 8
-npm run search-local -- --out indexes/terms-v4 \
-  --query '(negligence OR malpractice) AND "standard of care"'
-npm run search-local -- --out indexes/terms-v4 \
-  --query '(contract OR agreement) /p breach AND NOT "criminal law"'
-npm run dev -- --out indexes/terms-v4
+yarn search-local INDEX_DIR '(negligence OR malpractice) AND "standard of care"'
+yarn search-local INDEX_DIR '(contract OR agreement) /p breach AND NOT "criminal law"'
+yarn search-local INDEX_DIR 'jurisdiction' '{"exactTotal":true,"field":"title"}'
+yarn dev INDEX_DIR
 curl --get 'http://localhost:8787/search' \
   --data-urlencode 'q=(red OR blue) /s "fox jumps"' \
   --data-urlencode 'limit=20'
 ```
 
-Unsupported: stemming/automatic plurals, root expansion `!`, wildcards `*`/`?`, fuzzy search, inline field/segment functions, occurrence-count functions, metadata filters, and negative-proximity operators such as `NOT /n`. Quotes provide exact token sequences rather than exact character substrings. The parser rejects wildcard/field punctuation instead of pretending to execute it.
-
-## Version migration
-
-Container format **v4** separates frequency and positional payloads. Rebuild the entire index generation, upload its immutable objects, and deploy the v4 Worker with its matching bundle. v1/v2/v3 bundles are rejected. Older indexes cannot be served by the v4 reader. Rebuild a new immutable generation; deploying query code alone is insufficient. The compressed document-table subformat remains DTC2; it does not need separate migration. Keep old Workers and generations together for rollback.
-
-## Exact top-K without a count
-
-`GET /search?q=...&total=false` enables block-max score pruning and omits `total` entirely. Returned IDs, BM25 scores and tie ordering remain exact, including Boolean and positional queries. The default is `total=false`; explicit `total=true` computes an exact count. Other `total` values are rejected. CLI also omits counts by default; `--total` requests an exact count, and `--no-total` explicitly selects omission. Pruning bounds are built from decoded frequencies and can be retained in the bounded warm-isolate cache; the first call pays that construction cost and still reads/decodes frequencies. This is not an approximate result mode.
-
-Diagnostics now also report `postingCacheHits`, `postingCacheMisses`, `cacheBytes`, `boundsMs`, `boundsCacheHits`, `scoredDocuments`, `prunedCandidates`, and `deferredPositions`. R2 request/byte counters still count actual remote ranges; cache hits do not appear as R2 transfers. Metadata reads remain separate. Set Worker `CACHE_MIB=0` to benchmark uncached behavior; normal default is 4 MiB of retained cache per isolate (maximum 8).
+Unsupported syntax includes root expansion `!`, wildcards `*`/`?`, fuzzy search,
+inline field/segment functions, occurrence-count functions, and negative proximity
+such as `NOT /n`. Field and typed metadata filters are request options rather
+than inline query syntax. Quotes specify exact analyzed token sequences, not
+exact character substrings.

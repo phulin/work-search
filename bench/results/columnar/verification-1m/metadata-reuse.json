@@ -1,8 +1,0 @@
-{
-  "sourceGeneration": "e873d554d343bc48e65ca1ac7845d854f7ac6405b0f367eec65e37e3dd452a56",
-  "sourceMetadataGeneration": "54382e2cf6bef016cef8271491990574a9b49ec1dc314699f64ad51447e32c48",
-  "baseGeneration": "206e473362f2ed3ad8074a9840a6d03c5d9633605bc3365ee35d8eeebbf868f8",
-  "metadataGeneration": "47dce7d8dfcecb4430c167de182de62c8413a19497574707bae980c3ba62d512",
-  "count": 1000000,
-  "reason": "The document converter retains each source internal ID without reordering."
-}

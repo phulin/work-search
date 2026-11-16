@@ -14,7 +14,7 @@ import { pageIndex } from "../src/builder/page-index.js";
 const root = "work/full-flp";
 await mkdir(root + "/indices", { recursive: true });
 const training = JSON.parse(
-  await readFile("bench/results/flp100k-queries.json", "utf8"),
+  await readFile("bench/fixtures/flp-queries.json", "utf8"),
 ).train.map((q: any) => q.q);
 const wait = () => new Promise((r) => setTimeout(r, 5000));
 for (;;) {

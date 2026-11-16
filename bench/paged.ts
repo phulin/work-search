@@ -16,7 +16,7 @@ if (!process.argv.includes("--task")) {
   const index = openIndex(await readFile(`${root}/48-mixed/bundle.bin`)),
     storage = new FileStorage(`${root}/48-mixed/objects`);
   const workload = JSON.parse(
-      await readFile("bench/results/flp100k-queries.json", "utf8"),
+      await readFile("bench/fixtures/flp-queries.json", "utf8"),
     ).test,
     expected = [];
   for (const { q } of workload)
@@ -58,7 +58,7 @@ if (!process.argv.includes("--task")) {
     ),
     runtime = new SearchRuntime(4 * 1048576);
   const workload = JSON.parse(
-    await readFile("bench/results/flp100k-queries.json", "utf8"),
+    await readFile("bench/fixtures/flp-queries.json", "utf8"),
   ).test;
   const expected = new Map<string, unknown>(
     JSON.parse(await readFile("work/paged-expected.json", "utf8")),
