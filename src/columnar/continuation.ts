@@ -3,7 +3,6 @@ import type { ContinuationContext } from "./search.js";
 import { PACKAGE_CONCURRENCY } from "./package-batches.js";
 import { PAGE } from "./format.js";
 import { SCORE_LOOKAHEAD_WINDOWS } from "./score-lookahead.js";
-import { estimateDocumentRanking } from "./ranked-documents.js";
 const BAND = 16384,
   // Cold live comparisons make request waits much more expensive than a
   // 256 KiB transfer. Start at 60 ms per six-read wave / 2.5 ms per page.
@@ -47,32 +46,7 @@ export async function priceDocuments(
   }
   const ids = Uint32Array.from(selected),
     waves = Math.ceil(ids.length / PACKAGE_CONCURRENCY),
-    exhaustiveWork = bytes / PAGE + waves * WAVE,
-    // Apply phrase/pair membership before assuming that high-scoring documents
-    // will verify. An unfiltered word anchor can otherwise bypass a much
-    // cheaper pair intersection merely because its first scores look cheap.
-    ranking =
-      plan.membershipAnchor || packages.membership
-        ? estimateDocumentRanking(ids.length, ast, terms, options)
-        : undefined,
-    // The document executor can score this complete set first, then verify in
-    // exact score order. Price that existing alternative as well as opening
-    // every package. Expected checks select a plan; they never cap execution.
-    rankedWork = ranking
-      ? reader.completeFootprint(ranking.parts.map((p) => p.ref)) / PAGE +
-        Math.ceil(ranking.parts.length / PACKAGE_CONCURRENCY) * WAVE +
-        ranking.decodeMs / 2.5 +
-        ((bytes / Math.max(1, ids.length)) * ranking.expectedChecks) / PAGE +
-        Math.ceil(ranking.expectedChecks / PACKAGE_CONCURRENCY) * WAVE
-      : Infinity,
-    packageWork = Math.min(exhaustiveWork, rankedWork),
-    rankingCost = ranking
-      ? {
-          rankedWork,
-          rankingBytes: ranking.bytes,
-          rankingChecks: ranking.expectedChecks,
-        }
-      : {};
+    packageWork = bytes / PAGE + waves * WAVE;
   let candidateBands = 0,
     previousBand = -1;
   for (const doc of ids) {
@@ -109,7 +83,6 @@ export async function priceDocuments(
         blockWork: batchedWaves * WAVE,
         metadataBytes: 0,
         waveEstimateOnly: true,
-        ...rankingCost,
       },
     };
   const before = reader.stats.bytes,
@@ -146,7 +119,6 @@ export async function priceDocuments(
       packageWork,
       blockWork,
       metadataBytes: reader.stats.bytes - before,
-      ...rankingCost,
     };
   return packageWork < blockWork
     ? { ...documentPlan, continuationCost }
