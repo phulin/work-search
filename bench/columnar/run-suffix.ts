@@ -334,7 +334,14 @@ function check(actual: any, s: any) {
     JSON.stringify(actual.results.map((h: any) => h.doc)) !==
     JSON.stringify(expected.map((h: any) => h.doc))
   )
-    throw Error("Ranked document mismatch: " + s.q);
+    throw Error(
+      "Ranked document mismatch: " +
+        JSON.stringify({
+          q: s.q,
+          expected: expected.map((h: any) => [h.doc, h.score]),
+          actual: actual.results.map((h: any) => [h.doc, h.score]),
+        }),
+    );
   for (let i = 0; i < expected.length; i++) {
     const a = actual.results[i],
       e = expected[i];

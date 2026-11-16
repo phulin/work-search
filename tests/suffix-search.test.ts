@@ -42,6 +42,7 @@ import { tokenize } from "../src/query/tokenize.js";
 import { exhaustive } from "../bench/columnar/exhaustive.js";
 import { bm25 } from "../src/query/engine.js";
 import { filteredRankingPhrase } from "../src/suffix/filtered-phrase.js";
+import { executePackets } from "../src/columnar/packet-execution.js";
 import { collectPhraseRanking } from "../scripts/suffix-phrase-ranking.js";
 import { encodePhraseRanks } from "../src/suffix/phrase-ranks.js";
 
@@ -287,6 +288,7 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
       '"b c" AND "a b c d" AND "c d"',
       '("a b" AND "c d") AND "x x"',
       '"a b" OR "c d"',
+      '"a b a" AND ("c d" OR "b c")',
       '"a b" AND NOT "b c"',
       '"a b" AND NOT x',
       '"a b" AND NOT ("b c" OR x)',
@@ -393,6 +395,44 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
             booleanResult.results.map((h) => h.doc),
             q + field + " membership only",
           ).toEqual(expected.slice(0, 7).map((h) => h.doc));
+          // Force the document continuation: a tiny corpus otherwise chooses
+          // complete term reads and hides lost membership truth at this handoff.
+          const anchor = membership.candidateAnchor(ast, field);
+          if (anchor) {
+            const reader = new Reader(root, source),
+              fromDocuments = await executePackets(
+                ast,
+                new Map(terms),
+                root,
+                reader,
+                options,
+                {
+                  averageBytes: 1000,
+                  byteLength: (doc) => dd.verificationSize(doc),
+                  load: (doc) =>
+                    reader.document(
+                      root.documentPackages!.generation,
+                      doc,
+                      dd.lookup(doc),
+                      new Set(queryTerms(ast).map((w) => ids.get(w)!)),
+                    ),
+                },
+                {
+                  kind: "documents",
+                  membershipAnchor: anchor,
+                  frequencyBytes: 0,
+                  positionBytes: 0,
+                  expectedCandidates: anchor.count,
+                  expectedDocumentBytes: 0,
+                  gets: anchor.count,
+                  dependentStages: 1,
+                },
+              );
+            expect(
+              fromDocuments!.results.map((h) => h.doc),
+              q + field + " document membership",
+            ).toEqual(expected.slice(0, 7).map((h) => h.doc));
+          }
         }
         const staged = new SuffixEvidence(),
           parallel = await engine.search(q, new Reader(root, source), {

@@ -369,6 +369,11 @@ export function booleanMembershipAnchor(
         .get(words.join("\0"))
         ?.anchor(f ? "title" : "body")
         .evidence(words, doc, f) ?? evidence(words, doc, f),
+    truth: (words, doc, f) =>
+      known
+        .get(words.join("\0"))
+        ?.anchor(f ? "title" : "body")
+        .truth?.(words, doc, f),
     covered: (words) =>
       known.has(words.join("\0")) || pairPhraseCovered(packets, ids, words),
   };

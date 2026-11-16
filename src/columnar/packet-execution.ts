@@ -589,6 +589,7 @@ export async function executePackets(
   const packageHits = new Map<number, DocumentPackage>();
   let phraseEvidence: ReturnType<typeof pairPhraseEvidence> | undefined =
     packages?.membership?.evidence;
+  let phraseTruth = packages?.membership?.truth;
   if (plan.kind === "documents") {
     if (packages?.membership) {
       wantedPositions.clear();
@@ -603,6 +604,7 @@ export async function executePackets(
       const pair = plan.membershipAnchor;
       candidates = pair.values();
       phraseEvidence = pair.evidence;
+      phraseTruth = pair.truth;
       wantedPositions.clear();
       positionalIds.clear();
       for (const name of positionalTerms(ast, pair.covered)) {
@@ -807,6 +809,7 @@ export async function executePackets(
           direct,
           {},
           phraseEvidence,
+          phraseTruth,
         );
       active(
         pkg,

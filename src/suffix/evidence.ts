@@ -198,6 +198,7 @@ export class SuffixEvidence implements PhraseExecution {
           cursor: () => arrayCursor(docs),
           covered: this.covered,
           evidence: this.evidence,
+          truth: this.truth,
         }
       : undefined;
     const fields = cached ?? new Map<string, MembershipAnchor | undefined>();

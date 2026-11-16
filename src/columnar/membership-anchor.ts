@@ -180,6 +180,7 @@ export interface MembershipAnchor {
   has(doc: number): boolean;
   cursor(): { next(): number };
   evidence: ReturnType<typeof pairPhraseEvidence>;
+  truth?: (words: string[], doc: number, field: number) => boolean | undefined;
   covered: (words: string[]) => boolean;
 }
 /** Restrict conservative pair evidence by independently necessary unigrams.
