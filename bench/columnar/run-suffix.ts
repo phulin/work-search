@@ -26,6 +26,36 @@ import { searchWithSuffix } from "../../src/suffix/search.js";
 import { RangeStorage } from "./range-storage.js";
 import { SimulatedIO } from "./latency-model.js";
 import { benchmarkToken } from "./token.js";
+import { Session } from "node:inspector";
+
+const profileDirectory = process.env.CWS_CPU_PROFILES_DIR;
+let profileSequence = 0;
+async function profileStart() {
+  if (!profileDirectory) return;
+  const session = new Session();
+  session.connect();
+  const post = (method: string, params: Record<string, unknown> = {}) =>
+    new Promise<any>((resolve, reject) =>
+      session.post(method as any, params, (error, result) =>
+        error ? reject(error) : resolve(result),
+      ),
+    );
+  await post("Profiler.enable");
+  await post("Profiler.setSamplingInterval", { interval: 1000 });
+  await post("Profiler.start");
+  return async (sid: number, plan: string) => {
+    try {
+      const { profile } = await post("Profiler.stop");
+      await mkdir(profileDirectory, { recursive: true });
+      await writeFile(
+        `${profileDirectory}/${sid}-${plan}-${profileSequence++}.cpuprofile.gz`,
+        gzipSync(JSON.stringify(profile)),
+      );
+    } finally {
+      session.disconnect();
+    }
+  };
+}
 
 const [index, suffixPath, output] = process.argv.slice(2);
 if (!output)
@@ -294,6 +324,7 @@ async function query(s: any, plan: string, prepare: boolean) {
         )
       : undefined;
   io.delaysEnabled = suffixIO.delaysEnabled = process.env.CWS_NO_DELAY !== "1";
+  const finishProfile = !prepare ? await profileStart() : undefined;
   const cpu = process.cpuUsage(),
     localAssemblies = storage.localAssemblies,
     before = process.memoryUsage(),
@@ -317,6 +348,7 @@ async function query(s: any, plan: string, prepare: boolean) {
     usage = process.cpuUsage(cpu),
     after = process.memoryUsage();
   await Promise.all(writes);
+  await finishProfile?.(s.sid, plan);
   check(actual, s);
   return {
     sid: s.sid,
@@ -404,6 +436,7 @@ const provenance = {
   ),
   model,
   ioDelaysEnabled: process.env.CWS_NO_DELAY !== "1",
+  cpuProfiling: !!profileDirectory,
   plans,
   scenarios: scenarios.map((s: any) => ({
     sid: s.sid,
