@@ -8,10 +8,12 @@ import {
   unionCursors,
 } from "../columnar/numeric-cursor.js";
 import type { MembershipAnchor } from "../columnar/membership-anchor.js";
+import { canonicalBit } from "./format.js";
 interface PhraseRows {
   docs: Uint32Array;
-  offsets: [Uint32Array, Uint32Array];
-  positions: [Uint32Array, Uint32Array];
+  offsets?: [Uint32Array, Uint32Array];
+  positions?: [Uint32Array, Uint32Array];
+  fields?: [Uint32Array, Uint32Array];
 }
 /** Query-local sorted numeric evidence for intervals that fit the active-memory
  * budget. Broad standalone phrases use the streaming ranker instead. */
@@ -30,16 +32,22 @@ export class SuffixEvidence implements PhraseExecution {
     ids: Uint32Array,
     reader: SuffixReader,
     budget = 4 * 1048576,
+    needPositions = true,
   ) {
-    if (this.covered(words)) return true;
+    const existing = this.rows.get(words.join("\0"));
+    if (existing && (!needPositions || existing.positions)) return true;
     if (
       reader.minimumRows(ids) * 40 + this.bufferBytes + this.reserved >
       budget
     )
       return false;
+    const positions = needPositions || ids.length < 2 || ids.length > 5,
+      columns = positions
+        ? (["documents", "positions"] as const)
+        : (["documents", "flags"] as const);
     const estimated =
       ids.length <= 8
-        ? await reader.numericInterval(ids, ["documents", "positions"])
+        ? await reader.numericInterval(ids, [...columns])
         : await reader.interval(ids);
     const reserve = (estimated.end - estimated.first) * 40;
     if (reserve + this.bufferBytes + this.reserved > budget) return false;
@@ -47,10 +55,44 @@ export class SuffixEvidence implements PhraseExecution {
     try {
       const interval =
           "groups" in estimated
-            ? await reader.expand(estimated, ["documents", "positions"])
+            ? await reader.expand(estimated, [...columns])
             : estimated,
         docValues: number[] = [],
         positionValues: number[] = [];
+      if (!positions) {
+        const fields: [number[], number[]] = [[], []],
+          bodyBit = canonicalBit(ids.length, "body"),
+          titleBit = canonicalBit(ids.length, "title");
+        for await (const batch of reader.scan(interval, [...columns])) {
+          const d = batch.columns.documents!,
+            f = batch.columns.flags!,
+            docs = new DataView(d.buffer, d.byteOffset, d.byteLength),
+            flags = new DataView(f.buffer, f.byteOffset, f.byteLength);
+          for (let i = batch.first; i < batch.end; i++) {
+            const code = flags.getUint16(i * 2, true);
+            if (code & bodyBit) fields[0].push(docs.getUint32(i * 4, true));
+            if (code & titleBit) fields[1].push(docs.getUint32(i * 4, true));
+          }
+        }
+        const sorted = fields.map((values) => {
+            const docs = Uint32Array.from(values).sort();
+            let count = 0;
+            for (let i = 0; i < docs.length; i++)
+              if (!i || docs[i] !== docs[i - 1]) docs[count++] = docs[i];
+            return docs.subarray(0, count);
+          }) as [Uint32Array, Uint32Array],
+          cursor = unionCursors(arrayCursor(sorted[0]), arrayCursor(sorted[1])),
+          all = new Uint32Array(sorted[0].length + sorted[1].length);
+        let count = 0;
+        for (let doc = cursor.next(); doc !== Infinity; doc = cursor.next())
+          all[count++] = doc;
+        this.rows.set(words.join("\0"), {
+          docs: all.length === count ? all : all.slice(0, count),
+          fields: sorted,
+        });
+        this.anchors = new WeakMap();
+        return true;
+      }
       for await (const batch of reader.scan(interval, [
         "documents",
         "positions",
@@ -108,8 +150,9 @@ export class SuffixEvidence implements PhraseExecution {
         if (!row) return;
         if (field === "all") return row.docs;
         const f = field === "title" ? 1 : 0;
+        if (row.fields) return row.fields[f];
         return row.docs.filter(
-          (_, i) => row.offsets[f][i + 1] > row.offsets[f][i],
+          (_, i) => row.offsets![f][i + 1] > row.offsets![f][i],
         );
       }
       if (n.kind === "empty") return EMPTY;
@@ -155,15 +198,24 @@ export class SuffixEvidence implements PhraseExecution {
   evidence = (words: string[], doc: number, field: number) => {
     const rows = this.rows.get(words.join("\0"));
     if (!rows) return;
+    if (rows.fields) {
+      const docs = rows.fields[field];
+      return docs[lower(docs, doc)] === doc ? undefined : EMPTY;
+    }
     const i = lower(rows.docs, doc);
     return rows.docs[i] === doc
-      ? rows.positions[field].subarray(
-          rows.offsets[field][i],
-          rows.offsets[field][i + 1],
+      ? rows.positions![field].subarray(
+          rows.offsets![field][i],
+          rows.offsets![field][i + 1],
         )
       : EMPTY;
   };
   truth = (words: string[], doc: number, field: number) => {
+    const row = this.rows.get(words.join("\0"));
+    if (row?.fields) {
+      const docs = row.fields[field];
+      return docs[lower(docs, doc)] === doc;
+    }
     const p = this.evidence(words, doc, field);
     return p === undefined ? undefined : !!p.length;
   };
@@ -178,10 +230,12 @@ export class SuffixEvidence implements PhraseExecution {
       (n, r) =>
         n +
         r.docs.byteLength +
-        r.offsets[0].byteLength +
-        r.offsets[1].byteLength +
-        r.positions[0].byteLength +
-        r.positions[1].byteLength,
+        (r.fields
+          ? r.fields[0].byteLength + r.fields[1].byteLength
+          : r.offsets![0].byteLength +
+            r.offsets![1].byteLength +
+            r.positions![0].byteLength +
+            r.positions![1].byteLength),
       0,
     );
   }
@@ -197,6 +251,19 @@ export class SuffixEvidence implements PhraseExecution {
       if (n.kind === "phrase") {
         const rows = this.rows.get(n.terms.join("\0"));
         if (!rows) return 2;
+        if (rows.fields) {
+          const docs =
+              field === "all"
+                ? rows.docs
+                : rows.fields[field === "body" ? 0 : 1],
+            first = lower(docs, this.lo),
+            end = lower(docs, this.hi);
+          if (first === end) return 0;
+          if (end - first === size) return 1;
+          const values = new Uint8Array(size);
+          for (let i = first; i < end; i++) values[docs[i] - this.lo] = 1;
+          return values;
+        }
         const first = lower(rows.docs, this.lo),
           end = lower(rows.docs, this.hi);
         if (first === end) return 0;
@@ -206,8 +273,8 @@ export class SuffixEvidence implements PhraseExecution {
           if (
             field === "all" ||
             (field !== "title" &&
-              rows.offsets[0][i + 1] > rows.offsets[0][i]) ||
-            (field !== "body" && rows.offsets[1][i + 1] > rows.offsets[1][i])
+              rows.offsets![0][i + 1] > rows.offsets![0][i]) ||
+            (field !== "body" && rows.offsets![1][i + 1] > rows.offsets![1][i])
           )
             (a ??= new Uint8Array(size))[rows.docs[i] - this.lo] = 1;
         return a ?? 0;

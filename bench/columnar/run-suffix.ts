@@ -159,6 +159,7 @@ if (
         ![
           "control",
           "suffix-before",
+          "suffix-streams-max",
           "suffix16-scan",
           "suffix16-max",
           "suffix16-without-heads",
@@ -183,6 +184,45 @@ if (
       maxBuffer: 32 * 1048576,
     }),
   });
+let streamReader: any,
+  streamReaderVersion: { commit: string; sha256: string } | undefined;
+if (plans.includes("suffix-streams-max")) {
+  if (!process.env.CWS_STREAM_READER_COMMIT)
+    throw Error(
+      "Choose the frozen stream reader for the decompression ablation",
+    );
+  const commit = execFileSync(
+      "git",
+      [
+        "rev-parse",
+        "--verify",
+        process.env.CWS_STREAM_READER_COMMIT + "^{commit}",
+      ],
+      { encoding: "utf8" },
+    ).trim(),
+    path = resolve("work/suffix-control-" + commit);
+  await mkdir(path, { recursive: true });
+  if (
+    !(await readFile(path + "/src/suffix/reader.ts").then(
+      () => true,
+      () => false,
+    ))
+  )
+    execFileSync("tar", ["-x", "-C", path], {
+      input: execFileSync("git", ["archive", commit, "src"], {
+        maxBuffer: 32 * 1048576,
+      }),
+    });
+  streamReader = (
+    await import(pathToFileURL(path + "/src/suffix/reader.ts").href)
+  ).SuffixReader;
+  streamReaderVersion = {
+    commit,
+    sha256: createHash("sha256")
+      .update(await readFile(path + "/src/suffix/reader.ts"))
+      .digest("hex"),
+  };
+}
 const control = await import(
     pathToFileURL(frozen + "/src/columnar/search.ts").href
   ),
@@ -369,7 +409,9 @@ async function query(s: any, plan: string, prepare: boolean) {
     SuffixReaderClass =
       plan === "suffix-before"
         ? previousSuffixReader!.SuffixReader
-        : SuffixReader,
+        : plan === "suffix-streams-max"
+          ? streamReader
+          : SuffixReader,
     selectedManifest =
       plan === "suffix16-without-heads"
         ? {
@@ -408,7 +450,7 @@ async function query(s: any, plan: string, prepare: boolean) {
                 ? undefined
                 : suffixPhraseRankIndex,
             numericIndex:
-              plan === "suffix-before" || plan === "suffix16-without-fences"
+              plan === "suffix16-without-fences"
                 ? undefined
                 : suffixNumericIndex,
           },
@@ -469,6 +511,7 @@ const provenance = {
   documents: root.count,
   index,
   suffixGeneration: manifest?.generation,
+  streamReaderVersion,
   beforeFences: plans.includes("suffix-before")
     ? {
         file: process.env.CWS_BEFORE_FENCES ?? manifest.fences ?? "fences",

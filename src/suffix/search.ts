@@ -294,7 +294,15 @@ export async function searchWithSuffix(
   const evidence = new SuffixEvidence();
   const prepare = async () => {
     await Promise.all(
-      phrases.map((words) => evidence.add(words, ids(words), suffix)),
+      phrases.map((words) =>
+        evidence.add(
+          words,
+          ids(words),
+          suffix,
+          undefined,
+          ast.kind === "phrase" || positions.has(words.join("\0")),
+        ),
+      ),
     );
     return phrases.some((p) => evidence.covered(p));
   };

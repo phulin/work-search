@@ -209,6 +209,42 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
         new SuffixReader(manifest, async (file, at, n) =>
           (await readFile(directory + "/" + file)).subarray(at, at + n),
         );
+    const flagsOnly = suffix(),
+      proof = new SuffixEvidence();
+    for (const words of [
+      ["a", "b"],
+      ["b", "c"],
+      ["a", "b", "c", "d"],
+    ]) {
+      await proof.add(
+        words,
+        Uint32Array.from(words, (w) => ids.get(w)!),
+        flagsOnly,
+        undefined,
+        false,
+      );
+      for (const d of docs)
+        for (const field of [0, 1]) {
+          const tokens = tokenize(field ? d.title : d.body),
+            matching = tokens.some(
+              (_, p) =>
+                p + words.length <= tokens.length &&
+                words.every((w, j) => tokens[p + j] === w),
+            );
+          expect(proof.truth(words, d.doc, field)).toBe(matching);
+          expect(proof.evidence(words, d.doc, field)).toEqual(
+            matching ? undefined : new Uint32Array(),
+          );
+        }
+    }
+    expect(flagsOnly.stats.positionIntegers).toBe(0);
+    await proof.add(
+      ["a", "b"],
+      Uint32Array.of(ids.get("a")!, ids.get("b")!),
+      flagsOnly,
+    );
+    expect(flagsOnly.stats.positionIntegers).toBeGreaterThan(0);
+    expect(proof.evidence(["a", "b"], 1, 0)).toEqual(Uint32Array.of(0));
     const queries = [
       '"a" AND "d"',
       'NOT "x"',
@@ -283,17 +319,21 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
         const collect = async (
           n: ReturnType<typeof parse>,
           target = evidence,
+          needPositions = true,
         ): Promise<void> => {
           if (n.kind === "phrase")
             await target.add(
               n.terms,
               Uint32Array.from(n.terms, (w) => ids.get(w)!),
               suffix(),
+              undefined,
+              needPositions,
             );
-          else if (n.kind === "not") await collect(n.child, target);
+          else if (n.kind === "not")
+            await collect(n.child, target, needPositions);
           else if ("left" in n) {
-            await collect(n.left, target);
-            await collect(n.right, target);
+            await collect(n.left, target, needPositions);
+            await collect(n.right, target, needPositions);
           }
         };
         await collect(ast);
@@ -305,6 +345,25 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
           result.results.map((h) => h.doc),
           q + field,
         ).toEqual(expected.slice(0, 7).map((h) => h.doc));
+        if (ast.kind !== "phrase" && !q.includes("W/") && !q.includes("%")) {
+          const membership = new SuffixEvidence();
+          await collect(ast, membership, false);
+          const booleanResult = await engine.search(
+            q,
+            new Reader(root, source),
+            {
+              ...options,
+              phraseExecution: {
+                generation: root.generation,
+                execution: membership,
+              },
+            },
+          );
+          expect(
+            booleanResult.results.map((h) => h.doc),
+            q + field + " membership only",
+          ).toEqual(expected.slice(0, 7).map((h) => h.doc));
+        }
         const staged = new SuffixEvidence(),
           parallel = await engine.search(q, new Reader(root, source), {
             ...options,
