@@ -32,6 +32,10 @@ import {
 import { SuffixReader } from "../src/suffix/reader.js";
 import { SuffixEvidence } from "../src/suffix/evidence.js";
 import { searchWithSuffix } from "../src/suffix/search.js";
+import {
+  scoredConjunction,
+  rankSuffixConjunction,
+} from "../src/suffix/boolean-rank.js";
 import { buildSuffixIndex } from "../scripts/suffix-builder.js";
 import { parse, queryTerms } from "../src/query/parser.js";
 import { tokenize } from "../src/query/tokenize.js";
@@ -209,6 +213,10 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
       '"a b"',
       '"a b c d"',
       '"a a"',
+      '"a b" AND "c d"',
+      '"a b a" AND "c d"',
+      '"a b" AND "b c"',
+      '("a b" AND "c d") AND "x x"',
       '"a b" OR "c d"',
       '"a b" AND NOT "b c"',
       'NOT ("a b" OR "d a")',
@@ -297,13 +305,46 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
             actual.results.map((h) => h.doc),
             q + field,
           ).toEqual(expected.slice(0, 7).map((h) => h.doc));
+          if (scoredConjunction(ast))
+            expect(actual.diagnostics.executor).toBe("suffix-boolean-ranked");
           for (const h of actual.results) {
+            expect(h.score).toBeCloseTo(
+              expected.find((e) => e.doc === h.doc)!.score,
+              12,
+            );
             expect(h.id).toBe(String(h.doc));
             expect(h.metadata).toEqual({ doc: h.doc });
             expect(h.snippet).toBeDefined();
           }
+          if (scoredConjunction(ast) && actual.results.length) {
+            const after = actual.results.at(-1)!,
+              next = await searchWithSuffix(
+                engine,
+                suffix(),
+                q,
+                new Reader(root, source),
+                { ...options, after: { doc: after.doc, score: after.score } },
+                { bits, rangeMax: false },
+              );
+            expect(next.results.map((h) => h.doc)).toEqual(
+              expected.slice(7, 14).map((h) => h.doc),
+            );
+          }
         }
       }
+    const bounded = suffix();
+    expect(
+      await rankSuffixConjunction(
+        bounded,
+        [Uint32Array.of(1, 2), Uint32Array.of(3, 4)],
+        { bits: 8, limit: 7 },
+        async () => {
+          throw Error("Must not rescore");
+        },
+        1,
+      ),
+    ).toBeUndefined();
+    expect(bounded.stats.rescoreCandidates).toBe(0);
     await expect(
       engine.search('"a b"', new Reader(root, source), {
         phraseExecution: {
@@ -316,3 +357,18 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
     await rm(directory, { recursive: true, force: true });
   }
 }, 30000);
+it("combines scores only for mandatory phrases with disjoint normalized words", () => {
+  expect(scoredConjunction(parse('"a b a" AND "c d"'))).toEqual([
+    ["a", "b", "a"],
+    ["c", "d"],
+  ]);
+  for (const q of [
+    '"a b" AND "b c"',
+    '"a b" OR "c d"',
+    '"a b" AND NOT "c d"',
+    '"a b" W/2 "c d"',
+    '"a b" AND c',
+    '"a b c d e f" AND "g h"',
+  ])
+    expect(scoredConjunction(parse(q)), q).toBeUndefined();
+});

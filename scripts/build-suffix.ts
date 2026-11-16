@@ -87,12 +87,17 @@ async function* documents() {
     // Prefetch compressed numeric blocks four at a time. This is preparation,
     // outside all search timings and unrelated to simulated request caches.
     for (let at = 0; at < run.chunks.length; at += 4) {
-      const blocks = await Promise.all(run.chunks.slice(at, at + 4).map(get));
-      for (const bytes of blocks)
-        for (const row of decodeNumeric(gunzipSync(bytes))) {
+      const chunks = run.chunks.slice(at, at + 4),
+        blocks = await Promise.all(chunks.map(get));
+      for (let i = 0; i < blocks.length; i++) {
+        for (const row of decodeNumeric(gunzipSync(blocks[i]))) {
           if (row.doc !== next++) throw Error("Suffix numeric document gap");
           yield row;
         }
+        // Source rows are durable in the constructor. Keep just the current
+        // prefetch window locally while the larger suffix staging files grow.
+        await rm(output + "/cache/" + chunks[i].sha256, { force: true });
+      }
     }
     if (next !== run.end) throw Error("Incomplete suffix numeric run");
   }

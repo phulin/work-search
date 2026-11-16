@@ -12,6 +12,8 @@ import {
   compareSuffix,
   documentSuffixRows,
   canonicalBit,
+  SUFFIX_ROW_BYTES,
+  quantizerForMaximum,
   type FixedScores,
 } from "../src/suffix/format.js";
 import { bm25 } from "../src/query/engine.js";
@@ -30,6 +32,42 @@ it("quantizes with conservative bounds and compares suffixes without crossing fi
   const tokens = Uint32Array.of(1, 2, 0, 1, 2, 3, 0, 1, 2, 0);
   expect(compareSuffix(tokens, 0, 3)).toBeLessThan(0);
   expect(compareSuffix(tokens, 0, 7)).toBeLessThan(0);
+});
+it("scales common phrase scores to their block without losing exact staging inputs", () => {
+  for (const bits of [8, 16] as const) {
+    const q = quantizerForMaximum(0.003, bits),
+      global = quantizer(1000000, bits);
+    expect(q.step).toBeLessThan(global.step / 10000);
+    for (const score of [0, 0.0000001, 0.00043, 0.0029, 0.003]) {
+      const interval = scoreInterval(quantize(score, q), q);
+      expect(interval.lower).toBeLessThanOrEqual(score);
+      expect(interval.upper).toBeGreaterThanOrEqual(score);
+    }
+    expect(quantize(0, quantizerForMaximum(0, bits))).toBe(0);
+  }
+  const row: NumericDocument = {
+      doc: 0,
+      body: Uint32Array.of(1, 2, 1, 2),
+      title: Uint32Array.of(1, 2),
+    },
+    stats: FixedScores = {
+      count: 1000000,
+      avgBody: 1000,
+      avgTitle: 5,
+      titleBoost: 2,
+      df: Uint32Array.of(0, 999990, 999980),
+    },
+    raw = documentSuffixRows(row, 0, stats),
+    v = new DataView(raw.buffer),
+    exact = [1, 2].reduce(
+      (score, id) =>
+        score +
+        bm25(2, stats.df[id], stats.count, 4, stats.avgBody) +
+        2 * bm25(1, stats.df[id], stats.count, 2, stats.avgTitle),
+      0,
+    );
+  expect(v.getFloat64(16, true)).toBeCloseTo(exact, 15);
+  expect(v.getFloat64(16, true)).not.toBe(Math.fround(exact));
 });
 it("finds exhaustive phrase intervals, canonical field memberships and exact top-k for both quantizers", async () => {
   const directory = await mkdtemp(join(tmpdir(), "word-suffix-"));
@@ -211,7 +249,7 @@ it("keeps distinct phrases canonical even when their routing hashes collide", ()
       df,
     }),
     v = new DataView(bytes.buffer),
-    flags = (row: number) => v.getUint16(row * 28 + 12, true);
+    flags = (row: number) => v.getUint16(row * SUFFIX_ROW_BYTES + 12, true);
   expect(flags(0) & canonicalBit(2, "all")).not.toBe(0);
   expect(flags(3) & canonicalBit(2, "all")).not.toBe(0);
   expect(flags(6) & canonicalBit(2, "all")).toBe(0);

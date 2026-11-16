@@ -3,7 +3,7 @@ import {
   mkdir,
   readFile,
   writeFile,
-  readdir,
+  rm,
   stat,
   unlink,
   rename,
@@ -19,7 +19,8 @@ import {
   documentSuffixRows,
   compareSuffix,
   prefix,
-  quantizer,
+  quantize,
+  quantizerForMaximum,
   type FixedScores,
   type SuffixBlock,
   type SuffixColumn,
@@ -80,6 +81,21 @@ export async function buildSuffixIndex(
   analysis?: string,
   sortMiB = 128,
 ) {
+  const finished = await readFile(output + "/manifest.json", "utf8").then(
+    JSON.parse,
+    () => undefined,
+  );
+  if (finished) {
+    if (
+      finished.corpusGeneration !== corpusGeneration ||
+      finished.count !== stats.count ||
+      finished.analysis !== analysis ||
+      finished.fixed.avgBody !== stats.avgBody ||
+      finished.fixed.avgTitle !== stats.avgTitle
+    )
+      throw Error("Different completed suffix corpus");
+    return finished as SuffixManifest;
+  }
   await mkdir(output + "/staging", { recursive: true });
   if (!stats.idf)
     stats = {
@@ -141,7 +157,13 @@ export async function buildSuffixIndex(
       await tokenFile.close();
       await Promise.all([...sinks.values()].map((s) => s.close()));
     }
-    extracted = { corpusGeneration, rows, tokens: offset, documents: next };
+    extracted = {
+      corpusGeneration,
+      rows,
+      tokens: offset,
+      documents: next,
+      buckets: [...sinks.keys()].sort((a, b) => a - b),
+    };
     await writeFile(rootPath, JSON.stringify(extracted));
   }
   const tokens = new Uint32Array(extracted.tokens),
@@ -166,6 +188,24 @@ export async function buildSuffixIndex(
     terminal = false,
     higher = 0,
   ): Promise<string[]> {
+    const split = await readFile(path + ".split.json", "utf8").then(
+      JSON.parse,
+      () => undefined,
+    );
+    if (split) {
+      const parts: string[] = [];
+      for (const child of split)
+        parts.push(
+          ...(await partition(
+            child.path,
+            child.depth,
+            child.shift,
+            child.terminal,
+            child.higher,
+          )),
+        );
+      return parts;
+    }
     const size = (await stat(path)).size;
     if (size <= sortMiB * 1048576) return [path];
     const histogram = new Uint32Array(256);
@@ -210,6 +250,12 @@ export async function buildSuffixIndex(
     } finally {
       await Promise.all([...sinks.values()].map((s) => s.close()));
     }
+    const children = occupied.map((bucket) => ({
+      path: path + "." + bucket,
+      ...next(bucket),
+    }));
+    await writeFile(path + ".split.json.tmp", JSON.stringify(children));
+    await rename(path + ".split.json.tmp", path + ".split.json");
     await unlink(path);
     const parts: string[] = [];
     for (const bucket of occupied) {
@@ -226,9 +272,7 @@ export async function buildSuffixIndex(
     }
     return parts;
   }
-  const names = (await readdir(output + "/staging"))
-    .filter((n) => /^\d+\.rows$/.test(n))
-    .sort((a, b) => Number(a.split(".")[0]) - Number(b.split(".")[0]));
+  const names = extracted.buckets.map((n: number) => n + ".rows") as string[];
   let partitions: string[] | undefined = await readFile(
     output + "/partitions.json",
     "utf8",
@@ -299,7 +343,9 @@ export async function buildSuffixIndex(
         words = new Uint32Array(raw.buffer, raw.byteOffset, raw.byteLength / 4),
         count = raw.length / ROW,
         order = Uint32Array.from({ length: count }, (_, i) => i);
-      order.sort((a, b) => compareSuffix(tokens, words[a * 7], words[b * 7]));
+      order.sort((a, b) =>
+        compareSuffix(tokens, words[a * (ROW / 4)], words[b * (ROW / 4)]),
+      );
       for (let start = 0; start < count; start += BLOCK) {
         const n = Math.min(BLOCK, count - start),
           offsets = new Uint32Array(n),
@@ -308,8 +354,7 @@ export async function buildSuffixIndex(
           flags = new Uint16Array(n),
           score16 = Array.from({ length: 4 }, () => new Uint16Array(n)),
           score8 = Array.from({ length: 4 }, () => new Uint8Array(n)),
-          maxima16 = [0, 0, 0, 0],
-          maxima8 = [0, 0, 0, 0];
+          scoreMaximum = [0, 0, 0, 0];
         let minDocument = stats.count;
         for (let j = 0; j < n; j++) {
           const at = order[start + j] * ROW;
@@ -319,12 +364,24 @@ export async function buildSuffixIndex(
           flags[j] = raw.readUInt16LE(at + 12);
           minDocument = Math.min(minDocument, docs[j]);
           for (let p = 0; p < 4; p++) {
-            const a = (score16[p][j] = raw.readUInt16LE(at + 14 + p * 2)),
-              b = (score8[p][j] = raw[at + 22 + p]);
-            if (flags[j] & (7 << (p * 3))) {
-              maxima16[p] = Math.max(maxima16[p], a);
-              maxima8[p] = Math.max(maxima8[p], b);
-            }
+            if (flags[j] & (7 << (p * 3)))
+              scoreMaximum[p] = Math.max(
+                scoreMaximum[p],
+                raw.readDoubleLE(at + 16 + p * 8),
+              );
+          }
+        }
+        const q16 = scoreMaximum.map((m) => quantizerForMaximum(m, 16)),
+          q8 = scoreMaximum.map((m) => quantizerForMaximum(m, 8));
+        for (let j = 0; j < n; j++) {
+          const at = order[start + j] * ROW;
+          for (let p = 0; p < 4; p++) {
+            // Noncanonical entries never participate in prefix ranking. Their
+            // canonical occurrence can lie in another block with another scale.
+            if (!(flags[j] & (7 << (p * 3)))) continue;
+            const score = raw.readDoubleLE(at + 16 + p * 8);
+            score16[p][j] = quantize(score, q16[p]);
+            score8[p][j] = quantize(score, q8[p]);
           }
         }
         const values: Uint8Array[] = [
@@ -350,8 +407,7 @@ export async function buildSuffixIndex(
           low: [...prefix(tokens, offsets[0])],
           high: [...prefix(tokens, offsets.at(-1)!)],
           columns: refs,
-          maxima16,
-          maxima8,
+          scoreMaximum,
           minDocument,
         });
         first += n;
@@ -396,10 +452,6 @@ export async function buildSuffixIndex(
     rows: first,
     analysis,
     fixed: { titleBoost: 2, avgBody: stats.avgBody, avgTitle: stats.avgTitle },
-    quantizers: {
-      q16: quantizer(stats.count, 16),
-      q8: quantizer(stats.count, 8),
-    },
     directory: roots,
     files,
   };
@@ -408,6 +460,7 @@ export async function buildSuffixIndex(
     .digest("hex");
   await writeFile(output + "/manifest.json.tmp", JSON.stringify(manifest));
   await rename(output + "/manifest.json.tmp", output + "/manifest.json");
+  await rm(output + "/staging", { recursive: true, force: true });
   await writeFile(
     output + "/construction.json",
     JSON.stringify({

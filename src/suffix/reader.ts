@@ -2,7 +2,6 @@ import { Semaphore, Lru } from "../columnar/storage.js";
 import {
   PREFIX_WORDS,
   canonicalBit,
-  scoreInterval,
   type SuffixBlock,
   type SuffixColumn,
   type SuffixManifest,
@@ -257,11 +256,5 @@ export class SuffixReader {
     }
     docs.sort((a, b) => a - b);
     return Uint32Array.from(docs.filter((d, i) => !i || d !== docs[i - 1]));
-  }
-  bounds(code: number, bits: 8 | 16) {
-    return scoreInterval(
-      code,
-      bits === 16 ? this.manifest.quantizers.q16 : this.manifest.quantizers.q8,
-    );
   }
 }

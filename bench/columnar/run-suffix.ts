@@ -5,7 +5,13 @@ import { execFileSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { ColumnarIndex } from "../../src/columnar/search.js";
-import { Memory, Lru, Reader } from "../../src/columnar/storage.js";
+import {
+  Memory,
+  Lru,
+  Reader,
+  Semaphore,
+  type Source,
+} from "../../src/columnar/storage.js";
 import { TermDirectory } from "../../src/columnar/term-directory.js";
 import { DocumentDirectory } from "../../src/columnar/document-directory.js";
 import {
@@ -126,6 +132,20 @@ function check(actual: any, s: any) {
   }
   if (actual.total !== undefined) throw Error("Exact totals must be off");
 }
+function limitSource(source: Source, slots: Semaphore): Source {
+  return {
+    read: (...args) => slots.run(() => source.read(...args)),
+    readNamed: source.readNamed
+      ? (...args) => slots.run(() => source.readNamed!(...args))
+      : undefined,
+    readPage: source.readPage
+      ? (...args) => slots.run(() => source.readPage!(...args))
+      : undefined,
+    readWhole: source.readWhole
+      ? (...args) => slots.run(() => source.readWhole!(...args))
+      : undefined,
+  };
+}
 async function query(s: any, plan: string, prepare: boolean) {
   const frozen = plan === "control",
     MemoryClass = frozen ? controlStorage.Memory : Memory,
@@ -140,6 +160,9 @@ async function query(s: any, plan: string, prepare: boolean) {
   memory.decoded = new Lru(4 * 1048576);
   const io = new SimulatedIO(storage, model),
     suffixIO = new SimulatedIO({ read: suffixRead }, model),
+    slots = new Semaphore(6),
+    engineSource = limitSource(io.source, slots),
+    suffixSource = limitSource(suffixIO.source, slots),
     directory = new DirectoryClass(assets.directory!, root.count),
     documents = new DocumentsClass(assets.documents!),
     engine = new IndexClass(
@@ -153,7 +176,7 @@ async function query(s: any, plan: string, prepare: boolean) {
     writes: Promise<any>[] = [],
     reader = new ReaderClass(
       root,
-      prepare ? storage : io.source,
+      prepare ? storage : engineSource,
       memory,
       prepare ? undefined : io.shared,
       "cold-" + randomUUID(),
@@ -161,7 +184,7 @@ async function query(s: any, plan: string, prepare: boolean) {
       { remaining: 900 },
     ),
     suffix = manifest
-      ? new SuffixReader(manifest, prepare ? suffixRead : suffixIO.source.read)
+      ? new SuffixReader(manifest, prepare ? suffixRead : suffixSource.read)
       : undefined;
   io.delaysEnabled = suffixIO.delaysEnabled = process.env.CWS_NO_DELAY !== "1";
   const cpu = process.cpuUsage(),
@@ -214,6 +237,7 @@ const provenance = {
     "Empty application and shared caches for every timed request; filesystem/JIT priming is untimed.",
   notes: [
     "Simulated I/O; local process CPU is not Worker CPU.",
+    "Suffix and existing index requests share six simulated origin slots.",
     "Complete JSON responses include metadata and snippets.",
     "200 query definitions and expected ranks use the same corpus as the previous 1M run; snippets may select a different valid occurrence.",
   ],

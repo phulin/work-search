@@ -1,5 +1,9 @@
 import { Heap, type Hit } from "../columnar/top-k.js";
-import { canonicalBit, type SuffixColumn } from "./format.js";
+import {
+  canonicalBit,
+  quantizerForMaximum,
+  type SuffixColumn,
+} from "./format.js";
 import type { SuffixReader } from "./reader.js";
 export interface SuffixRankOptions {
   bits: 8 | 16;
@@ -8,8 +12,8 @@ export interface SuffixRankOptions {
   after?: { doc: number; score: number };
   rangeMax?: boolean;
 }
-/** Quantization never chooses the final order. A threshold is raised only by
- * exact rescoring of documents whose phrase membership is already established. */
+/** Quantization never chooses the final order. Conservative score thresholds
+ * come only from verified phrase matches; finalists are always rescored. */
 export async function rankSuffix(
   reader: SuffixReader,
   phrase: Uint32Array,
@@ -20,6 +24,7 @@ export async function rankSuffix(
     throw Error("Suffix score prefixes cover lengths 2–5");
   const interval = await reader.interval(phrase),
     heap = new Heap(options.limit),
+    proven = new Heap(options.limit),
     field = options.field ?? "all",
     bit = canonicalBit(phrase.length, field),
     scoreColumn = `score${options.bits}-${phrase.length}` as SuffixColumn,
@@ -28,9 +33,7 @@ export async function rankSuffix(
       { doc: number; first: number; titleOnly: boolean; upper: number }
     >();
   const competitive = (upper: number, doc: number) =>
-    !heap.threshold ||
-    upper > heap.threshold.score ||
-    (upper === heap.threshold.score && doc < heap.threshold.doc);
+    heap.accepts(doc, upper) && proven.accepts(doc, upper);
   const flush = async () => {
     const candidates = [...pending.values()]
       .filter((c) => competitive(c.upper, c.doc))
@@ -63,20 +66,13 @@ export async function rankSuffix(
   };
   if (options.rangeMax)
     interval.blocks.sort((a, b) => {
-      const maxima = (v: typeof a) =>
-        options.bits === 16
-          ? v.maxima16[phrase.length - 2]
-          : v.maxima8[phrase.length - 2];
+      const maxima = (v: typeof a) => v.scoreMaximum[phrase.length - 2];
       return maxima(b) - maxima(a) || a.minDocument - b.minDocument;
     });
   const admit = (block: (typeof interval.blocks)[number]) => {
-    const maximum = (options.bits === 16 ? block.maxima16 : block.maxima8)[
-      phrase.length - 2
-    ];
-    return competitive(
-      reader.bounds(maximum, options.bits).upper,
-      block.minDocument,
-    );
+    const maximum = block.scoreMaximum[phrase.length - 2],
+      error = 128 * Number.EPSILON * Math.max(1, maximum);
+    return competitive(maximum + error, block.minDocument);
   };
   for await (const batch of reader.scan(
     interval,
@@ -90,7 +86,12 @@ export async function rankSuffix(
       docs = view("documents"),
       positions = view("positions"),
       flags = view("flags"),
-      scores = view(scoreColumn);
+      scores = view(scoreColumn),
+      q = quantizerForMaximum(
+        batch.block.scoreMaximum[phrase.length - 2],
+        options.bits,
+      ),
+      error = 128 * Number.EPSILON * Math.max(1, q.maximum);
     for (let row = batch.first; row < batch.end; row++) {
       if (!(flags.getUint16(row * 2, true) & bit)) continue;
       const doc = docs.getUint32(row * 4, true),
@@ -102,20 +103,28 @@ export async function rankSuffix(
           options.bits === 16
             ? scores.getUint16(row * 2, true)
             : scores.getUint8(row),
-        bounds = reader.bounds(code, options.bits);
-      if (
-        field === "all" &&
-        options.after &&
-        bounds.lower > options.after.score
-      )
+        lower = Math.max(0, code * q.step - error),
+        upper = Math.min(q.maximum, (code + 1) * q.step) + error;
+      if (field === "all" && options.after && lower > options.after.score)
         continue;
-      if (!competitive(bounds.upper, doc)) continue;
+      // Canonical rows prove membership. K conservative lower scores can prune
+      // upper bounds before score completion. With a cursor, uncertain rows on
+      // its wrong side must not establish a competitive threshold.
+      const fieldLower = field === "all" ? lower : 0;
+      if (
+        (!options.after ||
+          upper < options.after.score ||
+          (upper === options.after.score && doc > options.after.doc)) &&
+        proven.accepts(doc, fieldLower)
+      )
+        proven.add({ doc, score: fieldLower, row: doc % 4096 });
+      if (!competitive(upper, doc)) continue;
       // For body/title, the all-field score remains a conservative upper bound.
       pending.set(doc, {
         doc,
         first: position % 2 ** 31,
         titleOnly,
-        upper: bounds.upper,
+        upper,
       });
       if (pending.size >= 1024) await flush();
     }

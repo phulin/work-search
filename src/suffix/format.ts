@@ -1,7 +1,7 @@
 import { contribution } from "../columnar/scoring.js";
 import type { NumericDocument } from "../columnar/construction/analyzed-document.js";
 
-export const SUFFIX_ROW_BYTES = 28;
+export const SUFFIX_ROW_BYTES = 48;
 export const PREFIX_WORDS = 8;
 export const SUFFIX_BLOCK_ROWS = 4096;
 export interface FixedScores {
@@ -20,7 +20,12 @@ export interface Quantizer {
 export function quantizer(count: number, bits: 8 | 16): Quantizer {
   // At most five distinct words. tf/(tf+positive) < 1 in both fields.
   const maximum = 5 * 2.2 * 3 * Math.log(1 + (count - 0.5) / 1.5);
-  return { maximum, bits, step: maximum / (2 ** bits - 1) };
+  return quantizerForMaximum(maximum, bits);
+}
+export function quantizerForMaximum(maximum: number, bits: 8 | 16): Quantizer {
+  if (!Number.isFinite(maximum) || maximum < 0)
+    throw Error("Invalid suffix score maximum");
+  return { maximum, bits, step: (maximum || Number.EPSILON) / (2 ** bits - 1) };
 }
 export function quantize(score: number, q: Quantizer) {
   const error = 128 * Number.EPSILON * Math.max(1, q.maximum);
@@ -118,9 +123,7 @@ export function documentSuffixRows(
     titleSeen = Array.from(
       { length: 4 },
       () => new Map<number, number | number[]>(),
-    ),
-    q16 = quantizer(stats.count, 16),
-    q8 = quantizer(stats.count, 8);
+    );
   const equal = (other: number, p: number, length: number, field: number) => {
     const source = fields[other >= 2 ** 31 ? 1 : 0],
       at = other % 2 ** 31;
@@ -178,8 +181,9 @@ export function documentSuffixRows(
           flags |= canonicalBit(n, "all") | (!f ? canonicalBit(n, "body") : 0);
         if (f && !previousOccurrence(titleSeen[n - 2], hash, p, n, f))
           flags |= canonicalBit(n, "title");
-        v.setUint16(at + 14 + (n - 2) * 2, quantize(score, q16), true);
-        v.setUint8(at + 22 + n - 2, quantize(score, q8));
+        // Keep full precision through sorting. Each aligned block selects its
+        // own scale after canonical occurrences have been grouped by suffix.
+        v.setFloat64(at + 16 + (n - 2) * 8, score, true);
       }
       v.setUint16(at + 12, flags, true);
     }
@@ -206,8 +210,7 @@ export interface SuffixBlock {
   high: number[];
   columns: Record<SuffixColumn, SuffixRef>;
   /** All-field upper bounds; conservative for body/title at the fixed boost. */
-  maxima16: number[];
-  maxima8: number[];
+  scoreMaximum: number[];
   minDocument: number;
 }
 export interface SuffixManifest {
@@ -218,7 +221,6 @@ export interface SuffixManifest {
   rows: number;
   analysis?: string;
   fixed: { titleBoost: 2; avgBody: number; avgTitle: number };
-  quantizers: { q16: Quantizer; q8: Quantizer };
   directory: {
     low: number[];
     high: number[];
