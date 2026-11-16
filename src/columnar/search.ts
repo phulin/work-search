@@ -8,6 +8,7 @@ import {
 } from "./exact-phrase.js";
 import { scoreParameters } from "./scoring.js";
 import { executePhraseFrequencies } from "./phrase-frequency.js";
+import { planTermFilter, readTermFilter } from "./term-filter.js";
 import { filterDocuments, type DocumentFilter } from "./document-filter.js";
 import { scoreLookahead, SCORE_LOOKAHEAD_WINDOWS } from "./score-lookahead.js";
 import { leaves } from "./candidate-layout.js";
@@ -404,6 +405,23 @@ export class ColumnarIndex {
       unigramAnchors = preliminary?.anchors?.filter(
         (name) => !provedWords.has(name),
       ),
+      termFilter =
+        membershipRead && bundled
+          ? planTermFilter(
+              original,
+              bundled,
+              this.root,
+              preliminary,
+              Math.min(
+                preliminary?.expectedCandidates ?? this.root.count,
+                membershipRead.expectedCandidates,
+              ),
+              provedWords,
+              excludedWords ?? new Set(),
+              basePackages?.averageBytes ?? 16384,
+              options.exactTotal ?? false,
+            )
+          : undefined,
       filterAlternative =
         preliminary && membershipRead
           ? {
@@ -450,18 +468,26 @@ export class ColumnarIndex {
           this.membership
             ? loadCommonPresence(presenceRanks, reader, this.membership)
             : [],
-          membershipRead &&
-          preliminary?.kind === "documents" &&
-          unigramAnchors?.length &&
-          bundled
-            ? readAnchorDocuments(
-                unigramAnchors,
+          termFilter && bundled
+            ? readTermFilter(
+                termFilter,
                 bundled,
+                this.root,
                 reader,
                 options.field ?? "all",
-                this.root,
               )
-            : undefined,
+            : membershipRead &&
+                preliminary?.kind === "documents" &&
+                unigramAnchors?.length &&
+                bundled
+              ? readAnchorDocuments(
+                  unigramAnchors,
+                  bundled,
+                  reader,
+                  options.field ?? "all",
+                  this.root,
+                )
+              : undefined,
           exact
             ? Promise.resolve(new Map())
             : readExactPhrasePairs(

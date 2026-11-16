@@ -50,7 +50,7 @@ export interface PairReadPlan {
 const cellCoverage = (count: number, documents: number) =>
   -Math.expm1((-128 * count) / documents);
 /** Work estimates select reads; they never reject a matching document. */
-function savedWork(
+export function savedWork(
   alternative: FilterAlternative,
   candidates: number,
   documents: number,

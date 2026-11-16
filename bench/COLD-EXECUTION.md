@@ -1,5 +1,72 @@
 # Cold search execution, 1M court cases
 
+## Clean live comparison
+
+The completed interleaved run used 200 queries × three repetitions × two
+Workers, with no overlapping search experiments. All 1,200 complete responses
+succeeded and preserved ranked IDs/order, metadata and snippets (scores within
+1e-10 relative tolerance). Independent validation passed all 76 oracle queries.
+Application caches reset inside each request; every request used a unique shared
+cache namespace. Exact totals and response caching were off.
+
+| Metric                  | Frozen control | Replacement |
+| ----------------------- | -------------: | ----------: |
+| Client P50              |       1,359 ms |    1,252 ms |
+| Client P95              |       4,317 ms |    3,463 ms |
+| Client P99              |       7,262 ms |    4,816 ms |
+| Worker CPU P50          |         308 ms |      292 ms |
+| Worker CPU P95          |       1,451 ms |    1,319 ms |
+| Worker CPU P99          |       2,179 ms |    1,741 ms |
+| Errors                  |        0 / 600 |     0 / 600 |
+| Native CPU observations |      600 / 600 |   600 / 600 |
+
+The control is version `c926c8cd-47ae-496a-af72-7f6887e4787b`; the replacement
+is `e04c2574-e9ec-4e73-8a02-079f6ac62e1a` (commit 130c739). Later candidate
+seeking, correlated-anchor replanning, compound phrase scoring and generic
+complete-list reads are **not** in this live table.
+
+Scenario-block bootstrap 95% intervals remain broad: control P99 5,572–8,769 ms,
+replacement P99 3,918–7,020 ms. These are 600-request workload samples, not
+production traffic percentiles or final P99 estimates. Workload classes and
+per-query regressions remain separate in `final-200-report.json.gz`; raw results
+are `final-200.json.gz` under `bench/results/columnar/cold-routing-1m/`.
+
+The largest remaining replacement medians were the common-phrase conjunction
+(5,258 ms), fraud-on-the-court Boolean query (4,256 ms), newly-discovered-evidence
+conjunction (3,730 ms), and stay-discovery Boolean query (3,583 ms). Some slower
+individual queries had identical reads/bytes and nearly identical native CPU;
+three samples cannot establish those differences as engine regressions.
+
+## Cheap term evidence inside Boolean branches
+
+The planner can now combine small complete term lists with pair candidates in
+the initial parallel read wave. For example, `nonparty OR intervenor` supplies
+a conservative filter for the fraud-on-the-court query. Unknown OR sides prevent
+that filter; negative clauses never subtract approximate evidence. Phrases may
+supply a necessary word, but adjacency and exact Boolean verification still
+follow. The final sorted intersection feeds the existing continuation selector.
+
+This optional path is considered only against block execution with more than
+128 forecast pair candidates. It excludes common/proved words, caps individual
+DF at 50,000, total frequency bytes at 1 MiB, and estimated decoded arrays at
+4 MiB. Estimated avoided work must exceed bytes, decoding and request-wave
+cost before any term I/O begins. These are scheduling budgets, not recall limits.
+
+Five-repetition local 1M pilot results against commit 907b6f4:
+
+| Query                                                       | Simulated median, before → after | Local CPU median |      GETs |       Transfer |
+| ----------------------------------------------------------- | -------------------------------: | ---------------: | --------: | -------------: |
+| Fraud on the court / nonparty or intervenor                 |                   1,483 → 963 ms |     927 → 274 ms | 203 → 149 |  50.4 → 7.2 MB |
+| Qualified immunity / First Amendment / retaliation variants |                   1,710 → 677 ms |     505 → 340 ms |  304 → 51 | 7.36 → 7.34 MB |
+
+The other three pilot queries performed no new filter reads and retained their
+work counters. Their timing variability, alongside the background suffix build,
+precludes attributing small CPU/latency movements. All results matched; the full
+suite passed 97 files / 348 tests, including the existing damaged-preparation
+test and a new verified-range coverage test. Evidence is in
+`boolean-term-filter-local.json.gz`; full 200-query local and live comparisons
+are kept separately.
+
 ## Further candidate execution changes
 
 Sorted membership cursors now use their existing restart tables to seek past
