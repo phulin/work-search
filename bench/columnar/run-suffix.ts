@@ -76,7 +76,7 @@ const model = {
     : ["control"],
   repeats = Number(process.env.CWS_REPEATS ?? 3),
   startedAt = new Date().toISOString(),
-  frozen = resolve("work/suffix-control-9b4b887");
+  frozen = resolve("work/suffix-control-a08e7fe");
 await mkdir(frozen, { recursive: true });
 if (
   !(await readFile(frozen + "/src/columnar/search.ts").then(
@@ -85,7 +85,7 @@ if (
   ))
 )
   execFileSync("tar", ["-x", "-C", frozen], {
-    input: execFileSync("git", ["archive", "9b4b887", "src"], {
+    input: execFileSync("git", ["archive", "a08e7fe", "src"], {
       maxBuffer: 32 * 1048576,
     }),
   });
@@ -226,7 +226,7 @@ const provenance = {
   index,
   suffixGeneration: manifest?.generation,
   code: execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
-  control: "9b4b887",
+  control: "a08e7fe",
   model,
   plans,
   repeats,
