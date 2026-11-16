@@ -18,7 +18,7 @@ export async function rankQuantizedRows(
   rescore: (documents: Uint32Array) => Promise<Float64Array>,
 ) {
   const bundled = options.rangeMax
-    ? reader.phraseRanking(phrase, options.limit, options.after)
+    ? await reader.phraseRanking(phrase, options.limit, options.after)
     : undefined;
   if (bundled) {
     reader.stats.rescoreCandidates += bundled.length;

@@ -5,15 +5,26 @@ import { SuffixReader } from "../src/suffix/reader.js";
 import { Lru } from "../src/columnar/storage.js";
 import {
   encodePhraseRanks,
+  phraseRankDirectory,
   type PhraseRankRecord,
 } from "../src/suffix/phrase-ranks.js";
 import type { SuffixManifest } from "../src/suffix/format.js";
 import { collectPhraseRanking } from "./suffix-phrase-ranking.js";
 
-const [directory, countText = "4096"] = process.argv.slice(2),
-  count = Number(countText);
-if (!directory || !Number.isInteger(count) || count < 1 || count > 65536)
-  throw Error("Use SUFFIX_DIRECTORY [PHRASE_COUNT]");
+const [directory, countText = "65536", inlineText = "4096"] =
+    process.argv.slice(2),
+  count = Number(countText),
+  inlineCount = Number(inlineText);
+if (
+  !directory ||
+  !Number.isInteger(count) ||
+  count < 1 ||
+  count > 65536 ||
+  !Number.isInteger(inlineCount) ||
+  inlineCount < 0 ||
+  inlineCount > count
+)
+  throw Error("Use SUFFIX_DIRECTORY [PHRASE_COUNT] [BUNDLED_PHRASE_COUNT]");
 const manifest: SuffixManifest = JSON.parse(
     await readFile(directory + "/manifest-intervals.json", "utf8"),
   ),
@@ -37,6 +48,11 @@ const manifest: SuffixManifest = JSON.parse(
   handles = new Map<string, ReturnType<typeof open>>(),
   cache = new Lru<Uint8Array>(64 * 1048576),
   records: PhraseRankRecord[] = [],
+  intervalDirectory = new PhraseIntervals(
+    intervals,
+    manifest.corpusGeneration,
+    manifest.rows,
+  ),
   started = Date.now();
 let reads = 0,
   bytes = 0,
@@ -90,21 +106,40 @@ try {
   await Promise.all([...handles.values()].map(async (h) => (await h).close()));
 }
 const raw = encodePhraseRanks(
-    records,
-    manifest.corpusGeneration,
-    manifest.rows,
-  ),
-  sha256 = createHash("sha256").update(raw).digest("hex"),
-  name = `phrase-ranks-${sha256.slice(0, 16)}`;
-await writeFile(directory + "/" + name, raw);
-manifest.files[name] = { bytes: raw.length, sha256 };
-manifest.phraseRanks = name;
+  records,
+  manifest.corpusGeneration,
+  manifest.rows,
+);
+const save = async (label: string, bytes: Uint8Array) => {
+  const sha256 = createHash("sha256").update(bytes).digest("hex"),
+    name = label + "-" + sha256.slice(0, 16);
+  await writeFile(directory + "/" + name, bytes);
+  manifest.files[name] = { bytes: bytes.length, sha256 };
+  return name;
+};
+manifest.phraseRankRows = await save("phrase-rank-rows", raw);
+const index = phraseRankDirectory(raw);
+manifest.phraseRankIndex = await save("phrase-rank-index", index);
+const hot = records
+    .slice()
+    .sort((a, b) => {
+      const x = intervalDirectory.lookup(Uint32Array.from(a.words))!,
+        y = intervalDirectory.lookup(Uint32Array.from(b.words))!;
+      return (
+        y.end - y.first - (x.end - x.first) ||
+        x.first - y.first ||
+        a.words.length - b.words.length
+      );
+    })
+    .slice(0, inlineCount),
+  inline = encodePhraseRanks(hot, manifest.corpusGeneration, manifest.rows);
+manifest.phraseRanks = await save("phrase-ranks", inline);
 manifest.generation = "";
 manifest.generation = createHash("sha256")
   .update(JSON.stringify(manifest))
   .digest("hex");
 await writeFile(
-  directory + `/manifest-phrase-ranks-${count}.json`,
+  directory + `/manifest-phrase-ranks-${count}-inline-${inlineCount}.json`,
   JSON.stringify(manifest),
 );
 console.log(
@@ -113,6 +148,9 @@ console.log(
     records: records.length,
     usableAt20: usable,
     bytes: raw.length,
+    directoryBytes: index.length,
+    bundledRankingBytes: index.length + inline.length,
+    inlineCount,
     seconds: (Date.now() - started) / 1000,
   }),
 );

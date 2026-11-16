@@ -59,6 +59,7 @@ export class SuffixReader {
     rankingPrefetchUnused: 0,
     intervalHits: 0,
     phraseRankHits: 0,
+    remotePhraseRankHits: 0,
   };
   private slots = new Semaphore(6);
   private cache = new Lru<Uint8Array>(8 * 1048576);
@@ -68,12 +69,14 @@ export class SuffixReader {
   private fences?: SuffixFences;
   private intervals?: PhraseIntervals;
   private phraseRanks?: PhraseRanks;
+  private phraseRankIndex?: PhraseRanks;
   get buffers() {
     return {
       bundledBytes:
         (this.fences?.bytes.byteLength ?? 0) +
         (this.intervals?.bytes.byteLength ?? 0) +
-        (this.phraseRanks?.bytes.byteLength ?? 0),
+        (this.phraseRanks?.bytes.byteLength ?? 0) +
+        (this.phraseRankIndex?.bytes.byteLength ?? 0),
       retainedColumnBytes: this.cache.bytes,
       peakRetainedColumnBytes: this.cache.peak,
       retainedDirectoryBytes: this.directories.bytes,
@@ -88,6 +91,7 @@ export class SuffixReader {
       rankingLookahead?: number;
       intervals?: Uint8Array;
       phraseRanks?: Uint8Array;
+      phraseRankIndex?: Uint8Array;
     } = {},
   ) {
     if (manifest.format !== "word-suffix-1" || manifest.fixed.titleBoost !== 2)
@@ -113,17 +117,47 @@ export class SuffixReader {
         manifest.rows,
         manifest.count,
       );
+    if (options.phraseRankIndex) {
+      const rows =
+        manifest.phraseRankRows && manifest.files[manifest.phraseRankRows];
+      if (!rows) throw Error("Missing suffix phrase ranking payload");
+      this.phraseRankIndex = new PhraseRanks(
+        options.phraseRankIndex,
+        manifest.corpusGeneration,
+        manifest.rows,
+        manifest.count,
+        rows.bytes,
+      );
+    }
   }
   /** The omitted-score bound must lose strictly, including possible ties.
    * Cursor/deeper pages keep the complete suffix scan. */
-  phraseRanking(phrase: Uint32Array, limit: number, after?: unknown) {
+  async phraseRanking(phrase: Uint32Array, limit: number, after?: unknown) {
     if (after || limit < 1) return;
-    const record = this.phraseRanks?.lookup(phrase);
+    let record = this.phraseRanks?.lookup(phrase),
+      remote = false;
+    if (!record && this.phraseRankIndex) {
+      const ref = this.phraseRankIndex.locate(phrase);
+      if (!ref || ref.count < limit) return;
+      record = {
+        entries: this.phraseRankIndex.decode(
+          await this.read(
+            this.manifest.phraseRankRows!,
+            ref.offset,
+            ref.length,
+            false,
+          ),
+        ),
+        tailUpper: ref.tailUpper,
+      };
+      remote = true;
+    }
     if (!record || record.entries.length < limit) return;
     const ordered = record.entries.slice().sort((a, b) => b.lower - a.lower),
       threshold = ordered[limit - 1].lower;
     if (record.tailUpper >= threshold) return;
     this.stats.phraseRankHits++;
+    if (remote) this.stats.remotePhraseRankHits++;
     return ordered
       .filter((e) => e.upper >= threshold)
       .sort((a, b) => a.doc - b.doc);

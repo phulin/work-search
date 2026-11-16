@@ -4,7 +4,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { buildSuffixIndex } from "../scripts/suffix-builder.js";
 import { collectPhraseRanking } from "../scripts/suffix-phrase-ranking.js";
-import { PhraseRanks, encodePhraseRanks } from "../src/suffix/phrase-ranks.js";
+import {
+  PhraseRanks,
+  encodePhraseRanks,
+  phraseRankDirectory,
+} from "../src/suffix/phrase-ranks.js";
 import { SuffixReader } from "../src/suffix/reader.js";
 import { rankSuffix } from "../src/suffix/rank.js";
 import { contribution } from "../src/columnar/scoring.js";
@@ -123,7 +127,7 @@ it("builds conservative phrase rankings, answers covered top-k without suffix re
   }
 });
 
-it("never uses an omitted-score bound to drop a possible tie", () => {
+it("never uses an omitted-score bound to drop a possible tie", async () => {
   const generation = "a".repeat(64),
     raw = encodePhraseRanks(
       [
@@ -152,5 +156,68 @@ it("never uses an omitted-score bound to drop a possible tie", () => {
     undefined,
     { phraseRanks: raw },
   );
-  expect(reader.phraseRanking(Uint32Array.of(1, 2), 1)).toBeUndefined();
+  expect(await reader.phraseRanking(Uint32Array.of(1, 2), 1)).toBeUndefined();
+});
+
+it("routes cold ranking payloads in one read, validates them, and avoids reads for cursors or deeper pages", async () => {
+  const generation = "a".repeat(64),
+    phrase = Uint32Array.of(1, 2),
+    record = {
+      words: [1, 2],
+      entries: [
+        { doc: 3, position: 17, lower: 9, upper: 10 },
+        { doc: 1, position: 2, lower: 8, upper: 9 },
+      ],
+      tailUpper: 7,
+    },
+    raw = encodePhraseRanks([record], generation, 30),
+    index = phraseRankDirectory(raw),
+    reads: any[] = [],
+    manifest = {
+      format: "word-suffix-1",
+      corpusGeneration: generation,
+      rows: 30,
+      count: 10,
+      fixed: { titleBoost: 2 },
+      phraseRankRows: "rows",
+      files: { rows: { bytes: raw.length } },
+    } as any,
+    reader = new SuffixReader(
+      manifest,
+      async (file, offset, bytes) => {
+        reads.push({ file, offset, bytes });
+        return raw.subarray(offset, offset + bytes);
+      },
+      undefined,
+      { phraseRankIndex: index },
+    );
+  expect(await reader.phraseRanking(phrase, 3)).toBeUndefined();
+  expect(
+    await reader.phraseRanking(phrase, 1, { doc: 3, score: 9 }),
+  ).toBeUndefined();
+  expect(reads).toHaveLength(0);
+  expect((await reader.phraseRanking(phrase, 2))?.map((e) => e.doc)).toEqual([
+    1, 3,
+  ]);
+  expect(reads).toHaveLength(1);
+  expect(reads[0].bytes).toBe(48);
+  expect(reader.stats.remotePhraseRankHits).toBe(1);
+  expect((await reader.phraseRanking(phrase, 2))?.map((e) => e.doc)).toEqual([
+    1, 3,
+  ]);
+  expect(reads).toHaveLength(1);
+  const corrupt = raw.slice();
+  new DataView(corrupt.buffer).setUint32(index.length, 100, true);
+  const invalid = new SuffixReader(
+    manifest,
+    async (_f, o, n) => corrupt.subarray(o, o + n),
+    undefined,
+    { phraseRankIndex: index },
+  );
+  await expect(invalid.phraseRanking(phrase, 2)).rejects.toThrow(
+    "Invalid suffix phrase ranking entry",
+  );
+  expect(() =>
+    new PhraseRanks(index, generation, 30, 10, index.length + 1).locate(phrase),
+  ).toThrow("Invalid suffix phrase ranking range");
 });

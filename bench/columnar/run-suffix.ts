@@ -204,6 +204,11 @@ const control = await import(
   suffixPhraseRanks = manifest?.phraseRanks
     ? new Uint8Array(await readFile(suffixPath + "/" + manifest.phraseRanks))
     : undefined,
+  suffixPhraseRankIndex = manifest?.phraseRankIndex
+    ? new Uint8Array(
+        await readFile(suffixPath + "/" + manifest.phraseRankIndex),
+      )
+    : undefined,
   files = new Map<string, ReturnType<typeof open>>();
 if (
   suffixFences &&
@@ -223,6 +228,12 @@ if (
     manifest.files[manifest.phraseRanks].sha256
 )
   throw Error("Suffix phrase rankings digest differs");
+if (
+  suffixPhraseRankIndex &&
+  createHash("sha256").update(suffixPhraseRankIndex).digest("hex") !==
+    manifest.files[manifest.phraseRankIndex].sha256
+)
+  throw Error("Suffix phrase ranking directory digest differs");
 storage.include(
   [...new DocumentDirectory(assets.documents!).groups()].map((g) => ({
     key: g.key,
@@ -352,6 +363,10 @@ async function query(s: any, plan: string, prepare: boolean) {
               plan === "suffix16-without-phrase-ranks"
                 ? undefined
                 : suffixPhraseRanks,
+            phraseRankIndex:
+              plan === "suffix16-without-phrase-ranks"
+                ? undefined
+                : suffixPhraseRankIndex,
           },
         )
       : undefined;

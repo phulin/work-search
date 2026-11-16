@@ -99,6 +99,7 @@ export class PhraseRanks {
     corpus: string,
     rows: number,
     readonly documents: number,
+    readonly sourceBytes = bytes.length,
   ) {
     this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
     if (
@@ -112,7 +113,7 @@ export class PhraseRanks {
     if (HEADER + this.count * RECORD > bytes.length)
       throw Error("Truncated suffix phrase rankings");
   }
-  lookup(words: Uint32Array) {
+  locate(words: Uint32Array) {
     if (words.length < 2 || words.length > 5) return;
     const compare = (i: number) => {
       const at = HEADER + i * RECORD,
@@ -137,23 +138,29 @@ export class PhraseRanks {
       offset = this.view.getUint32(at + 16, true),
       count = this.view.getUint16(at + 20, true),
       tailUpper = this.view.getFloat64(at + 24, true),
-      entries: PhraseRankEntry[] = [];
+      length = count * ENTRY;
     if (
       !count ||
       count > 255 ||
       offset < HEADER + this.count * RECORD ||
-      offset + count * ENTRY > this.bytes.length ||
+      offset + length > this.sourceBytes ||
       !Number.isFinite(tailUpper) ||
       tailUpper < 0
     )
       throw Error("Invalid suffix phrase ranking range");
+    return { offset, length, count, tailUpper };
+  }
+  decode(raw: Uint8Array) {
+    if (!raw.length || raw.length % ENTRY || raw.length > 255 * ENTRY)
+      throw Error("Invalid suffix phrase ranking payload");
+    const view = new DataView(raw.buffer, raw.byteOffset, raw.byteLength),
+      entries: PhraseRankEntry[] = [];
     const seen = new Set<number>();
-    for (let j = 0; j < count; j++) {
-      const p = offset + j * ENTRY,
-        doc = this.view.getUint32(p, true),
-        position = this.view.getUint32(p + 4, true),
-        lower = this.view.getFloat64(p + 8, true),
-        upper = this.view.getFloat64(p + 16, true);
+    for (let p = 0; p < raw.length; p += ENTRY) {
+      const doc = view.getUint32(p, true),
+        position = view.getUint32(p + 4, true),
+        lower = view.getFloat64(p + 8, true),
+        upper = view.getFloat64(p + 16, true);
       if (
         doc >= this.documents ||
         !Number.isFinite(lower) ||
@@ -166,6 +173,32 @@ export class PhraseRanks {
       seen.add(doc);
       entries.push({ doc, position, lower, upper });
     }
-    return { entries, tailUpper };
+    return entries;
   }
+  lookup(words: Uint32Array) {
+    const ref = this.locate(words);
+    if (!ref) return;
+    if (ref.offset + ref.length > this.bytes.length)
+      throw Error("Phrase ranking payload is external");
+    return {
+      entries: this.decode(
+        this.bytes.subarray(ref.offset, ref.offset + ref.length),
+      ),
+      tailUpper: ref.tailUpper,
+    };
+  }
+}
+
+/** The complete directory is small enough to route one payload read locally. */
+export function phraseRankDirectory(raw: Uint8Array) {
+  if (raw.length < HEADER) throw Error("Truncated suffix phrase rankings");
+  const size =
+    HEADER +
+    new DataView(raw.buffer, raw.byteOffset, raw.byteLength).getUint32(
+      4,
+      true,
+    ) *
+      RECORD;
+  if (size > raw.length) throw Error("Truncated suffix phrase rankings");
+  return raw.slice(0, size);
 }

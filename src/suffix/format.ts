@@ -233,4 +233,6 @@ export interface SuffixManifest {
   }[];
   files: Record<string, { bytes: number; sha256: string }>;
   phraseRanks?: string;
+  phraseRankIndex?: string;
+  phraseRankRows?: string;
 }
