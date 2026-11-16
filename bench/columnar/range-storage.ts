@@ -19,6 +19,7 @@ export class RangeStorage implements Source {
   localAssemblies = 0;
   private pending = new Map<string, Promise<Uint8Array>>();
   private expected = new Map<string, { sha256: string; size: number }>();
+  private completeInventory = new Set<string>();
   private accessed = new Set<string>();
   private byKey = new Map<string, RangeReceipt[]>();
   private receipts = new Map<string, RangeReceipt>();
@@ -27,11 +28,12 @@ export class RangeStorage implements Source {
     readonly directory: string,
     readonly remote?: { url: string; token: string },
   ) {
-    for (const o of [
-      ...root.objects,
-      ...(root.pairMembership?.objects ?? []),
-      ...(root.metadataObjects ?? []),
-    ])
+    for (const o of [...root.objects, ...(root.metadataObjects ?? [])]) {
+      const key = o.key ?? root.generation + "/" + (o as any).name;
+      this.expected.set(key, o);
+      this.completeInventory.add(key);
+    }
+    for (const o of root.pairMembership?.objects ?? [])
       this.expected.set(o.key ?? root.generation + "/" + (o as any).name, o);
   }
   private async fetchRange(
@@ -245,17 +247,27 @@ export class RangeStorage implements Source {
       if (old && (old.size !== object.size || old.sha256 !== object.sha256))
         throw Error("Conflicting prepared object identity");
       this.expected.set(object.key, object);
+      this.completeInventory.add(object.key);
     }
   }
-  /** Speculative reads can vary with completion order. Keep every byte of each
-   * touched small object locally, rather than just the preparation run's trace. */
-  async completePreparation(maxBytes = 32 * 1048576) {
+  /** Keep the complete numeric/document inventory. Pair packets are selected
+   * by query identity; retain whole touched packets without copying the much
+   * larger complete pair index just to prepare a scheduling experiment. */
+  async completePreparation(
+    maxBytes = 32 * 1048576,
+    onProgress?: (done: number, total: number, bytes: number) => void,
+  ) {
     if (!this.prepare) throw Error("Complete objects outside preparation");
-    const objects = [...this.accessed].flatMap((key) => {
+    const objects = [
+      ...new Set([...this.completeInventory, ...this.accessed]),
+    ].flatMap((key) => {
       const object = this.expected.get(key);
-      return object && object.size <= maxBytes ? [{ key, ...object }] : [];
+      return object && object.size > 0 && object.size <= maxBytes
+        ? [{ key, ...object }]
+        : [];
     });
     let next = 0,
+      done = 0,
       bytes = 0;
     await Promise.all(
       Array.from({ length: 6 }, async () => {
@@ -266,6 +278,7 @@ export class RangeStorage implements Source {
           if (createHash("sha256").update(raw).digest("hex") !== object.sha256)
             throw Error("Prepared whole-object digest mismatch");
           bytes += raw.length;
+          onProgress?.(++done, objects.length, bytes);
         }
       }),
     );

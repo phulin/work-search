@@ -83,6 +83,7 @@ import {
   readBooleanMembership as readMembershipAnchor,
   booleanMembershipAnchor as membershipAnchor,
 } from "./boolean-membership.js";
+import { combinePhraseExecution } from "./combined-phrases.js";
 export type PhraseExecution = Pick<
   ExactPhraseExecution,
   | "plans"
@@ -388,7 +389,7 @@ export class ColumnarIndex {
         options.field ?? "all",
         reader,
         options,
-      ),
+      ).filter((p) => !exact?.covered(p.words)),
       // A complete standalone phrase source already supplies both membership
       // and exact positions. Do not first fetch redundant pair/presence filters
       // just to rediscover a broad candidate set. Selective document plans keep
@@ -504,18 +505,17 @@ export class ColumnarIndex {
                   this.root,
                 )
               : undefined,
-          exact
-            ? Promise.resolve(new Map())
-            : readExactPhrasePairs(
-                original,
-                this.membership?.router,
-                this.membership?.exactPhrases,
-                reader,
-                preliminary,
-                membershipRead?.pairs,
-                bundled,
-                options,
-              ),
+          readExactPhrasePairs(
+            original,
+            this.membership?.router,
+            this.membership?.exactPhrases,
+            reader,
+            preliminary,
+            membershipRead?.pairs,
+            bundled,
+            options,
+            exact?.covered,
+          ),
         ]),
       allExactPlans = [
         ...bundledExactPlans,
@@ -535,6 +535,7 @@ export class ColumnarIndex {
       exactPlans = [
         ...new Map(
           allExactPlans
+            .filter((p) => !exact?.covered(p.words))
             .sort((a, b) => b.cost - a.cost)
             .map((p) => [p.words.join("\0"), p]),
         ).values(),
@@ -768,7 +769,6 @@ export class ColumnarIndex {
         });
       }
       if (
-        !exact &&
         planned.kind === "blocks" &&
         selection &&
         this.membership?.router.metadata.completeContext
@@ -821,11 +821,7 @@ export class ColumnarIndex {
       // The measured candidate-document continuation remains a complete
       // alternative. Do not replace a cheap, actually filtered set with a
       // corpus-wide context scan just because its unigram forecast was broad.
-      if (
-        !exact &&
-        exactPlans.length &&
-        (primaryExact || planned.kind === "blocks")
-      ) {
+      if (exactPlans.length && (primaryExact || planned.kind === "blocks")) {
         const phraseCandidates = loadedMembership
           ? Uint32Array.from(loadedMembership.values()).filter(
               (doc) => !presenceFilter || presenceFilter(doc),
@@ -833,6 +829,7 @@ export class ColumnarIndex {
           : undefined;
         const decisions = await Promise.all(
           exactPlans.map(async (p) => {
+            if (exact?.covered(p.words)) return false;
             if (loadedMembership?.covered(p.words)) return false;
             if (!primaryExact && loadedMembership) {
               const work = await filteredPhraseWork(
@@ -854,12 +851,15 @@ export class ColumnarIndex {
         );
         const useful = exactPlans.filter((_, i) => decisions[i]);
         if (useful.length) {
-          exact = new ExactPhraseExecution(
+          const additional = new ExactPhraseExecution(
             useful,
             reader,
             field,
             phraseCandidates,
           );
+          exact = exact
+            ? combinePhraseExecution(exact, additional)
+            : additional;
           reader.stats.exactPhrasePlans = describeExactPlans().filter((p) =>
             useful.some((s) => s.words === p.words),
           );

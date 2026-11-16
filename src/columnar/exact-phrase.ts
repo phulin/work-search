@@ -74,6 +74,7 @@ export async function readExactPhrasePairs(
     limit?: number;
     snippets?: boolean;
   } = {},
+  covered?: (words: string[]) => boolean,
 ) {
   const out = new Map<string, ExactPairDescriptor>();
   if (
@@ -87,6 +88,7 @@ export async function readExactPhrasePairs(
   const rendered = snippetPhrases(ast);
   const visit = (n: Node): void => {
     if (n.kind === "phrase") {
+      if (covered?.(n.terms)) return;
       if (n.terms.length < 2 || n.terms.length > 4) return;
       const pairs = n.terms
         .slice(1)

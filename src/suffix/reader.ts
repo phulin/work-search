@@ -10,6 +10,7 @@ import { comparePhrase, decodeSuffixKeys } from "./keys.js";
 import { decodeRankingHeads } from "./ranking-heads.js";
 import { quantizerForMaximum } from "./format.js";
 import { SuffixFences } from "./fences.js";
+import { PhraseIntervals } from "./intervals.js";
 export type SuffixRead = (
   file: string,
   offset: number,
@@ -55,6 +56,7 @@ export class SuffixReader {
     rankingRows: 0,
     rankingSkippedBlocks: 0,
     rankingPrefetchUnused: 0,
+    intervalHits: 0,
   };
   private slots = new Semaphore(6);
   private cache = new Lru<Uint8Array>(8 * 1048576);
@@ -62,22 +64,43 @@ export class SuffixReader {
   private directories = new Lru<SuffixBlock[]>(4 * 1048576);
   private directoryPending = new Map<number, Promise<SuffixBlock[]>>();
   private fences?: SuffixFences;
+  private intervals?: PhraseIntervals;
+  get buffers() {
+    return {
+      bundledBytes:
+        (this.fences?.bytes.byteLength ?? 0) +
+        (this.intervals?.bytes.byteLength ?? 0),
+      retainedColumnBytes: this.cache.bytes,
+      peakRetainedColumnBytes: this.cache.peak,
+      retainedDirectoryBytes: this.directories.bytes,
+      peakRetainedDirectoryBytes: this.directories.peak,
+    };
+  }
   constructor(
     readonly manifest: SuffixManifest,
     readonly source: SuffixRead,
     fences?: Uint8Array,
-    readonly tuning: { rankingLookahead?: number } = {},
+    readonly options: {
+      rankingLookahead?: number;
+      intervals?: Uint8Array;
+    } = {},
   ) {
     if (manifest.format !== "word-suffix-1" || manifest.fixed.titleBoost !== 2)
       throw Error("Invalid suffix manifest");
     if (fences) this.fences = new SuffixFences(fences, manifest);
     if (
-      tuning.rankingLookahead !== undefined &&
-      (!Number.isInteger(tuning.rankingLookahead) ||
-        tuning.rankingLookahead < 1 ||
-        tuning.rankingLookahead > 6)
+      options.rankingLookahead !== undefined &&
+      (!Number.isInteger(options.rankingLookahead) ||
+        options.rankingLookahead < 1 ||
+        options.rankingLookahead > 6)
     )
       throw Error("Invalid suffix ranking lookahead");
+    if (options.intervals)
+      this.intervals = new PhraseIntervals(
+        options.intervals,
+        manifest.corpusGeneration,
+        manifest.rows,
+      );
   }
   async read(file: string, offset: number, length: number, compressed = true) {
     const key = `${file}:${offset}:${length}:${compressed}`;
@@ -159,6 +182,8 @@ export class SuffixReader {
   }
   minimumRows(phrase: Uint32Array) {
     if (!phrase.length || phrase.some((x) => !x)) return 0;
+    const known = this.intervals?.lookup(phrase);
+    if (known) return known.end - known.first;
     const short = phrase.subarray(0, PREFIX_WORDS);
     if (phrase.length > PREFIX_WORDS) return 0;
     return this.manifest.directory.reduce(
@@ -232,6 +257,16 @@ export class SuffixReader {
       phrase.some((x) => !x)
     )
       return { first: 0, end: 0, groups: [] as SuffixManifest["directory"] };
+    const known = this.intervals?.lookup(phrase);
+    if (known) {
+      this.stats.intervalHits++;
+      return {
+        ...known,
+        groups: this.manifest.directory.filter(
+          (g) => g.first < known.end && g.end > known.first,
+        ),
+      };
+    }
     const groups = this.manifest.directory.filter(
       (d) =>
         comparePhrase(d.high, phrase) >= 0 && comparePhrase(d.low, phrase) <= 0,
@@ -300,7 +335,7 @@ export class SuffixReader {
           ? head
           : undefined;
       },
-      lookahead = this.tuning.rankingLookahead ?? 6,
+      lookahead = this.options.rankingLookahead ?? 6,
       prefetched = new Map<
         SuffixManifest["directory"][number],
         { task: Promise<Uint8Array>; bytes: number }

@@ -58,6 +58,8 @@ import { parse } from "../src/query/parser.js";
 import { tokenize } from "../src/query/tokenize.js";
 import { exhaustive } from "../bench/columnar/exhaustive.js";
 import { positionalMatcher } from "../src/query/evaluate.js";
+import { SuffixEvidence } from "../src/suffix/evidence.js";
+import type { SuffixReader } from "../src/suffix/reader.js";
 const generation = "b".repeat(64),
   empty = () => ({ positions: [], previous: [], next: [] });
 it("executes routed inline and chunk-directory external context without a bundled pair descriptor, including authoritative absence", async () => {
@@ -1018,6 +1020,43 @@ it("executes exact pair phrases inside Boolean/proximity expressions with the or
         { router, N: 0, M: 0, exactPhrases },
       ),
       control = new ColumnarIndex(root);
+    const preloaded = new SuffixEvidence(),
+      phraseWords = ["b", "c", "x"],
+      phraseDocs: number[] = [],
+      phrasePositions: number[] = [];
+    for (const [doc, d] of docs.entries())
+      for (const [f, text] of [d.body, d.title].entries()) {
+        const words = tokenize(text);
+        for (let p = 0; p + 3 <= words.length; p++)
+          if (phraseWords.every((w, i) => words[p + i] === w)) {
+            phraseDocs.push(doc);
+            phrasePositions.push(p + f * 2 ** 31);
+          }
+      }
+    await preloaded.add(
+      phraseWords,
+      Uint32Array.from(phraseWords, (w) => ids.get(w)!),
+      {
+        minimumRows: () => 0,
+        shortInterval: async () => ({
+          first: 0,
+          end: phraseDocs.length,
+          blocks: [],
+        }),
+        scan: async function* () {
+          yield {
+            first: 0,
+            end: phraseDocs.length,
+            columns: {
+              documents: new Uint8Array(Uint32Array.from(phraseDocs).buffer),
+              positions: new Uint8Array(
+                Uint32Array.from(phrasePositions).buffer,
+              ),
+            },
+          };
+        },
+      } as unknown as SuffixReader,
+    );
     let used = 0;
     for (const q of [
       '"a b c d"',
@@ -1047,6 +1086,56 @@ it("executes exact pair phrases inside Boolean/proximity expressions with the or
           );
         expect(result.results, q + field).toEqual(expected.results);
         expect(result.total).toBe(expected.total);
+        if (q.includes('"b c x"'))
+          for (const exactTotal of [false, true]) {
+            const mixed = await index.search(q, new Reader(root, source), {
+              ...options,
+              exactTotal,
+              phraseExecution: {
+                generation: root.generation,
+                execution: preloaded,
+              },
+            });
+            expect(mixed.results, "preloaded " + q + field).toEqual(
+              expected.results,
+            );
+            expect(mixed.total).toBe(exactTotal ? expected.total : undefined);
+            if (
+              !q.includes("W/") &&
+              result.diagnostics.executor === "exact-phrase-blocks"
+            )
+              expect(
+                mixed.diagnostics.wordPositionIntegers,
+                q +
+                  " " +
+                  field +
+                  " " +
+                  exactTotal +
+                  " " +
+                  result.diagnostics.executor +
+                  " " +
+                  mixed.diagnostics.executor,
+              ).toBe(0);
+            if (mixed.results.length) {
+              const last = mixed.results.at(-1)!,
+                after = { doc: last.doc, score: last.score },
+                page = await index.search(q, new Reader(root, source), {
+                  ...options,
+                  exactTotal,
+                  after,
+                  phraseExecution: {
+                    generation: root.generation,
+                    execution: preloaded,
+                  },
+                }),
+                want = await control.search(
+                  q,
+                  new Reader(root, objects.source),
+                  { ...options, exactTotal, after },
+                );
+              expect(page.results).toEqual(want.results);
+            }
+          }
         expect(result.total).toBe(
           docs.filter((d) =>
             exhaustive(

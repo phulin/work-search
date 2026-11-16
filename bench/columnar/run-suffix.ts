@@ -158,6 +158,7 @@ if (
           "suffix16-without-heads",
           "suffix16-without-fences",
           "suffix16-serial",
+          "suffix16-without-intervals",
           "suffix8-max",
         ].includes(p),
     ))
@@ -196,6 +197,9 @@ const control = await import(
   suffixFences = manifest?.files.fences
     ? new Uint8Array(await readFile(suffixPath + "/fences"))
     : undefined,
+  suffixIntervals = manifest?.files.intervals
+    ? new Uint8Array(await readFile(suffixPath + "/intervals"))
+    : undefined,
   files = new Map<string, ReturnType<typeof open>>();
 if (
   suffixFences &&
@@ -203,6 +207,12 @@ if (
     manifest.files.fences.sha256
 )
   throw Error("Suffix fences digest differs");
+if (
+  suffixIntervals &&
+  createHash("sha256").update(suffixIntervals).digest("hex") !==
+    manifest.files.intervals.sha256
+)
+  throw Error("Suffix intervals digest differs");
 storage.include(
   [...new DocumentDirectory(assets.documents!).groups()].map((g) => ({
     key: g.key,
@@ -322,7 +332,13 @@ async function query(s: any, plan: string, prepare: boolean) {
           selectedManifest,
           prepare ? suffixRead : suffixSource.read,
           plan === "suffix16-without-fences" ? undefined : suffixFences,
-          { rankingLookahead: plan === "suffix16-serial" ? 1 : 6 },
+          {
+            rankingLookahead: plan === "suffix16-serial" ? 1 : 6,
+            intervals:
+              plan === "suffix16-without-intervals"
+                ? undefined
+                : suffixIntervals,
+          },
         )
       : undefined;
   io.delaysEnabled = suffixIO.delaysEnabled = process.env.CWS_NO_DELAY !== "1";
@@ -344,7 +360,8 @@ async function query(s: any, plan: string, prepare: boolean) {
             plan === "suffix-before" ||
             plan === "suffix16-without-heads" ||
             plan === "suffix16-without-fences" ||
-            plan === "suffix16-serial",
+            plan === "suffix16-serial" ||
+            plan === "suffix16-without-intervals",
         });
   const body = JSON.stringify(actual),
     wallMs = performance.now() - start,
@@ -363,6 +380,7 @@ async function query(s: any, plan: string, prepare: boolean) {
     results: actual.results,
     diagnostics: actual.diagnostics,
     suffix: suffix?.stats,
+    suffixBuffers: suffix?.buffers,
     io: { engine: { ...io.calls }, suffix: { ...suffixIO.calls } },
     memory: { before, after },
     correct: true,
@@ -395,6 +413,7 @@ const provenance = {
         "packet-execution",
         "membership-anchor",
         "boolean-membership",
+        "combined-phrases",
         "numeric-cursor",
         "pair-membership",
         "storage",
@@ -425,6 +444,7 @@ const provenance = {
         "quantized-rank",
         "ranking-heads",
         "fences",
+        "intervals",
         "boolean-rank",
         "evidence",
         "format",
@@ -467,7 +487,20 @@ try {
       await query(s, plan, true);
       console.log("Prepared", plan, s.sid);
     }
-  const completeObjects = await storage.completePreparation();
+  const completeObjects = await storage.completePreparation(
+    32 * 1048576,
+    (done, total, bytes) => {
+      if (done % 128 === 0 || done === total)
+        console.log(
+          "Prepared immutable objects",
+          done,
+          "/",
+          total,
+          bytes,
+          "bytes",
+        );
+    },
+  );
   console.log("Prepared complete small objects", completeObjects);
   storage.prepare = false;
   const preparation = { ...(await storage.verify()), completeObjects };

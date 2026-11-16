@@ -110,19 +110,25 @@ it("serves changed coalescing ranges from verified local coverage without remote
   }
 });
 
-it("prepares complete touched objects so different speculative reads remain offline", async () => {
+it("prepares every small object, including unvisited objects, so speculative reads remain offline", async () => {
   const path = await mkdtemp(join(tmpdir(), "cws-complete-ranges-")),
     key = "a".repeat(64) + "/plan-0.bin",
+    other = "c".repeat(64) + "/plan-0.bin",
     data = Buffer.from(Array.from({ length: 64 }, (_, i) => i)),
     sha = createHash("sha256").update(data).digest("hex"),
     fetch = vi
       .spyOn(globalThis, "fetch")
-      .mockImplementation(async (_url, options) => {
+      .mockImplementation(async (url, options) => {
         const headers = new Headers(options?.headers),
           offset = Number(headers.get("x-offset")),
           length = Number(headers.get("x-length"));
         return new Response(data.subarray(offset, offset + length), {
-          headers: { "x-generation": "a".repeat(64), "x-sha256": sha },
+          headers: {
+            "x-generation": String(url).includes(other)
+              ? "c".repeat(64)
+              : "a".repeat(64),
+            "x-sha256": sha,
+          },
         });
       });
   try {
@@ -134,18 +140,20 @@ it("prepares complete touched objects so different speculative reads remain offl
       path,
       { url: "https://example.invalid", token: "test" },
     );
+    source.include([{ key: other, size: 64, sha256: sha }]);
     source.prepare = true;
     expect(await source.read(key, 10, 3)).toEqual(data.subarray(10, 13));
     expect(await source.completePreparation()).toEqual({
-      objects: 1,
-      bytes: 64,
+      objects: 2,
+      bytes: 128,
     });
     source.prepare = false;
     await source.verify();
     fetch.mockRejectedValue(Error("Network forbidden during timing"));
     expect(await source.read(key, 40, 5)).toEqual(data.subarray(40, 45));
-    expect(source.reads).toBe(2);
-    expect(source.localAssemblies).toBe(1);
+    expect(await source.read(other, 12, 4)).toEqual(data.subarray(12, 16));
+    expect(source.reads).toBe(3);
+    expect(source.localAssemblies).toBe(2);
   } finally {
     fetch.mockRestore();
     await rm(path, { recursive: true, force: true });
