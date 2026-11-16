@@ -35,15 +35,28 @@ export async function executePhraseFrequencies(
   started: number,
 ) {
   if (!packages) return;
-  const phrases: string[][] = [];
-  const covered = (n: Node): boolean => {
+  const phrases: string[][] = [],
+    required = new Set<string>();
+  const covered = (n: Node): Node | undefined => {
     if (n.kind === "phrase" && exact.covered(n.terms)) {
       phrases.push(n.terms);
-      return true;
+      return n;
     }
-    return n.kind === "and" && covered(n.left) && covered(n.right);
+    if (n.kind === "term") {
+      required.add(n.term);
+      // Ordinary AND terms have no requested positions in the block executor.
+      // For admitted matches their true, unanchored snippet behavior is `all`.
+      return { kind: "all" };
+    }
+    if (n.kind !== "and") return;
+    const left = covered(n.left),
+      right = covered(n.right);
+    return left && right ? { ...n, left, right } : undefined;
   };
-  if (!covered(ast)) return;
+  const snippetAst = covered(ast);
+  if (!snippetAst || !phrases.length) return;
+  for (const words of phrases) for (const word of words) required.delete(word);
+  if (required.size > 65535) return;
   const plans = phrases.map((words) =>
     exact.plans.find((p) => p.words.join("\0") === words.join("\0")),
   );
@@ -55,6 +68,7 @@ export async function executePhraseFrequencies(
       return [term.frequencies, ...(term.frequencyParts ?? [])].map((ref) => ({
         term,
         ref,
+        required: required.has(word),
       }));
     }),
     frequencyBytes = parts.reduce((n, p) => n + p.ref[2], 0),
@@ -77,7 +91,7 @@ export async function executePhraseFrequencies(
     physicalBytes > (compound ? 24 : 20) * 1048576 ||
     contextBytes > (compound ? 8 : 4) * 1048576 ||
     bound > (compound ? 262144 : 131072) ||
-    frequencyBytes + bound * 17 > 24 * 1048576
+    frequencyBytes + bound * (required.size ? 19 : 17) > 24 * 1048576
   )
     return;
   const estimatedBlockBytes = parts.reduce(
@@ -97,7 +111,7 @@ export async function executePhraseFrequencies(
     boost = options.titleBoost ?? 2,
     matcher = compound
       ? positionalMatcher(
-          ast,
+          snippetAst,
           new Map(),
           field,
           undefined,
@@ -142,6 +156,7 @@ export async function executePhraseFrequencies(
   }
   const matches = docs.subarray(0, count),
     scores = new Float64Array(count),
+    present = required.size ? new Uint16Array(count) : undefined,
     refs = parts.map((p) => p.ref),
     before = reader.stats.requests + reader.stats.sharedGets,
     raw = count ? await reader.completePackets(refs) : [];
@@ -154,6 +169,7 @@ export async function executePhraseFrequencies(
       first.byteLength +
       titleOnly.byteLength +
       scores.byteLength +
+      (present?.byteLength ?? 0) +
       raw.reduce((n, r) => n + r.length, 0),
   );
   const postingDocs = new Uint32Array(BLOCK),
@@ -224,6 +240,11 @@ export async function executePhraseFrequencies(
           2 + Number(!!body) + Number(!!title);
         if (body > bodyLength || title > titleLength)
           throw Error("Invalid field length");
+        if (
+          parts[j].required &&
+          ((field !== "title" && body) || (field !== "body" && title))
+        )
+          present![wanted]++;
         if (compound && field !== "title" && body) titleOnly[wanted] = 0;
         scores[wanted] +=
           (field !== "title"
@@ -288,6 +309,7 @@ export async function executePhraseFrequencies(
   const heap = new Heap(options.limit ?? 20);
   let total = 0;
   for (let i = 0; i < count; i++) {
+    if (present && present[i] !== required.size) continue;
     const doc = matches[i],
       score = scores[i];
     if (

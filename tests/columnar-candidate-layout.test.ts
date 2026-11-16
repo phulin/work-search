@@ -6,6 +6,7 @@ import {
 import { Reader } from "../src/columnar/storage.js";
 import type { Root, Branch } from "../src/columnar/format.js";
 import type { PacketPlan } from "../src/columnar/packet-execution.js";
+import { candidateLayout } from "../src/columnar/candidate-layout.js";
 const generation = "a".repeat(64);
 class Planner extends ColumnarIndex {
   choose(c: ContinuationContext) {
@@ -235,5 +236,79 @@ it("compares a scattered candidate set with batched scoring rather than one fetc
   });
   expect(got.kind).toBe("blocks");
   expect(got.continuationCost?.pageBytes).toBe(262144);
+  expect(reader.stats.requests).toBe(0);
+});
+it("prices delayed positional reads separately and omits proved or resident positions", async () => {
+  const { root, index, reader } = fixture(1000000),
+    tree: Branch = {
+      first: 0,
+      last: 999999,
+      count: 10000,
+      height: 0,
+      b: 1,
+      t: 0,
+      score: [0, 0, 100],
+      positions: [0, 524288, 100],
+      locators: [0, 0, 0],
+    },
+    term = {
+      id: 0,
+      df: 10000,
+      tree,
+      frequencies: [0, 0, 100] as [number, number, number],
+      positional: [0, 524288, 100] as [number, number, number],
+      bodyOccurrences: 10000,
+      titleOccurrences: 0,
+    },
+    terms = new Map([["alpha", term]]),
+    ids = Uint32Array.from({ length: 120 }, (_, i) => i * 8000),
+    ast = { kind: "phrase" as const, terms: ["alpha", "alpha"] },
+    plan: PacketPlan = {
+      kind: "blocks",
+      frequencyBytes: 100,
+      positionBytes: 100,
+      expectedCandidates: ids.length,
+      expectedDocumentBytes: 5000,
+      gets: 0,
+      dependentStages: 0,
+    },
+    context = {
+      root,
+      reader,
+      ast,
+      terms,
+      options: {},
+      plan,
+      packages: {
+        averageBytes: 100,
+        byteLength: () => 100,
+        load: async () => {
+          throw Error("Planning does not load documents");
+        },
+        membership: membership(ids.length, function* () {
+          yield* ids;
+        }),
+      },
+    };
+  const priced = await index.choose(context);
+  expect(priced.kind).toBe("blocks");
+  expect(priced.continuationCost?.positionWaves).toBeGreaterThan(0);
+  const proved = await candidateLayout(
+    ast,
+    terms,
+    root,
+    reader,
+    ids,
+    undefined,
+    () => true,
+  );
+  expect(proved.positionBands).toBe(0);
+  reader.memory.pages.set(
+    `${generation}/${reader.namespace}/0/2`,
+    new Uint8Array(262144),
+    262144,
+  );
+  const resident = await candidateLayout(ast, terms, root, reader, ids);
+  expect(resident.positionBands).toBe(0);
   expect(reader.stats.requests).toBe(0);
 });

@@ -262,3 +262,79 @@ it("joins nearby tiny context chunks while preserving exact candidate rows and b
     );
   }
 });
+it("skips scattered optional context when a complete pair read is cheaper", async () => {
+  const count = 8192,
+    docs = Uint32Array.from({ length: count }, (_, i) => i),
+    chunks = [];
+  let offset = 0;
+  for (let start = 0; start < count; start += 128) {
+    const bytes = encodePairPacket(
+      1,
+      2,
+      Array.from({ length: 128 }, (_, i) => {
+        const doc = start + i;
+        return {
+          doc,
+          body: [{ position: doc, previous: doc * 997, next: doc * 991 }],
+          title: [],
+        };
+      }),
+    );
+    expect(bytes.length).toBeGreaterThan(1024);
+    chunks.push({
+      first: start,
+      last: start + 127,
+      object: 0,
+      offset,
+      length: bytes.length,
+    });
+    offset += bytes.length;
+  }
+  const record = new PairMembership(
+      encodePairMembership(
+        {
+          a: 1,
+          b: 2,
+          df: count,
+          body: docs,
+          title: new Uint32Array(),
+          bodyOccurrences: count,
+          titleOccurrences: 0,
+          context: encodePairPositionDirectory(1, 2, "b".repeat(64), chunks),
+        },
+        count,
+      ),
+      count,
+    ),
+    selection = { words: ["a", "b", "c"], absent: false, records: [record] },
+    candidates = Uint32Array.from({ length: 32 }, (_, i) => i * 256),
+    reader = new Reader(
+      { generation: "a".repeat(64), objects: [] },
+      {
+        read: async () => {
+          throw Error("Optional context should not be read");
+        },
+        readNamed: async () => {
+          throw Error("Optional context should not be read");
+        },
+      },
+    );
+  expect(
+    await enrichMembershipPositions(
+      selection,
+      candidates,
+      reader,
+      offset,
+      false,
+      Infinity,
+      new Map([
+        ["a", 1],
+        ["b", 2],
+        ["c", 3],
+      ]),
+    ),
+  ).toBe(false);
+  expect(reader.stats.requests).toBe(0);
+  expect(reader.stats.pairPositionProductsSkipped).toBe(1);
+  expect([...record.body.values()]).toEqual([...docs]);
+});

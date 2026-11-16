@@ -69,6 +69,61 @@ are kept separately.
 
 ## Further candidate execution changes
 
+### Later cold regression checks
+
+The complete 200-query term-filter comparison (two requests per query per
+version, simulated I/O) preserved all results. P50/P95/P99 changed from
+244/922/1,422 ms to 254/851/1,452 ms. This exposed two substantial regressions:
+smaller candidate sets led optional pair-context refinement to open hundreds of
+tiny chunks before the complete phrase executor read the same logical list.
+The refinement now compares its GETs, transfer and decoding estimate with a
+complete pair read before starting I/O. The representation and context stay
+unchanged.
+
+Complete-frequency execution also accepts conjunctions of exact phrases and
+ordinary terms. It checks each remaining required term's frequency in the
+requested field before admitting a scored match. Words already proved by a
+mandatory phrase need no additional presence counter. Boolean alternatives,
+negatives and proximity expressions retain their existing executors.
+
+Five repetitions of ten selected queries against f469ec9, with empty application
+and shared caches and simulated I/O, all preserved results. Examples:
+
+| Query                                                             | Simulated median, before → after | GETs, before → after |
+| ----------------------------------------------------------------- | -------------------------------: | -------------------: |
+| Counterclaim / amended complaint / Rule 15 or responsive pleading |                   1,457 → 586 ms |             294 → 71 |
+| Reconsideration / summary judgment / new arguments                |                   1,400 → 711 ms |             251 → 66 |
+| Newly discovered evidence AND diligence                           |                     919 → 641 ms |             159 → 51 |
+| To the extent that AND jurisdiction                               |                     723 → 464 ms |              93 → 52 |
+
+The first eight-query pilot supplied the medians above; the subsequent
+ten-query pilot also includes the positional-wait cost correction. Raw results
+are `context-choice-local.json.gz` and `position-cost-local.json.gz`.
+The diligence change transfers 10.2 MB instead of 4.9 MB. The jurisdiction
+change decodes 2.81M document IDs instead of 1.72M, but reduces score I/O phases
+from eight to one. These trades require live validation; reduced GET counts are
+not sufficient proof of a latency improvement. The full suite passes 350 tests
+in 97 files, including exact ranks, fields, metadata filters, totals, cursors and
+snippets.
+
+A separate live 12-query pilot compared 130c739 with f469ec9, five requests per
+query per version. All 120 responses agreed. The user's summary-judgment /
+arbitration / third-party-beneficiary query improved from a median 3,116 to
+2,306 ms; fraud-on-the-court improved from 4,682 to 2,423 ms. The common-phrase
+conjunction regressed from 3,181 to 3,776 ms, with median CPU 1,565 to 2,271 ms;
+the negative abuse-of-discretion query also regressed, with identical work
+counters. Individual samples vary substantially, including native CPU. These
+regressions remain unresolved rather than being attributed to network noise.
+See `boolean-filter-pilot{,-cpu,-report}.json.gz` for every sample.
+
+For the arbitration query, forcing both continuations on identical candidates
+locally measured 679 ms for postings versus 618 ms for document verification
+(seven repetitions). Document verification used 139 GETs / 4.26 MB versus
+82 GETs / 24.79 MB. The automatic cost estimate omitted positional fetch phases
+after scoring. It now includes candidate bands with uncovered, nonresident
+positions; proved or already resident positions add no estimated phase.
+These are scheduling estimates, never matching or ranking bounds.
+
 Sorted membership cursors now use their existing restart tables to seek past
 unneeded blocks, including through nested unions and intersections. Compound
 pair evidence retains its final sorted intersection when it fits within

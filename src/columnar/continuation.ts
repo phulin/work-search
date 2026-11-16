@@ -94,11 +94,14 @@ export async function priceDocuments(
       undefined,
       covered,
     ),
+    positionWaves = Math.ceil(layout.positionBands / SCORE_LOOKAHEAD_WINDOWS),
     blockWork =
       // There may be fewer than K verified matches. Do not assume ranking
       // bounds will discard half the physical footprint before verification.
       (layout.bytes - layout.residentBytes) / PAGE +
-      Math.ceil(layout.candidateBands / SCORE_LOOKAHEAD_WINDOWS) * WAVE,
+      (Math.ceil(layout.candidateBands / SCORE_LOOKAHEAD_WINDOWS) +
+        positionWaves) *
+        WAVE,
     continuationCost = {
       packageBytes: bytes,
       packageGets: ids.length,
@@ -106,6 +109,7 @@ export async function priceDocuments(
       pageBytes: layout.bytes,
       pageGets: layout.gets,
       candidateBands: layout.candidateBands,
+      positionWaves,
       packageWork,
       blockWork,
       metadataBytes: reader.stats.bytes - before,

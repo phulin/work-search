@@ -1,0 +1,571 @@
+{
+  "health": {
+    "format": "CWS1",
+    "analysis": "nfkc-lower-porter2-v1",
+    "generation": "a4c4b1ef69eb92c661924fa6ed12d23a05f7da43941cb62b71536a0335824cd0",
+    "documents": 1000000,
+    "corpusHash": "e942ddeee0a58f3445688d49c29941cfde3dfc76f890e8b00593cbdeedf6d4e7",
+    "directoryBytes": 14082431,
+    "metadataFields": [
+      "opinion_id",
+      "cluster_id",
+      "date_filed",
+      "precedential_status"
+    ],
+    "metadataGeneration": "a113e8def4c27f1f5b49ebb02b6a91dbad08467e0db96e89db6747d544c82cfe",
+    "pairGeneration": "57005adbdbbbd7a903b6b586f78ffa77282d36ebf9787c61c39120289bbf8977",
+    "pairContextCoverage": "complete",
+    "exactPhraseGeneration": "57005adbdbbbd7a903b6b586f78ffa77282d36ebf9787c61c39120289bbf8977",
+    "commonWordAnchorsExcluded": 100,
+    "commonPairAnchorsExcluded": 1000,
+    "pairRouterBytes": 5575860,
+    "isolate": "544af51a-717a-41db-9627-b97e37562a8b",
+    "sequence": 1,
+    "cacheNamespace": "work-search-cws-fast-1m-bench",
+    "pageBytes": 262144,
+    "version": {
+      "id": "49092d5a-8b33-482e-a1ef-6dc614afa03b",
+      "tag": "",
+      "timestamp": "2026-11-16T12:20:50.276503Z"
+    }
+  },
+  "oraclePath": "work/construction-v3/complete-pairs-1m/oracle.json",
+  "independentDfVerified": true,
+  "independentGlobalStatsVerified": true,
+  "queries": 76,
+  "maxRelativeScoreDifference": 0,
+  "rows": [
+    {
+      "sid": 0,
+      "q": "summary judgment",
+      "results": 20,
+      "requestId": "2cbf1510-5ac8-460f-9307-c0a64baffd9e",
+      "passed": true
+    },
+    {
+      "sid": 1,
+      "q": "personal jurisdiction",
+      "results": 20,
+      "requestId": "7c7cc66c-565e-4d04-962e-4a092054dd42",
+      "passed": true
+    },
+    {
+      "sid": 2,
+      "q": "breach fiduciary duty",
+      "results": 20,
+      "requestId": "7c370e5f-2522-4761-aa17-ab0f3273d61f",
+      "passed": true
+    },
+    {
+      "sid": 3,
+      "q": "arbitrary capricious agency",
+      "results": 20,
+      "requestId": "e3786b37-94d0-46f4-a246-bb2db86146b7",
+      "passed": true
+    },
+    {
+      "sid": 4,
+      "q": "\"clear and convincing evidence\"",
+      "results": 20,
+      "requestId": "06b23262-0ba0-4192-84d9-33f2f1b5783d",
+      "passed": true
+    },
+    {
+      "sid": 5,
+      "q": "\"res ipsa loquitur\"",
+      "results": 20,
+      "requestId": "06c9a095-d88a-4ac7-b118-57a45f846e14",
+      "passed": true
+    },
+    {
+      "sid": 6,
+      "q": "(standing OR mootness) AND jurisdiction",
+      "results": 20,
+      "requestId": "23d2430e-0e07-45f1-baa0-d612ccbb2b0e",
+      "passed": true
+    },
+    {
+      "sid": 7,
+      "q": "(copyright OR trademark) AND injunction",
+      "results": 20,
+      "requestId": "c84d5504-a7b2-4db0-a46e-a4607ce500fc",
+      "passed": true
+    },
+    {
+      "sid": 8,
+      "q": "qualified AND immunity NOT prison",
+      "results": 20,
+      "requestId": "9ce6cb67-61dd-40b4-9cbb-de63a854aa26",
+      "passed": true
+    },
+    {
+      "sid": 9,
+      "q": "qualified /s immunity",
+      "results": 20,
+      "requestId": "c6de718c-aeb0-41da-9d4b-41f21b77381e",
+      "passed": true
+    },
+    {
+      "sid": 10,
+      "q": "contract /10 breach",
+      "results": 20,
+      "requestId": "e5355c76-aee2-41fb-b3e4-48eb4f211dd0",
+      "passed": true
+    },
+    {
+      "sid": 11,
+      "q": "notice /p termination",
+      "results": 20,
+      "requestId": "ad68787c-d0f5-42a9-8ad9-9102fa9d8852",
+      "passed": true
+    },
+    {
+      "sid": 12,
+      "q": "Christenberry Allen",
+      "results": 9,
+      "requestId": "71827854-38e1-43af-9530-24e473418ff2",
+      "passed": true
+    },
+    {
+      "sid": 13,
+      "q": "Twombly Iqbal",
+      "results": 20,
+      "requestId": "61e270aa-e108-4acd-88e8-9dd84ab68111",
+      "passed": true
+    },
+    {
+      "sid": 14,
+      "q": "court",
+      "results": 20,
+      "requestId": "c5d3b2cc-54ce-4bde-9dbf-514fcfd046cd",
+      "passed": true
+    },
+    {
+      "sid": 15,
+      "q": "unfindablebenchmarkzzzz",
+      "results": 0,
+      "requestId": "8a0dd785-5f27-4504-8e9f-1b6bfaf960ac",
+      "passed": true
+    },
+    {
+      "sid": 16,
+      "q": "res judicata",
+      "results": 20,
+      "requestId": "57111e18-bf23-49de-b446-a75517bd8dbf",
+      "passed": true
+    },
+    {
+      "sid": 17,
+      "q": "the pennsylvania",
+      "results": 20,
+      "requestId": "7636460f-6cac-4fe9-8939-3956bdf82544",
+      "passed": true
+    },
+    {
+      "sid": 18,
+      "q": "breach contract",
+      "results": 20,
+      "requestId": "20432b9a-e14f-4137-baeb-e3784868a5fd",
+      "passed": true
+    },
+    {
+      "sid": 19,
+      "q": "fiduciary duty",
+      "results": 20,
+      "requestId": "6847836a-053a-4c4b-8484-b95da68c6bd8",
+      "passed": true
+    },
+    {
+      "sid": 20,
+      "q": "\"court cause number 2010\"",
+      "results": 1,
+      "requestId": "b3f3f4ee-7cd8-4b33-ad69-a8eb86ed02b2",
+      "passed": true
+    },
+    {
+      "sid": 21,
+      "q": "\"strict scrutiny\"",
+      "results": 20,
+      "requestId": "0d0fd80a-f20a-482a-96a9-223a5768bd8e",
+      "passed": true
+    },
+    {
+      "sid": 22,
+      "q": "\"and absent a showing\"",
+      "results": 20,
+      "requestId": "2ca9f043-198a-4c4e-80f4-150ebd92410c",
+      "passed": true
+    },
+    {
+      "sid": 23,
+      "q": "\"on that advice appellant\"",
+      "results": 2,
+      "requestId": "15fe6aae-2257-4926-8142-ce33bf48888d",
+      "passed": true
+    },
+    {
+      "sid": 24,
+      "q": "this /5 of",
+      "results": 20,
+      "requestId": "a1dd2c69-998a-418f-9001-3df8eb59f385",
+      "passed": true
+    },
+    {
+      "sid": 25,
+      "q": "motion /5 ten",
+      "results": 20,
+      "requestId": "b0622b1a-a559-4164-bf61-2a008dd2c1e2",
+      "passed": true
+    },
+    {
+      "sid": 26,
+      "q": "prosecutorial /5 by",
+      "results": 20,
+      "requestId": "8393062b-64fc-4868-8ff6-31beed75b3f5",
+      "passed": true
+    },
+    {
+      "sid": 27,
+      "q": "subject /5 matter jurisdiction",
+      "results": 20,
+      "requestId": "14319224-3c4a-432d-bd04-cc4f3f97f463",
+      "passed": true
+    },
+    {
+      "sid": 28,
+      "q": "(fiduciary OR duty) AND court",
+      "results": 20,
+      "requestId": "c3dcfb96-3e62-4d18-a23c-12a9fb1f7129",
+      "passed": true
+    },
+    {
+      "sid": 29,
+      "q": "(agreement OR 632was) AND by",
+      "results": 20,
+      "requestId": "74601636-dbc7-492f-83e4-c90f0077b6d7",
+      "passed": true
+    },
+    {
+      "sid": 30,
+      "q": "(any OR oral) AND because",
+      "results": 20,
+      "requestId": "666bff96-f067-4592-9f39-e9c3a9d63232",
+      "passed": true
+    },
+    {
+      "sid": 31,
+      "q": "(\"and\" OR his) AND was",
+      "results": 20,
+      "requestId": "eaf2635f-d384-4523-890f-1a6ea1f4fe1a",
+      "passed": true
+    },
+    {
+      "sid": 32,
+      "q": "double jeopardy",
+      "results": 20,
+      "requestId": "137a28f8-c02a-4fab-bbb1-6fe43d6033bf",
+      "passed": true
+    },
+    {
+      "sid": 33,
+      "q": "wrongful termination",
+      "results": 20,
+      "requestId": "d1368ec4-1595-4df9-9173-1aed97466c5a",
+      "passed": true
+    },
+    {
+      "sid": 34,
+      "q": "burden proof",
+      "results": 20,
+      "requestId": "c44ea667-119b-4aba-babc-21f400bbf167",
+      "passed": true
+    },
+    {
+      "sid": 35,
+      "q": "plea agreement",
+      "results": 20,
+      "requestId": "3a207e26-697d-4a99-b4e0-c0143de60c4f",
+      "passed": true
+    },
+    {
+      "sid": 36,
+      "q": "\"medical malpractice\"",
+      "results": 20,
+      "requestId": "1a836378-0c5c-46a4-ba7b-26dcadcbc52e",
+      "passed": true
+    },
+    {
+      "sid": 37,
+      "q": "\"1970 fence maintained cattle\"",
+      "results": 0,
+      "requestId": "ba544cd6-e20f-45d2-b4d6-2fd06a9b859c",
+      "passed": true
+    },
+    {
+      "sid": 38,
+      "q": "\"excessive force\"",
+      "results": 20,
+      "requestId": "ee42b1e0-5528-493d-9109-7c965b15fa66",
+      "passed": true
+    },
+    {
+      "sid": 39,
+      "q": "\"new york until it\"",
+      "results": 7,
+      "requestId": "72308b40-d714-49a7-8efe-33f9fec836ea",
+      "passed": true
+    },
+    {
+      "sid": 40,
+      "q": "material /75 fact",
+      "results": 20,
+      "requestId": "04b8a316-216a-42ab-96e6-55bb55bc7483",
+      "passed": true
+    },
+    {
+      "sid": 41,
+      "q": "the /5 the",
+      "results": 20,
+      "requestId": "d22a0ca4-2a74-47c3-81a1-f1c9e30838cc",
+      "passed": true
+    },
+    {
+      "sid": 42,
+      "q": "statute /5 limitations",
+      "results": 20,
+      "requestId": "c0605db0-fefa-4f2e-8163-2ad83d23af2a",
+      "passed": true
+    },
+    {
+      "sid": 43,
+      "q": "jimmie /5 defendants",
+      "results": 20,
+      "requestId": "73b564d0-92aa-42ce-85a7-f68df8168c5b",
+      "passed": true
+    },
+    {
+      "sid": 44,
+      "q": "(rules OR of) AND rule",
+      "results": 20,
+      "requestId": "f0407b20-d257-451a-a46b-ab8a6d00521a",
+      "passed": true
+    },
+    {
+      "sid": 45,
+      "q": "(of OR the) AND limit",
+      "results": 20,
+      "requestId": "0434dfb6-598b-45c7-adb7-e634c0dc48f4",
+      "passed": true
+    },
+    {
+      "sid": 46,
+      "q": "(firm OR s) AND \"or\"",
+      "results": 20,
+      "requestId": "76c4bb50-3555-45f4-bd92-fd6b25ce0335",
+      "passed": true
+    },
+    {
+      "sid": 47,
+      "q": "(due OR process) AND court",
+      "results": 20,
+      "requestId": "f0a17469-20bc-4984-9a0e-b4bc0316b3c7",
+      "passed": true
+    },
+    {
+      "sid": 48,
+      "q": "\"the and of the\"",
+      "results": 4,
+      "requestId": "c651a386-5066-4a44-b1e0-d0f119d10743",
+      "passed": true
+    },
+    {
+      "sid": 49,
+      "q": "\"in the\"",
+      "results": 20,
+      "requestId": "66c46d3d-9a61-445c-b8aa-733437e26b82",
+      "passed": true
+    },
+    {
+      "sid": 50,
+      "q": "\"court court court court\"",
+      "results": 0,
+      "requestId": "065e9220-bda9-4a57-8bf5-90ecbc55f7e0",
+      "passed": true
+    },
+    {
+      "sid": 51,
+      "q": "\"and on that advice\"",
+      "results": 0,
+      "requestId": "a776e8b3-c2fd-4b5c-b2c7-1e49f39d7244",
+      "passed": true
+    },
+    {
+      "sid": 52,
+      "q": "NOT \"summary judgment\"",
+      "results": 20,
+      "requestId": "32249393-3af3-4443-b2b6-d38e6e9c1dbc",
+      "passed": true
+    },
+    {
+      "sid": 53,
+      "q": "court NOT \"personal jurisdiction\"",
+      "results": 20,
+      "requestId": "8eee7f68-fcb9-4438-a2b9-f8867abdebcd",
+      "passed": true
+    },
+    {
+      "sid": 54,
+      "q": "NOT NOT \"clear and convincing evidence\"",
+      "results": 20,
+      "requestId": "ceac1680-6ad6-4ca9-9886-65ff4e1c1556",
+      "passed": true
+    },
+    {
+      "sid": 55,
+      "q": "(jurisdiction OR \"summary judgment\") AND NOT \"res ipsa loquitur\"",
+      "results": 20,
+      "requestId": "74ddeff0-144f-4ec8-be0e-91aca9b48ecd",
+      "passed": true
+    },
+    {
+      "sid": 56,
+      "q": "\"summary judgment\" /10 evidence",
+      "results": 20,
+      "requestId": "7acb40d1-74c3-418b-bb05-f0d81f005720",
+      "passed": true
+    },
+    {
+      "sid": 57,
+      "q": "(motion OR court) +5 jurisdiction",
+      "results": 20,
+      "requestId": "e93e197d-3086-4083-8bcc-a5137c1ddf27",
+      "passed": true
+    },
+    {
+      "sid": 58,
+      "q": "court OR the OR of OR \"and\"",
+      "results": 20,
+      "requestId": "8d7c947f-303b-4056-8673-eff17c0509fa",
+      "passed": true
+    },
+    {
+      "sid": 59,
+      "q": "(the OR of) AND (court OR judgment)",
+      "results": 20,
+      "requestId": "1dfca91f-e7bc-475d-8c4c-e98d056ededd",
+      "passed": true
+    },
+    {
+      "sid": 60,
+      "q": "\"ＪＵＲＩＳＤＩＣＴＩＯＮ\"",
+      "results": 20,
+      "requestId": "5dc3f041-7698-493e-aa03-4ae29d4a490d",
+      "passed": true
+    },
+    {
+      "sid": 61,
+      "q": "\"judgment summary\"",
+      "results": 20,
+      "requestId": "86bf8245-e5c3-4f62-b258-cf4d4cb05397",
+      "passed": true
+    },
+    {
+      "sid": 62,
+      "q": "\"and and\"",
+      "results": 20,
+      "requestId": "4cba287f-4c5f-4f35-bace-49089fdfaa5d",
+      "passed": true
+    },
+    {
+      "sid": 63,
+      "q": "\"unfindable word zero\"",
+      "results": 0,
+      "requestId": "ca6b5906-14f4-48aa-8c85-180563557bd3",
+      "passed": true
+    },
+    {
+      "sid": 64,
+      "q": "court",
+      "results": 20,
+      "requestId": "18ba3925-85e5-4bcf-ba00-8dd942836d11",
+      "passed": true
+    },
+    {
+      "sid": 65,
+      "q": "court",
+      "results": 20,
+      "requestId": "1dbf2cf9-dc29-445e-96b5-ffb053f72c87",
+      "passed": true
+    },
+    {
+      "sid": 66,
+      "q": "court",
+      "results": 20,
+      "requestId": "216a74b1-7db8-4e73-8841-087cafd401a8",
+      "passed": true
+    },
+    {
+      "sid": 67,
+      "q": "court",
+      "results": 20,
+      "requestId": "30080698-7077-49d5-9895-c426f425db26",
+      "passed": true
+    },
+    {
+      "sid": 68,
+      "q": "court",
+      "results": 20,
+      "requestId": "712d8f8f-5eec-45d3-af2c-c5c222de501d",
+      "passed": true
+    },
+    {
+      "sid": 69,
+      "q": "summary OR judgment",
+      "results": 20,
+      "requestId": "3b65ba2d-5f3f-440d-8a38-b14a472fd104",
+      "passed": true
+    },
+    {
+      "sid": 70,
+      "q": "\"clear and convincing evidence\"",
+      "results": 0,
+      "requestId": "782d8364-37fc-4b76-aae5-f32ce0151a2c",
+      "passed": true
+    },
+    {
+      "sid": 71,
+      "q": "\"in the\"",
+      "results": 20,
+      "requestId": "95514013-a8ab-48e6-8368-680bc139d4d0",
+      "passed": true
+    },
+    {
+      "sid": 72,
+      "q": "motion /5 ten",
+      "results": 20,
+      "requestId": "e0de6b66-6baa-4bb6-bfaa-a83bbcec9bd4",
+      "passed": true
+    },
+    {
+      "sid": 73,
+      "q": "court",
+      "results": 20,
+      "requestId": "bedf7d11-fca3-446c-83f6-a5a2ab00eed6",
+      "passed": true
+    },
+    {
+      "sid": 74,
+      "q": "\"summary judgment\"",
+      "results": 20,
+      "requestId": "1e6d059d-a231-410b-ada4-3698d4930081",
+      "passed": true
+    },
+    {
+      "sid": 75,
+      "q": "jurisdiction",
+      "results": 100,
+      "requestId": "03d5c266-e8a2-405a-8b24-3825b090d63c",
+      "passed": true
+    }
+  ]
+}

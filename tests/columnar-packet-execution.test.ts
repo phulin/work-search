@@ -146,6 +146,12 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
       '"alpha beta" AND "beta gamma"',
       '"alpha beta" AND "alpha beta"',
       '"alpha beta" AND ("beta gamma" AND "Court alpha")',
+      '"alpha beta" AND rare',
+      '"alpha beta" AND gamma',
+      '"alpha beta" AND alpha AND gamma',
+      '"alpha beta" AND (gamma AND rare)',
+      '"alpha beta" AND titleonly',
+      '"Court alpha" AND rare',
     ]) {
       const ast = parse(q);
       const names = queryTerms(ast),

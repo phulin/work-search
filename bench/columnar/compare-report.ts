@@ -34,6 +34,9 @@ const counters = [
   "scoreIOWaves",
   "positionIOWaves",
   "anchorIOWaves",
+  "booleanTermFilterWaves",
+  "booleanTermFilterTerms",
+  "candidateTermPostingsDecoded",
   "positionIntegers",
   "pairContextIntegers",
   "pairPositionChunks",
@@ -47,6 +50,7 @@ const counters = [
   "peakExactPhraseBufferBytes",
   "retainedPageBytes",
   "retainedDecodedBytes",
+  "retainedPacketBytes",
   "repeatedDecodedBytes",
 ];
 function summarize(selected: any[]) {

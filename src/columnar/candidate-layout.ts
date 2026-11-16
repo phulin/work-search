@@ -45,7 +45,8 @@ export async function candidateLayout(
   const pages = new Map<number, Set<number>>(),
     positions = positionalTerms(ast, covered),
     last = new Map<string, string>(),
-    bands = new Set<number>();
+    bands = new Set<number>(),
+    positionBands = new Set<number>();
   let scoreBytes = 0,
     positionBytes = 0,
     postings = 0,
@@ -86,6 +87,13 @@ export async function candidateLayout(
           if (positions.has(name)) {
             add(b.positions);
             positionBytes += b.positions[2];
+            if (b.positions[2] && !reader.resident(b.positions))
+              for (
+                let i = row;
+                i < selected.length && selected[i] <= b.last;
+                i++
+              )
+                positionBands.add(Math.floor(selected[i] / 16384));
           }
         }
       }),
@@ -119,6 +127,7 @@ export async function candidateLayout(
     positionBytes,
     postings,
     candidateBands: bands.size,
+    positionBands: positionBands.size,
     windows,
   };
 }

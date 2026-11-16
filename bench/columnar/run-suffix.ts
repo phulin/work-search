@@ -4,7 +4,10 @@ import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { ColumnarIndex } from "../../src/columnar/search.js";
+import {
+  ColumnarIndex,
+  type ContinuationContext,
+} from "../../src/columnar/search.js";
 import {
   Memory,
   Lru,
@@ -33,7 +36,10 @@ const assets = await loadServingAssets(index, servingOptions()),
   root = assets.root,
   previous = JSON.parse(
     gunzipSync(
-      await readFile("bench/results/columnar/fresh-1m-200/final-pass.json.gz"),
+      await readFile(
+        process.env.CWS_CONTRACT_PATH ??
+          "bench/results/columnar/fresh-1m-200/final-pass.json.gz",
+      ),
     ).toString(),
   );
 if (
@@ -76,15 +82,21 @@ const model = {
     suffixPath !== "-"
       ? JSON.parse(await readFile(suffixPath + "/manifest.json", "utf8"))
       : undefined,
+  forced = process.env.CWS_CONTINUATIONS?.split(","),
   plans = manifest
     ? ["control", "suffix16-scan", "suffix16-max", "suffix8-max"]
-    : ["control", "candidate"],
+    : (forced ?? ["control", "candidate"]),
   repeats = Number(process.env.CWS_REPEATS ?? 3),
   startedAt = new Date().toISOString(),
   controlCommit = execFileSync("git", ["rev-parse", "HEAD"], {
     encoding: "utf8",
   }).trim(),
   frozen = resolve("work/suffix-control-" + controlCommit);
+if (
+  forced &&
+  (manifest || forced.some((p) => !["auto", "documents", "blocks"].includes(p)))
+)
+  throw Error("Invalid forced continuation experiment");
 await mkdir(frozen, { recursive: true });
 if (
   !(await readFile(frozen + "/src/columnar/search.ts").then(
@@ -155,6 +167,17 @@ function limitSource(source: Source, slots: Semaphore): Source {
   };
 }
 async function query(s: any, plan: string, prepare: boolean) {
+  class ForcedContinuation extends ColumnarIndex {
+    protected override async chooseContinuation(c: ContinuationContext) {
+      const anchor = c.packages?.membership;
+      if (!anchor || plan === "auto") return super.chooseContinuation(c);
+      return {
+        ...c.plan,
+        kind: plan as "documents" | "blocks",
+        membershipAnchor: anchor,
+      };
+    }
+  }
   const frozen = plan === "control",
     MemoryClass = frozen ? controlStorage.Memory : Memory,
     ReaderClass = frozen ? controlStorage.Reader : Reader,
@@ -162,7 +185,11 @@ async function query(s: any, plan: string, prepare: boolean) {
     DocumentsClass = frozen
       ? controlDocuments.DocumentDirectory
       : DocumentDirectory,
-    IndexClass = frozen ? control.ColumnarIndex : ColumnarIndex,
+    IndexClass = frozen
+      ? control.ColumnarIndex
+      : forced
+        ? ForcedContinuation
+        : ColumnarIndex,
     memory = new MemoryClass();
   memory.pages = new Lru(12 * 1048576);
   memory.decoded = new Lru(4 * 1048576);
@@ -257,6 +284,9 @@ const provenance = {
         "pair-membership",
         "storage",
         "phrase-frequency",
+        "term-filter",
+        "continuation",
+        "candidate-layout",
       ].map(async (name) => [
         name,
         createHash("sha256")

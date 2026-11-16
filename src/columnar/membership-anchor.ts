@@ -619,10 +619,15 @@ export async function enrichMembershipPositions(
     .map((record) => {
       const chunks = record.positionDirectory!.selected(docs),
         reads = pairPositionReads(chunks),
+        completeReads = pairPositionReads(record.positionDirectory!.chunks),
         bytes = chunks.reduce((n, c) => n + c.length, 0),
         cost =
           reads.reduce((n, r) => n + r.length, 0) / 104857.6 +
           Math.ceil(reads.length / 6) * 20,
+        completeCost =
+          completeReads.reduce((n, r) => n + r.length, 0) / 104857.6 +
+          Math.ceil(completeReads.length / 6) * 20 +
+          (record.bodyOccurrences + record.titleOccurrences) / 50000,
         covering =
           !!ids &&
           selection.words
@@ -634,13 +639,16 @@ export async function enrichMembershipPositions(
                 at <= 1 &&
                 selection.words.length - at - 2 <= 1,
             );
-      return { record, bytes, cost, covering };
+      return { record, bytes, cost, completeCost, covering };
     })
     .sort((a, b) => Number(b.covering) - Number(a.covering) || a.cost - b.cost);
   let remaining = budget;
   const selected = choices.filter((c) => {
     if (c.bytes > remaining) return false;
-    if (c.cost > maxReadMs) {
+    // A selective set can still touch hundreds of scattered tiny chunks.
+    // Leave a cheaper complete stream to the exact-phrase executor instead
+    // of spending its read budget on redundant optional evidence first.
+    if (c.cost > maxReadMs || c.cost > c.completeCost) {
       reader.stats.pairPositionProductsSkipped++;
       return false;
     }
