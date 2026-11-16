@@ -210,14 +210,32 @@ export function createColumnarWorker(
                 },
               }
             : undefined;
-        if (memory.activeQueries >= 2)
+        if (memory.activeQueries >= 2) {
+          console.log(
+            JSON.stringify({
+              benchmark: {
+                requestId,
+                isolate,
+                requestNumber,
+                wallMs: performance.now() - arrival,
+                version: env.CF_VERSION_METADATA,
+                rejected: true,
+                activeQueries: memory.activeQueries,
+              },
+            }),
+          );
           return Response.json(
             { error: "Search capacity busy", requestId, isolate },
             {
               status: 503,
-              headers: { "retry-after": "1", "cache-control": "no-store" },
+              headers: {
+                "retry-after": "1",
+                "cache-control": "no-store",
+                "x-request-id": requestId,
+              },
             },
           );
+        }
         memory.activeQueries++;
         const execute = async () => {
           // Reset in this search request; a separate reset request could reach

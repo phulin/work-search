@@ -39,6 +39,12 @@ import {
 } from "../src/columnar/pair-membership.js";
 import { encodePairRouter, PairRouter } from "../src/columnar/pair-router.js";
 import { crc32 } from "../src/format/codec.js";
+import { executePhraseFrequencies } from "../src/columnar/phrase-frequency.js";
+import {
+  ExactPhraseExecution,
+  type ExactPhrasePlan,
+} from "../src/columnar/exact-phrase.js";
+import { PairPacket } from "../src/columnar/pair-packet.js";
 it("complete terms and anchor packages preserve exhaustive Boolean/positional matching, scores, fields, ties and cursors", async () => {
   const dir = await mkdtemp(join(tmpdir(), "cws-packets-"));
   let original: OfflineObjects | undefined, objects: OfflineObjects | undefined;
@@ -131,6 +137,113 @@ it("complete terms and anchor packages preserve exhaustive Boolean/positional ma
         },
       }),
       control = new ColumnarIndex(before);
+    for (const q of [
+      '"alpha beta gamma"',
+      '"Court alpha"',
+      '"beta beta"',
+      '"long long"',
+    ]) {
+      const ast = parse(q);
+      if (ast.kind !== "phrase") throw Error("Expected phrase");
+      const names = queryTerms(ast),
+        selected = new Map(terms.filter(([w]) => names.includes(w))),
+        words = ast.terms.map((w) => ids.get(w)!),
+        rows: PairRow[] = docs.flatMap((d, doc) => {
+          const fields = [d.body, d.title].map((text) => {
+            const tokens = tokenize(text).map((w) => ids.get(w)!);
+            return tokens.flatMap((id, p) =>
+              id === words[0] && tokens[p + 1] === words[1]
+                ? [
+                    {
+                      position: p,
+                      previous: tokens[p - 1],
+                      next: tokens[p + 2],
+                    },
+                  ]
+                : [],
+            );
+          });
+          return fields.some((f) => f.length)
+            ? [{ doc, body: fields[0], title: fields[1] }]
+            : [];
+        }),
+        plan: ExactPhrasePlan = {
+          words: ast.terms,
+          ids: words,
+          at: 0,
+          bytes: 0,
+          groups: [],
+          cost: 0,
+          alternativeCost: Infinity,
+          pair: {
+            a: ast.terms[0],
+            b: ast.terms[1],
+            df: rows.length,
+            bodyDf: rows.filter((r) => r.body.length).length,
+            titleDf: rows.filter((r) => r.title.length).length,
+            bodyOccurrences: rows.reduce((n, r) => n + r.body.length, 0),
+            titleOccurrences: rows.reduce((n, r) => n + r.title.length, 0),
+            directory: {
+              a: words[0],
+              b: words[1],
+              generation: root.generation,
+              ranges: [],
+            },
+            inline: rows.length
+              ? new PairPacket(encodePairPacket(words[0], words[1], rows))
+              : undefined,
+          },
+        };
+      for (const field of ["all", "body", "title"] as const)
+        for (const exactTotal of [false, true]) {
+          const options: Options = {
+            field,
+            exactTotal,
+            titleBoost: 3,
+            limit: 7,
+            documentFilter: exactTotal
+              ? { prepare: async () => (doc: number) => doc % 2 === 0 }
+              : undefined,
+          };
+          for (let page = 0; page < 2; page++) {
+            const reader = new Reader(root, objects.source),
+              execution = new ExactPhraseExecution([plan], reader, field),
+              loaded: number[] = [],
+              result = await executePhraseFrequencies(
+                ast,
+                execution,
+                selected,
+                root,
+                reader,
+                options,
+                {
+                  averageBytes: 500,
+                  load: async (doc) => {
+                    loaded.push(doc);
+                    return new DocumentPackage(packages.get(doc)!, doc);
+                  },
+                },
+                performance.now(),
+              ),
+              expected = await control.search(
+                q,
+                new Reader(before, original.source),
+                options,
+              );
+            expect(result, q + field).toBeDefined();
+            expect(result!.results).toEqual(expected.results);
+            expect(result!.total).toBe(expected.total);
+            expect(loaded.sort((a, b) => a - b)).toEqual(
+              result!.results.map((h) => h.doc).sort((a, b) => a - b),
+            );
+            expect(reader.stats.wordPositionIntegers).toBe(0);
+            expect(reader.stats.scoreIOWaves).toBeLessThanOrEqual(1);
+            const last = result!.results.at(-1);
+            if (!last) break;
+            options.after = { score: last.score, doc: last.doc };
+          }
+        }
+    }
     const executors = new Set<string>();
     const broadFilter = {
         count: root.count,

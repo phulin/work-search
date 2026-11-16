@@ -67,6 +67,10 @@ const tails = variants.map((name) => {
             cpuMs: v.cpuTime,
             wallMs: v.wallTime,
             outcome: v.outcome,
+            exceptions: (v.exceptions ?? []).map((e: any) => ({
+              name: e.name,
+              message: e.message,
+            })),
             telemetry,
             timestamp: v.eventTimestamp,
           };

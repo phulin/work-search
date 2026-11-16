@@ -198,6 +198,7 @@ export class Reader {
     scoreBlockVisits: 0,
     scoreBlocksDecoded: 0,
     scorePostingsDecoded: 0,
+    scoreFrequencyIntegers: 0,
     scoreFetchWaves: 0,
     scoreIOWaves: 0,
     anchorIOWaves: 0,
@@ -670,6 +671,35 @@ export class Reader {
       }),
     );
     return result;
+  }
+  /** Complete immutable lists have stable cache identities of their own. Avoid
+   * copying a complete list into pages and then assembling it again. Sparse
+   * block access continues to use independently cached physical pages. */
+  async completePackets(refs: Ref[]) {
+    this.stats.stages++;
+    return Promise.all(
+      refs.map(async (ref) => {
+        if (this.resident(ref)) return this.packet(ref);
+        const object = objectAt(this.root, ref[0]);
+        if (!object) throw Error("Invalid complete packet object");
+        const key = object.key ?? `${this.root.generation}/${object.name}`;
+        if (
+          !object.key ||
+          !this.source.readNamed ||
+          !/^[a-f0-9]{64}\/plan-\d+\.bin$/.test(key)
+        )
+          return this.packet(ref);
+        if (
+          !Number.isSafeInteger(ref[1]) ||
+          !Number.isSafeInteger(ref[2]) ||
+          ref[1] < 0 ||
+          ref[2] < 1 ||
+          ref[1] + ref[2] > object.size
+        )
+          throw Error("Invalid complete packet range");
+        return this.named(`${key}@${ref[1]}`, ref[2]);
+      }),
+    );
   }
   /** Conservative physical transfer footprint, including page alignment and
    * the same range coalescing used by packets(). No bytes are decoded here. */

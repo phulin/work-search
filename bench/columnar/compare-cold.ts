@@ -95,6 +95,7 @@ await writeFile(output + ".jsonl", "");
 for (const { s, name, repeat } of jobs) {
   const requestId = randomUUID(),
     namespace = "compare-" + randomUUID(),
+    startedAt = new Date().toISOString(),
     start = performance.now();
   let row: any;
   try {
@@ -130,9 +131,15 @@ for (const { s, name, repeat } of jobs) {
       repeat,
       requestId,
       namespace,
+      startedAt,
       status: response.status,
       clientMs,
       responseBytes: Buffer.byteLength(text),
+      responseHeaders: {
+        ray: response.headers.get("cf-ray"),
+        contentType: response.headers.get("content-type"),
+        requestId: response.headers.get("x-request-id"),
+      },
       result,
     };
     if (!response.ok)

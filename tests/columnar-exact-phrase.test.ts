@@ -1068,6 +1068,102 @@ it("executes exact pair phrases inside Boolean/proximity expressions with the or
         }
       }
     expect(used).toBeGreaterThan(0);
+    // The same complete descriptor discovered in the first pair read must be
+    // executable without being duplicated in the bundled hot-pair table.
+    const routedMembers = encodePairMembershipPacket(
+      [...memberships.values()].map((m) => ({
+        a: m.a,
+        b: m.b,
+        data: encodePairMembership(
+          {
+            a: ids.get(m.a)!,
+            b: ids.get(m.b)!,
+            df: new Set([...m.body, ...m.title]).size,
+            body: Uint32Array.from(m.body),
+            title: Uint32Array.from(m.title),
+            bodyOccurrences: m.bodyOccurrences,
+            titleOccurrences: m.titleOccurrences,
+            context:
+              m.a === "b" && m.b === "c"
+                ? encodeCompletePairRanges(p.directory)
+                : undefined,
+          },
+          root.count,
+        ),
+      })),
+    );
+    const routedDirectory = new TermDirectory(
+      assembleTermDirectory([
+        {
+          first: terms[0][0],
+          count: terms.length,
+          data: gzipSync(encodeDirectoryBlock(terms)),
+        },
+      ]),
+      root.count,
+    );
+    // Discovery, rather than the bundled planning pass, supplies these terms.
+    routedDirectory.lookupBundled = async () => new Map();
+    const routed = new ColumnarIndex(
+      root,
+      undefined,
+      routedDirectory,
+      undefined,
+      undefined,
+      {
+        router: new PairRouter(
+          encodePairRouter(
+            {
+              ...router.metadata,
+              completeContext: true,
+            },
+            [],
+            [
+              {
+                object: 1,
+                offset: 0,
+                bytes: routedMembers.length,
+                pairs: memberships.size,
+                namespace: 0,
+                bits: 0,
+                prefix: 0,
+                crc32: 0,
+              },
+            ],
+            encodePairMembershipPacket([]),
+          ),
+        ),
+        N: 0,
+        M: 0,
+      },
+    );
+    for (const field of ["all", "body", "title"] as const) {
+      const options = { field, limit: 7, titleBoost: 3, exactTotal: true },
+        result = await routed.search(
+          '"a b c d"',
+          new Reader(root, {
+            ...source,
+            readNamed: async (address, n) =>
+              address.includes("/pairs-")
+                ? routedMembers
+                : source.readNamed(address, n),
+          }),
+          options,
+        ),
+        expected = await control.search(
+          '"a b c d"',
+          new Reader(root, objects.source),
+          options,
+        );
+      expect(result.results).toEqual(expected.results);
+      expect(result.total).toBe(expected.total);
+      if (field !== "title") {
+        expect(result.diagnostics.executor, field).toBe("exact-phrase-blocks");
+        expect(result.diagnostics.wordPositionIntegers).toBe(0);
+        expect(result.diagnostics.exactPhraseReads).toBeGreaterThan(0);
+        expect(result.diagnostics.pairPositionChunks).toBe(0);
+      }
+    }
   } finally {
     await original?.close();
     await objects?.close();

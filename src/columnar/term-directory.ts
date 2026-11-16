@@ -330,7 +330,6 @@ export class TermDirectory {
   readonly blocks: number;
   private cold?: TermDirectory;
   private decoded = new Lru<Map<string, DirectoryTerm>>(2 * 1048576);
-  private decoding = new Semaphore(2);
   constructor(
     bundled: Uint8Array,
     readonly documents = Number.MAX_SAFE_INTEGER,
@@ -436,7 +435,10 @@ export class TermDirectory {
     return this.lookup(names, undefined, true);
   }
   async lookup(names: string[], reader?: Reader, bundledOnly = false) {
-    const wanted = new Map<number, string[]>();
+    // Decompression belongs to this request. A cancelled owner must not leave
+    // later requests waiting on its unfinished streams or semaphore slots.
+    const decoding = new Semaphore(2),
+      wanted = new Map<number, string[]>();
     for (const name of names) {
       const i = this.route(name);
       if (i >= 0) {
@@ -448,7 +450,7 @@ export class TermDirectory {
     const found = new Map<string, DirectoryTerm>();
     await Promise.all(
       [...wanted].map(([i, ns]) =>
-        this.decoding.run(async () => {
+        decoding.run(async () => {
           const key = String(i);
           let entries = this.decoded.get(key);
           if (!entries) {

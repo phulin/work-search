@@ -7,6 +7,7 @@ import {
   readExactPhrasePairs,
 } from "./exact-phrase.js";
 import { scoreParameters } from "./scoring.js";
+import { executePhraseFrequencies } from "./phrase-frequency.js";
 import { filterDocuments, type DocumentFilter } from "./document-filter.js";
 import { scoreLookahead, SCORE_LOOKAHEAD_WINDOWS } from "./score-lookahead.js";
 import { leaves } from "./candidate-layout.js";
@@ -759,7 +760,16 @@ export class ColumnarIndex {
         }
       }
       const result = exact
-        ? undefined
+        ? await executePhraseFrequencies(
+            ast,
+            exact,
+            terms as Map<string, DirectoryTerm>,
+            queryRoot,
+            reader,
+            options,
+            packages,
+            started,
+          )
         : await executePackets(
             ast,
             terms as Map<string, DirectoryTerm>,
