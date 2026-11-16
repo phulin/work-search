@@ -181,7 +181,7 @@ async function worker(mode: string) {
  const root=${JSON.stringify(assets.root)}, manifest=${JSON.stringify(manifest)}, documents=new DocumentDirectory(${variable("documents.bin")}),
  settings={router:new PairRouter(${variable("router.bin")}),exactPhrases:new ExactPhraseDirectory(${variable("exact.bin")}),presence:${JSON.stringify(assets.membership?.presence)},N:100,M:1000};
  const pages=new Lru(12*1048576),decoded=new Lru(4*1048576)${!frozen ? ",suffixMemory=new SuffixMemory(manifest.generation)" : ""};
- const scoped=(cache,namespace)=>({get:key=>cache.get(namespace+':'+key),set:(key,value,bytes)=>cache.set(namespace+':'+key,value,bytes),get bytes(){return cache.bytes;},get peak(){return cache.peak;}});
+ const scoped=(cache,namespace)=>({get:key=>cache.get(namespace+':'+key),set:(key,value,bytes)=>cache.set(namespace+':'+key,value,bytes),entries:{has:key=>cache.entries.has(namespace+':'+key)},get limit(){return cache.limit;},get bytes(){return cache.bytes;},get peak(){return cache.peak;}});
  export default {async fetch(request,env){
  isolateId??=crypto.randomUUID();
  if(new URL(request.url).pathname==='/__gc') {const available=typeof globalThis.gc==='function';if(available)globalThis.gc();return Response.json({available});}
@@ -363,10 +363,11 @@ try {
           },
         }),
       }),
-      body: any = await r.json(),
+      raw = await r.text(),
       wallMs = performance.now() - start;
     jobs.delete(runId);
-    if (!r.ok) throw Error(JSON.stringify(body));
+    if (!r.ok) throw Error(raw);
+    const body = JSON.parse(raw);
     const expected = contract.rows.find((x: any) => x.sid === task.sid).result
       .results;
     if (

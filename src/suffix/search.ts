@@ -15,8 +15,8 @@ import type { SuffixReader } from "./reader.js";
 import { scoreCompleteCandidates } from "../columnar/frequency-scores.js";
 import { commonWordExclusions } from "../columnar/membership-anchor.js";
 
-/** Optional phrase layer. Disjoint mandatory phrases have additive scores;
- * overlapping words and other Boolean forms retain distinct-word scoring. */
+/** Optional phrase layer. Mandatory phrases supply conservative score bounds;
+ * finalists and other Boolean forms retain exact distinct-word scoring. */
 export async function searchWithSuffix(
   engine: ColumnarIndex,
   suffix: SuffixReader,
@@ -237,15 +237,20 @@ export async function searchWithSuffix(
         after: options.after,
         field,
       },
-      ranked =
+      rankPhrase =
         standalone && ast.kind === "phrase"
-          ? await rankSuffix(suffix, ids(ast.terms), rankOptions, rescore)
-          : await rankSuffixConjunction(
-              suffix,
-              conjunction!.map(ids),
-              rankOptions,
-              rescore,
-            );
+          ? ast.terms
+          : conjunction?.length === 1
+            ? conjunction[0]
+            : undefined,
+      ranked = rankPhrase
+        ? await rankSuffix(suffix, ids(rankPhrase), rankOptions, rescore)
+        : await rankSuffixConjunction(
+            suffix,
+            conjunction!.map(ids),
+            rankOptions,
+            rescore,
+          );
     if (ranked) {
       const results = [];
       for await (const { value: result } of packagePipeline(

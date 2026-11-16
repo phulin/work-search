@@ -9,22 +9,33 @@ import {
 import type { SuffixReader } from "./reader.js";
 import type { SuffixRankOptions } from "./rank.js";
 
-/** Every positive word must belong to exactly one mandatory phrase. Repeated
- * words within a phrase are already counted once in its stored score. */
+/** Every positive word belongs to a mandatory phrase. Overlapping words need
+ * conservative bounds, then distinct-word scoring of the surviving documents. */
 export function scoredConjunction(ast: Node): string[][] | undefined {
-  const phrases: string[][] = [],
-    seen = new Set<string>();
+  const phrases: string[][] = [];
   const visit = (n: Node): boolean => {
     if (n.kind === "and") return visit(n.left) && visit(n.right);
     if (n.kind !== "phrase" || n.terms.length < 2 || n.terms.length > 5)
       return false;
-    const words = new Set(n.terms);
-    for (const word of words) if (seen.has(word)) return false;
-    for (const word of words) seen.add(word);
     phrases.push(n.terms);
     return true;
   };
-  return visit(ast) && phrases.length > 1 ? phrases : undefined;
+  if (!visit(ast) || phrases.length < 2) return;
+  // A required longer phrase proves each of its contiguous subphrases. Their
+  // words still occur in the distinct-word scorer, so this changes no score.
+  return phrases.filter(
+    (words, i) =>
+      !phrases.some(
+        (other, j) =>
+          (other.length > words.length ||
+            (other.length === words.length && j < i)) &&
+          other.some(
+            (_, start) =>
+              start + words.length <= other.length &&
+              words.every((w, at) => other[start + at] === w),
+          ),
+      ),
+  );
 }
 
 /** Small complete intervals can provide Boolean matching and additive score
@@ -137,6 +148,20 @@ export async function rankSuffixConjunction(
     return heap.values.sort((a, b) => b.score - a.score || a.doc - b.doc);
   }
   const candidateSet = new Set(matches);
+  // A sum of overlapping phrase scores is an upper bound, never the exact
+  // Boolean score. A disjoint subset supplies a valid lower bound. Keeping
+  // the largest individual lower bound also helps when that subset is weak.
+  const disjoint = new Set<number>(),
+    used = new Set<number>();
+  for (const i of phrases
+    .map((_, i) => i)
+    .sort(
+      (a, b) => new Set(phrases[b]).size - new Set(phrases[a]).size || a - b,
+    )) {
+    if (phrases[i].some((id) => used.has(id))) continue;
+    disjoint.add(i);
+    for (const id of phrases[i]) used.add(id);
+  }
   const rows = await Promise.all(
     intervals.map(async (interval, i) => {
       const length = phrases[i].length,
@@ -196,6 +221,7 @@ export async function rankSuffixConjunction(
       const order = Uint32Array.from({ length: count }, (_, j) => j);
       order.sort((a, b) => docs[a] - docs[b]);
       return {
+        disjoint: disjoint.has(i),
         docs: Uint32Array.from(order, (j) => docs[j]),
         lo: Float64Array.from(order, (j) => lowerScores[j]),
         hi: Float64Array.from(order, (j) => upperScores[j]),
@@ -209,7 +235,8 @@ export async function rankSuffixConjunction(
   let count = 0;
   for (let i = 0; i < rows[0].docs.length; i++) {
     const doc = rows[0].docs[i];
-    let lo = rows[0].lo[i],
+    let lo = rows[0].disjoint ? rows[0].lo[i] : 0,
+      single = rows[0].lo[i],
       hi = rows[0].hi[i],
       match = true;
     for (let j = 1; j < rows.length; j++) {
@@ -219,10 +246,12 @@ export async function rankSuffixConjunction(
         match = false;
         break;
       }
-      lo += r.lo[at];
+      if (r.disjoint) lo += r.lo[at];
+      single = Math.max(single, r.lo[at]);
       hi += r.hi[at];
     }
     if (!match) continue;
+    lo = Math.max(lo, single);
     // Allow the original scorer to add distinct words in a different order.
     const error = 128 * Number.EPSILON * Math.max(1, hi) * phrases.length;
     if (options.after && lo - error > options.after.score) continue;

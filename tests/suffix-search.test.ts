@@ -218,6 +218,10 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
       '"a b" AND "c d"',
       '"a b a" AND "c d"',
       '"a b" AND "b c"',
+      '"a b" AND "b c" AND "c d"',
+      '"a b" AND "a b"',
+      '"a b c d" AND "b c"',
+      '"b c" AND "a b c d" AND "c d"',
       '("a b" AND "c d") AND "x x"',
       '"a b" OR "c d"',
       '"a b" AND NOT "b c"',
@@ -489,13 +493,20 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
     await rm(directory, { recursive: true, force: true });
   }
 }, 30000);
-it("combines scores only for mandatory phrases with disjoint normalized words", () => {
+it("uses phrase score bounds for mandatory phrases while retaining distinct-word scoring", () => {
   expect(scoredConjunction(parse('"a b a" AND "c d"'))).toEqual([
     ["a", "b", "a"],
     ["c", "d"],
   ]);
+  expect(scoredConjunction(parse('"a b" AND "b c"'))).toEqual([
+    ["a", "b"],
+    ["b", "c"],
+  ]);
+  expect(scoredConjunction(parse('"a b" AND "a b c" AND "b c"'))).toEqual([
+    ["a", "b", "c"],
+  ]);
+  expect(scoredConjunction(parse('"a b" AND "a b"'))).toEqual([["a", "b"]]);
   for (const q of [
-    '"a b" AND "b c"',
     '"a b" OR "c d"',
     '"a b" AND NOT "c d"',
     '"a b" W/2 "c d"',
