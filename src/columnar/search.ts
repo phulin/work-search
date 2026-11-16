@@ -875,6 +875,7 @@ export class ColumnarIndex {
             options,
             packages,
             started,
+            planned,
           )
         : undefined;
       // Exact evidence can reject most documents even when its frequency-only

@@ -252,11 +252,11 @@ export async function searchWithSuffix(
       };
     }
   }
-  // Price a candidate-document continuation before any interval I/O. General
-  // Boolean ranking continues through the unchanged distinct-word term scorer.
+  // Keep cheap complete-term and candidate-document plans before interval I/O.
+  // General Boolean ranking retains the original distinct-word term scorer.
   if (
     terms.size === queryTerms(ast).length &&
-    packetPlan(ast, terms, root, options, packages).kind === "documents"
+    packetPlan(ast, terms, root, options, packages).kind !== "blocks"
   )
     return engine.search(q, reader, options);
   const evidence = new SuffixEvidence();

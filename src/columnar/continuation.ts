@@ -48,7 +48,13 @@ export async function priceDocuments(
   const ids = Uint32Array.from(selected),
     waves = Math.ceil(ids.length / PACKAGE_CONCURRENCY),
     exhaustiveWork = bytes / PAGE + waves * WAVE,
-    ranking = estimateDocumentRanking(ids.length, ast, terms, options),
+    // Apply phrase/pair membership before assuming that high-scoring documents
+    // will verify. An unfiltered word anchor can otherwise bypass a much
+    // cheaper pair intersection merely because its first scores look cheap.
+    ranking =
+      plan.membershipAnchor || packages.membership
+        ? estimateDocumentRanking(ids.length, ast, terms, options)
+        : undefined,
     // The document executor can score this complete set first, then verify in
     // exact score order. Price that existing alternative as well as opening
     // every package. Expected checks select a plan; they never cap execution.

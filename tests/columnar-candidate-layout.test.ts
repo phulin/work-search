@@ -97,6 +97,9 @@ it("compares score-ordered document verification with blocks without assuming al
       packages: {
         averageBytes: 100,
         byteLength: () => 100,
+        membership: membership(candidates.length, function* () {
+          yield* candidates;
+        }),
         load: async () => {
           throw Error("Planning must not open documents");
         },

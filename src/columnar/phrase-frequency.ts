@@ -10,6 +10,7 @@ import { scoreCompleteCandidates } from "./frequency-scores.js";
 import { Heap } from "./top-k.js";
 import { queryTerms } from "../query/parser.js";
 import { positionalMatcher, QueryResourceError } from "../query/evaluate.js";
+import type { PacketPlan } from "./packet-execution.js";
 
 /** A bounded complete read avoids repeated score-tree windows. Decode only
  * blocks overlapping proven matches, and evaluate BM25 only for those rows.
@@ -23,6 +24,7 @@ export async function executePhraseFrequencies(
   options: Options,
   packages: CandidatePackages | undefined,
   started: number,
+  plan?: PacketPlan,
 ) {
   if (!packages) return;
   const field = options.field ?? "all",
@@ -113,7 +115,11 @@ export async function executePhraseFrequencies(
     ),
     completeCost = physicalBytes / 104857.6 + Math.ceil(parts.length / 6) * 20,
     blockCost =
-      Math.max(estimatedBlockBytes, Math.min(physicalBytes, 262144)) /
+      Math.max(
+        estimatedBlockBytes,
+        plan?.continuationCost?.pageBytes ?? 0,
+        Math.min(physicalBytes, 262144),
+      ) /
         104857.6 +
       Math.min(8, Math.ceil(root.count / (8 * 16384))) * 20;
   if (completeCost > blockCost) return;
