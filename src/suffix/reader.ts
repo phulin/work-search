@@ -347,13 +347,26 @@ export class SuffixReader {
       this.fences &&
       columns?.length &&
       columns.every(
-        (c) => c === "keys" || c === "documents" || c === "positions",
+        (c) =>
+          c === "keys" ||
+          c === "documents" ||
+          c === "positions" ||
+          (c === "flags" && !!this.numericIndex),
       )
-    )
+    ) {
+      const blocks = this.fences.blocks(interval.first, interval.end);
+      if (columns.includes("flags"))
+        for (const block of blocks) {
+          const ref = this.numericIndex!.flags(block);
+          if (ref.offset + ref.length > this.manifest.files.flags.bytes)
+            throw Error("Suffix flag range exceeds its column");
+          block.columns.flags = ref;
+        }
       return {
         ...interval,
-        blocks: this.fences.blocks(interval.first, interval.end),
+        blocks,
       };
+    }
     const blocks = (
       await Promise.all(interval.groups.map((g) => this.directory(g)))
     )

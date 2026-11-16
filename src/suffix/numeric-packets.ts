@@ -106,6 +106,7 @@ export class NumericDirectoryBuilder {
   private at = 0;
   private offset = 0;
   private scoreOffsets = [0, 0, 0, 0];
+  private baseOffsets = [0, 0, 0];
   constructor(
     readonly count: number,
     corpus: string,
@@ -129,6 +130,18 @@ export class NumericDirectoryBuilder {
       length > 0xffffffff
     )
       throw Error("Invalid numeric base length");
+    if (
+      length !==
+      HEADER +
+        baseColumns.reduce((n, name, i) => {
+          const ref = block.columns[name];
+          if (!ref || ref.offset !== this.baseOffsets[i])
+            throw Error("Noncontiguous numeric base column");
+          this.baseOffsets[i] += ref.length;
+          return n + ref.length;
+        }, 0)
+    )
+      throw Error("Numeric base length differs from columns");
     const restart = this.at % RESTART === 0,
       at = this.base + this.at * RECORD;
     if (restart) {
@@ -232,5 +245,30 @@ export class NumericDirectory {
       base: { offset, length: bytes },
       score: { offset: scoreOffset, length: scoreBytes },
     };
+  }
+  /** Every base packet has one header and the same three column frames.
+   * Subtract cumulative headers/documents/positions to recover the original
+   * flag address. No additional bundled address or remote discovery is needed. */
+  flags(block: SuffixBlock) {
+    const ref = this.lookup(block.ordinal!, 2);
+    if (!ref) throw Error("Missing numeric block ordinal");
+    const offset =
+        ref.base.offset -
+        HEADER * block.ordinal! -
+        block.columns.documents.offset -
+        block.columns.positions.offset,
+      length =
+        ref.base.length -
+        HEADER -
+        block.columns.documents.length -
+        block.columns.positions.length;
+    if (
+      !Number.isSafeInteger(offset) ||
+      offset < 0 ||
+      !Number.isSafeInteger(length) ||
+      length < 1
+    )
+      throw Error("Invalid numeric flag address");
+    return { offset, length };
   }
 }

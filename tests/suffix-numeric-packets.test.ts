@@ -67,6 +67,9 @@ it("bounds shared suffix memory across cold request namespaces and rejects anoth
 it("routes wide numeric addresses across restarts and rejects incomplete or mismatched generations", () => {
   const corpus = "a".repeat(64),
     offsets = Array(4).fill(2 ** 36),
+    baseOffsets = [0, 0, 0],
+    lengths: number[] = [],
+    blocks: SuffixBlock[] = [],
     expected: number[][] = [],
     builder = new NumericDirectoryBuilder(150, corpus, 1050);
   let total = 0;
@@ -77,17 +80,28 @@ it("routes wide numeric addresses across restarts and rejects incomplete or mism
       columns[`score16-${j + 2}`] = { offset: offsets[j], length: i + j + 1 };
       offsets[j] += i + j + 1;
     }
-    builder.append({ columns } as SuffixBlock, 136 + i);
-    total += 136 + i;
+    for (const [j, name] of baseColumns.entries()) {
+      columns[name] = { offset: baseOffsets[j], length: i + j + 1 };
+      baseOffsets[j] += i + j + 1;
+    }
+    const block = { columns, ordinal: i } as SuffixBlock,
+      length =
+        136 + baseColumns.reduce((n, name) => n + columns[name].length, 0);
+    blocks.push(block);
+    lengths.push(length);
+    builder.append(block, length);
+    total += length;
   }
   const raw = builder.finish(),
     index = new NumericDirectory(raw, corpus, 1050);
   for (let i = 0; i < 150; i++)
     for (let n = 2; n <= 5; n++)
       expect(index.lookup(i, n)).toEqual({
-        base: { offset: expected[i][0], length: 136 + i },
+        base: { offset: expected[i][0], length: lengths[i] },
         score: { offset: expected[i][n - 1], length: i + n - 1 },
       });
+  for (const block of blocks)
+    expect(index.flags(block)).toEqual(block.columns.flags);
   expect(index.sourceBytes).toBe(total);
   expect(() => new NumericDirectory(raw, "b".repeat(64), 1050)).toThrow(
     "Invalid numeric directory",
@@ -308,6 +322,22 @@ it("finishes small phrases without a remote directory, preserves exhaustive rank
     expect(new Set(calls.filter((c) => c.startsWith("score")))).toEqual(
       new Set(["score16-3"]),
     );
+    calls.length = 0;
+    const independent = make(),
+      all = await independent.expand(
+        { first: 0, end: manifest.rows, groups: manifest.directory },
+        ["documents", "flags"],
+      );
+    let rows = 0;
+    for await (const batch of independent.scan(all, ["documents", "flags"])) {
+      const original = blocks.find((b) => b.first === batch.block.first)!;
+      expect(batch.block.columns.flags).toEqual(original.columns.flags);
+      rows += batch.end - batch.first;
+    }
+    expect(rows).toBe(manifest.rows);
+    expect(calls).not.toContain("directory");
+    expect(calls).not.toContain("positions");
+    expect(calls).not.toContain("numeric-base");
     let release!: () => void;
     const gate = new Promise<void>((r) => {
         release = r;
