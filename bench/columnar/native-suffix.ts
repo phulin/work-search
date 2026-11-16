@@ -30,8 +30,7 @@ const index = resolve(indexInput),
     await readFile(
       suffixDir +
         "/" +
-        (process.env.CWS_SUFFIX_MANIFEST ??
-          "manifest-phrase-ranks-65536-inline-4096.json"),
+        (process.env.CWS_SUFFIX_MANIFEST ?? "manifest-fences.json"),
       "utf8",
     ),
   ),
@@ -93,7 +92,9 @@ const data: Record<string, Uint8Array> = {
   "documents.bin": assets.documents!,
   ...(assets.router ? { "router.bin": assets.router } : {}),
   ...(assets.exactPhrases ? { "exact.bin": assets.exactPhrases } : {}),
-  "suffix-fences.bin": await readFile(suffixDir + "/fences"),
+  "suffix-fences.bin": await readFile(
+    suffixDir + "/" + (manifest.fences ?? "fences"),
+  ),
   "suffix-intervals.bin": await readFile(suffixDir + "/intervals"),
   "suffix-ranks.bin": await readFile(suffixDir + "/" + manifest.phraseRanks),
   ...(manifest.phraseRankIndex
@@ -159,11 +160,11 @@ async function worker(mode: string) {
  import {ExactPhraseDirectory} from ${JSON.stringify(source + "/columnar/exact-phrase-directory.ts")};
  import {Reader,Memory,Lru} from ${JSON.stringify(source + "/columnar/storage.ts")};
  ${!frozen ? `import {SuffixReader} from ${JSON.stringify(resolve("src/suffix/reader.ts"))};import {searchWithSuffix} from ${JSON.stringify(resolve("src/suffix/search.ts"))};` : ""}
- const root=${JSON.stringify(assets.root)}, manifest=${JSON.stringify(manifest)},
- directory=new TermDirectory(${variable("directory.bin")},root.count), documents=new DocumentDirectory(${variable("documents.bin")}),
- settings={router:new PairRouter(${variable("router.bin")}),exactPhrases:new ExactPhraseDirectory(${variable("exact.bin")}),presence:${JSON.stringify(assets.membership?.presence)},N:100,M:1000},
- engine=new ColumnarIndex(root,undefined,directory,undefined,documents,settings);
+ const root=${JSON.stringify(assets.root)}, manifest=${JSON.stringify(manifest)}, documents=new DocumentDirectory(${variable("documents.bin")}),
+ settings={router:new PairRouter(${variable("router.bin")}),exactPhrases:new ExactPhraseDirectory(${variable("exact.bin")}),presence:${JSON.stringify(assets.membership?.presence)},N:100,M:1000};
  export default {async fetch(request,env){
+ if(new URL(request.url).pathname==='/__gc') {const available=typeof globalThis.gc==='function';if(available)globalThis.gc();return Response.json({available});}
+ const directory=new TermDirectory(${variable("directory.bin")},root.count),engine=new ColumnarIndex(root,undefined,directory,undefined,documents,settings);
  const input=await request.json(), run=input.runId;
  const invoke=async(op,key,offset=0,length=0,range=undefined,body=undefined)=>{
  const r=await env.DATA.fetch('http://data/',{method:body?'POST':'GET',headers:{run,op,key,offset:String(offset),length:String(length),range:JSON.stringify(range??null)},body});
@@ -382,6 +383,8 @@ try {
             encoding: "utf8",
           }).trim(),
           model,
+          applicationCaches: "All application caches are new for every request",
+          v8Flags: process.env.MINIFLARE_WORKERD_V8_FLAGS ?? null,
           rows,
         }),
       ),
@@ -398,10 +401,15 @@ try {
   const memory: any = {};
   for (const [mode, w] of Object.entries<any>(workers)) {
     const before = await w.inspector.send("Runtime.getHeapUsage");
-    const retained = {
-      unavailable:
-        "Forced garbage collection is not supported reliably by this runtime",
-    };
+    const collected: any = await (
+      await w.mf.dispatchFetch("http://native/__gc")
+    ).json();
+    const retained = collected.available
+      ? await w.inspector.send("Runtime.getHeapUsage")
+      : {
+          unavailable:
+            "Run with MINIFLARE_WORKERD_V8_FLAGS=--expose-gc to measure after garbage collection",
+        };
     memory[mode] = {
       bundleBytes: w.bundleBytes,
       startupMs: w.startupMs,

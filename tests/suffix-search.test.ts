@@ -210,6 +210,8 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
           (await readFile(directory + "/" + file)).subarray(at, at + n),
         );
     const queries = [
+      '"a" AND "d"',
+      'NOT "x"',
       '"a b"',
       '"a b c d"',
       '"a a"',
@@ -327,6 +329,37 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
             expect(ranked!.map((h) => h.doc)).toEqual(
               expected.slice(0, 7).map((h) => h.doc),
             );
+          }
+          if (scoredConjunction(ast) && bits === 16) {
+            const reads: string[] = [],
+              few = new SuffixReader(manifest, async (file, at, n) => {
+                reads.push(file);
+                return (await readFile(directory + "/" + file)).subarray(
+                  at,
+                  at + n,
+                );
+              }),
+              ranked = await rankSuffixConjunction(
+                few,
+                scoredConjunction(ast)!.map((words) =>
+                  Uint32Array.from(words, (w) => ids.get(w)!),
+                ),
+                { bits: 16, limit: 100, field },
+                async (documents) =>
+                  Float64Array.from(
+                    documents,
+                    (d) => expected.find((e) => e.doc === d)!.score,
+                  ),
+              );
+            expect(ranked!.map((h) => h.doc)).toEqual(
+              expected.map((h) => h.doc),
+            );
+            expect(
+              reads.some(
+                (file) => file === "flags" || file.startsWith("score"),
+              ),
+            ).toBe(false);
+            expect(few.stats.intersectionCandidates).toBe(expected.length);
           }
           for (const h of actual.results) {
             expect(h.score).toBeCloseTo(

@@ -235,4 +235,5 @@ export interface SuffixManifest {
   phraseRanks?: string;
   phraseRankIndex?: string;
   phraseRankRows?: string;
+  fences?: string;
 }

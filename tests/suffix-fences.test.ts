@@ -1,6 +1,10 @@
 import { expect, it } from "vitest";
 import { gzipSync } from "node:zlib";
-import { encodeSuffixFences, SuffixFences } from "../src/suffix/fences.js";
+import {
+  encodeSuffixFences,
+  SuffixFences,
+  SuffixFenceBuilder,
+} from "../src/suffix/fences.js";
 import { SuffixReader } from "../src/suffix/reader.js";
 import { encodeSuffixKeys, comparePhrase } from "../src/suffix/keys.js";
 import type {
@@ -173,4 +177,54 @@ it("resolves phrase intervals from bundled fences across repeated prefixes, bloc
   expect(
     wide.bounds(Uint32Array.of(3, 4))![0].columns.keys.offset,
   ).toBeGreaterThan(2 ** 32);
+});
+
+it("preserves wide addresses across restart groups and rejects column gaps", () => {
+  const generation = "a".repeat(64),
+    offsets = [2 ** 36, 2 ** 34, 2 ** 35],
+    blocks = Array.from({ length: 150 }, (_, i) => {
+      const lengths = [100 + i, 50 + i, 30 + i],
+        columns = {} as SuffixBlock["columns"];
+      for (const [j, name] of ["keys", "documents", "positions"].entries()) {
+        columns[name as SuffixColumn] = {
+          offset: offsets[j],
+          length: lengths[j],
+        };
+        offsets[j] += lengths[j];
+      }
+      return {
+        first: i * 7,
+        count: 7,
+        low: [i + 1, 1],
+        high: [i + 1, 9],
+        columns,
+        scoreMaximum: [],
+        minDocument: 0,
+      };
+    }),
+    raw = encodeSuffixFences(blocks, generation, 1050),
+    fences = new SuffixFences(raw, {
+      corpusGeneration: generation,
+      rows: 1050,
+    });
+  expect(raw.length).toBeLessThan(48 + 150 * 47);
+  for (let i = 0; i < 150; i++) {
+    const actual = fences.blocks(i * 7, i * 7 + 7);
+    expect(actual).toHaveLength(1);
+    expect(actual[0].first).toBe(blocks[i].first);
+    expect(actual[0].columns).toEqual(blocks[i].columns);
+    expect(fences.bounds(Uint32Array.of(i + 1, 1))![1].columns).toEqual(
+      blocks[i].columns,
+    );
+  }
+  const builder = new SuffixFenceBuilder(150, generation, 1050);
+  builder.append(blocks.slice(0, 63));
+  builder.append(blocks.slice(63, 129));
+  builder.append(blocks.slice(129));
+  expect(builder.finish()).toEqual(raw);
+  const bad = blocks.map((b) => ({ ...b, columns: { ...b.columns } }));
+  bad[65].columns.keys = { ...bad[65].columns.keys, offset: 1 };
+  expect(() => encodeSuffixFences(bad, generation, 1050)).toThrow(
+    "Noncontiguous",
+  );
 });

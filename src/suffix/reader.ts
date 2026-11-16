@@ -60,6 +60,8 @@ export class SuffixReader {
     intervalHits: 0,
     phraseRankHits: 0,
     remotePhraseRankHits: 0,
+    membershipRows: 0,
+    intersectionCandidates: 0,
   };
   private slots = new Semaphore(6);
   private cache = new Lru<Uint8Array>(8 * 1048576);

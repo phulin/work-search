@@ -17,7 +17,10 @@ if (!directory || !Number.isInteger(limit) || limit < 1)
 const manifest: SuffixManifest = JSON.parse(
     await readFile(directory + "/manifest-fences.json", "utf8"),
   ),
-  fences = new SuffixFences(await readFile(directory + "/fences"), manifest),
+  fences = new SuffixFences(
+    await readFile(directory + "/" + (manifest.fences ?? "fences")),
+    manifest,
+  ),
   input = await open(directory + "/directory", "r"),
   keys = await open(directory + "/keys", "r"),
   started = Date.now(),

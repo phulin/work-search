@@ -36,61 +36,155 @@ export async function rankSuffixConjunction(
   rescore: (documents: Uint32Array) => Promise<Float64Array>,
   budget = 4 * 1048576,
 ) {
+  if (phrases.some((p) => p.some((word) => !word))) return [];
   if (phrases.reduce((n, p) => n + reader.minimumRows(p) * 48, 0) > budget)
     return;
   const bounds = await Promise.all(phrases.map((p) => reader.shortInterval(p)));
+  if (bounds.some((b) => b.first === b.end)) return [];
   // Sorting and intersections need temporary arrays too, not just retained
   // scores. Bound their sum before opening payload columns.
   if (bounds.reduce((n, r) => n + (r.end - r.first) * 48, 0) > budget) return;
-  const intervals = await Promise.all(bounds.map((b) => reader.expand(b)));
-  const field = options.field ?? "all",
-    rows = await Promise.all(
-      intervals.map(async (interval, i) => {
-        const length = phrases[i].length,
-          capacity = interval.end - interval.first,
-          docs = new Uint32Array(capacity),
-          lowerScores = new Float64Array(capacity),
-          upperScores = new Float64Array(capacity),
-          bit = canonicalBit(length, field),
-          column = `score${options.bits}-${length}` as SuffixColumn;
+  const field = options.field ?? "all";
+  // Read matching document IDs alongside block metadata. Exact phrase intervals
+  // establish membership without opening flags or score columns.
+  const [intervals, memberships] = await Promise.all([
+    Promise.all(bounds.map((b) => reader.expand(b))),
+    Promise.all(
+      bounds.map(async (bound) => {
+        const names: SuffixColumn[] =
+            field === "all" ? ["documents"] : ["documents", "positions"],
+          interval = await reader.expand(bound, names),
+          docs = new Uint32Array(bound.end - bound.first);
         let count = 0;
-        for await (const batch of reader.scan(interval, [
-          "documents",
-          "flags",
-          column,
-        ])) {
-          const view = (name: SuffixColumn) => {
-              const b = batch.columns[name]!;
-              return new DataView(b.buffer, b.byteOffset, b.byteLength);
-            },
-            d = view("documents"),
-            f = view("flags"),
-            s = view(column),
-            q = quantizerForMaximum(
-              batch.block.scoreMaximum[length - 2],
-              options.bits,
-            ),
-            error = 128 * Number.EPSILON * Math.max(1, q.maximum);
+        for await (const batch of reader.scan(interval, names)) {
+          const raw = batch.columns.documents!,
+            d = new DataView(raw.buffer, raw.byteOffset, raw.byteLength),
+            positions = batch.columns.positions,
+            p =
+              positions &&
+              new DataView(
+                positions.buffer,
+                positions.byteOffset,
+                positions.byteLength,
+              );
           for (let j = batch.first; j < batch.end; j++) {
-            if (!(f.getUint16(j * 2, true) & bit)) continue;
-            const code =
-              options.bits === 16 ? s.getUint16(j * 2, true) : s.getUint8(j);
-            docs[count] = d.getUint32(j * 4, true);
-            lowerScores[count] =
-              field === "all" ? Math.max(0, code * q.step - error) : 0;
-            upperScores[count++] =
-              Math.min(q.maximum, (code + 1) * q.step) + error;
+            const title = p ? p.getUint32(j * 4, true) >= 2 ** 31 : false;
+            if ((field === "body" && title) || (field === "title" && !title))
+              continue;
+            docs[count++] = d.getUint32(j * 4, true);
           }
         }
-        const order = Uint32Array.from({ length: count }, (_, j) => j);
-        order.sort((a, b) => docs[a] - docs[b]);
-        return {
-          docs: Uint32Array.from(order, (j) => docs[j]),
-          lo: Float64Array.from(order, (j) => lowerScores[j]),
-          hi: Float64Array.from(order, (j) => upperScores[j]),
-        };
+        reader.stats.membershipRows += count;
+        const sorted = docs.subarray(0, count).sort();
+        let unique = 0;
+        for (let j = 0; j < sorted.length; j++)
+          if (!j || sorted[j] !== sorted[j - 1]) sorted[unique++] = sorted[j];
+        return sorted.subarray(0, unique);
       }),
-    );
+    ),
+  ]);
+  memberships.sort((a, b) => a.length - b.length);
+  const matching = new Uint32Array(memberships[0].length);
+  let matchCount = 0;
+  for (const doc of memberships[0]) {
+    let present = true;
+    for (let i = 1; i < memberships.length; i++)
+      if (memberships[i][lower(memberships[i], doc)] !== doc) {
+        present = false;
+        break;
+      }
+    if (present) matching[matchCount++] = doc;
+  }
+  const matches = matching.subarray(0, matchCount);
+  reader.stats.intersectionCandidates += matchCount;
+  if (matchCount <= options.limit) {
+    if (!matchCount) return [];
+    reader.stats.rescoreCandidates += matchCount;
+    const scores = await rescore(matches),
+      heap = new Heap(options.limit);
+    if (scores.length !== matchCount)
+      throw Error("Incomplete Boolean suffix score completion");
+    for (let i = 0; i < matchCount; i++) {
+      const doc = matches[i],
+        score = scores[i];
+      if (!Number.isFinite(score) || score < 0)
+        throw Error("Invalid Boolean suffix score");
+      if (
+        options.after &&
+        (score > options.after.score ||
+          (score === options.after.score && doc <= options.after.doc))
+      )
+        continue;
+      heap.add({ doc, score, row: doc % 4096 });
+    }
+    return heap.values.sort((a, b) => b.score - a.score || a.doc - b.doc);
+  }
+  const candidateSet = new Set(matches);
+  const rows = await Promise.all(
+    intervals.map(async (interval, i) => {
+      const length = phrases[i].length,
+        capacity = matchCount,
+        docs = new Uint32Array(capacity),
+        lowerScores = new Float64Array(capacity),
+        upperScores = new Float64Array(capacity),
+        bit = canonicalBit(length, field),
+        column = `score${options.bits}-${length}` as SuffixColumn;
+      let count = 0;
+      const useful = await Promise.all(
+        interval.blocks.map(async (block) => {
+          const raw = await reader.column(block, "documents"),
+            view = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);
+          for (
+            let j = Math.max(0, interval.first - block.first);
+            j < Math.min(block.count, interval.end - block.first);
+            j++
+          )
+            if (candidateSet.has(view.getUint32(j * 4, true))) return block;
+        }),
+      );
+      const selected = {
+        ...interval,
+        blocks: useful.filter((b): b is NonNullable<typeof b> => !!b),
+      };
+      for await (const batch of reader.scan(selected, [
+        "documents",
+        "flags",
+        column,
+      ])) {
+        const view = (name: SuffixColumn) => {
+            const b = batch.columns[name]!;
+            return new DataView(b.buffer, b.byteOffset, b.byteLength);
+          },
+          d = view("documents"),
+          f = view("flags"),
+          s = view(column),
+          q = quantizerForMaximum(
+            batch.block.scoreMaximum[length - 2],
+            options.bits,
+          ),
+          error = 128 * Number.EPSILON * Math.max(1, q.maximum);
+        for (let j = batch.first; j < batch.end; j++) {
+          if (!(f.getUint16(j * 2, true) & bit)) continue;
+          const code =
+            options.bits === 16 ? s.getUint16(j * 2, true) : s.getUint8(j);
+          const doc = d.getUint32(j * 4, true);
+          if (!candidateSet.has(doc)) continue;
+          docs[count] = doc;
+          lowerScores[count] =
+            field === "all" ? Math.max(0, code * q.step - error) : 0;
+          upperScores[count++] =
+            Math.min(q.maximum, (code + 1) * q.step) + error;
+        }
+      }
+      const order = Uint32Array.from({ length: count }, (_, j) => j);
+      order.sort((a, b) => docs[a] - docs[b]);
+      return {
+        docs: Uint32Array.from(order, (j) => docs[j]),
+        lo: Float64Array.from(order, (j) => lowerScores[j]),
+        hi: Float64Array.from(order, (j) => upperScores[j]),
+      };
+    }),
+  );
   rows.sort((a, b) => a.docs.length - b.docs.length);
   const candidates = new Uint32Array(rows[0].docs.length),
     upper = new Float64Array(candidates.length),

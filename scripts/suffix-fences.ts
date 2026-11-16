@@ -1,56 +1,45 @@
 import { open, readFile, writeFile } from "node:fs/promises";
-import { createReadStream } from "node:fs";
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import {
-  encodeSuffixFenceRecords,
-  suffixFenceHeader,
-} from "../src/suffix/fences.js";
+import { SuffixFenceBuilder } from "../src/suffix/fences.js";
 import type { SuffixManifest, SuffixBlock } from "../src/suffix/format.js";
-
-const [directory] = process.argv.slice(2);
-if (!directory) throw Error("Use SUFFIX_DIRECTORY");
+const [directory, manifestName = "manifest-heads.json"] = process.argv.slice(2);
+if (!directory) throw Error("Use SUFFIX_DIRECTORY [MANIFEST]");
 const manifest: SuffixManifest = JSON.parse(
-    await readFile(directory + "/manifest-heads.json", "utf8"),
+    await readFile(directory + "/" + manifestName, "utf8"),
   ),
   input = await open(directory + "/directory", "r"),
-  output = await open(directory + "/fences", "w"),
   started = Date.now();
-let bytes = 48,
-  count = 0,
-  expected = 0;
+async function blocks(
+  group: SuffixManifest["directory"][number],
+): Promise<SuffixBlock[]> {
+  const raw = Buffer.allocUnsafe(group.ref.length);
+  if (
+    (await input.read(raw, 0, raw.length, group.ref.offset)).bytesRead !==
+    raw.length
+  )
+    throw Error("Truncated suffix directory");
+  return JSON.parse(gunzipSync(raw).toString());
+}
+let count = 0,
+  raw: Uint8Array;
 try {
-  for (const group of manifest.directory) {
-    const compressed = Buffer.allocUnsafe(group.ref.length);
-    if (
-      (await input.read(compressed, 0, compressed.length, group.ref.offset))
-        .bytesRead !== compressed.length
-    )
-      throw Error("Truncated suffix directory");
-    const blocks: SuffixBlock[] = JSON.parse(gunzipSync(compressed).toString());
-    if (blocks[0].first !== expected) throw Error("Suffix fence directory gap");
-    const raw = encodeSuffixFenceRecords(blocks);
-    await output.write(raw, 0, raw.length, bytes);
-    bytes += raw.length;
-    count += blocks.length;
-    expected = blocks.at(-1)!.first + blocks.at(-1)!.count;
-  }
-  if (expected !== manifest.rows)
-    throw Error("Suffix fence directory row count");
-  const header = suffixFenceHeader(
+  for (const group of manifest.directory) count += (await blocks(group)).length;
+  const builder = new SuffixFenceBuilder(
     count,
     manifest.corpusGeneration,
     manifest.rows,
   );
-  await output.write(header, 0, header.length, 0);
+  for (const group of manifest.directory) builder.append(await blocks(group));
+  raw = builder.finish();
 } finally {
   await input.close();
-  await output.close();
 }
-const hash = createHash("sha256");
-for await (const raw of createReadStream(directory + "/fences"))
-  hash.update(raw);
-manifest.files.fences = { bytes, sha256: hash.digest("hex") };
+const sha256 = createHash("sha256").update(raw).digest("hex"),
+  name = "fences-" + sha256.slice(0, 16);
+await writeFile(directory + "/" + name, raw);
+manifest.files[name] = { bytes: raw.length, sha256 };
+manifest.fences = name;
 manifest.generation = "";
 manifest.generation = createHash("sha256")
   .update(JSON.stringify(manifest))
@@ -60,7 +49,7 @@ console.log(
   JSON.stringify({
     generation: manifest.generation,
     blocks: count,
-    bytes,
+    bytes: raw.length,
     milliseconds: Date.now() - started,
   }),
 );

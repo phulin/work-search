@@ -195,7 +195,12 @@ const control = await import(
   previousSuffixSearch = manifest
     ? await import(pathToFileURL(frozen + "/src/suffix/search.ts").href)
     : undefined,
-  suffixFences = manifest?.files.fences
+  suffixFences = manifest?.files[manifest.fences ?? "fences"]
+    ? new Uint8Array(
+        await readFile(suffixPath + "/" + (manifest.fences ?? "fences")),
+      )
+    : undefined,
+  suffixBeforeFences = plans.includes("suffix-before")
     ? new Uint8Array(await readFile(suffixPath + "/fences"))
     : undefined,
   suffixIntervals = manifest?.files.intervals
@@ -213,7 +218,7 @@ const control = await import(
 if (
   suffixFences &&
   createHash("sha256").update(suffixFences).digest("hex") !==
-    manifest.files.fences.sha256
+    manifest.files[manifest.fences ?? "fences"].sha256
 )
   throw Error("Suffix fences digest differs");
 if (
@@ -317,6 +322,7 @@ async function query(s: any, plan: string, prepare: boolean) {
     slots = new Semaphore(6),
     engineSource = limitSource(io.source, slots),
     suffixSource = limitSource(suffixIO.source, slots),
+    suffixByFile: Record<string, { reads: number; bytes: number }> = {},
     directory = new DirectoryClass(assets.directory!, root.count),
     documents = new DocumentsClass(assets.documents!),
     engine = new IndexClass(
@@ -351,8 +357,19 @@ async function query(s: any, plan: string, prepare: boolean) {
     suffix = manifest
       ? new SuffixReaderClass(
           selectedManifest,
-          prepare ? suffixRead : suffixSource.read,
-          plan === "suffix16-without-fences" ? undefined : suffixFences,
+          prepare
+            ? suffixRead
+            : (file: string, offset: number, bytes: number) => {
+                const count = (suffixByFile[file] ??= { reads: 0, bytes: 0 });
+                count.reads++;
+                count.bytes += bytes;
+                return suffixSource.read(file, offset, bytes);
+              },
+          plan === "suffix16-without-fences"
+            ? undefined
+            : plan === "suffix-before"
+              ? suffixBeforeFences
+              : suffixFences,
           {
             rankingLookahead: plan === "suffix16-serial" ? 1 : 6,
             intervals:
@@ -412,6 +429,7 @@ async function query(s: any, plan: string, prepare: boolean) {
     suffix: suffix?.stats,
     suffixBuffers: suffix?.buffers,
     io: { engine: { ...io.calls }, suffix: { ...suffixIO.calls } },
+    suffixByFile,
     memory: { before, after },
     correct: true,
     localRangeAssemblies: storage.localAssemblies - localAssemblies,

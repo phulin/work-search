@@ -28,7 +28,7 @@ if (
 const manifest: SuffixManifest = JSON.parse(
     await readFile(directory + "/manifest-intervals.json", "utf8"),
   ),
-  fences = await readFile(directory + "/fences"),
+  fences = await readFile(directory + "/" + (manifest.fences ?? "fences")),
   intervals = await readFile(directory + "/intervals"),
   candidates = [
     ...new PhraseIntervals(

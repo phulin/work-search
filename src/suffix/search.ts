@@ -47,6 +47,7 @@ export async function searchWithSuffix(
   const visit = (n: Node): void => {
     if (
       n.kind === "phrase" &&
+      n.terms.length > 1 &&
       !phrases.some((p) => p.join("\0") === n.terms.join("\0"))
     )
       phrases.push(n.terms);
