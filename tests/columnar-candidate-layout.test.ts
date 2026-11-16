@@ -216,26 +216,28 @@ it("compares a scattered candidate set with batched scoring rather than one fetc
       gets: 120,
       dependentStages: 2,
     };
-  const got = await index.choose({
-    root,
-    reader,
-    ast: { kind: "term", term: "alpha" },
-    terms: new Map([["alpha", term]]),
-    options: {},
-    plan,
-    packages: {
-      averageBytes: 100,
-      byteLength: () => 100,
-      load: async () => {
-        throw Error("No package reads while planning");
+  for (const count of [88, 120]) {
+    const got = await index.choose({
+      root,
+      reader,
+      ast: { kind: "term", term: "alpha" },
+      terms: new Map([["alpha", term]]),
+      options: {},
+      plan,
+      packages: {
+        averageBytes: 100,
+        byteLength: () => 100,
+        load: async () => {
+          throw Error("No package reads while planning");
+        },
+        membership: membership(count, function* () {
+          for (let i = 0; i < count; i++) yield i * 8000;
+        }),
       },
-      membership: membership(120, function* () {
-        for (let i = 0; i < 120; i++) yield i * 8000;
-      }),
-    },
-  });
-  expect(got.kind).toBe("blocks");
-  expect(got.continuationCost?.pageBytes).toBe(262144);
+    });
+    expect(got.kind).toBe("blocks");
+    expect(got.continuationCost?.pageBytes).toBe(262144);
+  }
   expect(reader.stats.requests).toBe(0);
 });
 it("prices delayed positional reads separately and omits proved or resident positions", async () => {

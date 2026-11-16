@@ -67,8 +67,7 @@ export async function priceDocuments(
   const batchedWaves = Math.ceil(candidateBands / SCORE_LOOKAHEAD_WINDOWS);
   if (
     !ids.length ||
-    (waves <= 2 * SCORE_LOOKAHEAD_WINDOWS &&
-      packageWork < candidateBands * WAVE) ||
+    (waves === 1 && packageWork < candidateBands * WAVE) ||
     packageWork < batchedWaves * WAVE
   )
     return {

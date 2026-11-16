@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, open } from "node:fs/promises";
+import { readFile, writeFile, appendFile, mkdir, open } from "node:fs/promises";
 import { gzipSync, gunzipSync } from "node:zlib";
 import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
@@ -344,6 +344,11 @@ try {
       ),
     );
   } else {
+    await writeFile(output + ".jsonl", "");
+    await writeFile(
+      output,
+      gzipSync(JSON.stringify({ ...provenance, preparation, rows: [] })),
+    );
     let seed = 879133;
     const random = () => {
       seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
@@ -363,10 +368,11 @@ try {
         repeat: job.repeat,
       };
       rows.push(row);
-      await writeFile(
-        output,
-        gzipSync(JSON.stringify({ ...provenance, preparation, rows })),
-      );
+      await appendFile(output + ".jsonl", JSON.stringify(row) + "\n");
+      // Recompressing all previous responses after every query creates large
+      // allocations and lets unrelated GC contaminate the next CPU sample.
+      // The journal retains every row; compress the complete result once,
+      // after all measured requests finish.
       console.log(
         rows.length,
         "/",

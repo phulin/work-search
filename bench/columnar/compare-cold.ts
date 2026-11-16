@@ -92,6 +92,7 @@ const jobs = Array.from({ length: repeats }, (_, repeat) =>
   };
 await mkdir(dirname(output), { recursive: true });
 await writeFile(output + ".jsonl", "");
+await writeFile(output, gzipSync(JSON.stringify({ ...provenance, rows: [] })));
 for (const { s, name, repeat } of jobs) {
   const requestId = randomUUID(),
     namespace = "compare-" + randomUUID(),
@@ -184,7 +185,6 @@ for (const { s, name, repeat } of jobs) {
   }
   rows.push(row);
   await appendFile(output + ".jsonl", JSON.stringify(row) + "\n");
-  await writeFile(output, gzipSync(JSON.stringify({ ...provenance, rows })));
   console.log(
     rows.length,
     "/",

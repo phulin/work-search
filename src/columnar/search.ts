@@ -760,7 +760,9 @@ export class ColumnarIndex {
         this.membership?.router.metadata.completeContext
       ) {
         const ids = new Map([...terms].map(([word, t]) => [t.id, word])),
-          routed = new Map<string, ExactPairDescriptor>();
+          routed = new Map<string, ExactPairDescriptor>(
+            exactPlans.map((p) => [p.pair.a + "\0" + p.pair.b, p.pair]),
+          );
         for (const s of selection.selections.values())
           for (const record of s.records) {
             const a = ids.get(record.a),
@@ -795,7 +797,11 @@ export class ColumnarIndex {
           options,
         );
         const merged = new Map(exactPlans.map((p) => [p.words.join("\0"), p]));
-        for (const p of repriced) merged.set(p.words.join("\0"), p);
+        for (const p of repriced) {
+          const key = p.words.join("\0"),
+            prior = merged.get(key);
+          if (!prior || p.cost < prior.cost) merged.set(key, p);
+        }
         exactPlans.splice(0, exactPlans.length, ...merged.values());
       }
       // The measured candidate-document continuation remains a complete
