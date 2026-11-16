@@ -173,6 +173,7 @@ export class SuffixFences {
       columns[n as SuffixColumn] = { offset: offsets[j], length };
     });
     return {
+      ordinal: i,
       first,
       count,
       low,

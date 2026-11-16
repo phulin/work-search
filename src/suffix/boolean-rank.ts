@@ -39,7 +39,16 @@ export async function rankSuffixConjunction(
   if (phrases.some((p) => p.some((word) => !word))) return [];
   if (phrases.reduce((n, p) => n + reader.minimumRows(p) * 48, 0) > budget)
     return;
-  const bounds = await Promise.all(phrases.map((p) => reader.shortInterval(p)));
+  const bounds = await Promise.all(
+    phrases.map((p) =>
+      reader.numericInterval(
+        p,
+        options.field && options.field !== "all"
+          ? ["documents", "positions"]
+          : ["documents"],
+      ),
+    ),
+  );
   if (bounds.some((b) => b.first === b.end)) return [];
   // Sorting and intersections need temporary arrays too, not just retained
   // scores. Bound their sum before opening payload columns.
@@ -48,7 +57,15 @@ export async function rankSuffixConjunction(
   // Read matching document IDs alongside block metadata. Exact phrase intervals
   // establish membership without opening flags or score columns.
   const [intervals, memberships] = await Promise.all([
-    Promise.all(bounds.map((b) => reader.expand(b))),
+    Promise.all(
+      bounds.map((b, i) =>
+        reader.expand(b, [
+          "documents",
+          "flags",
+          `score${options.bits}-${phrases[i].length}`,
+        ]),
+      ),
+    ),
     Promise.all(
       bounds.map(async (bound) => {
         const names: SuffixColumn[] =

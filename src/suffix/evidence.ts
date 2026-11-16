@@ -39,7 +39,7 @@ export class SuffixEvidence implements PhraseExecution {
       return false;
     const estimated =
       ids.length <= 8
-        ? await reader.shortInterval(ids)
+        ? await reader.numericInterval(ids, ["documents", "positions"])
         : await reader.interval(ids);
     const reserve = (estimated.end - estimated.first) * 40;
     if (reserve + this.bufferBytes + this.reserved > budget) return false;

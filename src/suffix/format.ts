@@ -204,6 +204,8 @@ export interface SuffixRef {
   length: number;
 }
 export interface SuffixBlock {
+  /** Physical ordinal from the bundled block directory, when available. */
+  ordinal?: number;
   first: number;
   count: number;
   low: number[];
@@ -236,4 +238,5 @@ export interface SuffixManifest {
   phraseRankIndex?: string;
   phraseRankRows?: string;
   fences?: string;
+  numericPackets?: { index: string; data: string };
 }

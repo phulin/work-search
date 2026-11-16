@@ -12,6 +12,11 @@ import { quantizerForMaximum } from "./format.js";
 import { SuffixFences } from "./fences.js";
 import { PhraseIntervals } from "./intervals.js";
 import { PhraseRanks } from "./phrase-ranks.js";
+import {
+  NumericDirectory,
+  decodeNumericBase,
+  baseColumns,
+} from "./numeric-packets.js";
 export type SuffixRead = (
   file: string,
   offset: number,
@@ -62,6 +67,9 @@ export class SuffixReader {
     remotePhraseRankHits: 0,
     membershipRows: 0,
     intersectionCandidates: 0,
+    numericPackets: 0,
+    numericBytes: 0,
+    numericUnusedBlocks: 0,
   };
   private slots = new Semaphore(6);
   private cache = new Lru<Uint8Array>(8 * 1048576);
@@ -72,13 +80,16 @@ export class SuffixReader {
   private intervals?: PhraseIntervals;
   private phraseRanks?: PhraseRanks;
   private phraseRankIndex?: PhraseRanks;
+  private numericIndex?: NumericDirectory;
+  private numericPending = new Map<number, Promise<SuffixBlock>>();
   get buffers() {
     return {
       bundledBytes:
         (this.fences?.bytes.byteLength ?? 0) +
         (this.intervals?.bytes.byteLength ?? 0) +
         (this.phraseRanks?.bytes.byteLength ?? 0) +
-        (this.phraseRankIndex?.bytes.byteLength ?? 0),
+        (this.phraseRankIndex?.bytes.byteLength ?? 0) +
+        (this.numericIndex?.bytes.byteLength ?? 0),
       retainedColumnBytes: this.cache.bytes,
       peakRetainedColumnBytes: this.cache.peak,
       retainedDirectoryBytes: this.directories.bytes,
@@ -94,6 +105,7 @@ export class SuffixReader {
       intervals?: Uint8Array;
       phraseRanks?: Uint8Array;
       phraseRankIndex?: Uint8Array;
+      numericIndex?: Uint8Array;
     } = {},
   ) {
     if (manifest.format !== "word-suffix-1" || manifest.fixed.titleBoost !== 2)
@@ -130,6 +142,21 @@ export class SuffixReader {
         manifest.count,
         rows.bytes,
       );
+    }
+    if (options.numericIndex) {
+      if (!manifest.numericPackets || !this.fences)
+        throw Error("Numeric suffix packets require bundled block routing");
+      this.numericIndex = new NumericDirectory(
+        options.numericIndex,
+        manifest.corpusGeneration,
+        manifest.rows,
+      );
+      if (
+        this.numericIndex.count !== this.fences.count ||
+        this.numericIndex.sourceBytes !==
+          manifest.files[manifest.numericPackets.data]?.bytes
+      )
+        throw Error("Numeric suffix packet generation mismatch");
     }
   }
   /** The omitted-score bound must lose strictly, including possible ties.
@@ -265,6 +292,8 @@ export class SuffixReader {
     },
     columns?: SuffixColumn[],
   ) {
+    const numeric = this.preparedNumeric(interval, columns);
+    if (numeric) return { ...interval, blocks: numeric };
     if (
       this.fences &&
       columns?.length &&
@@ -284,6 +313,139 @@ export class SuffixReader {
         (b) => b.first < interval.end && b.first + b.count > interval.first,
       );
     return { first: interval.first, end: interval.end, blocks };
+  }
+  private preparedNumeric(
+    interval: { first: number; end: number },
+    columns?: SuffixColumn[],
+  ) {
+    if (
+      !this.numericIndex ||
+      !columns?.length ||
+      !this.fences ||
+      interval.end - interval.first > 8192
+    )
+      return;
+    const fences = this.fences.blocks(interval.first, interval.end);
+    if (!fences.length || fences.length > 2) return;
+    const blocks: SuffixBlock[] = [];
+    for (const fence of fences) {
+      const block = this.directories.get("numeric:" + fence.first)?.[0];
+      if (!block || columns.some((c) => !block.columns[c])) return;
+      blocks.push(block);
+    }
+    return blocks;
+  }
+  /** A small phrase interval can read its boundary keys, matching evidence and
+   * selected score column concurrently. No per-row address discovery follows. */
+  async numericInterval(phrase: Uint32Array, columns: SuffixColumn[]) {
+    if (!this.numericIndex || !this.fences) return this.shortInterval(phrase);
+    const known = this.intervals?.lookup(phrase),
+      edges = this.fences?.bounds(phrase),
+      fences =
+        known && known.end - known.first <= 8192
+          ? this.fences!.blocks(known.first, known.end)
+          : edges && edges[0].ordinal! + 1 >= edges[1].ordinal!
+            ? edges[0].first === edges[1].first
+              ? [edges[0]]
+              : [...edges]
+            : [],
+      scores = columns.some((c) => c === `score16-${phrase.length}`),
+      references =
+        this.numericIndex &&
+        phrase.length >= 2 &&
+        phrase.length <= 5 &&
+        !columns.some((c) => c.startsWith("score8") || c === "offsets") &&
+        fences.length <= 2
+          ? fences.map((b) =>
+              this.numericIndex!.lookup(b.ordinal!, phrase.length),
+            )
+          : [];
+    if (
+      !references.length ||
+      references.some((r) => !r) ||
+      references.reduce(
+        (n, r) => n + r!.base.length + (scores ? r!.score.length : 0),
+        0,
+      ) > 131072
+    )
+      return this.shortInterval(phrase);
+    const prepare = Promise.all(
+      fences.map(async (fence, i) => {
+        const ref = references[i]!,
+          key = "numeric:" + fence.first;
+        let task = this.numericPending.get(fence.first);
+        if (!task && !this.directories.get(key)) {
+          task = (async () => {
+            this.stats.numericPackets++;
+            this.stats.numericBytes += ref.base.length;
+            const raw = await this.read(
+                this.manifest.numericPackets!.data,
+                ref.base.offset,
+                ref.base.length,
+                false,
+              ),
+              { block, frames } = decodeNumericBase(raw, fence);
+            if (
+              block.columns[`score16-${phrase.length}`].offset !==
+                ref.score.offset ||
+              block.columns[`score16-${phrase.length}`].length !==
+                ref.score.length
+            )
+              throw Error("Numeric suffix score address mismatch");
+            this.directories.set(key, [block], 512);
+            await Promise.all(
+              columns
+                .filter((c) => baseColumns.includes(c))
+                .map((name) => this.rememberFrame(block, name, frames[name]!)),
+            );
+            return block;
+          })();
+          this.numericPending.set(fence.first, task);
+        }
+        const scoreTask = scores
+          ? this.read(
+              `score16-${phrase.length}`,
+              ref.score.offset,
+              ref.score.length,
+            )
+          : undefined;
+        try {
+          await Promise.all([task, scoreTask]);
+        } finally {
+          if (this.numericPending.get(fence.first) === task)
+            this.numericPending.delete(fence.first);
+        }
+      }),
+    );
+    const [interval] = await Promise.all([this.shortInterval(phrase), prepare]);
+    this.stats.numericUnusedBlocks += fences.filter(
+      (b) => b.first >= interval.end || b.first + b.count <= interval.first,
+    ).length;
+    return interval;
+  }
+  private async rememberFrame(
+    block: SuffixBlock,
+    name: SuffixColumn,
+    frame: Uint8Array,
+  ) {
+    const ref = block.columns[name],
+      key = `${name}:${ref.offset}:${ref.length}:true`;
+    if (this.cache.get(key)) return;
+    let task = this.pending.get(key);
+    if (!task) {
+      task = (async () => {
+        const data = await inflate(frame);
+        this.stats.decodedBytes += data.length;
+        this.cache.set(key, data, data.length);
+        return data;
+      })();
+      this.pending.set(key, task);
+    }
+    try {
+      await task;
+    } finally {
+      if (this.pending.get(key) === task) this.pending.delete(key);
+    }
   }
   private async shortBoundary(
     block: SuffixBlock,
@@ -380,10 +542,29 @@ export class SuffixReader {
     columns: SuffixColumn[],
     admit: (maximum: number) => boolean,
   ): AsyncGenerator<SuffixBatch> {
-    const interval = await this.shortInterval(phrase),
+    const interval = await this.numericInterval(phrase, [
+        ...columns,
+        "documents",
+        "positions",
+      ]),
       index = phrase.length - 2,
       maximum = (g: SuffixManifest["directory"][number]) =>
         g.scoreMaximum?.[index] ?? Infinity;
+    const numeric = this.preparedNumeric(interval, columns);
+    if (numeric) {
+      numeric.sort(
+        (a, b) =>
+          b.scoreMaximum[index] - a.scoreMaximum[index] ||
+          a.minDocument - b.minDocument,
+      );
+      yield* this.scan(
+        { ...interval, blocks: numeric },
+        [...new Set([...columns, "documents" as const, "positions" as const])],
+        (b) => admit(b.scoreMaximum[index]),
+        2,
+      );
+      return;
+    }
     interval.groups.sort(
       (a, b) =>
         maximum(b) - maximum(a) || (a.minDocument ?? 0) - (b.minDocument ?? 0),
