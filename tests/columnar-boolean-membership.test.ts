@@ -7,6 +7,7 @@ import {
   planBooleanMembership,
   readBooleanMembership,
   booleanMembershipAnchor,
+  refineBooleanMembership,
 } from "../src/columnar/boolean-membership.js";
 import {
   encodePairMembership,
@@ -24,9 +25,9 @@ const entries = [
   { a: "c", b: "d", body: [0, 2, 5], title: [1] },
   { a: "e", b: "f", body: [3, 4], title: [5] },
 ];
-function fixture(bytes?: number) {
+function fixture(bytes?: number, extra: typeof entries = []) {
   const packet = encodePairMembershipPacket(
-    entries.map((e) => ({
+    [...entries, ...extra].map((e) => ({
       a: e.a,
       b: e.b,
       data: encodePairMembership(
@@ -102,6 +103,47 @@ const alternative = {
   positionBytes: 2048 * 1048576,
   expectedCandidates: 64,
 };
+it("composes a completed phrase with loaded OR branches without more reads or negative subtraction", async () => {
+  for (const [q, expected] of [
+    ['"a b c" AND ("c d" OR "e f")', [0]],
+    ['("a b c" OR "e f") AND "c d"', [0, 5]],
+    ['("a b c" OR unknown) AND "c d"', [0, 1, 2, 5]],
+    ['"c d" NOT "a b c"', [0, 1, 2, 5]],
+    ['"a b c" W/5 "e f"', []],
+  ] as const) {
+    const { settings, reader } = fixture(undefined, [
+        { a: "b", b: "c", body: [0, 1, 4], title: [2] },
+      ]),
+      ast = parse(q),
+      plan = planBooleanMembership(
+        ast,
+        settings,
+        undefined,
+        16384,
+        "all",
+        alternative,
+      )!,
+      loaded = await readBooleanMembership(plan, reader, settings),
+      before = reader.stats.requests,
+      refined = refineBooleanMembership(loaded, ast, "all", (words, field) => {
+        if (words.join(" ") !== "a b c") return;
+        const docs = Uint32Array.from(field === "title" ? [] : [0]);
+        return {
+          count: docs.length,
+          values: function* () {
+            yield* docs;
+          },
+          cursor: () => arrayCursor(docs),
+          has: (d) => docs.includes(d),
+          covered: (w) => w.join(" ") === "a b c",
+          evidence: () => undefined,
+        };
+      }),
+      anchor = booleanMembershipAnchor(refined, ids, "all");
+    expect([...anchor.values()], q).toEqual(expected);
+    expect(reader.stats.requests).toBe(before);
+  }
+});
 it("combines already known phrase lists with unread pair branches, including same-field proximity", async () => {
   for (const [q, expected] of [
     ['"a b" AND ("c d" OR "e f")', [0, 1, 2, 4]],

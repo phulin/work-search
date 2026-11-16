@@ -208,6 +208,57 @@ export async function readBooleanMembership(
   );
   return { tree: plan.tree, selections };
 }
+/** Compose newly completed phrase evidence with memberships already fetched.
+ * This rebuilds only the Boolean expression; it never schedules another read.
+ * Unknown OR branches remain unknown and negative supersets are not subtracted. */
+export function refineBooleanMembership(
+  selection: Awaited<ReturnType<typeof readBooleanMembership>>,
+  ast: Node,
+  field: "all" | "body" | "title",
+  known: (
+    words: string[],
+    field: "all" | "body" | "title",
+  ) => MembershipAnchor | undefined,
+) {
+  const plans = new Map(
+      [...selection.selections.keys()].map((p) => [p.words.join("\0"), p]),
+    ),
+    existing = new Map<string, Extract<Tree, { kind: "known" }>>();
+  const collect = (n: Tree): void => {
+    if (n.kind === "known") existing.set(n.words.join("\0"), n);
+    else if (n.kind !== "phrase") {
+      collect(n.left);
+      collect(n.right);
+    }
+  };
+  collect(selection.tree);
+  const visit = (n: Node): Tree | undefined => {
+    if (n.kind === "phrase") {
+      const source = known(n.terms, field),
+        key = n.terms.join("\0");
+      if (source)
+        return {
+          kind: "known",
+          words: n.terms,
+          anchor: (f) => known(n.terms, f) ?? source,
+        };
+      const old = existing.get(key);
+      if (old) return old;
+      const plan = plans.get(key);
+      return plan ? { kind: "phrase", plan } : undefined;
+    }
+    if (!("left" in n)) return;
+    const left = visit(n.left);
+    if (n.kind === "except") return left;
+    const right = visit(n.right);
+    if (n.kind === "or")
+      return left && right ? { kind: "or", left, right } : undefined;
+    if (!left) return right;
+    if (!right) return left;
+    return { kind: n.kind, left, right };
+  };
+  return { ...selection, tree: visit(ast) ?? selection.tree };
+}
 export function booleanMembershipAnchor(
   selection: Awaited<ReturnType<typeof readBooleanMembership>>,
   ids: Map<string, number>,

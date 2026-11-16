@@ -82,6 +82,7 @@ import {
   planBooleanMembership as planMembershipAnchor,
   readBooleanMembership as readMembershipAnchor,
   booleanMembershipAnchor as membershipAnchor,
+  refineBooleanMembership,
 } from "./boolean-membership.js";
 import { combinePhraseExecution } from "./combined-phrases.js";
 export type PhraseExecution = Pick<
@@ -482,7 +483,7 @@ export class ColumnarIndex {
             return terms;
           })
         : this.terms(requested, reader),
-      [terms, selection, presence, unigramCandidates, remotePhrases] =
+      [terms, initialSelection, presence, unigramCandidates, remotePhrases] =
         await Promise.all([
           termRequest,
           membershipRead && this.membership
@@ -585,12 +586,14 @@ export class ColumnarIndex {
     reader.stats.plannedPresenceLists = presenceRanks.length;
     reader.stats.estimatedPairCandidates =
       membershipRead?.expectedCandidates ?? 0;
-    const supplied = selection
-        ? exact?.candidateAnchor?.(ast, field)
-        : undefined,
-      suppliedCandidates = supplied
-        ? Uint32Array.from(supplied.values())
-        : undefined;
+    const selection =
+      initialSelection && exact?.candidateAnchor
+        ? refineBooleanMembership(initialSelection, ast, field, (words, f) =>
+            exact!.covered(words)
+              ? exact!.candidateAnchor!({ kind: "phrase", terms: words }, f)
+              : undefined,
+          )
+        : initialSelection;
     let loadedMembership = selection
       ? intersectMembershipAnchor(
           membershipAnchor(
@@ -601,15 +604,7 @@ export class ColumnarIndex {
           unigramCandidates,
         )
       : exact?.candidateAnchor?.(ast, field);
-    if (loadedMembership && suppliedCandidates) {
-      loadedMembership = intersectMembershipAnchor(
-        loadedMembership,
-        suppliedCandidates,
-      );
-    }
-    reader.stats.anchorBufferBytes +=
-      (loadedMembership?.bufferBytes ?? 0) +
-      (suppliedCandidates?.byteLength ?? 0);
+    reader.stats.anchorBufferBytes += loadedMembership?.bufferBytes ?? 0;
     if (unigramCandidates) {
       reader.stats.anchorUnigramCandidates = unigramCandidates.length;
       reader.stats.anchorIntersectionCandidates = loadedMembership?.count ?? 0;
@@ -685,15 +680,12 @@ export class ColumnarIndex {
         );
         if (!enriched.some(Boolean)) return false;
         loadedMembership = intersectMembershipAnchor(
-          intersectMembershipAnchor(
-            membershipAnchor(
-              selection,
-              new Map([...terms].map(([name, t]) => [name, t.id])),
-              field,
-            ),
-            unigramCandidates,
+          membershipAnchor(
+            selection,
+            new Map([...terms].map(([name, t]) => [name, t.id])),
+            field,
           ),
-          suppliedCandidates,
+          unigramCandidates,
         );
         reader.stats.membershipCandidates = loadedMembership.count;
         return true;
