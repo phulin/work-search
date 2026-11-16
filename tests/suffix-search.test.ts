@@ -238,12 +238,18 @@ it("uses suffix matches with the term scorer for nested Boolean/proximity querie
         }
     }
     expect(flagsOnly.stats.positionIntegers).toBe(0);
+    const cachedWords = ["a", "b"];
+    expect(proof.covered(cachedWords)).toBe(true);
+    expect(proof.truth(cachedWords, 1, 0)).toBe(true);
+    expect(proof.evidence(cachedWords, 1, 0)).toBeUndefined();
     await proof.add(
       ["a", "b"],
       Uint32Array.of(ids.get("a")!, ids.get("b")!),
       flagsOnly,
     );
     expect(flagsOnly.stats.positionIntegers).toBeGreaterThan(0);
+    expect(proof.truth(cachedWords, 1, 0)).toBe(true);
+    expect(proof.evidence(cachedWords, 1, 0)).toEqual(Uint32Array.of(0));
     expect(proof.evidence(["a", "b"], 1, 0)).toEqual(Uint32Array.of(0));
     const queries = [
       '"a" AND "d"',

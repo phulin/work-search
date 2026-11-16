@@ -20,6 +20,15 @@ interface PhraseRows {
 export class SuffixEvidence implements PhraseExecution {
   readonly plans = [];
   private rows = new Map<string, PhraseRows>();
+  private byWords = new WeakMap<string[], PhraseRows>();
+  private phraseRows(words: string[]) {
+    let row = this.byWords.get(words);
+    if (!row) {
+      row = this.rows.get(words.join("\0"));
+      if (row) this.byWords.set(words, row);
+    }
+    return row;
+  }
   private lo = 0;
   private hi = 0;
   private reserved = 0;
@@ -34,7 +43,7 @@ export class SuffixEvidence implements PhraseExecution {
     budget = 4 * 1048576,
     needPositions = true,
   ) {
-    const existing = this.rows.get(words.join("\0"));
+    const existing = this.phraseRows(words);
     if (existing && (!needPositions || existing.positions)) return true;
     if (
       reader.minimumRows(ids) * 40 + this.bufferBytes + this.reserved >
@@ -91,6 +100,7 @@ export class SuffixEvidence implements PhraseExecution {
           fields: sorted,
         });
         this.anchors = new WeakMap();
+        this.byWords = new WeakMap();
         return true;
       }
       for await (const batch of reader.scan(interval, [
@@ -130,6 +140,7 @@ export class SuffixEvidence implements PhraseExecution {
         positions: [Uint32Array.from(starts[0]), Uint32Array.from(starts[1])],
       });
       this.anchors = new WeakMap();
+      this.byWords = new WeakMap();
       return true;
     } finally {
       this.reserved -= reserve;
@@ -146,7 +157,7 @@ export class SuffixEvidence implements PhraseExecution {
     if (cached?.has(field)) return cached.get(field);
     const visit = (n: Node): Uint32Array | undefined => {
       if (n.kind === "phrase") {
-        const row = this.rows.get(n.terms.join("\0"));
+        const row = this.phraseRows(n.terms);
         if (!row) return;
         if (field === "all") return row.docs;
         const f = field === "title" ? 1 : 0;
@@ -194,9 +205,9 @@ export class SuffixEvidence implements PhraseExecution {
     this.anchors.set(ast, fields);
     return result;
   }
-  covered = (words: string[]) => this.rows.has(words.join("\0"));
+  covered = (words: string[]) => !!this.phraseRows(words);
   evidence = (words: string[], doc: number, field: number) => {
-    const rows = this.rows.get(words.join("\0"));
+    const rows = this.phraseRows(words);
     if (!rows) return;
     if (rows.fields) {
       const docs = rows.fields[field];
@@ -211,13 +222,16 @@ export class SuffixEvidence implements PhraseExecution {
       : EMPTY;
   };
   truth = (words: string[], doc: number, field: number) => {
-    const row = this.rows.get(words.join("\0"));
-    if (row?.fields) {
+    const row = this.phraseRows(words);
+    if (!row) return;
+    if (row.fields) {
       const docs = row.fields[field];
       return docs[lower(docs, doc)] === doc;
     }
-    const p = this.evidence(words, doc, field);
-    return p === undefined ? undefined : !!p.length;
+    const i = lower(row.docs, doc);
+    return (
+      row.docs[i] === doc && row.offsets![field][i + 1] > row.offsets![field][i]
+    );
   };
   positionGuard = () => () => true;
   async window(lo: number, hi: number) {
@@ -249,7 +263,7 @@ export class SuffixEvidence implements PhraseExecution {
       if (n.kind === "all") return 1;
       if (n.kind === "term") return 2;
       if (n.kind === "phrase") {
-        const rows = this.rows.get(n.terms.join("\0"));
+        const rows = this.phraseRows(n.terms);
         if (!rows) return 2;
         if (rows.fields) {
           const docs =

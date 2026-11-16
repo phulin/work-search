@@ -50,6 +50,7 @@ const index = resolve(indexInput),
   collectDuringRequests =
     process.env.CWS_NATIVE_COLLECT_DURING_REQUESTS === "1",
   allocationProfile = process.env.CWS_NATIVE_ALLOCATIONS === "1",
+  cpuProfile = process.env.CWS_NATIVE_CPU_PROFILES === "1",
   storage = new RangeStorage(assets.root, index + "/local-ranges"),
   model = {
     r2Ms: 20,
@@ -68,6 +69,8 @@ if (
   concurrency > 16
 )
   throw Error("Invalid native benchmark plans or concurrency");
+if (cpuProfile && concurrency !== 1)
+  throw Error("Per-request CPU profiles require concurrency 1");
 await mkdir(frozenRoot, { recursive: true });
 if (
   !(await readFile(frozenRoot + "/src/columnar/search.ts").then(
@@ -327,6 +330,13 @@ const workers: any = {},
   rows: any[] = [];
 try {
   for (const mode of modes) workers[mode] = await worker(mode);
+  if (cpuProfile)
+    for (const w of Object.values<any>(workers)) {
+      await w.inspector.send("Profiler.enable");
+      await w.inspector.send("Profiler.setSamplingInterval", {
+        interval: 1000,
+      });
+    }
   if (allocationProfile)
     for (const w of Object.values<any>(workers)) {
       try {
@@ -365,6 +375,7 @@ try {
         slots: new Semaphore(6),
       };
     jobs.set(runId, job);
+    if (cpuProfile) await workers[task.mode].inspector.send("Profiler.start");
     const start = performance.now(),
       r = await workers[task.mode].mf.dispatchFetch("http://native/search", {
         method: "POST",
@@ -384,6 +395,21 @@ try {
     jobs.delete(runId);
     if (!r.ok) throw Error(raw);
     const body = JSON.parse(raw);
+    if (cpuProfile) {
+      const { profile } =
+        await workers[task.mode].inspector.send("Profiler.stop");
+      await writeFile(
+        out + "/" + runId + ".cpuprofile",
+        JSON.stringify({
+          requestId: runId,
+          isolateId: body.isolateId,
+          query: s.q,
+          sid: task.sid,
+          mode: task.mode,
+          ...profile,
+        }),
+      );
+    }
     const expected = contract.rows.find((x: any) => x.sid === task.sid).result
       .results;
     if (
@@ -478,6 +504,7 @@ try {
           memoryProfile,
           collectDuringRequests,
           allocationProfile,
+          cpuProfile,
           v8Flags: process.env.MINIFLARE_WORKERD_V8_FLAGS ?? null,
           rows,
         }),
@@ -548,6 +575,7 @@ try {
         memoryProfile,
         collectDuringRequests,
         allocationProfile,
+        cpuProfile,
         rows,
         memory,
         completedAt: new Date().toISOString(),
